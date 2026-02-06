@@ -1,17 +1,24 @@
 <article class="review-card">
-  <h2 class="review-card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-  <div class="review-card-meta">
-    {{ with .Params.author }}{{ . }} &middot; {{ end }}
-    Published {{ with .Params.year }}{{ . }} &middot; {{ end }}
-    <span class="rating">{{ partial "rating.html" . }}</span>
-    &middot; {{ .Date.Format "Jan 2, 2006" }}
+  {{ with .Params.cover }}
+  <div class="review-card-cover">
+    <a href="{{ $.RelPermalink }}"><img src="{{ . | relURL }}" alt="Cover of {{ $.Title }}"></a>
   </div>
-  {{ with .Params.summary }}<p class="review-card-summary">{{ . }}</p>{{ end }}
-  {{ with .Params.tags }}
-  <ul class="tag-list">
-    {{- range . }}
-    <li><a href="{{ "tags/" | relURL }}{{ . | urlize }}/" class="tag">{{ . }}</a></li>
-    {{- end }}
-  </ul>
   {{ end }}
+  <div class="review-card-content">
+    <h2 class="review-card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+    <div class="review-card-meta">
+      {{ with .Params.author }}{{ . }} &middot; {{ end }}
+      Published {{ with .Params.year }}{{ . }} &middot; {{ end }}
+      <span class="rating">{{ partial "rating.html" . }}</span>
+    </div>
+    {{ with .Params.summary }}<p class="review-card-summary">{{ . }}</p>{{ end }}
+    {{ with .Params.tags }}
+    <ul class="tag-list">
+      {{- range . }}
+      <li><a href="{{ "tags/" | relURL }}{{ . | urlize }}/" class="tag">{{ . }}</a></li>
+      {{- end }}
+    </ul>
+    {{ end }}
+  </div>
 </article>
+<hr class="review-divider">
