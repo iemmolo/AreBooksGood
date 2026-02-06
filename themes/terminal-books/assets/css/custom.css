@@ -272,8 +272,18 @@ main {
 }
 
 /* ============================================
-   Images — no border on site images
+   Cover Images
    ============================================ */
+.review-cover {
+  margin: 20px 0;
+}
+
+.review-cover img {
+  max-width: 200px;
+  border: 2px solid var(--accent);
+  padding: 4px;
+}
+
 .review-body img {
   border: none;
   padding: 0;

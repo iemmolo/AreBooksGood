@@ -2,6 +2,11 @@
   <article>
     <div class="review-header">
       <h1 class="page-title">{{ .Title }}</h1>
+      {{ with .Params.cover }}
+      <div class="review-cover">
+        <img src="{{ . | relURL }}" alt="Cover of {{ $.Title }}">
+      </div>
+      {{ end }}
       <div class="review-meta">
         {{ with .Params.author }}Author: {{ . }}<br>{{ end }}
         {{ with .Params.year }}Published: {{ . }}<br>{{ end }}
