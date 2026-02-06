@@ -1,5 +1,5 @@
 <nav class="site-nav">
-  <a href="{{ "/" | relURL }}" class="site-title">> AreBooksGood</a>
+  <span class="site-title">> AreBooksGood</span>
   <ul class="nav-links">
     {{- range site.Menus.main }}
     <li><a href="{{ .URL }}"{{ if $.IsMenuCurrent "main" . }} class="active"{{ end }}>{{ .Name }}</a></li>

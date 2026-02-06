@@ -29,20 +29,14 @@ main {
 .site-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 1.5em;
 }
 
 .site-title {
   font-weight: 600;
   font-size: var(--font-size);
   color: var(--foreground);
-  text-decoration: none;
-}
-
-.site-title:hover {
-  color: var(--accent);
 }
 
 .nav-links {
