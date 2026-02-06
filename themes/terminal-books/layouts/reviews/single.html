@@ -1,0 +1,18 @@
+{{ define "main" }}
+  <article>
+    <div class="review-header">
+      <h1 class="page-title">{{ .Title }}</h1>
+      <div class="review-meta">
+        {{ with .Params.author }}Author: {{ . }}<br>{{ end }}
+        {{ with .Params.year }}Published: {{ . }}<br>{{ end }}
+        {{ with .Params.narrator }}Narrator: {{ . }}<br>{{ end }}
+        Rating: <span class="rating">{{ partial "rating.html" . }}</span><br>
+        {{ with .Params.categories }}Categories: {{ delimit . ", " }}<br>{{ end }}
+        {{ with .Params.tags }}Tags: {{ delimit . ", " }}{{ end }}
+      </div>
+    </div>
+    <div class="review-body">
+      {{ .Content }}
+    </div>
+  </article>
+{{ end }}
