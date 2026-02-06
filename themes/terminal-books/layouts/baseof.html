@@ -18,6 +18,8 @@
   {{- $js := resources.Get "js/theme-switcher.js" | minify -}}
   <script src="{{ $js.RelPermalink }}"></script>
   {{ if eq .Layout "chess" -}}
+    {{- $engine := resources.Get "js/chess-engine.js" | minify -}}
+    <script src="{{ $engine.RelPermalink }}"></script>
     {{- $chess := resources.Get "js/chess.js" | minify -}}
     <script src="{{ $chess.RelPermalink }}"></script>
   {{- end }}
