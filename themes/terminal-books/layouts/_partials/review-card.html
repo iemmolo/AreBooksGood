@@ -1,7 +1,7 @@
 <article class="review-card">
   {{ with .Params.cover }}
   <div class="review-card-cover">
-    <a href="{{ $.RelPermalink }}"><img src="{{ . | relURL }}" alt="Cover of {{ $.Title }}"></a>
+    <a href="{{ $.RelPermalink }}"><img src="{{ . | absURL }}" alt="Cover of {{ $.Title }}"></a>
   </div>
   {{ end }}
   <div class="review-card-content">

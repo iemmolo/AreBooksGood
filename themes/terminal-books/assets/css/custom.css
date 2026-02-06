@@ -83,7 +83,8 @@ main {
   border-radius: var(--radius);
   padding: 4px 30px 4px 8px;
   font: inherit;
-  font-size: 0.9em;
+  font-size: var(--font-size);
+  line-height: var(--line-height);
   cursor: pointer;
   appearance: none;
   background-image: linear-gradient(
