@@ -2,6 +2,7 @@
   <h2 class="review-card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
   <div class="review-card-meta">
     {{ with .Params.author }}{{ . }} &middot; {{ end }}
+    Published {{ with .Params.year }}{{ . }} &middot; {{ end }}
     <span class="rating">{{ partial "rating.html" . }}</span>
     &middot; {{ .Date.Format "Jan 2, 2006" }}
   </div>

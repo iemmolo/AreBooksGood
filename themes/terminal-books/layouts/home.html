@@ -1,7 +1,7 @@
 {{ define "main" }}
   {{ .Content }}
 
-  <h2 class="page-title">latest reviews</h2>
+  <!-- <h2 class="page-title">What have I been reading</h2> -->
   <ul class="review-list">
     {{- range where site.RegularPages "Section" "reviews" | first 10 }}
       <li>{{ partial "review-card.html" . }}</li>
