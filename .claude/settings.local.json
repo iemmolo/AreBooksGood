@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(hugo version:*)",
+      "Bash(brew install:*)",
+      "Bash(hugo new:*)",
+      "Bash(hugo:*)"
+    ]
+  }
+}
