@@ -26,17 +26,22 @@ main {
   margin-bottom: 30px;
 }
 
-.site-nav {
+.top-bar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1.5em;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .site-title {
   font-weight: 600;
   font-size: var(--font-size);
   color: var(--foreground);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
 }
 
 .nav-links {
