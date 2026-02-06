@@ -2,8 +2,6 @@
 title: "About"
 ---
 
-AreBooksGood is a collection of short, honest book reviews.
+I'm Jack and I like books. Maybe you know me in real life, maybe you don't.
 
-The goal is simple: read books, write a few paragraphs about whether they're worth your time, and move on. No sponsored content, no affiliate links, no algorithm.
-
-If you want to get in touch, find me on Instagram.
+This was an experiment to test Claude Code with a simple website. The site, theme, GitHub Actions deployment workflow, and four color themes with a live switcher were all done within an hour.
