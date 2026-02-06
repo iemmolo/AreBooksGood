@@ -8,6 +8,7 @@ year: "2021"
 narrator: "Ray Porter"
 date: 2026-02-06
 summary: "This book makes me feel stressed, anxious, hopeful, and optimistic. It touches on such well-trod concepts from a really unique and refreshing angle."
+cover: "images/covers/project-hail-mary.jpg"
 ---
 
 This book makes me feel stressed, anxious, hopeful, and optimistic. It touches on such well-trod concepts from a really unique and refreshing angle. I found the relationships in this book to be quite powerful and was continually impressed with the writing.
