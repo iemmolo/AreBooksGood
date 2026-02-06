@@ -1,0 +1,27 @@
+Chess Puzzle Feature - Task Tracking
+=====================================
+
+## Done
+
+- [x] Scaffold files: content page, layout, CSS, JS, puzzle data
+- [x] Implement chess board rendering (FEN parser, Unicode pieces)
+- [x] Implement move validation for all piece types
+- [x] Implement check/checkmate detection
+- [x] Implement puzzle solution flow (validate moves, auto-reply, solved state)
+- [x] Add reset and hint buttons
+- [x] Add move history log
+- [x] Style for all 4 themes (pistachio, matrix, light, dark)
+- [x] Responsive layout (480px breakpoint)
+- [x] Conditional CSS/JS loading (only on chess pages)
+
+## Future / Nice-to-Have
+
+- [ ] Add more puzzles (mate-in-2, mate-in-3, tactical themes)
+- [ ] Add puzzle difficulty ratings display
+- [ ] Add puzzle navigation (next/previous) with wrap-around
+- [ ] Add keyboard navigation for accessibility
+- [ ] Add castling support
+- [ ] Add en passant support
+- [ ] Add pawn promotion UI (currently auto-queens)
+- [ ] Add animation for piece movement
+- [ ] Track puzzle solve stats in localStorage

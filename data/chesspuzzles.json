@@ -1,0 +1,24 @@
+[
+  {
+    "id": "puzzle-001",
+    "title": "Back Rank Mate",
+    "description": "White to move. Mate in 1.",
+    "difficulty": "beginner",
+    "fen": "6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1",
+    "turn": "w",
+    "solution": [
+      { "from": "a1", "to": "a8", "notation": "Ra8#" }
+    ]
+  },
+  {
+    "id": "puzzle-002",
+    "title": "Queen Checkmate",
+    "description": "White to move. Mate in 1.",
+    "difficulty": "beginner",
+    "fen": "6k1/7p/5K2/8/8/8/8/Q7 w - - 0 1",
+    "turn": "w",
+    "solution": [
+      { "from": "a1", "to": "a8", "notation": "Qa8#" }
+    ]
+  }
+]

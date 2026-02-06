@@ -18,6 +18,12 @@
 {{- $styles := slice $terminal $themes $custom | resources.Concat "css/bundle.css" | minify -}}
 <link rel="stylesheet" href="{{ $styles.RelPermalink }}">
 
+{{/* Chess puzzle CSS — only on chess pages */}}
+{{ if eq .Layout "chess" -}}
+  {{- $chess := resources.Get "css/chess.css" | minify -}}
+  <link rel="stylesheet" href="{{ $chess.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
