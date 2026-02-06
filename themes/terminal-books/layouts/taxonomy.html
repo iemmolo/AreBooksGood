@@ -1,0 +1,13 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  {{ .Content }}
+
+  <ul class="taxonomy-list">
+    {{- range .Pages }}
+    <li>
+      <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+      <span class="taxonomy-count">({{ len .Pages }})</span>
+    </li>
+    {{- end }}
+  </ul>
+{{ end }}

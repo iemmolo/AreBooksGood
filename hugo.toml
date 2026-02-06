@@ -1,0 +1,44 @@
+baseURL = 'https://arebooksgood.com/'
+languageCode = 'en-us'
+title = 'AreBooksGood'
+theme = 'terminal-books'
+
+[taxonomies]
+  category = 'categories'
+  tag = 'tags'
+
+[params]
+  description = 'Short, honest book reviews.'
+  author = 'AreBooksGood'
+  defaultTheme = 'pistachio'
+
+[menus]
+  [[menus.main]]
+    name = 'Home'
+    pageRef = '/'
+    weight = 10
+  [[menus.main]]
+    name = 'Reviews'
+    pageRef = '/reviews'
+    weight = 20
+  [[menus.main]]
+    name = 'Categories'
+    pageRef = '/categories'
+    weight = 30
+  [[menus.main]]
+    name = 'Tags'
+    pageRef = '/tags'
+    weight = 40
+  [[menus.main]]
+    name = 'About'
+    pageRef = '/about'
+    weight = 50
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = false
+
+[outputs]
+  home = ['html', 'rss']
+  section = ['html', 'rss']

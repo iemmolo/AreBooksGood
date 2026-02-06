@@ -1,0 +1,10 @@
+{{ define "main" }}
+  {{ .Content }}
+
+  <h2 class="page-title">latest reviews</h2>
+  <ul class="review-list">
+    {{- range where site.RegularPages "Section" "reviews" | first 10 }}
+      <li>{{ partial "review-card.html" . }}</li>
+    {{- end }}
+  </ul>
+{{ end }}

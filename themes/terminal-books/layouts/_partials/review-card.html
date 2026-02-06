@@ -1,0 +1,16 @@
+<article class="review-card">
+  <h2 class="review-card-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+  <div class="review-card-meta">
+    {{ with .Params.author }}{{ . }} &middot; {{ end }}
+    <span class="rating">{{ partial "rating.html" . }}</span>
+    &middot; {{ .Date.Format "Jan 2, 2006" }}
+  </div>
+  {{ with .Params.summary }}<p class="review-card-summary">{{ . }}</p>{{ end }}
+  {{ with .Params.tags }}
+  <ul class="tag-list">
+    {{- range . }}
+    <li><a href="{{ "tags/" | relURL }}{{ . | urlize }}/" class="tag">{{ . }}</a></li>
+    {{- end }}
+  </ul>
+  {{ end }}
+</article>

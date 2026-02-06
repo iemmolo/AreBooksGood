@@ -1,0 +1,41 @@
+/* ============================================
+   PISTACHIO (default)
+   Gruvbox-inspired: warm dark bg, cream text,
+   pistachio green accent
+   ============================================ */
+:root,
+[data-theme="pistachio"] {
+  --background: #1d2021;
+  --foreground: #ebdbb2;
+  --accent: #8ec07c;
+}
+
+/* ============================================
+   MATRIX
+   Phosphor green on black
+   ============================================ */
+[data-theme="matrix"] {
+  --background: #0a0a0a;
+  --foreground: #00ff41;
+  --accent: #00cc33;
+}
+
+/* ============================================
+   LIGHT
+   Clean white, classic readability
+   ============================================ */
+[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --accent: #0060df;
+}
+
+/* ============================================
+   DARK
+   Deep charcoal, cool tones
+   ============================================ */
+[data-theme="dark"] {
+  --background: #1a1a2e;
+  --foreground: #e5e7eb;
+  --accent: #60a5fa;
+}

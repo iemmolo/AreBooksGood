@@ -1,0 +1,41 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+<meta name="description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+
+{{/* Apply theme before paint to prevent flash */}}
+<script>
+(function() {
+  var t = localStorage.getItem('theme') || '{{ site.Params.defaultTheme | default "pistachio" }}';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+
+{{/* CSS */}}
+{{- $terminal := resources.Get "css/terminal.css" -}}
+{{- $themes := resources.Get "css/themes.css" -}}
+{{- $custom := resources.Get "css/custom.css" -}}
+{{- $styles := slice $terminal $themes $custom | resources.Concat "css/bundle.css" | minify -}}
+<link rel="stylesheet" href="{{ $styles.RelPermalink }}">
+
+{{/* Open Graph */}}
+<meta property="og:title" content="{{ .Title }}">
+<meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+<meta property="og:type" content="{{ if .IsPage }}article{{ else }}website{{ end }}">
+<meta property="og:url" content="{{ .Permalink }}">
+{{ with .Params.cover -}}
+<meta property="og:image" content="{{ . | absURL }}">
+{{- end }}
+<meta property="og:site_name" content="{{ site.Title }}">
+
+{{/* Twitter Card */}}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ .Title }}">
+<meta name="twitter:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+
+{{/* RSS */}}
+{{ with .OutputFormats.Get "rss" -}}
+<link rel="alternate" type="application/rss+xml" title="{{ site.Title }}" href="{{ .Permalink }}">
+{{- end }}
+
+<link rel="canonical" href="{{ .Permalink }}">

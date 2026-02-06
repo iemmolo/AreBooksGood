@@ -1,0 +1,59 @@
+# AreBooksGood — Progress
+
+## Status: MVP COMPLETE
+
+## What's Done
+- [x] Requirements documented (docs/requirements.md)
+- [x] Architecture documented (docs/architecture.md)
+- [x] Theme/design spec documented (docs/theme.md)
+- [x] Hugo project initialized
+- [x] Custom theme "terminal-books" built with terminal-css
+- [x] Theme switcher: pistachio (default), matrix, light, dark
+- [x] Layouts: baseof, home, section (reviews list), page (about), taxonomy, term
+- [x] Partials: head (with OG tags), header (nav + theme dropdown), footer, review-card, rating
+- [x] CSS: terminal.css base + themes.css (4 themes) + custom.css (layout)
+- [x] JS: theme-switcher.js (localStorage + no-flash inline script)
+- [x] hugo.toml configured (taxonomies, menus, params)
+- [x] OG + Twitter Card meta tags on all pages
+- [x] RSS feed enabled
+- [x] GitHub Actions deploy workflow (.github/workflows/deploy.yml)
+- [x] Sample content: 3 reviews (The Road, Sapiens, Project Hail Mary)
+- [x] About page
+- [x] Build tested locally — 46 pages, 53ms
+
+## What's Next
+- [ ] Initialize git repo and push to GitHub
+- [ ] Enable GitHub Pages in repo settings (Settings > Pages > Source: GitHub Actions)
+- [ ] Purchase and configure custom domain
+- [ ] Add more reviews
+- [ ] Optional: add search (pagefind or lunr.js)
+- [ ] Optional: add reading time to review metadata
+- [ ] Optional: generate OG images per review
+
+## Key Decisions
+- SSG: Hugo
+- CSS: terminal-css (monospace/terminal aesthetic)
+- Themes: pistachio (default), matrix, light, dark
+- Theme switcher: CSS custom properties + vanilla JS + localStorage
+- Hosting: GitHub Pages with GitHub Actions
+- Domain: custom domain (TBD, pointed at GitHub Pages)
+- Taxonomies: categories + tags (Hugo built-in)
+
+## File Structure (key files)
+- hugo.toml — site config
+- themes/terminal-books/assets/css/themes.css — theme color definitions
+- themes/terminal-books/layouts/baseof.html — base template
+- themes/terminal-books/layouts/_partials/head.html — <head> with OG tags
+- themes/terminal-books/layouts/_partials/header.html — nav + theme dropdown
+- themes/terminal-books/layouts/_partials/review-card.html — review listing card
+- content/reviews/*.md — book reviews
+- .github/workflows/deploy.yml — auto-deploy pipeline
+
+## Notes for Next Claude Session
+- Read this file first, then docs/ if you need deeper context
+- The project uses Hugo with a custom theme called "terminal-books"
+- terminal-css is the base CSS framework (vendored in assets/css/terminal.css)
+- 4 themes: pistachio (default), matrix, light, dark — defined in assets/css/themes.css
+- User wants to edit markdown on GitHub and have it auto-deploy
+- Instagram integration = OG meta tags for good link previews, not an API
+- Hugo build is clean with no warnings

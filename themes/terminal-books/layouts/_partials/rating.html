@@ -1,0 +1,4 @@
+{{- $rating := .Params.rating | default 0 -}}
+{{- range seq 5 -}}
+  {{- if le . $rating -}}&#9733;{{- else -}}&#9734;{{- end -}}
+{{- end -}}

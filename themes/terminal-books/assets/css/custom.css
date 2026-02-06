@@ -1,0 +1,307 @@
+/* ============================================
+   Site layout
+   ============================================ */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+.site-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ============================================
+   Header & Nav
+   ============================================ */
+.site-header {
+  border-bottom: 2px solid var(--accent);
+  padding: 20px 0;
+  margin-bottom: 30px;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.site-title {
+  font-weight: 600;
+  font-size: var(--font-size);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.site-title:hover {
+  color: var(--accent);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li {
+  padding: 0;
+  margin: 0;
+}
+
+.nav-links li::marker {
+  content: none;
+}
+
+.nav-links a {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  text-decoration: none;
+  font-size: var(--font-size);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--accent);
+}
+
+/* ============================================
+   Theme Switcher
+   ============================================ */
+.theme-select {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--foreground);
+  border-radius: var(--radius);
+  padding: 4px 30px 4px 8px;
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      var(--foreground) 50%
+    ),
+    linear-gradient(135deg, var(--foreground) 50%, transparent 50%);
+  background-position: calc(100% - 14px), calc(100% - 9px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.theme-select option {
+  background: var(--background);
+}
+
+.theme-select:focus-visible {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.site-footer {
+  border-top: 2px solid var(--accent);
+  padding: 20px 0;
+  margin-top: 40px;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-size: 0.9em;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ============================================
+   Review Cards (listing pages)
+   ============================================ */
+.review-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.review-list > li {
+  padding: 0;
+  margin: 0;
+}
+
+.review-list > li::marker {
+  content: none;
+}
+
+.review-card {
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding: 20px 0;
+}
+
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-card-title {
+  margin: 0 0 4px;
+  font-size: var(--font-size);
+  font-weight: 600;
+}
+
+.review-card-title a {
+  color: var(--foreground);
+}
+
+.review-card-title a:hover {
+  color: var(--accent);
+}
+
+.review-card-meta {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+
+.review-card-summary {
+  margin: 8px 0 0;
+  color: var(--foreground);
+}
+
+/* ============================================
+   Tags (inline)
+   ============================================ */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.tag-list li {
+  padding: 0;
+  margin: 0;
+}
+
+.tag-list li::marker {
+  content: none;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  text-decoration: none;
+}
+
+.tag:hover {
+  background: var(--accent);
+  color: var(--background);
+  border-color: var(--accent);
+}
+
+/* ============================================
+   Rating
+   ============================================ */
+.rating {
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+
+/* ============================================
+   Single Review
+   ============================================ */
+.review-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.review-header h1 {
+  margin: 0 0 8px;
+}
+
+.review-meta {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.review-body {
+  margin-bottom: 40px;
+}
+
+/* ============================================
+   Taxonomy pages (categories/tags index)
+   ============================================ */
+.taxonomy-list {
+  list-style: none;
+  padding: 0;
+}
+
+.taxonomy-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.taxonomy-list li::marker {
+  content: none;
+}
+
+.taxonomy-list li:last-child {
+  border-bottom: none;
+}
+
+.taxonomy-count {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* ============================================
+   Page headings
+   ============================================ */
+.page-title {
+  margin: 0 0 20px;
+}
+
+/* ============================================
+   Images — no border on site images
+   ============================================ */
+.review-body img {
+  border: none;
+  padding: 0;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 480px) {
+  .site-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 1em;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
