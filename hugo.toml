@@ -8,7 +8,7 @@ theme = 'terminal-books'
   tag = 'tags'
 
 [params]
-  description = 'Short, honest book reviews.'
+  description = 'Short book reviews.'
   author = 'AreBooksGood'
   defaultTheme = 'pistachio'
 
