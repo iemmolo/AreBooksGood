@@ -18,8 +18,8 @@
 {{- $styles := slice $terminal $themes $custom | resources.Concat "css/bundle.css" | minify -}}
 <link rel="stylesheet" href="{{ $styles.RelPermalink }}">
 
-{{/* Chess puzzle CSS — only on chess pages */}}
-{{ if eq .Layout "chess" -}}
+{{/* Chess CSS — on chess and chess-play pages */}}
+{{ if or (eq .Layout "chess") (eq .Layout "chess-play") -}}
   {{- $chess := resources.Get "css/chess.css" | minify -}}
   <link rel="stylesheet" href="{{ $chess.RelPermalink }}">
 {{- end }}

@@ -14,6 +14,7 @@ const {
   legalMoves,
   hasLegalMoves,
   isCheckmate,
+  isStalemate,
 } = engine;
 
 // ── Helper: sort moves for stable comparisons ──────────
@@ -692,5 +693,191 @@ describe('puzzle positions', () => {
     const board = parseFEN('6k1/7p/5K2/8/8/8/8/Q7 w - - 0 1');
     expect(hasLegalMoves(board, 'b')).toBe(true);
     expect(isCheckmate(board, 'b')).toBe(false);
+  });
+});
+
+// ── Castling ──────────────────────────────────────────
+
+describe('castling', () => {
+  it('white can castle king-side', () => {
+    // King e1, rook h1, squares f1 g1 empty
+    const board = parseFEN('4k3/8/8/8/8/8/8/4K2R w K - 0 1');
+    const moves = legalMoves(board, 7, 4, 'K');
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(true); // g1
+  });
+
+  it('white can castle queen-side', () => {
+    // King e1, rook a1, squares b1 c1 d1 empty
+    const board = parseFEN('4k3/8/8/8/8/8/8/R3K3 w Q - 0 1');
+    const moves = legalMoves(board, 7, 4, 'Q');
+    const set = moveSet(moves);
+    expect(set.has('7,2')).toBe(true); // c1
+  });
+
+  it('black can castle king-side', () => {
+    const board = parseFEN('4k2r/8/8/8/8/8/8/4K3 b k - 0 1');
+    const moves = legalMoves(board, 0, 4, 'k');
+    const set = moveSet(moves);
+    expect(set.has('0,6')).toBe(true); // g8
+  });
+
+  it('black can castle queen-side', () => {
+    const board = parseFEN('r3k3/8/8/8/8/8/8/4K3 b q - 0 1');
+    const moves = legalMoves(board, 0, 4, 'q');
+    const set = moveSet(moves);
+    expect(set.has('0,2')).toBe(true); // c8
+  });
+
+  it('cannot castle when squares are blocked', () => {
+    // Bishop on f1 blocks king-side castling
+    const board = parseFEN('4k3/8/8/8/8/8/8/4KB1R w K - 0 1');
+    const moves = legalMoves(board, 7, 4, 'K');
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(false);
+  });
+
+  it('cannot castle through check', () => {
+    // Black rook on f8 attacks f1 — white can't castle king-side
+    const board = parseFEN('4kr2/8/8/8/8/8/8/4K2R w K - 0 1');
+    const moves = legalMoves(board, 7, 4, 'K');
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(false);
+  });
+
+  it('cannot castle out of check', () => {
+    // Black rook on e8 checks white king on e1
+    const board = parseFEN('4r3/8/8/8/8/8/8/4K2R w K - 0 1');
+    const moves = legalMoves(board, 7, 4, 'K');
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(false);
+  });
+
+  it('cannot castle into check', () => {
+    // Black rook on g8 attacks g1 — white can't castle king-side
+    const board = parseFEN('4k1r1/8/8/8/8/8/8/4K2R w K - 0 1');
+    const moves = legalMoves(board, 7, 4, 'K');
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(false);
+  });
+
+  it('no castling without rights', () => {
+    // Same position but no castling flag
+    const board = parseFEN('4k3/8/8/8/8/8/8/4K2R w - - 0 1');
+    const moves = legalMoves(board, 7, 4);
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(false);
+  });
+
+  it('queen-side castling blocked if b-file occupied', () => {
+    const board = parseFEN('4k3/8/8/8/8/8/8/Rn2K3 w Q - 0 1');
+    const moves = legalMoves(board, 7, 4, 'Q');
+    const set = moveSet(moves);
+    expect(set.has('7,2')).toBe(false);
+  });
+
+  it('can castle both sides', () => {
+    const board = parseFEN('4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1');
+    const moves = legalMoves(board, 7, 4, 'KQ');
+    const set = moveSet(moves);
+    expect(set.has('7,6')).toBe(true); // king-side
+    expect(set.has('7,2')).toBe(true); // queen-side
+  });
+});
+
+// ── En Passant ────────────────────────────────────────
+
+describe('en passant', () => {
+  it('white pawn can capture en passant', () => {
+    // White pawn on e5 (row 3), black pawn just moved d7-d5, EP square d6
+    const board = parseFEN('4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1');
+    const moves = rawMoves(board, 3, 4, null, 'd6');
+    const set = moveSet(moves);
+    expect(set.has('2,3')).toBe(true); // d6 — en passant capture
+  });
+
+  it('black pawn can capture en passant', () => {
+    // Black pawn on d4 (row 4), white pawn just moved e2-e4, EP square e3
+    const board = parseFEN('4k3/8/8/8/3pP3/8/8/4K3 b - e3 0 1');
+    const moves = rawMoves(board, 4, 3, null, 'e3');
+    const set = moveSet(moves);
+    expect(set.has('5,4')).toBe(true); // e3 — en passant capture
+  });
+
+  it('en passant not available from wrong rank', () => {
+    // White pawn on e4 (row 4, not 5th rank) — can't EP
+    const board = parseFEN('4k3/8/8/8/3pP3/8/8/4K3 w - d3 0 1');
+    const moves = rawMoves(board, 4, 4, null, 'd3');
+    const set = moveSet(moves);
+    // d3 is row 5, pawn on row 4 — epRow for white is 3, so no match
+    expect(set.has('5,3')).toBe(false);
+  });
+
+  it('en passant removes captured pawn in legality check', () => {
+    // White pawn e5, black pawn d5 just double-pushed, EP square d6
+    // Make sure the captured pawn is removed when checking legality
+    const board = parseFEN('4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1');
+    const moves = legalMoves(board, 3, 4, null, 'd6');
+    const set = moveSet(moves);
+    expect(set.has('2,3')).toBe(true); // legal EP capture
+  });
+
+  it('en passant illegal if it exposes king to check', () => {
+    // White king on a5, white pawn on b5, black pawn on c5 (just double-pushed), black rook on h5
+    // EP capture bxc6 would remove the black pawn from c5 and expose king on a5 to rook on h5
+    const board = parseFEN('4k3/8/8/K1Pp3r/8/8/8/8 w - d6 0 1');
+    const moves = legalMoves(board, 3, 2, null, 'd6');
+    const set = moveSet(moves);
+    expect(set.has('2,3')).toBe(false); // EP would expose king
+  });
+
+  it('no en passant without EP square', () => {
+    const board = parseFEN('4k3/8/8/3pP3/8/8/8/4K3 w - - 0 1');
+    const moves = rawMoves(board, 3, 4);
+    // Only forward move, no diagonal (no EP square, no piece to capture)
+    const set = moveSet(moves);
+    expect(set.has('2,3')).toBe(false);
+  });
+});
+
+// ── Stalemate ─────────────────────────────────────────
+
+describe('isStalemate', () => {
+  it('detects classic stalemate (king trapped in corner)', () => {
+    // Black king a8, white queen b6, white king c1 — black has no legal moves
+    const board = parseFEN('k7/8/1Q6/8/8/8/8/2K5 w - - 0 1');
+    expect(isStalemate(board, 'b')).toBe(true);
+  });
+
+  it('not stalemate when in check', () => {
+    // Black king a8 in check from white queen a6
+    const board = parseFEN('k7/8/Q7/8/8/8/8/2K5 w - - 0 1');
+    expect(isInCheck(board, 'b')).toBe(true);
+    expect(isStalemate(board, 'b')).toBe(false);
+  });
+
+  it('not stalemate when moves are available', () => {
+    const board = parseFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    expect(isStalemate(board, 'w')).toBe(false);
+    expect(isStalemate(board, 'b')).toBe(false);
+  });
+
+  it('stalemate with only king vs king+pawn', () => {
+    // Black king h8, white king g6, white pawn h7 — black is stalemated
+    // Kg6 controls g7, f7. Pawn h7 blocks h8->h7. King can't go to g8 (controlled by Kg6).
+    const board = parseFEN('7k/7P/6K1/8/8/8/8/8 w - - 0 1');
+    expect(isStalemate(board, 'b')).toBe(true);
+  });
+
+  it('distinguishes checkmate from stalemate', () => {
+    // Checkmate position
+    const mateBoard = parseFEN('R5k1/5ppp/8/8/8/8/8/4K3 w - - 0 1');
+    expect(isCheckmate(mateBoard, 'b')).toBe(true);
+    expect(isStalemate(mateBoard, 'b')).toBe(false);
+
+    // Stalemate position
+    const staleBoard = parseFEN('k7/8/1Q6/8/8/8/8/2K5 w - - 0 1');
+    expect(isCheckmate(staleBoard, 'b')).toBe(false);
+    expect(isStalemate(staleBoard, 'b')).toBe(true);
   });
 });

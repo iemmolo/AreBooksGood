@@ -17,11 +17,17 @@
   </div>
   {{- $js := resources.Get "js/theme-switcher.js" | minify -}}
   <script src="{{ $js.RelPermalink }}"></script>
-  {{ if eq .Layout "chess" -}}
+  {{ if or (eq .Layout "chess") (eq .Layout "chess-play") -}}
     {{- $engine := resources.Get "js/chess-engine.js" | minify -}}
     <script src="{{ $engine.RelPermalink }}"></script>
+  {{- end }}
+  {{ if eq .Layout "chess" -}}
     {{- $chess := resources.Get "js/chess.js" | minify -}}
     <script src="{{ $chess.RelPermalink }}"></script>
+  {{- end }}
+  {{ if eq .Layout "chess-play" -}}
+    {{- $chessPlay := resources.Get "js/chess-play.js" | minify -}}
+    <script src="{{ $chessPlay.RelPermalink }}"></script>
   {{- end }}
 </body>
 </html>

@@ -30,9 +30,13 @@ theme = 'terminal-books'
     pageRef = '/tags'
     weight = 40
   [[menus.main]]
-    name = 'Puzzle'
+    name = 'Tactics'
     pageRef = '/chess'
     weight = 45
+  [[menus.main]]
+    name = 'Play'
+    pageRef = '/chess-play'
+    weight = 46
   [[menus.main]]
     name = 'About'
     pageRef = '/about'

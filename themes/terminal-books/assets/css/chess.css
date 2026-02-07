@@ -291,6 +291,23 @@
   min-width: 7ch;
 }
 
+/* Turn indicator (play page) */
+.chess-turn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.chess-turn-icon {
+  font-size: 1.4em;
+  line-height: 1;
+}
+
 /* Piece legend */
 .chess-legend {
   display: flex;

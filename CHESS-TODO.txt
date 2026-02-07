@@ -1,4 +1,4 @@
-Chess Puzzle Feature - Task Tracking
+Chess Feature - Task Tracking
 =====================================
 
 ## Done
@@ -13,6 +13,11 @@ Chess Puzzle Feature - Task Tracking
 - [x] Style for all 4 themes (pistachio, matrix, light, dark)
 - [x] Responsive layout (480px breakpoint)
 - [x] Conditional CSS/JS loading (only on chess pages)
+- [x] Add castling support (engine + play mode)
+- [x] Add en passant support (engine + play mode)
+- [x] Add stalemate detection (engine + play mode)
+- [x] Local 2-player Play page (/chess-play) with turn management, undo, new game
+- [x] Rename nav "Puzzle" → "Tactics", add "Play" nav entry
 
 ## Future / Nice-to-Have
 
@@ -20,8 +25,6 @@ Chess Puzzle Feature - Task Tracking
 - [ ] Add puzzle difficulty ratings display
 - [ ] Add puzzle navigation (next/previous) with wrap-around
 - [ ] Add keyboard navigation for accessibility
-- [ ] Add castling support
-- [ ] Add en passant support
 - [ ] Add pawn promotion UI (currently auto-queens)
 - [ ] Add animation for piece movement
 - [ ] Track puzzle solve stats in localStorage

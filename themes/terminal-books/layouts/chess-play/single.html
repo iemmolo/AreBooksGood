@@ -1,0 +1,42 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="chess-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="chess-play-app">
+    <div class="chess-layout">
+      <div class="chess-board-wrapper">
+        <div class="chess-coords chess-coords-files">
+          <span>a</span><span>b</span><span>c</span><span>d</span>
+          <span>e</span><span>f</span><span>g</span><span>h</span>
+        </div>
+        <div class="chess-coords chess-coords-ranks">
+          <span>8</span><span>7</span><span>6</span><span>5</span>
+          <span>4</span><span>3</span><span>2</span><span>1</span>
+        </div>
+        <div id="chess-board" class="chess-board"></div>
+      </div>
+
+      <div class="chess-sidebar">
+        <div id="chess-turn" class="chess-turn-indicator">
+          <span class="chess-turn-icon">&#9812;</span>
+          <span id="chess-turn-text">White's turn</span>
+        </div>
+        <div id="chess-status" class="chess-status" style="display:none;"></div>
+        <div class="chess-controls">
+          <button id="btn-new-game">New Game</button>
+          <button id="btn-undo">Undo</button>
+        </div>
+        <div class="chess-move-log">
+          <h3>Moves</h3>
+          <ol id="move-log"></ol>
+        </div>
+        <div class="chess-legend">
+          <span class="chess-legend-item"><span class="chess-legend-piece legend-white">&#9812;</span> White</span>
+          <span class="chess-legend-item"><span class="chess-legend-piece">&#9818;</span> Black</span>
+        </div>
+      </div>
+    </div>
+  </div>
+{{ end }}
