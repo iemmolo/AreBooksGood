@@ -68,7 +68,7 @@
 
         var cell = state.board[r][c];
         if (cell) {
-          var key = cell.color === 'w' ? cell.piece : cell.piece.toLowerCase();
+          var key = cell.color === 'w' ? cell.piece.toLowerCase() : cell.piece;
           sq.textContent = PIECES[key];
           sq.classList.add('has-piece');
           sq.title = (cell.color === 'w' ? 'White' : 'Black') + ' ' + PIECE_NAMES[cell.piece];
@@ -360,10 +360,10 @@
       turnTextEl.textContent = state.gameResult;
       turnIconEl.textContent = '';
     } else if (state.currentTurn === 'w') {
-      turnIconEl.textContent = '\u2654';
+      turnIconEl.textContent = '\u265A';
       turnTextEl.textContent = "White's turn";
     } else {
-      turnIconEl.textContent = '\u265A';
+      turnIconEl.textContent = '\u2654';
       turnTextEl.textContent = "Black's turn";
     }
   }

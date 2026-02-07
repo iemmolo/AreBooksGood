@@ -77,7 +77,7 @@
 
         var cell = state.board[r][c];
         if (cell) {
-          var key = cell.color === 'w' ? cell.piece : cell.piece.toLowerCase();
+          var key = cell.color === 'w' ? cell.piece.toLowerCase() : cell.piece;
           sq.textContent = PIECES[key];
           sq.classList.add('has-piece');
           var colorName = cell.color === 'w' ? 'White' : 'Black';
