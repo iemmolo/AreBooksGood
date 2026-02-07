@@ -23,6 +23,7 @@
   var counterEl = document.getElementById('puzzle-counter');
   var categorySelect = document.getElementById('category-select');
   var categoryDescEl = document.getElementById('category-description');
+  var hintBtn = document.getElementById('btn-hint');
 
   var state = {
     board: null,        // 8x8 array [row][col], null or {piece, color}
@@ -36,6 +37,18 @@
     playerColor: 'w',
     lastMove: null      // {from: {row,col}, to: {row,col}}
   };
+
+  var boardWrapper = document.querySelector('.chess-board-wrapper');
+
+  function markSolved() {
+    boardWrapper.classList.add('solved');
+    hintBtn.style.display = 'none';
+  }
+
+  function clearSolved() {
+    boardWrapper.classList.remove('solved');
+    hintBtn.style.display = '';
+  }
 
   // ── Category Helpers ──────────────────────────────────────
 
@@ -167,6 +180,7 @@
       var oppColor = state.playerColor === 'w' ? 'b' : 'w';
       if (state.solutionStep >= solution.length || ChessEngine.isCheckmate(state.board, oppColor)) {
         state.solved = true;
+        markSolved();
         setStatus('Puzzle solved! ' + (ChessEngine.isCheckmate(state.board, oppColor) ? 'Checkmate!' : ''), 'status-solved');
         render();
         return;
@@ -185,6 +199,7 @@
 
         if (state.solutionStep >= solution.length) {
           state.solved = true;
+          markSolved();
           setStatus('Puzzle solved!', 'status-solved');
         } else {
           setStatus('Your turn. Find the best move.', '');
@@ -306,6 +321,7 @@
     state.solved = false;
     state.lastMove = null;
     state.playerColor = puzzle.turn;
+    clearSolved();
 
     titleEl.textContent = puzzle.title;
     descEl.textContent = puzzle.description;

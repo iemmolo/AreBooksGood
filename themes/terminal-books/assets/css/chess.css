@@ -137,6 +137,16 @@
   }
 }
 
+/* Solved state */
+.chess-board-wrapper.solved .chess-board {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.chess-board-wrapper.solved .chess-coords {
+  color: var(--accent);
+}
+
 /* Interaction states */
 .chess-square.selected {
   background: color-mix(in srgb, var(--accent) 45%, var(--background)) !important;
