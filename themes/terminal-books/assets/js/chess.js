@@ -10,8 +10,10 @@
   var app = document.getElementById('chess-app');
   if (!app) return;
 
-  var puzzles = JSON.parse(app.getAttribute('data-puzzles'));
-  if (!puzzles || !puzzles.length) return;
+  var data = JSON.parse(app.getAttribute('data-puzzles'));
+  if (!data || !data.categories || !data.categories.length) return;
+
+  var categories = data.categories;
 
   var boardEl = document.getElementById('chess-board');
   var statusEl = document.getElementById('chess-status');
@@ -19,6 +21,8 @@
   var titleEl = document.getElementById('puzzle-title');
   var descEl = document.getElementById('puzzle-description');
   var counterEl = document.getElementById('puzzle-counter');
+  var categorySelect = document.getElementById('category-select');
+  var categoryDescEl = document.getElementById('category-description');
 
   var state = {
     board: null,        // 8x8 array [row][col], null or {piece, color}
@@ -26,11 +30,26 @@
     validMoves: [],     // [{row, col}]
     solutionStep: 0,
     moveHistory: [],
+    categoryIndex: 0,
     puzzleIndex: 0,
     solved: false,
     playerColor: 'w',
     lastMove: null      // {from: {row,col}, to: {row,col}}
   };
+
+  // ── Category Helpers ──────────────────────────────────────
+
+  function currentCategory() {
+    return categories[state.categoryIndex];
+  }
+
+  function currentPuzzles() {
+    return currentCategory().puzzles;
+  }
+
+  function currentPuzzle() {
+    return currentPuzzles()[state.puzzleIndex];
+  }
 
   // ── Board Rendering ─────────────────────────────────────
 
@@ -48,6 +67,14 @@
           var key = cell.color === 'w' ? cell.piece : cell.piece.toLowerCase();
           sq.textContent = PIECES[key];
           sq.classList.add('has-piece');
+          var colorName = cell.color === 'w' ? 'White' : 'Black';
+          var pieceName = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight', P: 'Pawn' }[cell.piece];
+          sq.title = colorName + ' ' + pieceName;
+        }
+
+        // Arrival animation on destination square of last move
+        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell) {
+          sq.classList.add('piece-arrived');
         }
 
         // Selected state
@@ -94,7 +121,6 @@
     var row = parseInt(sq.dataset.row, 10);
     var col = parseInt(sq.dataset.col, 10);
     var cell = state.board[row][col];
-    var puzzle = puzzles[state.puzzleIndex];
 
     // If a valid move square was clicked, execute the move
     if (state.selected) {
@@ -123,7 +149,7 @@
   }
 
   function executePlayerMove(fromRow, fromCol, toRow, toCol) {
-    var puzzle = puzzles[state.puzzleIndex];
+    var puzzle = currentPuzzle();
     var solution = puzzle.solution;
     var expectedMove = solution[state.solutionStep];
 
@@ -246,10 +272,32 @@
     if (cls) statusEl.classList.add(cls);
   }
 
+  // ── Category Management ───────────────────────────────
+
+  function populateCategories() {
+    categorySelect.innerHTML = '';
+    for (var i = 0; i < categories.length; i++) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = categories[i].title;
+      categorySelect.appendChild(opt);
+    }
+  }
+
+  function loadCategory(index) {
+    state.categoryIndex = index;
+    state.puzzleIndex = 0;
+    categorySelect.value = index;
+    categoryDescEl.textContent = currentCategory().description;
+    loadPuzzle(0);
+  }
+
   // ── Puzzle Loading ──────────────────────────────────────
 
   function loadPuzzle(index) {
-    var puzzle = puzzles[index];
+    state.puzzleIndex = index;
+    var puzzle = currentPuzzle();
+    var puzzles = currentPuzzles();
     state.board = ChessEngine.parseFEN(puzzle.fen);
     state.selected = null;
     state.validMoves = [];
@@ -272,7 +320,7 @@
 
   function showHint() {
     if (state.solved) return;
-    var puzzle = puzzles[state.puzzleIndex];
+    var puzzle = currentPuzzle();
     var nextMove = puzzle.solution[state.solutionStep];
     if (!nextMove) return;
 
@@ -301,13 +349,18 @@
   });
 
   document.getElementById('next-puzzle').addEventListener('click', function () {
-    if (state.puzzleIndex < puzzles.length - 1) {
+    if (state.puzzleIndex < currentPuzzles().length - 1) {
       state.puzzleIndex++;
       loadPuzzle(state.puzzleIndex);
     }
   });
 
+  categorySelect.addEventListener('change', function () {
+    loadCategory(parseInt(categorySelect.value, 10));
+  });
+
   // ── Init ────────────────────────────────────────────────
 
-  loadPuzzle(0);
+  populateCategories();
+  loadCategory(0);
 })();

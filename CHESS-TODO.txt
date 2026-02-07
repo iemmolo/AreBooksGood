@@ -16,7 +16,7 @@ Chess Puzzle Feature - Task Tracking
 
 ## Future / Nice-to-Have
 
-- [ ] Add more puzzles (mate-in-2, mate-in-3, tactical themes)
+- [x] Add more puzzles (mate-in-2, mate-in-3, tactical themes) — expanded to 15 puzzles across 5 themed categories sourced from Lichess puzzle DB
 - [ ] Add puzzle difficulty ratings display
 - [ ] Add puzzle navigation (next/previous) with wrap-around
 - [ ] Add keyboard navigation for accessibility
@@ -25,3 +25,35 @@ Chess Puzzle Feature - Task Tracking
 - [ ] Add pawn promotion UI (currently auto-queens)
 - [ ] Add animation for piece movement
 - [ ] Track puzzle solve stats in localStorage
+
+## Process Log: Categorized Puzzles (Feb 2026)
+
+How we built the tactics tutorial with Claude Code:
+
+1. **Planning phase** — Designed data structure (flat array → categories object),
+   identified 5 tactical themes (back rank mates, forks, pins/skewers, discovered
+   attacks, mating patterns), and mapped out all files to change.
+
+2. **First attempt: hand-crafted puzzles** — Claude initially tried to create 15
+   puzzles from scratch by constructing FEN positions and solutions manually.
+   Several had incorrect positions (wrong squares attacked, impossible mates,
+   pieces on wrong diagonals). Caught during careful verification of each puzzle.
+
+3. **Pivot to Lichess database** — User suggested using the Lichess open puzzle
+   database (database.lichess.org). Streamed the 5.7M puzzle CSV via curl+zstd,
+   filtered by theme tags (backRankMate, fork, pin, skewer, discoveredAttack,
+   smotheredMate, arabianMate), rating (<1400), and popularity (>80%).
+
+4. **Conversion pipeline** — Wrote a Python script to convert Lichess format to
+   ours: applied the setup move to get the puzzle-start FEN, converted UCI moves
+   (e.g. "e2e4") to algebraic notation, and structured into our JSON schema.
+
+5. **Implementation** — Updated 5 files:
+   - `data/chesspuzzles.json` — 15 verified puzzles in 5 categories
+   - `layouts/chess/single.html` — added category `<select>` and description
+   - `assets/js/chess.js` — category state, helpers, dropdown listener
+   - `assets/css/chess.css` — category bar styling with CSS vars
+   - `content/chess/index.md` — updated title and intro text
+
+6. **Verification** — Hugo build passes, JSON validates, all puzzles sourced
+   from real games played on Lichess.

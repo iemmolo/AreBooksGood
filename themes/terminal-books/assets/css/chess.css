@@ -6,6 +6,43 @@
   margin-bottom: 20px;
 }
 
+/* Category bar */
+.chess-category-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.chess-category-bar label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chess-category-bar select {
+  flex: 1;
+  max-width: 320px;
+  padding: 4px 8px;
+  font-size: 0.95em;
+  font-family: inherit;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  cursor: pointer;
+}
+
+.chess-category-bar select:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent);
+}
+
+.chess-category-desc {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  font-size: 0.9em;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
 /* Puzzle header */
 .chess-puzzle-header {
   display: flex;
@@ -83,6 +120,21 @@
 
 .chess-square.dark {
   background: color-mix(in srgb, var(--foreground) 18%, var(--background));
+}
+
+/* Move arrival animation */
+.chess-square.piece-arrived {
+  animation: piece-arrive 0.4s ease-out;
+}
+
+@keyframes piece-arrive {
+  0% {
+    background: color-mix(in srgb, var(--accent) 50%, var(--background));
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Interaction states */
@@ -229,6 +281,29 @@
   min-width: 7ch;
 }
 
+/* Piece legend */
+.chess-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.chess-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chess-legend-piece {
+  font-size: 1.3em;
+  line-height: 1;
+  vertical-align: middle;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .chess-layout {
@@ -250,5 +325,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+
+  .chess-category-bar select {
+    max-width: 100%;
   }
 }

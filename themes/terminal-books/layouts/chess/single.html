@@ -6,6 +6,12 @@
 
   {{ $puzzles := site.Data.chesspuzzles }}
   <div id="chess-app" data-puzzles='{{ $puzzles | jsonify }}'>
+    <div class="chess-category-bar">
+      <label for="category-select">Section:</label>
+      <select id="category-select"></select>
+    </div>
+    <div id="category-description" class="chess-category-desc"></div>
+
     <div class="chess-puzzle-header">
       <div class="chess-puzzle-info">
         <span id="puzzle-title" class="chess-puzzle-title"></span>
@@ -40,6 +46,10 @@
         <div class="chess-move-log">
           <h3>Moves</h3>
           <ol id="move-log"></ol>
+        </div>
+        <div class="chess-legend">
+          <span class="chess-legend-item"><span class="chess-legend-piece legend-white">&#9812;</span> White</span>
+          <span class="chess-legend-item"><span class="chess-legend-piece">&#9818;</span> Black</span>
         </div>
       </div>
     </div>

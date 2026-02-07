@@ -1,24 +1,228 @@
-[
-  {
-    "id": "puzzle-001",
-    "title": "Back Rank Mate",
-    "description": "White to move. Mate in 1.",
-    "difficulty": "beginner",
-    "fen": "6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1",
-    "turn": "w",
-    "solution": [
-      { "from": "a1", "to": "a8", "notation": "Ra8#" }
-    ]
-  },
-  {
-    "id": "puzzle-002",
-    "title": "Queen Checkmate",
-    "description": "White to move. Mate in 1.",
-    "difficulty": "beginner",
-    "fen": "6k1/7p/5K2/8/8/8/8/Q7 w - - 0 1",
-    "turn": "w",
-    "solution": [
-      { "from": "a1", "to": "a8", "notation": "Qa8#" }
-    ]
-  }
-]
+{
+  "categories": [
+    {
+      "id": "back-rank-mates",
+      "title": "Back Rank & Basic Mates",
+      "description": "When a king is trapped behind its own pawns, a rook or queen can deliver a devastating checkmate on the back rank. Learn to spot these patterns.",
+      "puzzles": [
+        {
+          "id": "br-001",
+          "title": "Rook to the Back Rank",
+          "description": "White to move. Mate in 1.",
+          "difficulty": "beginner",
+          "fen": "5r1k/pp4pp/2p5/6q1/5R2/2P5/P1P2PPP/3rR1K1 w - - 0 27",
+          "turn": "w",
+          "solution": [
+            { "from": "f4", "to": "f8", "notation": "Rxf8" }
+          ]
+        },
+        {
+          "id": "br-002",
+          "title": "Queen Sacrifice, Back Rank Mate",
+          "description": "White to move. Mate in 2. Sacrifice the queen.",
+          "difficulty": "intermediate",
+          "fen": "3r2k1/4nppp/pq3b2/1p2p3/2r2P2/2P1NR2/PP1Q2BP/3R2K1 w - - 0 24",
+          "turn": "w",
+          "solution": [
+            { "from": "d2", "to": "d8", "notation": "Qxd8" },
+            { "from": "b6", "to": "d8", "notation": "Qxd8" },
+            { "from": "d1", "to": "d8", "notation": "Rxd8" }
+          ]
+        },
+        {
+          "id": "br-003",
+          "title": "Exchange and Mate",
+          "description": "White to move. Mate in 2. Force your way to the back rank.",
+          "difficulty": "intermediate",
+          "fen": "6k1/5ppp/r1p5/p1n1rP2/8/2P2N1P/2P3P1/3R2K1 w - - 0 21",
+          "turn": "w",
+          "solution": [
+            { "from": "d1", "to": "d8", "notation": "Rd8" },
+            { "from": "e5", "to": "e8", "notation": "Re8" },
+            { "from": "d8", "to": "e8", "notation": "Rxe8" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forks",
+      "title": "Forks",
+      "description": "A fork attacks two or more pieces at once, forcing your opponent to lose material. Knights are especially deadly forkers.",
+      "puzzles": [
+        {
+          "id": "fk-001",
+          "title": "Queen Fork",
+          "description": "White to move. Fork with the queen to win a piece.",
+          "difficulty": "beginner",
+          "fen": "r3kb1r/p4ppp/b3p3/2pq4/3Q4/4BN2/PPP2PPP/R3K2R w KQkq - 0 11",
+          "turn": "w",
+          "solution": [
+            { "from": "d4", "to": "a4", "notation": "Qa4" },
+            { "from": "a6", "to": "b5", "notation": "Bb5" },
+            { "from": "a4", "to": "b5", "notation": "Qxb5" }
+          ]
+        },
+        {
+          "id": "fk-002",
+          "title": "Knight Fork",
+          "description": "White to move. Fork the king and queen with the knight.",
+          "difficulty": "beginner",
+          "fen": "3q2k1/3r4/pp3p1Q/2b1n3/P3N3/2P5/1P4PP/R6K w - - 0 24",
+          "turn": "w",
+          "solution": [
+            { "from": "e4", "to": "f6", "notation": "Nxf6" },
+            { "from": "d8", "to": "f6", "notation": "Qxf6" },
+            { "from": "h6", "to": "f6", "notation": "Qxf6" }
+          ]
+        },
+        {
+          "id": "fk-003",
+          "title": "Fork and Mate",
+          "description": "White to move. Fork to force checkmate.",
+          "difficulty": "intermediate",
+          "fen": "3rk2r/2qn2p1/p1Q1p3/3n3p/8/8/PP4PP/5R1K w k - 0 23",
+          "turn": "w",
+          "solution": [
+            { "from": "c6", "to": "e6", "notation": "Qxe6" },
+            { "from": "d5", "to": "e7", "notation": "Ne7" },
+            { "from": "e6", "to": "f7", "notation": "Qf7" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pins-skewers",
+      "title": "Pins & Skewers",
+      "description": "A pin immobilizes a piece that shields a more valuable piece behind it. A skewer attacks a valuable piece that must move, exposing a piece behind it.",
+      "puzzles": [
+        {
+          "id": "ps-001",
+          "title": "Rook Skewer",
+          "description": "White to move. Skewer the king and queen with the rook.",
+          "difficulty": "beginner",
+          "fen": "8/4R3/p4kpp/3B4/5q2/8/5P1P/6K1 w - - 0 40",
+          "turn": "w",
+          "solution": [
+            { "from": "e7", "to": "f7", "notation": "Rf7" },
+            { "from": "f6", "to": "e5", "notation": "Ke5" },
+            { "from": "f7", "to": "f4", "notation": "Rxf4" }
+          ]
+        },
+        {
+          "id": "ps-002",
+          "title": "Queen Skewer",
+          "description": "White to move. Skewer the king and queen.",
+          "difficulty": "beginner",
+          "fen": "5Q2/8/1bk1p1p1/5p2/3p4/5qPK/7P/8 w - - 0 51",
+          "turn": "w",
+          "solution": [
+            { "from": "f8", "to": "a8", "notation": "Qa8" },
+            { "from": "c6", "to": "d6", "notation": "Kd6" },
+            { "from": "a8", "to": "f3", "notation": "Qxf3" }
+          ]
+        },
+        {
+          "id": "ps-003",
+          "title": "Knight Pin and Win",
+          "description": "White to move. Use a pin to win material.",
+          "difficulty": "intermediate",
+          "fen": "1r3k1r/pNqnppb1/6pn/2p3Np/7P/2P2Q2/PP3PP1/R1B1K2R w KQ - 0 15",
+          "turn": "w",
+          "solution": [
+            { "from": "g5", "to": "e6", "notation": "Ne6" },
+            { "from": "f8", "to": "g8", "notation": "Kg8" },
+            { "from": "e6", "to": "c7", "notation": "Nxc7" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discovered-attacks",
+      "title": "Discovered Attacks",
+      "description": "Move one piece out of the way to unleash a hidden attack from the piece behind it. A discovered check is especially powerful.",
+      "puzzles": [
+        {
+          "id": "da-001",
+          "title": "Knight Discovers Rook",
+          "description": "White to move. Move the knight to discover a rook attack.",
+          "difficulty": "beginner",
+          "fen": "6k1/6p1/pp2np1p/8/2r1NR1P/6P1/1PP5/1K6 w - - 0 32",
+          "turn": "w",
+          "solution": [
+            { "from": "e4", "to": "f6", "notation": "Nxf6" },
+            { "from": "g7", "to": "f6", "notation": "gxf6" },
+            { "from": "f4", "to": "c4", "notation": "Rxc4" }
+          ]
+        },
+        {
+          "id": "da-002",
+          "title": "Discovered Check",
+          "description": "White to move. Use a discovered check to win material.",
+          "difficulty": "intermediate",
+          "fen": "rnbqk2r/pp3ppp/5n2/4N3/2p5/2P5/P1PPQPPP/R1B1K2R w KQkq - 0 8",
+          "turn": "w",
+          "solution": [
+            { "from": "e5", "to": "c6", "notation": "Nc6" },
+            { "from": "c8", "to": "e6", "notation": "Be6" },
+            { "from": "c6", "to": "d8", "notation": "Nxd8" }
+          ]
+        },
+        {
+          "id": "da-003",
+          "title": "Bishop Opens the Diagonal",
+          "description": "White to move. Discover an attack to win the queen.",
+          "difficulty": "intermediate",
+          "fen": "r1b2rk1/4bppp/p1n5/3q4/Pp6/3B1N2/1B3PPP/R2Q1RK1 w - - 0 17",
+          "turn": "w",
+          "solution": [
+            { "from": "d3", "to": "h7", "notation": "Bxh7" },
+            { "from": "g8", "to": "h7", "notation": "Kxh7" },
+            { "from": "d1", "to": "d5", "notation": "Qxd5" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mating-patterns",
+      "title": "Mating Patterns",
+      "description": "Classic checkmate patterns every player should know: smothered mates, Arabian mates, and support mates. Recognise the pattern, deliver the blow.",
+      "puzzles": [
+        {
+          "id": "mp-001",
+          "title": "Smothered Mate",
+          "description": "White to move. Deliver a smothered mate.",
+          "difficulty": "beginner",
+          "fen": "2r3rk/6pp/p6N/1p1p4/2pq4/P6P/1P3PP1/4R1K1 w - - 0 36",
+          "turn": "w",
+          "solution": [
+            { "from": "h6", "to": "f7", "notation": "Nf7" }
+          ]
+        },
+        {
+          "id": "mp-002",
+          "title": "Arabian Mate",
+          "description": "White to move. Deliver an Arabian mate with rook and knight.",
+          "difficulty": "beginner",
+          "fen": "r6k/pR5p/2p2N2/4n3/3p4/7P/3q2P1/4R2K w - - 0 32",
+          "turn": "w",
+          "solution": [
+            { "from": "b7", "to": "h7", "notation": "Rxh7" }
+          ]
+        },
+        {
+          "id": "mp-003",
+          "title": "Set Up the Arabian Mate",
+          "description": "White to move. Mate in 2. Force the king to the corner.",
+          "difficulty": "intermediate",
+          "fen": "5bk1/2R4p/6p1/8/4NP1P/3bP1K1/r7/8 w - - 0 45",
+          "turn": "w",
+          "solution": [
+            { "from": "e4", "to": "f6", "notation": "Nf6" },
+            { "from": "g8", "to": "h8", "notation": "Kh8" },
+            { "from": "c7", "to": "h7", "notation": "Rxh7" }
+          ]
+        }
+      ]
+    }
+  ]
+}
