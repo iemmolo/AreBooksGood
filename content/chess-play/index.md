@@ -3,4 +3,4 @@ title: "Play Chess"
 layout: "chess-play"
 ---
 
-Local 2-player chess. Click a piece to select it, then click a destination square to move.
+Zero frameworks, zero libraries — just plain JavaScript. The entire engine (move validation, castling, en passant, check, checkmate, stalemate) was built from scratch. Click a piece to select it, then click a destination square to move.
