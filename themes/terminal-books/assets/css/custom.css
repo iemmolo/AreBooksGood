@@ -34,10 +34,11 @@ main {
   margin-bottom: 10px;
 }
 
-.site-title {
+a.site-title {
   font-weight: 600;
   font-size: var(--font-size);
   color: var(--foreground);
+  text-decoration: none;
 }
 
 .site-nav {
