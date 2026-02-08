@@ -1,0 +1,322 @@
+/* ============================================
+   Casino Wars
+   ============================================ */
+
+.cw-intro {
+  margin-bottom: 20px;
+}
+
+/* ── Bankroll bar ─────────────────────────── */
+.cw-bankroll-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.cw-bet-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cw-bet-amount {
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Buttons ──────────────────────────────── */
+.cw-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cw-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.cw-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cw-btn-small {
+  padding: 3px 10px;
+  font-size: 0.85em;
+}
+
+.cw-btn-danger {
+  color: #ff4444;
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.cw-btn-danger:hover:not(:disabled) {
+  border-color: #ff4444;
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+}
+
+/* ── Table surface ────────────────────────── */
+.cw-table {
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 0 0 120px 120px;
+  padding: 24px 28px 32px;
+  box-shadow:
+    inset 0 2px 12px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 4px 20px color-mix(in srgb, #000 15%, transparent);
+}
+
+/* ── Zone labels ──────────────────────────── */
+.cw-zone-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in srgb, var(--accent) 40%, transparent);
+  margin-bottom: 4px;
+}
+
+/* ── Card slot (single card, centered) ────── */
+.cw-card-slot {
+  display: flex;
+  justify-content: center;
+  min-height: 126px;
+  padding: 4px 0;
+}
+
+/* ── Card ─────────────────────────────────── */
+.cw-card {
+  width: 90px;
+  height: 126px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 6px;
+  background: var(--background);
+  font-size: 1.4em;
+  line-height: 1.2;
+  box-shadow: 1px 2px 6px color-mix(in srgb, #000 12%, transparent);
+  animation: cw-deal 0.3s ease-out;
+}
+
+.cw-card-rank {
+  font-weight: 700;
+  font-size: 1.3em;
+}
+
+.cw-card-suit {
+  font-size: 1.6em;
+  line-height: 1;
+}
+
+.cw-card-red {
+  color: #ff6b6b;
+}
+
+.cw-card-black {
+  color: var(--foreground);
+}
+
+.cw-card-facedown {
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: color-mix(in srgb, var(--accent) 35%, transparent);
+  font-size: 2.4em;
+  font-weight: 700;
+  box-shadow:
+    1px 2px 6px color-mix(in srgb, #000 12%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+/* War cards appear next to the original */
+.cw-card-slot.cw-war {
+  gap: 10px;
+}
+
+@keyframes cw-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Table divider ────────────────────────── */
+.cw-table-divider {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.cw-table-arc {
+  width: 60%;
+  height: 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 0 0 50% 50%;
+  padding-bottom: 16px;
+}
+
+/* ── Status ───────────────────────────────── */
+.cw-status {
+  text-align: center;
+  font-size: 1.15em;
+  font-weight: 700;
+  min-height: 1.6em;
+  margin: 4px 0;
+}
+
+.cw-status-win {
+  color: var(--accent);
+}
+
+.cw-status-lose {
+  color: #ff4444;
+}
+
+.cw-status-tie {
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.cw-status .cw-btn {
+  margin-left: 4px;
+}
+
+/* ── Controls ─────────────────────────────── */
+.cw-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Stats ─────────────────────────────────── */
+.cw-stats {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+}
+
+.cw-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+}
+
+.cw-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92em;
+}
+
+.cw-stat-label {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.cw-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Responsive ───────────────────────────── */
+@media (max-width: 480px) {
+  .cw-intro {
+    margin-bottom: 12px;
+  }
+
+  .cw-bankroll-bar {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 0.95em;
+  }
+
+  .cw-table {
+    padding: 14px 10px 20px;
+    border-radius: 0 0 60px 60px;
+  }
+
+  .cw-zone-label {
+    font-size: 0.6em;
+    margin-bottom: 2px;
+  }
+
+  .cw-card-slot {
+    min-height: 90px;
+  }
+
+  .cw-card {
+    width: 58px;
+    height: 82px;
+    font-size: 1.05em;
+    border-radius: 4px;
+  }
+
+  .cw-card-rank {
+    font-size: 1.2em;
+  }
+
+  .cw-card-suit {
+    font-size: 1.3em;
+  }
+
+  .cw-card-facedown {
+    font-size: 1.8em;
+  }
+
+  .cw-table-divider {
+    margin: 6px 0;
+  }
+
+  .cw-table-arc {
+    padding-bottom: 10px;
+  }
+
+  .cw-status {
+    font-size: 1em;
+    margin: 2px 0;
+  }
+
+  .cw-controls {
+    margin-top: 10px;
+    padding-top: 4px;
+    gap: 6px;
+  }
+
+  .cw-btn {
+    padding: 5px 12px;
+    font-size: 0.88em;
+  }
+
+  .cw-stats {
+    margin-top: 16px;
+    padding: 10px;
+  }
+}

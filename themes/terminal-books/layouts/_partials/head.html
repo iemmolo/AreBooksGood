@@ -30,6 +30,12 @@
   <link rel="stylesheet" href="{{ $blackjack.RelPermalink }}">
 {{- end }}
 
+{{/* Casino Wars CSS */}}
+{{ if eq .Type "casino-wars" -}}
+  {{- $cw := resources.Get "css/casino-wars.css" | minify -}}
+  <link rel="stylesheet" href="{{ $cw.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">

@@ -1,0 +1,60 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="cw-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="casino-wars-app">
+    <!-- Bankroll bar -->
+    <div class="cw-bankroll-bar">
+      <span class="cw-balance">Balance: $<span id="cw-balance">1000</span></span>
+      <div class="cw-bet-controls">
+        <span class="cw-bet-label">Bet:</span>
+        <button id="cw-bet-down" class="cw-btn cw-btn-small" title="Decrease bet">-</button>
+        <span id="cw-bet-amount" class="cw-bet-amount">$25</span>
+        <button id="cw-bet-up" class="cw-btn cw-btn-small" title="Increase bet">+</button>
+      </div>
+    </div>
+
+    <!-- Table surface -->
+    <div class="cw-table">
+      <!-- Dealer zone -->
+      <div class="cw-dealer-zone">
+        <div class="cw-zone-label">DEALER</div>
+        <div id="cw-dealer-card" class="cw-card-slot"></div>
+      </div>
+
+      <!-- Divider -->
+      <div class="cw-table-divider">
+        <div class="cw-table-arc"></div>
+      </div>
+
+      <!-- Status -->
+      <div id="cw-status" class="cw-status"></div>
+
+      <!-- Player zone -->
+      <div class="cw-player-zone">
+        <div class="cw-zone-label">PLAYER</div>
+        <div id="cw-player-card" class="cw-card-slot"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="cw-controls">
+        <button id="cw-deal" class="cw-btn">Deal</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="cw-stats">
+      <h3 class="cw-stats-title">Stats</h3>
+      <div class="cw-stats-grid">
+        <span class="cw-stat-label">Hands</span><span id="cw-stat-hands" class="cw-stat-value">0</span>
+        <span class="cw-stat-label">Wins</span><span id="cw-stat-wins" class="cw-stat-value">0</span>
+        <span class="cw-stat-label">Losses</span><span id="cw-stat-losses" class="cw-stat-value">0</span>
+        <span class="cw-stat-label">Wars</span><span id="cw-stat-wars" class="cw-stat-value">0</span>
+        <span class="cw-stat-label">Peak</span><span id="cw-stat-peak" class="cw-stat-value">$1000</span>
+      </div>
+      <button id="cw-reset-stats" class="cw-btn cw-btn-small cw-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}
