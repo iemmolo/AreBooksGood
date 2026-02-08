@@ -49,30 +49,32 @@ Future lessons (not yet built):
   9. Mating patterns                — smothered mate, Arabian mate, support mate
   10. Putting it together           — combining tactics in real positions
 
-## Phase 4: Openings — Drillable Sequences
+## Phase 4: Openings — Drillable Sequences [IN PROGRESS — first opening done]
 
 Interactive opening trainer. Player drills move sequences
 until they become muscle memory.
 
-Starting repertoire:
+Infrastructure (all done):
+- [x] Data format: flat JSON move array with annotations (data/chessopenings.json)
+- [x] Board UI: player makes the "right" move, opponent auto-responds
+- [x] Wrong move feedback: shake animation, error counted, player retries
+- [x] Drill mode: track accuracy per attempt, save best to localStorage
+- [x] Layout: chess board + move list + opening name/description (chess-openings/single.html)
+- [x] Stats: track drill accuracy and attempts in localStorage
+- [x] "You play as Black/White" indicator
+
+Shipped openings:
+  1. [x] Caro-Kann (black) — 1.e4 c6 2.d4 d5 main line, 10 moves per side
+
+Future openings (not yet built):
 - [ ] Ruy Lopez (white) — 1.e4 e5 2.Nf3 Nc6 3.Bb5 (main line + common responses)
-- [ ] Caro-Kann (black) — 1.e4 c6 2.d4 d5 (main line + exchange/advance variations)
+- [ ] Italian Game (white) — 1.e4 e5 2.Nf3 Nc6 3.Bc4
+- [ ] Sicilian Defence (black) — 1.e4 c5
+- [ ] Queen's Gambit (white) — 1.d4 d5 2.c4
 
-Each opening needs:
-- [ ] Data format: JSON tree of moves with annotations
-      { "move": "e4", "notation": "1. e4", "comment": "King's pawn opening",
-        "responses": [ { "move": "e5", ... }, { "move": "c5", ... } ] }
-- [ ] Board UI: player makes the "right" move, opponent auto-responds
-- [ ] Wrong move feedback: highlight correct square, let player retry
+Future enhancements:
 - [ ] Variation branches: after main line, drill common deviations
-- [ ] Drill mode: repeat the sequence N times, track accuracy
-- [ ] Layout: chess board + move list + opening name/variation label
-- [ ] Stats: track drill accuracy and repetitions in localStorage
-
-Design notes:
-- Start simple — main line only, then add branches
-- Keep the tree shallow (8-12 moves deep for each side)
-- Show "you're drilling as white/black" clearly
+- [ ] Hint button: highlight the correct source/target square
 
 ## Phase 5: Polish & Future
 

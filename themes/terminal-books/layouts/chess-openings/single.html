@@ -1,0 +1,55 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="chess-intro">
+    {{ .Content }}
+  </div>
+
+  {{ $openings := site.Data.chessopenings }}
+  <div id="chess-openings-app" data-openings='{{ $openings | jsonify }}'>
+    {{/* Opening Index View */}}
+    <div id="openings-index" class="chess-openings-index">
+      <ul id="opening-list" class="chess-opening-list"></ul>
+    </div>
+
+    {{/* Drill View */}}
+    <div id="openings-drill" class="chess-openings-drill" style="display:none;">
+      <button id="btn-back-openings" class="chess-learn-back">&lt; All Openings</button>
+
+      <h2 id="opening-title" class="chess-lesson-title"></h2>
+      <p id="opening-desc" class="chess-opening-desc"></p>
+
+      <div class="chess-layout">
+        <div class="chess-board-wrapper">
+          <div class="chess-coords chess-coords-files">
+            <span>a</span><span>b</span><span>c</span><span>d</span>
+            <span>e</span><span>f</span><span>g</span><span>h</span>
+          </div>
+          <div class="chess-coords chess-coords-ranks">
+            <span>8</span><span>7</span><span>6</span><span>5</span>
+            <span>4</span><span>3</span><span>2</span><span>1</span>
+          </div>
+          <div id="chess-board" class="chess-board"></div>
+        </div>
+
+        <div class="chess-sidebar">
+          <div id="drill-color" class="chess-drill-info"></div>
+          <div id="drill-status" class="chess-status"></div>
+          <div class="chess-controls">
+            <button id="btn-reset-drill">Reset</button>
+            <button id="btn-back-move">Back</button>
+          </div>
+          <div id="drill-moves" class="chess-drill-moves">
+            <h3>Moves</h3>
+            <ol id="drill-move-list"></ol>
+          </div>
+        </div>
+      </div>
+
+      <div id="drill-complete" class="chess-drill-complete" style="display:none;">
+        <p id="drill-complete-msg"></p>
+        <p id="drill-accuracy"></p>
+        <button id="btn-drill-again">Drill Again</button>
+      </div>
+    </div>
+  </div>
+{{ end }}

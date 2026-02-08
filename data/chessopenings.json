@@ -1,0 +1,33 @@
+{
+  "openings": [
+    {
+      "id": "caro-kann",
+      "title": "Caro-Kann Defence",
+      "description": "A solid reply to 1.e4. Black fights for the centre with pawns on c6 and d5, keeping a sound pawn structure and developing the light-squared bishop outside the pawn chain.",
+      "playerColor": "b",
+      "startFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        { "from": "e2", "to": "e4", "notation": "1. e4", "comment": "White opens with the King's pawn, controlling the centre." },
+        { "from": "c7", "to": "c6", "notation": "1... c6", "comment": "The Caro-Kann! Preparing to challenge the centre with ...d5 next move." },
+        { "from": "d2", "to": "d4", "notation": "2. d4", "comment": "White claims more central space with both pawns." },
+        { "from": "d7", "to": "d5", "notation": "2... d5", "comment": "Black strikes at e4 immediately. The point of 1...c6 \u2014 the d5-pawn is supported." },
+        { "from": "b1", "to": "c3", "notation": "3. Nc3", "comment": "White defends the e4-pawn with the knight \u2014 the Classical Variation." },
+        { "from": "d5", "to": "e4", "notation": "3... dxe4", "comment": "Black captures, opening the diagonal for the light-squared bishop." },
+        { "from": "c3", "to": "e4", "notation": "4. Nxe4", "comment": "White recaptures with the knight, centralising it powerfully." },
+        { "from": "c8", "to": "f5", "notation": "4... Bf5", "comment": "The signature move! Developing the bishop outside the pawn chain before playing ...e6." },
+        { "from": "e4", "to": "g3", "notation": "5. Ng3", "comment": "White attacks the bishop, forcing it to decide where to go." },
+        { "from": "f5", "to": "g6", "notation": "5... Bg6", "comment": "The bishop retreats to a safe diagonal, still active outside the pawn chain." },
+        { "from": "h2", "to": "h4", "notation": "6. h4", "comment": "An aggressive pawn thrust, threatening h5 to trap or trade the bishop." },
+        { "from": "h7", "to": "h6", "notation": "6... h6", "comment": "Preventing h5 for now, giving the bishop a retreat square on h7." },
+        { "from": "g1", "to": "f3", "notation": "7. Nf3", "comment": "White develops the knight to its natural square, preparing to castle." },
+        { "from": "b8", "to": "d7", "notation": "7... Nd7", "comment": "Developing the knight to d7 rather than c6, keeping the c-file open and supporting ...e6." },
+        { "from": "h4", "to": "h5", "notation": "8. h5", "comment": "White pushes the h-pawn, displacing the bishop from the g6 diagonal." },
+        { "from": "g6", "to": "h7", "notation": "8... Bh7", "comment": "The bishop retreats to h7. It looks passive but remains useful after ...Bd3 trades." },
+        { "from": "f1", "to": "d3", "notation": "9. Bd3", "comment": "White develops the bishop and offers a trade of light-squared bishops." },
+        { "from": "h7", "to": "d3", "notation": "9... Bxd3", "comment": "Black trades bishops. This is fine \u2014 White's light-squared bishop was more active." },
+        { "from": "d1", "to": "d3", "notation": "10. Qxd3", "comment": "White recaptures with the queen, centralising it." },
+        { "from": "e7", "to": "e6", "notation": "10... e6", "comment": "Black solidifies the centre and opens the dark-squared bishop's diagonal. A model Caro-Kann position." }
+      ]
+    }
+  ]
+}

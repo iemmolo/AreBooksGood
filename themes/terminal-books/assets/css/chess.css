@@ -545,3 +545,116 @@
     flex-wrap: wrap;
   }
 }
+
+/* ============================================
+   Chess Openings
+   ============================================ */
+
+.chess-opening-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chess-opening-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.chess-opening-item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.chess-opening-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chess-opening-item-title {
+  font-weight: 600;
+}
+
+.chess-opening-item-desc {
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.chess-opening-stats {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  white-space: nowrap;
+}
+
+.chess-opening-desc {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  font-size: 0.9em;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+/* Drill info indicator */
+.chess-drill-info {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+/* Drill move list */
+.chess-drill-moves h3 {
+  margin: 0 0 8px;
+  font-size: 0.95em;
+}
+
+.chess-drill-moves ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.chess-drill-moves li {
+  padding: 2px 0;
+}
+
+.drill-current-move {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.drill-future-move {
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+/* Drill complete panel */
+.chess-drill-complete {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  text-align: center;
+}
+
+.chess-drill-complete p {
+  margin: 0 0 10px;
+}
+
+.chess-drill-complete p:first-child {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.chess-drill-complete button {
+  padding: 6px 18px;
+  font-size: 0.95em;
+}
