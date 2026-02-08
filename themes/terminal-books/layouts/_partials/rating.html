@@ -1,4 +1,6 @@
 {{- $rating := .Params.rating | default 0 -}}
+<span role="img" aria-label="Rating: {{ $rating }} out of 5">
 {{- range seq 5 -}}
   {{- if le . $rating -}}&#9733;{{- else -}}&#9734;{{- end -}}
 {{- end -}}
+</span>

@@ -6,13 +6,13 @@ AreBooksGood - Improvement TODO
 - [ ] Complete "The First Fifteen Lives of Harry August" review (ends mid-sentence)
 - [ ] Add missing front matter to that review: summary, narrator
 - [ ] Clean stale build artifacts (public/reviews/sapiens/, public/reviews/the-road/)
-- [ ] Add ARIA labels to rating partial for screen reader accessibility
+- [x] Add ARIA labels to rating partial for screen reader accessibility
 
 ## High Priority
 
 - [x] Add a custom 404 page template
-- [ ] Remove commented-out code in home.html (line 4)
-- [ ] Add skip-to-main-content link for accessibility
+- [x] Remove commented-out code in home.html (line 4)
+- [x] Add skip-to-main-content link for accessibility
 
 ## Medium Priority
 
