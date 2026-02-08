@@ -15,6 +15,7 @@
   var NUM_DECKS = 6;
   var STORAGE_KEY = 'casino-wars-stats';
   var BET_STEPS = [5, 10, 25, 50, 100, 250, 500];
+  var DEAL_DELAY = 350;  // ms between each card reveal
 
   // ── DOM refs ───────────────────────────────────────────
   var app = document.getElementById('casino-wars-app');
@@ -90,53 +91,94 @@
   }
 
   // ── Game flow ──────────────────────────────────────────
+  var dealing = false;
+
   function deal() {
+    if (dealing) return;
     var bet = stats.lastBet;
     if (bet > stats.bankroll) bet = stats.bankroll;
     if (bet <= 0) return;
 
+    dealing = true;
     stats.lastBet = bet;
     state.bet = bet;
     stats.bankroll -= bet;
 
     state.dealerCards = [drawCard()];
     state.playerCards = [drawCard()];
+    state.phase = 'dealing';
 
+    // Step 1: show face-down cards
+    renderBankroll();
+    renderControls();
+    renderStats();
+    dom.status.className = 'cw-status';
+    dom.status.textContent = '';
+    dom.dealerCard.innerHTML = '';
+    dom.playerCard.innerHTML = '';
+    dom.dealerCard.className = 'cw-card-slot';
+    dom.playerCard.className = 'cw-card-slot';
+    dom.dealerCard.appendChild(renderFaceDown());
+    dom.playerCard.appendChild(renderFaceDown());
+
+    // Step 2: reveal player card
+    setTimeout(function () {
+      dom.playerCard.innerHTML = '';
+      dom.playerCard.appendChild(renderCard(state.playerCards[0]));
+
+      // Step 3: reveal dealer card
+      setTimeout(function () {
+        dom.dealerCard.innerHTML = '';
+        dom.dealerCard.appendChild(renderCard(state.dealerCards[0]));
+
+        // Step 4: resolve
+        setTimeout(function () {
+          dealing = false;
+          resolveDeal();
+        }, DEAL_DELAY);
+      }, DEAL_DELAY);
+    }, DEAL_DELAY);
+  }
+
+  function resolveDeal() {
     var dRank = RANK_ORDER[state.dealerCards[0].rank];
     var pRank = RANK_ORDER[state.playerCards[0].rank];
 
     if (pRank > dRank) {
-      // Player wins
       stats.bankroll += state.bet * 2;
       stats.wins++;
       stats.hands++;
       state.phase = 'settled';
       updatePeak();
-      render();
+      renderBankroll();
+      renderControls();
+      renderStats();
       renderResult('win', 'You win!');
       saveStats();
     } else if (pRank < dRank) {
-      // Dealer wins
       stats.losses++;
       stats.hands++;
       state.phase = 'settled';
-      render();
+      renderBankroll();
+      renderControls();
+      renderStats();
       renderResult('lose', 'Dealer wins');
       saveStats();
     } else {
-      // Tie — go to war or surrender
       state.phase = 'war';
-      render();
+      renderControls();
       renderWarPrompt();
     }
   }
 
   function goToWar() {
+    if (dealing) return;
+    dealing = true;
     stats.wars++;
-    // Player puts up equal bet for war
     var warBet = state.bet;
     if (warBet > stats.bankroll) warBet = stats.bankroll;
     stats.bankroll -= warBet;
+    renderBankroll();
 
     // Burn a card each, then deal one each
     drawCard();
@@ -144,32 +186,55 @@
     state.dealerCards.push(drawCard());
     state.playerCards.push(drawCard());
 
-    var dRank = RANK_ORDER[state.dealerCards[1].rank];
-    var pRank = RANK_ORDER[state.playerCards[1].rank];
+    // Show face-down war cards next to originals
+    dom.status.className = 'cw-status';
+    dom.status.textContent = 'Going to war...';
+    dom.dealerCard.classList.add('cw-war');
+    dom.playerCard.classList.add('cw-war');
+    dom.dealerCard.appendChild(renderFaceDown());
+    dom.playerCard.appendChild(renderFaceDown());
 
-    if (pRank >= dRank) {
-      // Player wins war (tie in war also wins)
-      // Win original bet + war bet returned
-      stats.bankroll += state.bet * 2 + warBet;
-      stats.wins++;
-    } else {
-      // Lose both bets (already deducted)
-      stats.losses++;
-    }
+    // Reveal player war card
+    setTimeout(function () {
+      dom.playerCard.lastChild.remove();
+      dom.playerCard.appendChild(renderCard(state.playerCards[1]));
 
-    stats.hands++;
-    state.phase = 'settled';
-    updatePeak();
-    render();
+      // Reveal dealer war card
+      setTimeout(function () {
+        dom.dealerCard.lastChild.remove();
+        dom.dealerCard.appendChild(renderCard(state.dealerCards[1]));
 
-    if (pRank > dRank) {
-      renderResult('win', 'You win the war!');
-    } else if (pRank === dRank) {
-      renderResult('win', 'Tie in war — you win!');
-    } else {
-      renderResult('lose', 'Dealer wins the war');
-    }
-    saveStats();
+        // Resolve
+        setTimeout(function () {
+          dealing = false;
+          var dRank = RANK_ORDER[state.dealerCards[1].rank];
+          var pRank = RANK_ORDER[state.playerCards[1].rank];
+
+          if (pRank >= dRank) {
+            stats.bankroll += state.bet * 2 + warBet;
+            stats.wins++;
+          } else {
+            stats.losses++;
+          }
+
+          stats.hands++;
+          state.phase = 'settled';
+          updatePeak();
+          renderBankroll();
+          renderControls();
+          renderStats();
+
+          if (pRank > dRank) {
+            renderResult('win', 'You win the war!');
+          } else if (pRank === dRank) {
+            renderResult('win', 'Tie in war — you win!');
+          } else {
+            renderResult('lose', 'Dealer wins the war');
+          }
+          saveStats();
+        }, DEAL_DELAY);
+      }, DEAL_DELAY);
+    }, DEAL_DELAY);
   }
 
   function surrender() {
@@ -217,10 +282,37 @@
     return el;
   }
 
-  function render() {
-    // Bankroll
+  function renderBankroll() {
     dom.balance.textContent = stats.bankroll;
     dom.betAmount.textContent = '$' + stats.lastBet;
+  }
+
+  function renderControls() {
+    var isBetting = state.phase === 'betting' || state.phase === 'settled';
+    dom.deal.hidden = !isBetting;
+    dom.deal.disabled = stats.bankroll <= 0 || dealing;
+    dom.betUp.disabled = !isBetting || dealing;
+    dom.betDown.disabled = !isBetting || dealing;
+  }
+
+  function renderStats() {
+    dom.statHands.textContent = stats.hands;
+    dom.statWins.textContent = stats.wins;
+    dom.statLosses.textContent = stats.losses;
+    dom.statWars.textContent = stats.wars;
+    dom.statPeak.textContent = '$' + stats.peak;
+
+    // Bankruptcy
+    if (state.phase === 'settled' && stats.bankroll <= 0) {
+      stats.bankroll = 1000;
+      stats.peak = Math.max(stats.peak, 1000);
+      saveStats();
+      dom.balance.textContent = stats.bankroll;
+    }
+  }
+
+  function render() {
+    renderBankroll();
 
     // Cards
     dom.dealerCard.innerHTML = '';
@@ -241,31 +333,11 @@
       if (state.playerCards.length > 1) dom.playerCard.classList.add('cw-war');
     }
 
-    // Status — clear (will be set by renderResult/renderWarPrompt)
     dom.status.className = 'cw-status';
     dom.status.textContent = '';
 
-    // Controls
-    var isBetting = state.phase === 'betting' || state.phase === 'settled';
-    dom.deal.hidden = !isBetting;
-    dom.deal.disabled = stats.bankroll <= 0;
-    dom.betUp.disabled = !isBetting;
-    dom.betDown.disabled = !isBetting;
-
-    // Stats
-    dom.statHands.textContent = stats.hands;
-    dom.statWins.textContent = stats.wins;
-    dom.statLosses.textContent = stats.losses;
-    dom.statWars.textContent = stats.wars;
-    dom.statPeak.textContent = '$' + stats.peak;
-
-    // Bankruptcy
-    if (state.phase === 'settled' && stats.bankroll <= 0) {
-      stats.bankroll = 1000;
-      stats.peak = Math.max(stats.peak, 1000);
-      saveStats();
-      dom.balance.textContent = stats.bankroll;
-    }
+    renderControls();
+    renderStats();
   }
 
   function renderResult(type, message) {

@@ -116,7 +116,7 @@
   font-size: 1.4em;
   line-height: 1.2;
   box-shadow: 1px 2px 6px color-mix(in srgb, #000 12%, transparent);
-  animation: cw-deal 0.3s ease-out;
+  animation: cw-deal 0.35s ease-out;
 }
 
 .cw-card-rank {
@@ -156,11 +156,11 @@
 @keyframes cw-deal {
   from {
     opacity: 0;
-    transform: translateY(-12px);
+    transform: translateY(-16px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
