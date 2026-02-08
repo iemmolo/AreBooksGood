@@ -28,6 +28,35 @@
         { "from": "d1", "to": "d3", "notation": "10. Qxd3", "comment": "White recaptures with the queen, centralising it." },
         { "from": "e7", "to": "e6", "notation": "10... e6", "comment": "Black solidifies the centre and opens the dark-squared bishop's diagonal. A model Caro-Kann position." }
       ]
+    },
+    {
+      "id": "ruy-lopez",
+      "title": "Ruy Lopez",
+      "description": "One of the oldest and most classical openings. White develops quickly, pins the knight defending e5, and builds long-term pressure. The Closed Morphy Defence is the main line.",
+      "playerColor": "w",
+      "startFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        { "from": "e2", "to": "e4", "notation": "1. e4", "comment": "King's pawn \u2014 claiming the centre and opening lines for the bishop and queen." },
+        { "from": "e7", "to": "e5", "notation": "1... e5", "comment": "Black mirrors, fighting for central control." },
+        { "from": "g1", "to": "f3", "notation": "2. Nf3", "comment": "Developing the knight and attacking the e5-pawn." },
+        { "from": "b8", "to": "c6", "notation": "2... Nc6", "comment": "Black defends e5 with the knight." },
+        { "from": "f1", "to": "b5", "notation": "3. Bb5", "comment": "The Ruy Lopez! The bishop pins the knight that defends e5, creating long-term pressure." },
+        { "from": "a7", "to": "a6", "notation": "3... a6", "comment": "The Morphy Defence \u2014 Black asks the bishop to declare its intentions." },
+        { "from": "b5", "to": "a4", "notation": "4. Ba4", "comment": "Retreating but maintaining the pin. White keeps the tension." },
+        { "from": "g8", "to": "f6", "notation": "4... Nf6", "comment": "Black develops and counterattacks the e4-pawn." },
+        { "from": "e1", "to": "g1", "notation": "5. O-O", "comment": "Castling early! The king is safe, and the rook eyes the e-file." },
+        { "from": "f8", "to": "e7", "notation": "5... Be7", "comment": "Black develops the bishop modestly, preparing to castle." },
+        { "from": "f1", "to": "e1", "notation": "6. Re1", "comment": "The rook supports the e4-pawn and controls the open e-file." },
+        { "from": "b7", "to": "b5", "notation": "6... b5", "comment": "Black gains space on the queenside and forces the bishop to retreat." },
+        { "from": "a4", "to": "b3", "notation": "7. Bb3", "comment": "The bishop retreats to a strong diagonal, aiming at f7." },
+        { "from": "d7", "to": "d6", "notation": "7... d6", "comment": "Black supports the e5-pawn and opens a path for the bishop." },
+        { "from": "c2", "to": "c3", "notation": "8. c3", "comment": "Preparing d4 to challenge Black's centre. A key Ruy Lopez idea." },
+        { "from": "e8", "to": "g8", "notation": "8... O-O", "comment": "Black castles, getting the king to safety." },
+        { "from": "h2", "to": "h3", "notation": "9. h3", "comment": "A useful prophylactic move \u2014 preventing ...Bg4 pinning the knight." },
+        { "from": "c6", "to": "a5", "notation": "9... Na5", "comment": "Black reroutes the knight to pressure the b3-bishop." },
+        { "from": "b3", "to": "c2", "notation": "10. Bc2", "comment": "The bishop retreats to safety, still eyeing the kingside. A typical Ruy Lopez manoeuvre." },
+        { "from": "c7", "to": "c5", "notation": "10... c5", "comment": "Black strikes at the centre. The Closed Ruy Lopez \u2014 a rich middlegame ahead." }
+      ]
     }
   ]
 }

@@ -65,16 +65,16 @@ Infrastructure (all done):
 
 Shipped openings:
   1. [x] Caro-Kann (black) — 1.e4 c6 2.d4 d5 main line, 10 moves per side
+  2. [x] Ruy Lopez (white) — 1.e4 e5 2.Nf3 Nc6 3.Bb5 Closed Morphy Defence, 10 moves per side
 
 Future openings (not yet built):
-- [ ] Ruy Lopez (white) — 1.e4 e5 2.Nf3 Nc6 3.Bb5 (main line + common responses)
 - [ ] Italian Game (white) — 1.e4 e5 2.Nf3 Nc6 3.Bc4
 - [ ] Sicilian Defence (black) — 1.e4 c5
 - [ ] Queen's Gambit (white) — 1.d4 d5 2.c4
 
 Future enhancements:
 - [ ] Variation branches: after main line, drill common deviations
-- [ ] Hint button: highlight the correct source/target square
+- [x] Hint button: highlight the correct source square
 
 ## Phase 5: Polish & Future
 
