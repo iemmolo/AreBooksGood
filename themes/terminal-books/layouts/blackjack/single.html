@@ -5,7 +5,7 @@
   </div>
 
   <div id="blackjack-app">
-    <!-- Bankroll bar -->
+    <!-- Bankroll bar — sits on the table rim -->
     <div class="bj-bankroll-bar">
       <span class="bj-balance">Balance: $<span id="bj-balance">1000</span></span>
       <div class="bj-bet-controls">
@@ -16,40 +16,54 @@
       </div>
     </div>
 
-    <!-- Dealer area -->
-    <div class="bj-hand-area">
-      <div class="bj-hand-label">Dealer <span id="bj-dealer-score" class="bj-score"></span></div>
-      <div id="bj-dealer-cards" class="bj-cards"></div>
-    </div>
+    <!-- The felt table surface -->
+    <div class="bj-table">
+      <!-- Dealer zone -->
+      <div class="bj-dealer-zone">
+        <div class="bj-zone-label">DEALER</div>
+        <div class="bj-hand-area">
+          <div class="bj-hand-info"><span id="bj-dealer-score" class="bj-score"></span></div>
+          <div id="bj-dealer-cards" class="bj-cards"></div>
+        </div>
+      </div>
 
-    <!-- Status message -->
-    <div id="bj-status" class="bj-status"></div>
+      <!-- Table divider arc -->
+      <div class="bj-table-divider">
+        <div class="bj-table-arc"></div>
+      </div>
 
-    <!-- Insurance prompt -->
-    <div id="bj-insurance" class="bj-insurance" hidden>
-      <span>Insurance? (Half your bet, pays 2:1 if dealer has blackjack)</span>
-      <button id="bj-insurance-yes" class="bj-btn bj-btn-small">Yes</button>
-      <button id="bj-insurance-no" class="bj-btn bj-btn-small">No</button>
-    </div>
+      <!-- Status message -->
+      <div id="bj-status" class="bj-status"></div>
 
-    <!-- Player area -->
-    <div id="bj-player-area" class="bj-hand-area">
-      <div class="bj-hand-label">Player <span id="bj-player-score" class="bj-score"></span></div>
-      <div id="bj-player-hands" class="bj-player-hands">
-        <div class="bj-cards" data-hand="0"></div>
+      <!-- Insurance prompt -->
+      <div id="bj-insurance" class="bj-insurance" hidden>
+        <span>Insurance? (Half your bet, pays 2:1 if dealer has blackjack)</span>
+        <button id="bj-insurance-yes" class="bj-btn bj-btn-small">Yes</button>
+        <button id="bj-insurance-no" class="bj-btn bj-btn-small">No</button>
+      </div>
+
+      <!-- Player zone -->
+      <div class="bj-player-zone">
+        <div class="bj-zone-label">PLAYER</div>
+        <div id="bj-player-area" class="bj-hand-area">
+          <div class="bj-hand-info"><span id="bj-player-score" class="bj-score"></span></div>
+          <div id="bj-player-hands" class="bj-player-hands">
+            <div class="bj-cards" data-hand="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls — inside the table, below player cards -->
+      <div class="bj-controls">
+        <button id="bj-deal" class="bj-btn">Deal</button>
+        <button id="bj-hit" class="bj-btn" hidden>Hit</button>
+        <button id="bj-stand" class="bj-btn" hidden>Stand</button>
+        <button id="bj-double" class="bj-btn" hidden>Double</button>
+        <button id="bj-split" class="bj-btn" hidden>Split</button>
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="bj-controls">
-      <button id="bj-deal" class="bj-btn">Deal</button>
-      <button id="bj-hit" class="bj-btn" hidden>Hit</button>
-      <button id="bj-stand" class="bj-btn" hidden>Stand</button>
-      <button id="bj-double" class="bj-btn" hidden>Double</button>
-      <button id="bj-split" class="bj-btn" hidden>Split</button>
-    </div>
-
-    <!-- Stats panel -->
+    <!-- Stats panel — outside the table -->
     <div class="bj-stats">
       <h3 class="bj-stats-title">Stats</h3>
       <div class="bj-stats-grid">

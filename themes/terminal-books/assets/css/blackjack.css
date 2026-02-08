@@ -6,15 +6,17 @@
   margin-bottom: 20px;
 }
 
-/* Bankroll bar */
+/* ── Bankroll bar — sits above the table ──── */
 .bj-bankroll-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  margin-bottom: 16px;
-  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
-  border-radius: 4px;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
   font-size: 1.05em;
   font-weight: 600;
 }
@@ -31,7 +33,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Buttons */
+/* ── Buttons ──────────────────────────────── */
 .bj-btn {
   padding: 6px 16px;
   font-family: inherit;
@@ -69,32 +71,72 @@
   background: color-mix(in srgb, #ff4444 10%, var(--background));
 }
 
-/* Hand areas */
-.bj-hand-area {
-  margin-bottom: 12px;
+/* ── Table surface ────────────────────────── */
+.bj-table {
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 0 0 120px 120px;
+  padding: 24px 28px 32px;
+  box-shadow:
+    inset 0 2px 12px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 4px 20px color-mix(in srgb, #000 15%, transparent);
+  position: relative;
 }
 
-.bj-hand-label {
-  font-weight: 600;
-  margin-bottom: 6px;
-  font-size: 0.95em;
+/* ── Zone labels (DEALER / PLAYER) ────────── */
+.bj-zone-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in srgb, var(--accent) 40%, transparent);
+  margin-bottom: 4px;
+}
+
+/* ── Hand areas ───────────────────────────── */
+.bj-hand-area {
+  margin-bottom: 8px;
+}
+
+.bj-hand-info {
+  margin-bottom: 4px;
+  min-height: 1.2em;
+  text-align: center;
 }
 
 .bj-score {
-  font-weight: 400;
+  font-weight: 600;
+  font-size: 0.9em;
   color: color-mix(in srgb, var(--foreground) 65%, transparent);
 }
 
-/* Cards container */
+/* ── Table divider arc ────────────────────── */
+.bj-table-divider {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.bj-table-arc {
+  width: 60%;
+  height: 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 0 0 50% 50%;
+  padding-bottom: 16px;
+}
+
+/* ── Cards container ──────────────────────── */
 .bj-cards {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
   min-height: 126px;
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
-/* Individual card */
+/* ── Individual card ──────────────────────── */
 .bj-card {
   width: 90px;
   height: 126px;
@@ -103,11 +145,12 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border: 2px solid color-mix(in srgb, var(--foreground) 35%, transparent);
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
   border-radius: 6px;
   background: var(--background);
   font-size: 1.4em;
   line-height: 1.2;
+  box-shadow: 1px 2px 6px color-mix(in srgb, #000 12%, transparent);
   animation: bj-deal 0.3s ease-out;
 }
 
@@ -130,11 +173,14 @@
 }
 
 .bj-card-facedown {
-  background: color-mix(in srgb, var(--accent) 15%, var(--background));
-  border-color: var(--accent);
-  color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: color-mix(in srgb, var(--accent) 35%, transparent);
   font-size: 2.4em;
   font-weight: 700;
+  box-shadow:
+    1px 2px 6px color-mix(in srgb, #000 12%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 @keyframes bj-deal {
@@ -148,7 +194,7 @@
   }
 }
 
-/* Player hands (split support) */
+/* ── Player hands (split support) ─────────── */
 .bj-player-hands {
   display: flex;
   gap: 16px;
@@ -171,13 +217,13 @@
   margin-top: 4px;
 }
 
-/* Status message */
+/* ── Status message ───────────────────────── */
 .bj-status {
   text-align: center;
-  font-size: 1.1em;
-  font-weight: 600;
+  font-size: 1.15em;
+  font-weight: 700;
   min-height: 1.6em;
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .bj-status-win {
@@ -194,31 +240,33 @@
 
 .bj-status-blackjack {
   color: var(--accent);
-  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
-/* Insurance prompt */
+/* ── Insurance prompt ─────────────────────── */
 .bj-insurance {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
   margin: 8px 0;
-  border: 1px solid var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
   border-radius: 4px;
   font-size: 0.92em;
-  background: color-mix(in srgb, var(--accent) 5%, var(--background));
+  background: color-mix(in srgb, var(--accent) 6%, var(--background));
 }
 
-/* Controls */
+/* ── Controls — inside the table ──────────── */
 .bj-controls {
   display: flex;
   gap: 8px;
-  margin: 16px 0;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 8px;
   flex-wrap: wrap;
 }
 
-/* Stats panel */
+/* ── Stats panel — outside the table ──────── */
 .bj-stats {
   margin-top: 24px;
   padding: 14px;
@@ -248,12 +296,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Responsive */
+/* ── Responsive ───────────────────────────── */
 @media (max-width: 480px) {
   .bj-bankroll-bar {
     flex-direction: column;
     gap: 8px;
     text-align: center;
+  }
+
+  .bj-table {
+    padding: 16px 14px 24px;
+    border-radius: 0 0 80px 80px;
   }
 
   .bj-card {
@@ -264,10 +317,6 @@
 
   .bj-card-suit {
     font-size: 1.3em;
-  }
-
-  .bj-controls {
-    justify-content: center;
   }
 
   .bj-insurance {
