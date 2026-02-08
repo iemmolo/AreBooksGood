@@ -13,7 +13,11 @@
           "fen": "5r1k/pp4pp/2p5/6q1/5R2/2P5/P1P2PPP/3rR1K1 w - - 0 27",
           "turn": "w",
           "solution": [
-            { "from": "f4", "to": "f8", "notation": "Rxf8" }
+            {
+              "from": "f4",
+              "to": "f8",
+              "notation": "Rxf8"
+            }
           ]
         },
         {
@@ -24,9 +28,21 @@
           "fen": "3r2k1/4nppp/pq3b2/1p2p3/2r2P2/2P1NR2/PP1Q2BP/3R2K1 w - - 0 24",
           "turn": "w",
           "solution": [
-            { "from": "d2", "to": "d8", "notation": "Qxd8" },
-            { "from": "b6", "to": "d8", "notation": "Qxd8" },
-            { "from": "d1", "to": "d8", "notation": "Rxd8" }
+            {
+              "from": "d2",
+              "to": "d8",
+              "notation": "Qxd8"
+            },
+            {
+              "from": "b6",
+              "to": "d8",
+              "notation": "Qxd8"
+            },
+            {
+              "from": "d1",
+              "to": "d8",
+              "notation": "Rxd8"
+            }
           ]
         },
         {
@@ -37,10 +53,147 @@
           "fen": "6k1/5ppp/r1p5/p1n1rP2/8/2P2N1P/2P3P1/3R2K1 w - - 0 21",
           "turn": "w",
           "solution": [
-            { "from": "d1", "to": "d8", "notation": "Rd8" },
-            { "from": "e5", "to": "e8", "notation": "Re8" },
-            { "from": "d8", "to": "e8", "notation": "Rxe8" }
+            {
+              "from": "d1",
+              "to": "d8",
+              "notation": "Rd8"
+            },
+            {
+              "from": "e5",
+              "to": "e8",
+              "notation": "Re8"
+            },
+            {
+              "from": "d8",
+              "to": "e8",
+              "notation": "Rxe8"
+            }
           ]
+        },
+        {
+          "id": "br-004",
+          "title": "Back Rank Mate",
+          "description": "White to move. Mate in 2. Force your way to the back rank.",
+          "difficulty": "beginner",
+          "fen": "6k1/5ppp/5n2/pp6/4b1rP/5N1Q/Pq2r1P1/3R2RK w - - 5 33",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "d1",
+              "to": "d8",
+              "notation": "Rd8+"
+            },
+            {
+              "from": "f6",
+              "to": "e8",
+              "notation": "Ne8"
+            },
+            {
+              "from": "d8",
+              "to": "e8",
+              "notation": "Rxe8#"
+            }
+          ]
+        },
+        {
+          "id": "br-005",
+          "title": "Back Rank Mate",
+          "description": "White to move. Mate in 2. Force your way to the back rank.",
+          "difficulty": "beginner",
+          "fen": "r6k/2q3pp/8/2p5/R1np4/7P/2PB1PP1/6K1 w - - 0 33",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "a4",
+              "to": "a8",
+              "notation": "Rxa8+"
+            },
+            {
+              "from": "c7",
+              "to": "b8",
+              "notation": "Qb8"
+            },
+            {
+              "from": "a8",
+              "to": "b8",
+              "notation": "Rxb8#"
+            }
+          ]
+        },
+        {
+          "id": "br-006",
+          "title": "Back Rank Mate",
+          "description": "Black to move. Mate in 2. Force your way to the back rank.",
+          "difficulty": "beginner",
+          "fen": "2kr3r/p1p1Rpp1/2p2n1p/8/8/1P6/P1P2PPP/RNB3K1 b - - 0 16",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "d8",
+              "to": "d1",
+              "notation": "Rd1+"
+            },
+            {
+              "from": "e7",
+              "to": "e1",
+              "notation": "Re1"
+            },
+            {
+              "from": "d1",
+              "to": "e1",
+              "notation": "Rxe1#"
+            }
+          ]
+        },
+        {
+          "fen": "5k2/p2r3p/1p4pP/3r1q2/4R3/2P5/PP3PQ1/K3R3 b - - 0 33",
+          "turn": "b",
+          "title": "Back Rank Mate",
+          "difficulty": "beginner",
+          "description": "Black to move. Mate in 2. Force your way to the back rank.",
+          "solution": [
+            {
+              "from": "d5",
+              "to": "d1",
+              "notation": "Rd1+"
+            },
+            {
+              "from": "e1",
+              "to": "d1",
+              "notation": "Rxd1"
+            },
+            {
+              "from": "d7",
+              "to": "d1",
+              "notation": "Rxd1#"
+            }
+          ],
+          "id": "br-007"
+        },
+        {
+          "fen": "1k6/ppp3p1/8/1P5p/8/P3n2P/2P1r1P1/B2rNRK1 w - - 5 32",
+          "turn": "w",
+          "title": "Back Rank Mate",
+          "difficulty": "beginner",
+          "description": "White to move. Mate in 2. Force your way to the back rank.",
+          "solution": [
+            {
+              "from": "f1",
+              "to": "f8",
+              "notation": "Rf8+"
+            },
+            {
+              "from": "d1",
+              "to": "d8",
+              "notation": "Rd8"
+            },
+            {
+              "from": "f8",
+              "to": "d8",
+              "notation": "Rxd8#"
+            }
+          ],
+          "id": "br-008"
         }
       ]
     },
@@ -57,9 +210,21 @@
           "fen": "r3kb1r/p4ppp/b3p3/2pq4/3Q4/4BN2/PPP2PPP/R3K2R w KQkq - 0 11",
           "turn": "w",
           "solution": [
-            { "from": "d4", "to": "a4", "notation": "Qa4" },
-            { "from": "a6", "to": "b5", "notation": "Bb5" },
-            { "from": "a4", "to": "b5", "notation": "Qxb5" }
+            {
+              "from": "d4",
+              "to": "a4",
+              "notation": "Qa4"
+            },
+            {
+              "from": "a6",
+              "to": "b5",
+              "notation": "Bb5"
+            },
+            {
+              "from": "a4",
+              "to": "b5",
+              "notation": "Qxb5"
+            }
           ]
         },
         {
@@ -70,9 +235,21 @@
           "fen": "3q2k1/3r4/pp3p1Q/2b1n3/P3N3/2P5/1P4PP/R6K w - - 0 24",
           "turn": "w",
           "solution": [
-            { "from": "e4", "to": "f6", "notation": "Nxf6" },
-            { "from": "d8", "to": "f6", "notation": "Qxf6" },
-            { "from": "h6", "to": "f6", "notation": "Qxf6" }
+            {
+              "from": "e4",
+              "to": "f6",
+              "notation": "Nxf6"
+            },
+            {
+              "from": "d8",
+              "to": "f6",
+              "notation": "Qxf6"
+            },
+            {
+              "from": "h6",
+              "to": "f6",
+              "notation": "Qxf6"
+            }
           ]
         },
         {
@@ -83,10 +260,157 @@
           "fen": "3rk2r/2qn2p1/p1Q1p3/3n3p/8/8/PP4PP/5R1K w k - 0 23",
           "turn": "w",
           "solution": [
-            { "from": "c6", "to": "e6", "notation": "Qxe6" },
-            { "from": "d5", "to": "e7", "notation": "Ne7" },
-            { "from": "e6", "to": "f7", "notation": "Qf7" }
+            {
+              "from": "c6",
+              "to": "e6",
+              "notation": "Qxe6"
+            },
+            {
+              "from": "d5",
+              "to": "e7",
+              "notation": "Ne7"
+            },
+            {
+              "from": "e6",
+              "to": "f7",
+              "notation": "Qf7"
+            }
           ]
+        },
+        {
+          "id": "fk-004",
+          "title": "Fork",
+          "description": "Black to move. Use a fork to win material.",
+          "difficulty": "intermediate",
+          "fen": "3R4/8/8/KB2b3/1p6/1P2k3/3p4/8 b - - 0 58",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "e5",
+              "to": "c7",
+              "notation": "Bc7+"
+            },
+            {
+              "from": "a5",
+              "to": "b4",
+              "notation": "Kxb4"
+            },
+            {
+              "from": "c7",
+              "to": "d8",
+              "notation": "Bxd8"
+            }
+          ]
+        },
+        {
+          "id": "fk-005",
+          "title": "Fork",
+          "description": "Black to move. Use a fork to win material.",
+          "difficulty": "beginner",
+          "fen": "r4rk1/p3ppbp/Pp1q1np1/3PpbB1/2B5/2N2P2/1PPQ2PP/3RR1K1 b - - 0 18",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "d6",
+              "to": "c5",
+              "notation": "Qc5+"
+            },
+            {
+              "from": "g1",
+              "to": "h1",
+              "notation": "Kh1"
+            },
+            {
+              "from": "c5",
+              "to": "c4",
+              "notation": "Qxc4"
+            }
+          ]
+        },
+        {
+          "id": "fk-006",
+          "title": "Fork",
+          "description": "Black to move. Use a fork to win material.",
+          "difficulty": "beginner",
+          "fen": "6k1/Q2bqr1p/2rpp1pR/p7/Pp2P3/1B3P2/1PP3P1/2KR4 b - - 7 22",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "e7",
+              "to": "g5",
+              "notation": "Qg5+"
+            },
+            {
+              "from": "c1",
+              "to": "b1",
+              "notation": "Kb1"
+            },
+            {
+              "from": "g5",
+              "to": "h6",
+              "notation": "Qxh6"
+            }
+          ]
+        },
+        {
+          "id": "fk-007",
+          "title": "Fork",
+          "description": "Black to move. Find the fork combination.",
+          "difficulty": "intermediate",
+          "fen": "rn3rk1/p5pp/3N4/4np1q/5Q2/1P6/PB1P1KP1/2R4R b - - 1 25",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "e5",
+              "to": "d3",
+              "notation": "Nd3+"
+            },
+            {
+              "from": "f2",
+              "to": "e3",
+              "notation": "Ke3"
+            },
+            {
+              "from": "d3",
+              "to": "f4",
+              "notation": "Nxf4"
+            },
+            {
+              "from": "h1",
+              "to": "h5",
+              "notation": "Rxh5"
+            },
+            {
+              "from": "f4",
+              "to": "h5",
+              "notation": "Nxh5"
+            }
+          ]
+        },
+        {
+          "fen": "5rk1/5ppp/4p3/4N3/8/1Pn5/5PPP/2R3K1 b - - 1 28",
+          "turn": "b",
+          "title": "Fork",
+          "difficulty": "beginner",
+          "description": "Black to move. Use a fork to win material.",
+          "solution": [
+            {
+              "from": "c3",
+              "to": "e2",
+              "notation": "Ne2+"
+            },
+            {
+              "from": "g1",
+              "to": "f1",
+              "notation": "Kf1"
+            },
+            {
+              "from": "e2",
+              "to": "c1",
+              "notation": "Nxc1"
+            }
+          ],
+          "id": "fk-008"
         }
       ]
     },
@@ -103,9 +427,21 @@
           "fen": "8/4R3/p4kpp/3B4/5q2/8/5P1P/6K1 w - - 0 40",
           "turn": "w",
           "solution": [
-            { "from": "e7", "to": "f7", "notation": "Rf7" },
-            { "from": "f6", "to": "e5", "notation": "Ke5" },
-            { "from": "f7", "to": "f4", "notation": "Rxf4" }
+            {
+              "from": "e7",
+              "to": "f7",
+              "notation": "Rf7"
+            },
+            {
+              "from": "f6",
+              "to": "e5",
+              "notation": "Ke5"
+            },
+            {
+              "from": "f7",
+              "to": "f4",
+              "notation": "Rxf4"
+            }
           ]
         },
         {
@@ -116,9 +452,21 @@
           "fen": "5Q2/8/1bk1p1p1/5p2/3p4/5qPK/7P/8 w - - 0 51",
           "turn": "w",
           "solution": [
-            { "from": "f8", "to": "a8", "notation": "Qa8" },
-            { "from": "c6", "to": "d6", "notation": "Kd6" },
-            { "from": "a8", "to": "f3", "notation": "Qxf3" }
+            {
+              "from": "f8",
+              "to": "a8",
+              "notation": "Qa8"
+            },
+            {
+              "from": "c6",
+              "to": "d6",
+              "notation": "Kd6"
+            },
+            {
+              "from": "a8",
+              "to": "f3",
+              "notation": "Qxf3"
+            }
           ]
         },
         {
@@ -129,10 +477,167 @@
           "fen": "1r3k1r/pNqnppb1/6pn/2p3Np/7P/2P2Q2/PP3PP1/R1B1K2R w KQ - 0 15",
           "turn": "w",
           "solution": [
-            { "from": "g5", "to": "e6", "notation": "Ne6" },
-            { "from": "f8", "to": "g8", "notation": "Kg8" },
-            { "from": "e6", "to": "c7", "notation": "Nxc7" }
+            {
+              "from": "g5",
+              "to": "e6",
+              "notation": "Ne6"
+            },
+            {
+              "from": "f8",
+              "to": "g8",
+              "notation": "Kg8"
+            },
+            {
+              "from": "e6",
+              "to": "c7",
+              "notation": "Nxc7"
+            }
           ]
+        },
+        {
+          "id": "ps-004",
+          "title": "Skewer",
+          "description": "Black to move. Use a pin or skewer to win material.",
+          "difficulty": "advanced",
+          "fen": "7r/6k1/2b1Rp2/8/P1N3p1/5nP1/5P2/Q4K2 b - - 0 38",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "h8",
+              "to": "h1",
+              "notation": "Rh1+"
+            },
+            {
+              "from": "f1",
+              "to": "e2",
+              "notation": "Ke2"
+            },
+            {
+              "from": "h1",
+              "to": "a1",
+              "notation": "Rxa1"
+            }
+          ]
+        },
+        {
+          "id": "ps-005",
+          "title": "Skewer",
+          "description": "Black to move. Find the pin/skewer combination.",
+          "difficulty": "intermediate",
+          "fen": "1r5r/p3kp2/4p2p/4P3/R4Pp1/6P1/P1P4P/4K2R b K - 2 25",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "b8",
+              "to": "b1",
+              "notation": "Rb1+"
+            },
+            {
+              "from": "e1",
+              "to": "f2",
+              "notation": "Kf2"
+            },
+            {
+              "from": "b1",
+              "to": "h1",
+              "notation": "Rxh1"
+            },
+            {
+              "from": "a4",
+              "to": "a7",
+              "notation": "Rxa7+"
+            },
+            {
+              "from": "e7",
+              "to": "f8",
+              "notation": "Kf8"
+            }
+          ]
+        },
+        {
+          "id": "ps-006",
+          "title": "Skewer",
+          "description": "White to move. Find the pin/skewer combination.",
+          "difficulty": "intermediate",
+          "fen": "6k1/r1b1q3/2p3p1/2Pp4/1P2p1n1/2B1P3/NQ6/2K4R w - - 2 37",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "h1",
+              "to": "h8",
+              "notation": "Rh8+"
+            },
+            {
+              "from": "g8",
+              "to": "f7",
+              "notation": "Kf7"
+            },
+            {
+              "from": "h8",
+              "to": "h7",
+              "notation": "Rh7+"
+            },
+            {
+              "from": "f7",
+              "to": "e8",
+              "notation": "Ke8"
+            },
+            {
+              "from": "h7",
+              "to": "e7",
+              "notation": "Rxe7+"
+            }
+          ]
+        },
+        {
+          "fen": "4rk2/p4q2/1p3Q1b/8/1p5N/2P1p3/P3P3/2K5 w - - 1 44",
+          "turn": "w",
+          "title": "Pin",
+          "difficulty": "intermediate",
+          "description": "White to move. Use a pin or skewer to win material.",
+          "solution": [
+            {
+              "from": "h4",
+              "to": "g6",
+              "notation": "Ng6+"
+            },
+            {
+              "from": "f8",
+              "to": "g8",
+              "notation": "Kg8"
+            },
+            {
+              "from": "f6",
+              "to": "h8",
+              "notation": "Qh8#"
+            }
+          ],
+          "id": "ps-007"
+        },
+        {
+          "fen": "6R1/p7/5k2/P7/6KP/8/8/5r2 b - - 6 53",
+          "turn": "b",
+          "title": "Skewer",
+          "difficulty": "beginner",
+          "description": "Black to move. Use a pin or skewer to win material.",
+          "solution": [
+            {
+              "from": "f1",
+              "to": "g1",
+              "notation": "Rg1+"
+            },
+            {
+              "from": "g4",
+              "to": "f4",
+              "notation": "Kf4"
+            },
+            {
+              "from": "g1",
+              "to": "g8",
+              "notation": "Rxg8"
+            }
+          ],
+          "id": "ps-008"
         }
       ]
     },
@@ -149,9 +654,21 @@
           "fen": "6k1/6p1/pp2np1p/8/2r1NR1P/6P1/1PP5/1K6 w - - 0 32",
           "turn": "w",
           "solution": [
-            { "from": "e4", "to": "f6", "notation": "Nxf6" },
-            { "from": "g7", "to": "f6", "notation": "gxf6" },
-            { "from": "f4", "to": "c4", "notation": "Rxc4" }
+            {
+              "from": "e4",
+              "to": "f6",
+              "notation": "Nxf6"
+            },
+            {
+              "from": "g7",
+              "to": "f6",
+              "notation": "gxf6"
+            },
+            {
+              "from": "f4",
+              "to": "c4",
+              "notation": "Rxc4"
+            }
           ]
         },
         {
@@ -162,9 +679,21 @@
           "fen": "rnbqk2r/pp3ppp/5n2/4N3/2p5/2P5/P1PPQPPP/R1B1K2R w KQkq - 0 8",
           "turn": "w",
           "solution": [
-            { "from": "e5", "to": "c6", "notation": "Nc6" },
-            { "from": "c8", "to": "e6", "notation": "Be6" },
-            { "from": "c6", "to": "d8", "notation": "Nxd8" }
+            {
+              "from": "e5",
+              "to": "c6",
+              "notation": "Nc6"
+            },
+            {
+              "from": "c8",
+              "to": "e6",
+              "notation": "Be6"
+            },
+            {
+              "from": "c6",
+              "to": "d8",
+              "notation": "Nxd8"
+            }
           ]
         },
         {
@@ -175,10 +704,167 @@
           "fen": "r1b2rk1/4bppp/p1n5/3q4/Pp6/3B1N2/1B3PPP/R2Q1RK1 w - - 0 17",
           "turn": "w",
           "solution": [
-            { "from": "d3", "to": "h7", "notation": "Bxh7" },
-            { "from": "g8", "to": "h7", "notation": "Kxh7" },
-            { "from": "d1", "to": "d5", "notation": "Qxd5" }
+            {
+              "from": "d3",
+              "to": "h7",
+              "notation": "Bxh7"
+            },
+            {
+              "from": "g8",
+              "to": "h7",
+              "notation": "Kxh7"
+            },
+            {
+              "from": "d1",
+              "to": "d5",
+              "notation": "Qxd5"
+            }
           ]
+        },
+        {
+          "id": "da-004",
+          "title": "Discovered Attack",
+          "description": "White to move. Use a discovered attack to win material.",
+          "difficulty": "intermediate",
+          "fen": "r5k1/1p1r1pp1/p3pnp1/2qN4/8/1Q5P/PP3PP1/3RR1K1 w - - 0 25",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "d5",
+              "to": "f6",
+              "notation": "Nxf6+"
+            },
+            {
+              "from": "g7",
+              "to": "f6",
+              "notation": "gxf6"
+            },
+            {
+              "from": "d1",
+              "to": "d7",
+              "notation": "Rxd7"
+            }
+          ]
+        },
+        {
+          "id": "da-005",
+          "title": "Discovered Attack",
+          "description": "Black to move. Find the discovered attack sequence.",
+          "difficulty": "advanced",
+          "fen": "r3r1k1/1p3p1p/p1p3p1/8/6bP/Q3b1P1/PP2B3/R3K2R b KQ - 0 20",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "g4",
+              "to": "e2",
+              "notation": "Bxe2"
+            },
+            {
+              "from": "e1",
+              "to": "e2",
+              "notation": "Kxe2"
+            },
+            {
+              "from": "e3",
+              "to": "c5",
+              "notation": "Bc5+"
+            },
+            {
+              "from": "e2",
+              "to": "f3",
+              "notation": "Kf3"
+            },
+            {
+              "from": "c5",
+              "to": "a3",
+              "notation": "Bxa3"
+            }
+          ]
+        },
+        {
+          "id": "da-006",
+          "title": "Discovered Attack",
+          "description": "Black to move. Find the discovered attack sequence.",
+          "difficulty": "intermediate",
+          "fen": "3r4/4kp1p/1PQ1p1p1/p3b3/1p2P2P/1P5K/6P1/8 b - - 2 36",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "d8",
+              "to": "d3",
+              "notation": "Rd3+"
+            },
+            {
+              "from": "g2",
+              "to": "g3",
+              "notation": "g3"
+            },
+            {
+              "from": "d3",
+              "to": "g3",
+              "notation": "Rxg3+"
+            },
+            {
+              "from": "h3",
+              "to": "h2",
+              "notation": "Kh2"
+            },
+            {
+              "from": "g3",
+              "to": "c3",
+              "notation": "Rc3+"
+            }
+          ]
+        },
+        {
+          "id": "da-007",
+          "title": "Discovered Attack",
+          "description": "Black to move. Use a discovered attack to win material.",
+          "difficulty": "intermediate",
+          "fen": "8/p5pk/1p3b1p/3r3P/6P1/3nBN2/P4PK1/3R4 b - - 4 30",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "d3",
+              "to": "f4",
+              "notation": "Nf4+"
+            },
+            {
+              "from": "e3",
+              "to": "f4",
+              "notation": "Bxf4"
+            },
+            {
+              "from": "d5",
+              "to": "d1",
+              "notation": "Rxd1"
+            }
+          ]
+        },
+        {
+          "fen": "5bk1/2Q2p1p/5qp1/p7/P1Bp4/1P5P/2r2PP1/3R2K1 w - - 6 28",
+          "turn": "w",
+          "title": "Discovered Attack",
+          "difficulty": "advanced",
+          "description": "White to move. Use a discovered attack to win material.",
+          "solution": [
+            {
+              "from": "c4",
+              "to": "f7",
+              "notation": "Bxf7+"
+            },
+            {
+              "from": "g8",
+              "to": "g7",
+              "notation": "Kg7"
+            },
+            {
+              "from": "c7",
+              "to": "c2",
+              "notation": "Qxc2"
+            }
+          ],
+          "id": "da-008"
         }
       ]
     },
@@ -195,7 +881,11 @@
           "fen": "2r3rk/6pp/p6N/1p1p4/2pq4/P6P/1P3PP1/4R1K1 w - - 0 36",
           "turn": "w",
           "solution": [
-            { "from": "h6", "to": "f7", "notation": "Nf7" }
+            {
+              "from": "h6",
+              "to": "f7",
+              "notation": "Nf7"
+            }
           ]
         },
         {
@@ -206,7 +896,11 @@
           "fen": "r6k/pR5p/2p2N2/4n3/3p4/7P/3q2P1/4R2K w - - 0 32",
           "turn": "w",
           "solution": [
-            { "from": "b7", "to": "h7", "notation": "Rxh7" }
+            {
+              "from": "b7",
+              "to": "h7",
+              "notation": "Rxh7"
+            }
           ]
         },
         {
@@ -217,10 +911,147 @@
           "fen": "5bk1/2R4p/6p1/8/4NP1P/3bP1K1/r7/8 w - - 0 45",
           "turn": "w",
           "solution": [
-            { "from": "e4", "to": "f6", "notation": "Nf6" },
-            { "from": "g8", "to": "h8", "notation": "Kh8" },
-            { "from": "c7", "to": "h7", "notation": "Rxh7" }
+            {
+              "from": "e4",
+              "to": "f6",
+              "notation": "Nf6"
+            },
+            {
+              "from": "g8",
+              "to": "h8",
+              "notation": "Kh8"
+            },
+            {
+              "from": "c7",
+              "to": "h7",
+              "notation": "Rxh7"
+            }
           ]
+        },
+        {
+          "id": "mp-004",
+          "title": "Hook Mate",
+          "description": "White to move. Mate in 2. Find the mating pattern.",
+          "difficulty": "intermediate",
+          "fen": "3r4/4kp1r/p2Np1p1/3bP3/P2n4/8/1P3RPP/5RK1 w - - 5 26",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "f2",
+              "to": "f7",
+              "notation": "Rxf7+"
+            },
+            {
+              "from": "h7",
+              "to": "f7",
+              "notation": "Rxf7"
+            },
+            {
+              "from": "f1",
+              "to": "f7",
+              "notation": "Rxf7#"
+            }
+          ]
+        },
+        {
+          "id": "mp-005",
+          "title": "Hook Mate",
+          "description": "White to move. Mate in 2. Find the mating pattern.",
+          "difficulty": "beginner",
+          "fen": "5rk1/p2q2p1/1p2p1Np/3p3P/3Pb1P1/2P5/PP3R2/6K1 w - - 0 34",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "f2",
+              "to": "f8",
+              "notation": "Rxf8+"
+            },
+            {
+              "from": "g8",
+              "to": "h7",
+              "notation": "Kh7"
+            },
+            {
+              "from": "f8",
+              "to": "h8",
+              "notation": "Rh8#"
+            }
+          ]
+        },
+        {
+          "id": "mp-006",
+          "title": "Smothered Mate",
+          "description": "White to move. Mate in 2. Find the mating pattern.",
+          "difficulty": "advanced",
+          "fen": "r2q1r1k/4N1bp/p2p2p1/2p3N1/Pp4P1/1Q5P/1P1n1P2/5RK1 w - - 1 22",
+          "turn": "w",
+          "solution": [
+            {
+              "from": "b3",
+              "to": "g8",
+              "notation": "Qg8+"
+            },
+            {
+              "from": "f8",
+              "to": "g8",
+              "notation": "Rxg8"
+            },
+            {
+              "from": "g5",
+              "to": "f7",
+              "notation": "Nf7#"
+            }
+          ]
+        },
+        {
+          "id": "mp-007",
+          "title": "Smothered Mate",
+          "description": "Black to move. Mate in 2. Find the mating pattern.",
+          "difficulty": "advanced",
+          "fen": "r1b2rk1/ppp2ppp/8/1B1p4/3bn3/5N2/PPP2qPP/RNBQR2K b - - 1 12",
+          "turn": "b",
+          "solution": [
+            {
+              "from": "f2",
+              "to": "g1",
+              "notation": "Qg1+"
+            },
+            {
+              "from": "f3",
+              "to": "g1",
+              "notation": "Nxg1"
+            },
+            {
+              "from": "e4",
+              "to": "f2",
+              "notation": "Nf2#"
+            }
+          ]
+        },
+        {
+          "fen": "3r1r1k/5Qpp/2p3n1/p3p1N1/P2q4/3P4/B1P2P2/R4K2 w - - 0 26",
+          "turn": "w",
+          "title": "Smothered Mate",
+          "difficulty": "advanced",
+          "description": "White to move. Mate in 2. Find the mating pattern.",
+          "solution": [
+            {
+              "from": "f7",
+              "to": "g8",
+              "notation": "Qg8+"
+            },
+            {
+              "from": "f8",
+              "to": "g8",
+              "notation": "Rxg8"
+            },
+            {
+              "from": "g5",
+              "to": "f7",
+              "notation": "Nf7#"
+            }
+          ],
+          "id": "mp-008"
         }
       ]
     }

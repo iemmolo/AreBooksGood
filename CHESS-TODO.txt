@@ -14,10 +14,9 @@ Chess Feature - Task Tracking
 
 ## Phase 2: Puzzles (expand existing)
 
-- [x] 15 puzzles across 5 tactical categories (Lichess-sourced)
+- [x] 40 puzzles across 5 tactical categories, 8 per category (Lichess-sourced)
 - [ ] Add puzzle difficulty ratings display
 - [ ] Add puzzle navigation (next/previous) with wrap-around
-- [ ] Add more puzzles (aim for 5-8 per category)
 - [ ] Track puzzle solve stats in localStorage
 - [ ] Add pawn promotion UI (currently auto-queens)
 
