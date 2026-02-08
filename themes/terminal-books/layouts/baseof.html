@@ -17,11 +17,11 @@
   </div>
   {{- $js := resources.Get "js/theme-switcher.js" | minify -}}
   <script src="{{ $js.RelPermalink }}"></script>
-  {{ if .IsSection -}}
+  {{ if and .IsSection (ne .Type "chess") -}}
     {{- $filter := resources.Get "js/review-filter.js" | minify -}}
     <script src="{{ $filter.RelPermalink }}"></script>
   {{- end }}
-  {{ if or (eq .Layout "chess") (eq .Layout "chess-play") -}}
+  {{ if or (eq .Layout "chess") (eq .Type "chess-play") -}}
     {{- $engine := resources.Get "js/chess-engine.js" | minify -}}
     <script src="{{ $engine.RelPermalink }}"></script>
   {{- end }}
@@ -29,7 +29,7 @@
     {{- $chess := resources.Get "js/chess.js" | minify -}}
     <script src="{{ $chess.RelPermalink }}"></script>
   {{- end }}
-  {{ if eq .Layout "chess-play" -}}
+  {{ if eq .Type "chess-play" -}}
     {{- $chessPlay := resources.Get "js/chess-play.js" | minify -}}
     <script src="{{ $chessPlay.RelPermalink }}"></script>
   {{- end }}

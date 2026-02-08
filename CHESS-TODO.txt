@@ -1,7 +1,92 @@
 Chess Feature - Task Tracking
 =====================================
 
-## Done
+## Phase 1: Hub Page & Restructure [IN PROGRESS]
+
+- [x] Replace "Tactics" and "Play" nav entries with single "Chess" link
+- [x] Convert /chess/ from leaf bundle to section (hub page)
+- [x] Create chess hub layout with links to all sub-pages
+- [x] Move puzzles to /chess/puzzles/
+- [x] Move play to /chess/play/
+- [x] Create placeholder pages for Learn and Openings
+- [x] Fix conditional CSS/JS loading for new structure
+- [ ] Add hub page CSS (styled links with descriptions)
+
+## Phase 2: Puzzles (expand existing)
+
+- [x] 15 puzzles across 5 tactical categories (Lichess-sourced)
+- [ ] Add puzzle difficulty ratings display
+- [ ] Add puzzle navigation (next/previous) with wrap-around
+- [ ] Add more puzzles (aim for 5-8 per category)
+- [ ] Track puzzle solve stats in localStorage
+- [ ] Add pawn promotion UI (currently auto-queens)
+
+## Phase 3: Learn — Tactical Lessons
+
+~10 structured lessons teaching tactical chess fundamentals.
+Assumes the player already knows how pieces move.
+Presented as a lesson plan — sequential, building on each concept.
+
+Lesson plan (draft):
+  1. Piece value & trading          — when to exchange, material advantage
+  2. Controlling the centre         — why centre squares matter, pawn structure
+  3. Development & tempo            — getting pieces out, not moving same piece twice
+  4. King safety & castling         — when and why to castle, pawn shield
+  5. Forks                          — double attacks, knight forks especially
+  6. Pins & skewers                 — absolute vs relative pins, skewer patterns
+  7. Discovered attacks             — moving one piece to unleash another
+  8. Back rank mates                — the classic trapped-king pattern
+  9. Mating patterns                — smothered mate, Arabian mate, support mate
+  10. Putting it together           — combining tactics in real positions
+
+Each lesson needs:
+- [ ] Short text explanation (~2-3 paragraphs) of the concept
+- [ ] 2-3 interactive board positions demonstrating the concept
+- [ ] Step-through mode: show the key moves with explanations
+- [ ] Data format: JSON with lesson text + positions + annotated move sequences
+- [ ] Layout: reuse chess board component, add lesson text panel
+- [ ] Progress tracking in localStorage (lessons completed)
+- [ ] Build on existing puzzle data (forks, pins, back rank, etc.)
+
+Design notes:
+- Keep it minimal — don't overwhelm. One concept at a time.
+- Lesson index page shows progress (completed/total)
+- Each lesson page: explanation → interactive examples → "next lesson" link
+
+## Phase 4: Openings — Drillable Sequences
+
+Interactive opening trainer. Player drills move sequences
+until they become muscle memory.
+
+Starting repertoire:
+- [ ] Ruy Lopez (white) — 1.e4 e5 2.Nf3 Nc6 3.Bb5 (main line + common responses)
+- [ ] Caro-Kann (black) — 1.e4 c6 2.d4 d5 (main line + exchange/advance variations)
+
+Each opening needs:
+- [ ] Data format: JSON tree of moves with annotations
+      { "move": "e4", "notation": "1. e4", "comment": "King's pawn opening",
+        "responses": [ { "move": "e5", ... }, { "move": "c5", ... } ] }
+- [ ] Board UI: player makes the "right" move, opponent auto-responds
+- [ ] Wrong move feedback: highlight correct square, let player retry
+- [ ] Variation branches: after main line, drill common deviations
+- [ ] Drill mode: repeat the sequence N times, track accuracy
+- [ ] Layout: chess board + move list + opening name/variation label
+- [ ] Stats: track drill accuracy and repetitions in localStorage
+
+Design notes:
+- Start simple — main line only, then add branches
+- Keep the tree shallow (8-12 moves deep for each side)
+- Show "you're drilling as white/black" clearly
+
+## Phase 5: Polish & Future
+
+- [ ] Keyboard navigation for accessibility (all chess pages)
+- [ ] Animation for piece movement
+- [ ] Shared chess engine improvements (promotion UI, etc.)
+- [ ] Add more openings (Italian, Sicilian, Queen's Gambit, etc.)
+- [ ] Add more lessons (endgame basics, pawn structure, etc.)
+
+## Done (historical)
 
 - [x] Scaffold files: content page, layout, CSS, JS, puzzle data
 - [x] Implement chess board rendering (FEN parser, Unicode pieces)
@@ -16,24 +101,13 @@ Chess Feature - Task Tracking
 - [x] Add castling support (engine + play mode)
 - [x] Add en passant support (engine + play mode)
 - [x] Add stalemate detection (engine + play mode)
-- [x] Local 2-player Play page (/chess-play) with turn management, undo, new game
-- [x] Rename nav "Puzzle" → "Tactics", add "Play" nav entry
-
-## Future / Nice-to-Have
-
-- [x] Add more puzzles (mate-in-2, mate-in-3, tactical themes) — expanded to 15 puzzles across 5 themed categories sourced from Lichess puzzle DB
-- [ ] Add puzzle difficulty ratings display
-- [ ] Add puzzle navigation (next/previous) with wrap-around
-- [ ] Add keyboard navigation for accessibility
-- [ ] Add pawn promotion UI (currently auto-queens)
-- [ ] Add animation for piece movement
-- [ ] Track puzzle solve stats in localStorage
+- [x] Local 2-player Play page with turn management, undo, new game
 
 ## Process Log: Categorized Puzzles (Feb 2026)
 
 How we built the tactics tutorial with Claude Code:
 
-1. **Planning phase** — Designed data structure (flat array → categories object),
+1. **Planning phase** — Designed data structure (flat array -> categories object),
    identified 5 tactical themes (back rank mates, forks, pins/skewers, discovered
    attacks, mating patterns), and mapped out all files to change.
 

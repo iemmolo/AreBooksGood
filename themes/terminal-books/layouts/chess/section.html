@@ -1,0 +1,25 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="chess-intro">
+    {{ .Content }}
+  </div>
+
+  <nav class="chess-hub">
+    <a href="{{ "chess/puzzles/" | relURL }}" class="chess-hub-link">
+      <span class="chess-hub-name">> puzzles</span>
+      <span class="chess-hub-desc">solve tactical puzzles from Lichess</span>
+    </a>
+    <a href="{{ "chess/learn/" | relURL }}" class="chess-hub-link">
+      <span class="chess-hub-name">> learn</span>
+      <span class="chess-hub-desc">lessons on tactical chess fundamentals</span>
+    </a>
+    <a href="{{ "chess/play/" | relURL }}" class="chess-hub-link">
+      <span class="chess-hub-name">> play</span>
+      <span class="chess-hub-desc">local 2-player game</span>
+    </a>
+    <a href="{{ "chess/openings/" | relURL }}" class="chess-hub-link">
+      <span class="chess-hub-name">> openings</span>
+      <span class="chess-hub-desc">drill opening sequences</span>
+    </a>
+  </nav>
+{{ end }}

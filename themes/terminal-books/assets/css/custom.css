@@ -132,6 +132,8 @@ a.site-title {
    ============================================ */
 .review-filters {
   margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
 .filter-toggle {
@@ -151,8 +153,6 @@ a.site-title {
 
 .filter-content {
   margin-top: 12px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
 .filter-row {
@@ -395,6 +395,43 @@ a.site-title {
 .review-body img {
   border: none;
   padding: 0;
+}
+
+/* ============================================
+   Chess Hub
+   ============================================ */
+.chess-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.chess-hub-link {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 0;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.chess-hub-link:last-child {
+  border-bottom: none;
+}
+
+.chess-hub-link:hover .chess-hub-name {
+  color: var(--accent);
+}
+
+.chess-hub-name {
+  color: var(--foreground);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chess-hub-desc {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  font-size: 0.9em;
 }
 
 /* ============================================
