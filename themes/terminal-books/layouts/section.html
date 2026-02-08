@@ -2,9 +2,48 @@
   <h1 class="page-title">{{ .Title }}</h1>
   {{ .Content }}
 
-  <ul class="review-list">
+  {{- $allCats := slice }}
+  {{- $allTags := slice }}
+  {{- range .Pages }}
+    {{- range .Params.categories }}{{ $allCats = $allCats | append (. | urlize) }}{{ end }}
+    {{- range .Params.tags }}{{ $allTags = $allTags | append (. | urlize) }}{{ end }}
+  {{- end }}
+  {{- $allCats = $allCats | uniq | sort }}
+  {{- $allTags = $allTags | uniq | sort }}
+
+  {{ if or $allCats $allTags }}
+  <details class="review-filters" id="review-filters">
+    <summary class="filter-toggle">> filter</summary>
+    <div class="filter-content">
+      {{ with $allCats }}
+      <div class="filter-row">
+        <span class="filter-label">genre:</span>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all" data-group="category">all</button>
+          {{- range . }}
+          <button class="filter-btn" data-filter="{{ . }}" data-group="category">{{ . | humanize }}</button>
+          {{- end }}
+        </div>
+      </div>
+      {{ end }}
+      {{ with $allTags }}
+      <div class="filter-row">
+        <span class="filter-label">tags:</span>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all" data-group="tag">all</button>
+          {{- range . }}
+          <button class="filter-btn" data-filter="{{ . }}" data-group="tag">{{ . | humanize }}</button>
+          {{- end }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
+  </details>
+  {{ end }}
+
+  <ul class="review-list" id="review-list">
     {{- range .Pages.ByDate.Reverse }}
-      <li>{{ partial "review-card.html" . }}</li>
+      <li data-categories="{{ range .Params.categories }}{{ . | urlize }} {{ end }}" data-tags="{{ range .Params.tags }}{{ . | urlize }} {{ end }}">{{ partial "review-card.html" . }}</li>
     {{- end }}
   </ul>
 {{ end }}

@@ -22,21 +22,13 @@ theme = 'terminal-books'
     pageRef = '/reviews'
     weight = 20
   [[menus.main]]
-    name = 'Categories'
-    pageRef = '/categories'
-    weight = 30
-  [[menus.main]]
-    name = 'Tags'
-    pageRef = '/tags'
-    weight = 40
-  [[menus.main]]
     name = 'Tactics'
     pageRef = '/chess'
-    weight = 45
+    weight = 30
   [[menus.main]]
     name = 'Play'
     pageRef = '/chess-play'
-    weight = 46
+    weight = 35
   [[menus.main]]
     name = 'About'
     pageRef = '/about'

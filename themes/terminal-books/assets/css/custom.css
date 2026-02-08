@@ -128,6 +128,82 @@ a.site-title {
 }
 
 /* ============================================
+   Review Filters
+   ============================================ */
+.review-filters {
+  margin-bottom: 24px;
+}
+
+.filter-toggle {
+  cursor: pointer;
+  list-style: none;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-size: 0.9em;
+}
+
+.filter-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.filter-toggle:hover {
+  color: var(--accent);
+}
+
+.filter-content {
+  margin-top: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.filter-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.filter-row:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-btn {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.filter-btn.active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.review-list > li.hidden {
+  display: none;
+}
+
+/* ============================================
    Review Cards (listing pages)
    ============================================ */
 .review-list {
@@ -339,6 +415,11 @@ a.site-title {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    gap: 6px;
   }
 
   .review-card {
