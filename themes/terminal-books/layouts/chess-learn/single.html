@@ -1,0 +1,58 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="chess-intro">
+    {{ .Content }}
+  </div>
+
+  {{ $lessons := site.Data.chesslessons }}
+  <div id="chess-learn-app" data-lessons='{{ $lessons | jsonify }}'>
+    {{/* Lesson Index View */}}
+    <div id="learn-index" class="chess-learn-index">
+      <div id="learn-progress" class="chess-learn-progress"></div>
+      <ul id="lesson-list" class="chess-lesson-list"></ul>
+    </div>
+
+    {{/* Active Lesson View */}}
+    <div id="learn-lesson" class="chess-learn-lesson" style="display:none;">
+      <button id="btn-back" class="chess-learn-back">&lt; All Lessons</button>
+
+      <h2 id="lesson-title" class="chess-lesson-title"></h2>
+      <div id="lesson-text" class="chess-lesson-text"></div>
+
+      <div id="position-tabs" class="chess-position-tabs"></div>
+
+      <div class="chess-layout">
+        <div class="chess-board-wrapper">
+          <div class="chess-coords chess-coords-files">
+            <span>a</span><span>b</span><span>c</span><span>d</span>
+            <span>e</span><span>f</span><span>g</span><span>h</span>
+          </div>
+          <div class="chess-coords chess-coords-ranks">
+            <span>8</span><span>7</span><span>6</span><span>5</span>
+            <span>4</span><span>3</span><span>2</span><span>1</span>
+          </div>
+          <div id="chess-board" class="chess-board"></div>
+        </div>
+
+        <div class="chess-sidebar">
+          <div id="position-info" class="chess-learn-position-info">
+            <span id="position-title" class="chess-learn-position-title"></span>
+            <span id="position-desc" class="chess-learn-position-desc"></span>
+          </div>
+          <div id="step-comment" class="chess-step-comment"></div>
+          <div class="chess-step-controls">
+            <button id="btn-prev">Previous</button>
+            <button id="btn-next">Next</button>
+            <button id="btn-reset-pos">Reset</button>
+          </div>
+          <div id="step-counter" class="chess-step-counter"></div>
+        </div>
+      </div>
+
+      <div id="lesson-complete" class="chess-lesson-complete" style="display:none;">
+        <p>Lesson complete!</p>
+        <button id="btn-next-lesson">Next Lesson &gt;</button>
+      </div>
+    </div>
+  </div>
+{{ end }}

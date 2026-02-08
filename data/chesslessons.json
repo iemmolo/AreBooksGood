@@ -1,0 +1,158 @@
+{
+  "lessons": [
+    {
+      "id": "piece-value",
+      "title": "Piece Value & Trading",
+      "description": "Learn when to trade pieces and how to count material.",
+      "content": "Every chess piece has a relative value that helps you decide when a trade is worth it. Pawns are worth 1 point, knights and bishops 3, rooks 5, and the queen 9. The king is invaluable — you can't trade it. These numbers aren't rules carved in stone, but they give you a reliable framework for quick decisions.\n\nA good trade is one where you capture more value than you give up. Trading a bishop (3) for a rook (5) is great — you gain 2 points of material. Trading your queen (9) for a knight (3) is a disaster. When material is equal, the player with better piece activity and pawn structure usually wins.\n\nWatch for situations where your opponent offers a trade that looks even but isn't. A bishop pair (two bishops working together) is often worth more than a bishop and a knight. And sometimes sacrificing material is correct if it leads to checkmate or wins material back with interest.",
+      "positions": [
+        {
+          "title": "Winning the Exchange",
+          "description": "White's bishop pins a knight to the king — and wins it.",
+          "fen": "r3k2r/ppp2ppp/2n1bn2/3pp3/2B1P3/2N2N2/PPP2PPP/R1BQK2R w KQkq - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "c4", "to": "b5", "notation": "Bb5", "comment": "The bishop pins the knight on c6 to the king on e8. The knight cannot move without exposing the king to check." },
+            { "from": "f6", "to": "e4", "notation": "Nxe4", "comment": "Black ignores the pin and grabs a centre pawn, hoping to create counterplay." },
+            { "from": "b5", "to": "c6", "notation": "Bxc6+", "comment": "White captures the pinned knight with check. Trading bishop (3) for knight (3) is even, but the follow-up wins more." },
+            { "from": "e8", "to": "e7", "notation": "Ke7", "comment": "The king steps out of check. White can now capture the undefended knight on e4, coming out a full piece ahead." }
+          ]
+        },
+        {
+          "title": "A Bad Trade",
+          "description": "Avoid trading your queen for a minor piece.",
+          "fen": "r1bqk2r/pppp1ppp/2n2n2/4p3/1bB1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e1", "to": "g1", "notation": "O-O", "comment": "White calmly castles instead of worrying about the bishop on b4 attacking the knight. King safety first, then deal with threats." },
+            { "from": "b4", "to": "c3", "notation": "Bxc3", "comment": "Black captures the knight (3 points) with the bishop (3 points). An even trade in material." },
+            { "from": "b2", "to": "c3", "notation": "bxc3", "comment": "White recaptures with the pawn. The pawn structure is slightly damaged, but material stays equal. Much better than panicking and making a bad trade!" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "controlling-the-centre",
+      "title": "Controlling the Centre",
+      "description": "Why centre squares matter and how to fight for them.",
+      "content": "The four central squares — d4, d5, e4, e5 — are the most important squares on the board. A piece on a central square controls more of the board than one on the edge. A knight on e4 attacks 8 squares; a knight on a1 attacks only 2. Controlling the centre gives your pieces room to manoeuvre and limits your opponent's options.\n\nThe simplest way to fight for the centre is with pawns. Playing e4 and d4 as White (or e5 and d5 as Black) stakes a claim to those key squares. Pawns are cheap sentries — they guard central squares while freeing your bishops to develop. But pawns can also become targets, so support them.\n\nYou don't always need pawns in the centre to control it. Pieces can influence central squares from a distance. A bishop on c4 controls d5 and e6. A knight on f3 watches d4 and e5. The key principle is: whether with pawns or pieces, fight for the centre early and don't let your opponent dominate it for free.",
+      "positions": [
+        {
+          "title": "The Classical Centre",
+          "description": "White builds an ideal pawn centre with e4 and d4.",
+          "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e2", "to": "e4", "notation": "1. e4", "comment": "White opens with the king's pawn, immediately claiming e4 and opening lines for the bishop and queen." },
+            { "from": "e7", "to": "e5", "notation": "1... e5", "comment": "Black mirrors, fighting for their share of the centre." },
+            { "from": "d2", "to": "d4", "notation": "2. d4", "comment": "White challenges Black's e5 pawn directly. Two pawns abreast on d4 and e4 form the ideal classical centre." },
+            { "from": "e5", "to": "d4", "notation": "2... exd4", "comment": "Black captures, but gives up their central pawn. White can recapture and maintain a strong presence in the centre." }
+          ]
+        },
+        {
+          "title": "Piece Control of the Centre",
+          "description": "Knights and bishops influence the centre from developed squares.",
+          "fen": "r1bqkb1r/pppppppp/2n2n2/8/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "d2", "to": "d4", "notation": "d4", "comment": "White pushes the d-pawn, placing two pawns side by side in the centre. Both e4 and d4 are now occupied." },
+            { "from": "d7", "to": "d5", "notation": "d5", "comment": "Black strikes back immediately, challenging White's centre rather than allowing total domination." },
+            { "from": "b1", "to": "c3", "notation": "Nc3", "comment": "The knight develops to c3, defending e4 and adding pressure to d5. Pieces and pawns work together to fight for the centre." }
+          ]
+        },
+        {
+          "title": "Knight on the Rim",
+          "description": "See why a centralised knight is stronger than one on the edge.",
+          "fen": "8/8/8/4N3/8/8/8/n7 w - - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e5", "to": "d3", "notation": "Nd3", "comment": "From d3 the knight can reach 8 squares: b2, b4, c1, c5, e1, e5, f2, f4. A centralised knight has maximum mobility." },
+            { "from": "a1", "to": "b3", "notation": "Nb3", "comment": "The edge knight moves to its best square. From b3 it reaches only 4 squares. 'A knight on the rim is dim' — half the mobility of a centralised knight." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forks",
+      "title": "Forks",
+      "description": "Double attacks that win material by threatening two targets at once.",
+      "content": "A fork is a move that attacks two or more pieces simultaneously. The opponent can only save one, so you win the other. Forks are one of the most common ways to win material in chess, and every piece can deliver them — though knights are the most famous forkers.\n\nKnights are natural forking machines because they jump over pieces and attack in an unusual pattern. A knight fork checking the king while attacking the queen or rook is devastating: the king must move, and the other piece is lost. Even beginners can spot knight forks once they know what to look for.\n\nPawns and queens can also deliver devastating forks. A pawn advancing to attack two pieces diagonally is cheap and effective. Look for positions where two enemy pieces sit on squares that a single move could attack. Setting up a fork often involves a sacrifice or a forcing move that drives enemy pieces onto vulnerable squares.",
+      "positions": [
+        {
+          "title": "The Royal Fork",
+          "description": "A knight checks the king and attacks the rook — winning material.",
+          "fen": "r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "d5", "to": "c7", "notation": "Nc7+", "comment": "The knight jumps to c7 with check! It attacks the king on e8 and the rook on a8 simultaneously. This is a knight fork — the king must move, and the rook will be lost." },
+            { "from": "e8", "to": "d8", "notation": "Kd8", "comment": "The king moves out of check. There is no way to block a knight's check — the king must step aside." },
+            { "from": "c7", "to": "a8", "notation": "Nxa8", "comment": "The knight captures the rook on a8. White has won a rook (5 points) for free. Knight forks with check are devastating because the opponent has no choice but to deal with the check first." }
+          ]
+        },
+        {
+          "title": "Knight Fork: King and Rook",
+          "description": "White's knight forks two pieces on the same rank.",
+          "fen": "4k3/3r4/8/8/4N3/8/8/4K3 w - - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e4", "to": "f6", "notation": "Nf6+", "comment": "Knight to f6 with check! The knight attacks the king on e8 and the rook on d7 simultaneously. The king must move." },
+            { "from": "e8", "to": "e7", "notation": "Ke7", "comment": "The king steps away from the check, but the rook on d7 is left undefended." },
+            { "from": "f6", "to": "d7", "notation": "Nxd7", "comment": "The knight captures the rook. White wins 5 points of material — all thanks to the knight fork." }
+          ]
+        },
+        {
+          "title": "Pawn Fork",
+          "description": "Even a humble pawn can fork two pieces.",
+          "fen": "2kr4/ppp2ppp/8/3b4/3n4/4P3/PPP2PPP/R3KB1R w KQ - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e3", "to": "e4", "notation": "e4", "comment": "The pawn advances and attacks the bishop on d5! The bishop must move or be captured." },
+            { "from": "d5", "to": "e6", "notation": "Be6", "comment": "Black saves the bishop by retreating to e6. But now the knight on d4 has lost its defender." },
+            { "from": "e4", "to": "e5", "notation": "e5", "comment": "The pawn pushes again, gaining space. White has driven back Black's pieces and won the initiative with simple pawn advances." }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pins-and-skewers",
+      "title": "Pins & Skewers",
+      "description": "Use line pieces to trap or win material through alignment tactics.",
+      "content": "A pin is an attack on a piece that cannot move without exposing a more valuable piece behind it. The pinned piece is stuck — it may be legally unable to move (absolute pin, when the king is behind it) or simply unwise to move (relative pin, when a queen or rook is behind it). Pins are extremely powerful because they immobilise an enemy piece.\n\nA skewer is the reverse of a pin: you attack a valuable piece, and when it moves, you capture the less valuable piece behind it. The classic skewer is a bishop attacking a king along a diagonal, and when the king steps aside, the rook behind it is captured. Skewers often arise in endgames when pieces line up on open files or diagonals.\n\nBoth pins and skewers exploit piece alignment along ranks, files, and diagonals. Bishops, rooks, and queens are the pieces that create these tactics because they attack in straight lines. To set up pins and skewers, look for enemy pieces lined up on the same line — then find a way to get your line piece onto that line.",
+      "positions": [
+        {
+          "title": "Absolute Pin",
+          "description": "A bishop pins a knight to the king — the knight is frozen.",
+          "fen": "r2qk2r/ppp1bppp/2n5/3p4/3Pn3/4BN2/PPP1BPPP/R2QK2R w KQkq - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e2", "to": "b5", "notation": "Bb5", "comment": "The bishop moves to b5, pinning the knight on c6 to the king on e8. This is an absolute pin — the knight literally cannot move because it would expose the king to check." },
+            { "from": "e7", "to": "d6", "notation": "Bd6", "comment": "Black develops the bishop but the pinned knight on c6 remains stuck and under pressure." },
+            { "from": "d1", "to": "a4", "notation": "Qa4", "comment": "White piles pressure on the pinned knight with the queen. Now c6 is attacked twice (bishop + queen) and defended only once. White wins the knight." }
+          ]
+        },
+        {
+          "title": "Rook Skewer",
+          "description": "A rook checks the king along a rank and wins the rook behind it.",
+          "fen": "8/8/8/8/8/8/3k1r2/R6K w - - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "a1", "to": "a2", "notation": "Ra2+", "comment": "The rook slides to a2, giving check along the second rank. The king on d2 must move — and the rook on f2 is left exposed on the same rank. This is a skewer." },
+            { "from": "d2", "to": "e3", "notation": "Ke3", "comment": "The king escapes the check by stepping to e3, but the rook on f2 is now unprotected." },
+            { "from": "a2", "to": "f2", "notation": "Rxf2", "comment": "White captures the rook on f2. The skewer worked: attack the valuable piece (king), and when it moves, capture the piece behind it." }
+          ]
+        },
+        {
+          "title": "Piling on a Pin",
+          "description": "Add attackers to a pinned piece to win it.",
+          "fen": "r1bqk2r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+          "playerColor": "w",
+          "steps": [
+            { "from": "e1", "to": "g1", "notation": "O-O", "comment": "White castles, getting the king to safety. The bishop on b5 already pins the knight on c6 to the king on e8." },
+            { "from": "d7", "to": "d6", "notation": "d6", "comment": "Black develops and defends e5, but the pinned knight on c6 is still stuck." },
+            { "from": "d2", "to": "d4", "notation": "d4", "comment": "White strikes the centre while the knight on c6 can't help. The pin limits Black's options — the knight seems to guard d4 but cannot actually move there." }
+          ]
+        }
+      ]
+    }
+  ]
+}

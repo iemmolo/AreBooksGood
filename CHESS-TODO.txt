@@ -21,37 +21,33 @@ Chess Feature - Task Tracking
 - [ ] Track puzzle solve stats in localStorage
 - [ ] Add pawn promotion UI (currently auto-queens)
 
-## Phase 3: Learn — Tactical Lessons
+## Phase 3: Learn — Tactical Lessons [DONE — first 4 lessons]
 
-~10 structured lessons teaching tactical chess fundamentals.
-Assumes the player already knows how pieces move.
-Presented as a lesson plan — sequential, building on each concept.
+Interactive lesson system with step-through board positions.
+First batch of 4 lessons shipped; infrastructure supports adding more.
 
-Lesson plan (draft):
-  1. Piece value & trading          — when to exchange, material advantage
-  2. Controlling the centre         — why centre squares matter, pawn structure
-  3. Development & tempo            — getting pieces out, not moving same piece twice
-  4. King safety & castling         — when and why to castle, pawn shield
-  5. Forks                          — double attacks, knight forks especially
-  6. Pins & skewers                 — absolute vs relative pins, skewer patterns
+Shipped lessons:
+  1. [x] Piece value & trading      — when to exchange, material advantage
+  2. [x] Controlling the centre     — why centre squares matter, pawn structure
+  3. [x] Forks                      — double attacks, knight forks especially
+  4. [x] Pins & skewers             — absolute vs relative pins, skewer patterns
+
+Infrastructure (all done):
+- [x] Short text explanation (~2-3 paragraphs) per lesson
+- [x] 2-3 interactive board positions per lesson
+- [x] Step-through mode with annotated moves
+- [x] JSON data format (data/chesslessons.json)
+- [x] Dedicated layout (chess-learn/single.html) + JS (chess-learn.js)
+- [x] Progress tracking in localStorage
+- [x] Reuses chess engine for FEN parsing
+
+Future lessons (not yet built):
+  5. Development & tempo            — getting pieces out, not moving same piece twice
+  6. King safety & castling         — when and why to castle, pawn shield
   7. Discovered attacks             — moving one piece to unleash another
   8. Back rank mates                — the classic trapped-king pattern
   9. Mating patterns                — smothered mate, Arabian mate, support mate
   10. Putting it together           — combining tactics in real positions
-
-Each lesson needs:
-- [ ] Short text explanation (~2-3 paragraphs) of the concept
-- [ ] 2-3 interactive board positions demonstrating the concept
-- [ ] Step-through mode: show the key moves with explanations
-- [ ] Data format: JSON with lesson text + positions + annotated move sequences
-- [ ] Layout: reuse chess board component, add lesson text panel
-- [ ] Progress tracking in localStorage (lessons completed)
-- [ ] Build on existing puzzle data (forks, pins, back rank, etc.)
-
-Design notes:
-- Keep it minimal — don't overwhelm. One concept at a time.
-- Lesson index page shows progress (completed/total)
-- Each lesson page: explanation → interactive examples → "next lesson" link
 
 ## Phase 4: Openings — Drillable Sequences
 
@@ -88,6 +84,7 @@ Design notes:
 
 ## Done (historical)
 
+- [x] Learn page: 4 interactive lessons with step-through boards & localStorage progress
 - [x] Scaffold files: content page, layout, CSS, JS, puzzle data
 - [x] Implement chess board rendering (FEN parser, Unicode pieces)
 - [x] Implement move validation for all piece types

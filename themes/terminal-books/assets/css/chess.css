@@ -331,6 +331,189 @@
   vertical-align: middle;
 }
 
+/* ============================================
+   Chess Learn
+   ============================================ */
+
+.chess-learn-progress {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-size: 0.9em;
+  margin-bottom: 16px;
+}
+
+.chess-lesson-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chess-lesson-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.chess-lesson-item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.chess-lesson-item.completed {
+  opacity: 0.75;
+}
+
+.chess-lesson-num {
+  font-weight: 600;
+  min-width: 2ch;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.chess-lesson-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chess-lesson-item-title {
+  font-weight: 600;
+}
+
+.chess-lesson-item-desc {
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.chess-lesson-indicator {
+  font-size: 1.1em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  min-width: 2ch;
+  text-align: right;
+}
+
+.chess-lesson-item.completed .chess-lesson-indicator {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Lesson view */
+.chess-learn-back {
+  padding: 4px 12px;
+  font-size: 0.9em;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.chess-lesson-title {
+  margin: 0 0 12px;
+  font-size: 1.3em;
+}
+
+.chess-lesson-text {
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.chess-lesson-text p {
+  margin: 0 0 12px;
+}
+
+.chess-lesson-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* Position tabs */
+.chess-position-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.chess-position-tab {
+  padding: 4px 12px;
+  font-size: 0.85em;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.chess-position-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.chess-position-tab:hover {
+  border-color: var(--accent);
+}
+
+/* Position info */
+.chess-learn-position-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.chess-learn-position-title {
+  font-weight: 600;
+}
+
+.chess-learn-position-desc {
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* Step controls and comment */
+.chess-step-comment {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  font-size: 0.95em;
+  line-height: 1.5;
+  min-height: 3em;
+}
+
+.chess-step-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chess-step-controls button {
+  padding: 4px 14px;
+  font-size: 0.9em;
+}
+
+.chess-step-counter {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+/* Lesson complete */
+.chess-lesson-complete {
+  margin-top: 20px;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  text-align: center;
+}
+
+.chess-lesson-complete p {
+  margin: 0 0 10px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.chess-lesson-complete button {
+  padding: 6px 18px;
+  font-size: 0.95em;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .chess-layout {
@@ -356,5 +539,9 @@
 
   .chess-category-bar select {
     max-width: 100%;
+  }
+
+  .chess-position-tabs {
+    flex-wrap: wrap;
   }
 }

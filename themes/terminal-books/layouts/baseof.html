@@ -21,7 +21,7 @@
     {{- $filter := resources.Get "js/review-filter.js" | minify -}}
     <script src="{{ $filter.RelPermalink }}"></script>
   {{- end }}
-  {{ if or (eq .Layout "chess") (eq .Type "chess-play") -}}
+  {{ if or (eq .Layout "chess") (eq .Type "chess-play") (eq .Type "chess-learn") -}}
     {{- $engine := resources.Get "js/chess-engine.js" | minify -}}
     <script src="{{ $engine.RelPermalink }}"></script>
   {{- end }}
@@ -32,6 +32,10 @@
   {{ if eq .Type "chess-play" -}}
     {{- $chessPlay := resources.Get "js/chess-play.js" | minify -}}
     <script src="{{ $chessPlay.RelPermalink }}"></script>
+  {{- end }}
+  {{ if eq .Type "chess-learn" -}}
+    {{- $learn := resources.Get "js/chess-learn.js" | minify -}}
+    <script src="{{ $learn.RelPermalink }}"></script>
   {{- end }}
 </body>
 </html>

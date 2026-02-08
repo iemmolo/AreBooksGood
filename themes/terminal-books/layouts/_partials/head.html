@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="{{ $styles.RelPermalink }}">
 
 {{/* Chess CSS — on chess and chess-play pages */}}
-{{ if or (eq .Layout "chess") (eq .Type "chess-play") -}}
+{{ if or (eq .Layout "chess") (eq .Type "chess-play") (eq .Type "chess-learn") -}}
   {{- $chess := resources.Get "css/chess.css" | minify -}}
   <link rel="stylesheet" href="{{ $chess.RelPermalink }}">
 {{- end }}
