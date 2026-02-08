@@ -1,0 +1,64 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="sdk-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="sudoku-app">
+    <!-- Control bar -->
+    <div class="sdk-control-bar">
+      <div class="sdk-left-controls">
+        <select id="sdk-difficulty" class="sdk-select">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+          <option value="diabolical">Diabolical</option>
+        </select>
+        <button id="sdk-new" class="sdk-btn">New Puzzle</button>
+      </div>
+      <div class="sdk-timer" id="sdk-timer">0:00</div>
+    </div>
+
+    <!-- Board -->
+    <div class="sdk-board" id="sdk-board"></div>
+
+    <!-- Number pad -->
+    <div class="sdk-numpad" id="sdk-numpad">
+      <button class="sdk-num-btn" data-num="1">1</button>
+      <button class="sdk-num-btn" data-num="2">2</button>
+      <button class="sdk-num-btn" data-num="3">3</button>
+      <button class="sdk-num-btn" data-num="4">4</button>
+      <button class="sdk-num-btn" data-num="5">5</button>
+      <button class="sdk-num-btn" data-num="6">6</button>
+      <button class="sdk-num-btn" data-num="7">7</button>
+      <button class="sdk-num-btn" data-num="8">8</button>
+      <button class="sdk-num-btn" data-num="9">9</button>
+      <button class="sdk-num-btn sdk-erase-btn" data-num="0">Erase</button>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="sdk-actions">
+      <button id="sdk-pencil" class="sdk-btn">Pencil: OFF</button>
+      <button id="sdk-undo" class="sdk-btn">Undo</button>
+      <button id="sdk-check" class="sdk-btn">Check</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="sdk-stats">
+      <h3 class="sdk-stats-title">Stats</h3>
+      <div class="sdk-stats-grid">
+        <span class="sdk-stat-label">Easy Solved</span><span id="sdk-stat-easy" class="sdk-stat-value">0</span>
+        <span class="sdk-stat-label">Easy Best</span><span id="sdk-stat-easy-best" class="sdk-stat-value">--</span>
+        <span class="sdk-stat-label">Medium Solved</span><span id="sdk-stat-medium" class="sdk-stat-value">0</span>
+        <span class="sdk-stat-label">Medium Best</span><span id="sdk-stat-medium-best" class="sdk-stat-value">--</span>
+        <span class="sdk-stat-label">Hard Solved</span><span id="sdk-stat-hard" class="sdk-stat-value">0</span>
+        <span class="sdk-stat-label">Hard Best</span><span id="sdk-stat-hard-best" class="sdk-stat-value">--</span>
+        <span class="sdk-stat-label">Diabolical Solved</span><span id="sdk-stat-diabolical" class="sdk-stat-value">0</span>
+        <span class="sdk-stat-label">Diabolical Best</span><span id="sdk-stat-diabolical-best" class="sdk-stat-value">--</span>
+      </div>
+      <button id="sdk-reset-stats" class="sdk-btn sdk-btn-small sdk-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+
+  <script>window.__SUDOKU_DATA = {{ site.Data.sudoku | jsonify | safeJS }};</script>
+{{ end }}

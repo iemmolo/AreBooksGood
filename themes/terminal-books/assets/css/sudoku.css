@@ -1,0 +1,319 @@
+/* ============================================
+   Sudoku
+   ============================================ */
+
+.sdk-intro {
+  margin-bottom: 20px;
+}
+
+/* ── Control bar ─────────────────────────── */
+.sdk-control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.sdk-left-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sdk-select {
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.9em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.sdk-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1em;
+  color: var(--accent);
+}
+
+/* ── Buttons ─────────────────────────────── */
+.sdk-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sdk-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.sdk-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sdk-btn-small {
+  padding: 3px 10px;
+  font-size: 0.8em;
+}
+
+.sdk-btn-danger {
+  color: #ff4444;
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.sdk-btn-danger:hover {
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+  border-color: #ff4444;
+}
+
+.sdk-btn.sdk-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--background));
+  color: var(--accent);
+}
+
+/* ── Board ───────────────────────────────── */
+.sdk-board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  border: 2px solid var(--foreground);
+  background: var(--background);
+  aspect-ratio: 1;
+  max-width: 500px;
+  margin: 0 auto;
+  user-select: none;
+}
+
+.sdk-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6em;
+  font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.1s;
+  color: var(--foreground);
+  aspect-ratio: 1;
+}
+
+/* Thick 3x3 box borders */
+.sdk-cell[data-col="2"],
+.sdk-cell[data-col="5"] {
+  border-right: 2px solid var(--foreground);
+}
+
+.sdk-cell[data-row="2"],
+.sdk-cell[data-row="5"] {
+  border-bottom: 2px solid var(--foreground);
+}
+
+/* Given digits */
+.sdk-cell.sdk-given {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+/* Player-entered digits */
+.sdk-cell.sdk-player {
+  color: var(--accent);
+}
+
+/* Selected cell */
+.sdk-cell.sdk-selected {
+  background: color-mix(in srgb, var(--accent) 25%, var(--background));
+}
+
+/* Peer highlighting (same row/col/box) */
+.sdk-cell.sdk-peer {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--background));
+}
+
+/* Same number highlight */
+.sdk-cell.sdk-same-num {
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+}
+
+/* Conflict */
+.sdk-cell.sdk-conflict {
+  color: #ff4444;
+}
+
+/* Check errors */
+.sdk-cell.sdk-error {
+  background: color-mix(in srgb, #ff4444 20%, var(--background));
+}
+
+/* ── Pencil marks ────────────────────────── */
+.sdk-pencil-marks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.sdk-pencil-marks span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.38em;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  line-height: 1;
+}
+
+/* ── Number pad ──────────────────────────── */
+.sdk-numpad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  max-width: 500px;
+  margin: 12px auto 0;
+}
+
+.sdk-num-btn {
+  padding: 10px 0;
+  font-family: inherit;
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sdk-num-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.sdk-num-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.sdk-erase-btn {
+  grid-column: span 2;
+  font-size: 0.95em;
+}
+
+/* ── Actions row ─────────────────────────── */
+.sdk-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  max-width: 500px;
+  margin: 10px auto 0;
+}
+
+/* ── Stats ───────────────────────────────── */
+.sdk-stats {
+  margin-top: 20px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 6px;
+}
+
+.sdk-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+  color: var(--accent);
+}
+
+.sdk-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  font-size: 0.9em;
+}
+
+.sdk-stat-label {
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.sdk-stat-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Completion animation ────────────────── */
+.sdk-board.sdk-complete {
+  animation: sdk-glow 1.5s ease-in-out;
+  border-color: var(--accent);
+}
+
+@keyframes sdk-glow {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+  50%  { box-shadow: 0 0 20px 4px color-mix(in srgb, var(--accent) 40%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+}
+
+.sdk-cell.sdk-ripple {
+  animation: sdk-ripple 0.5s ease-out;
+}
+
+@keyframes sdk-ripple {
+  0%   { transform: scale(1); background: color-mix(in srgb, var(--accent) 40%, var(--background)); }
+  50%  { transform: scale(1.1); }
+  100% { transform: scale(1); background: transparent; }
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 480px) {
+  .sdk-board {
+    max-width: 100%;
+  }
+
+  .sdk-cell {
+    font-size: 1.1em;
+  }
+
+  .sdk-pencil-marks span {
+    font-size: 0.3em;
+  }
+
+  .sdk-numpad {
+    max-width: 100%;
+    gap: 4px;
+  }
+
+  .sdk-num-btn {
+    padding: 8px 0;
+    font-size: 1.1em;
+  }
+
+  .sdk-actions {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .sdk-control-bar {
+    font-size: 0.9em;
+    padding: 8px 10px;
+  }
+}

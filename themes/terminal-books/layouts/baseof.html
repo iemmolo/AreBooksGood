@@ -49,5 +49,9 @@
     {{- $cw := resources.Get "js/casino-wars.js" | minify -}}
     <script src="{{ $cw.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "sudoku" -}}
+    {{- $sudoku := resources.Get "js/sudoku.js" | minify -}}
+    <script src="{{ $sudoku.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

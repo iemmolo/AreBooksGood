@@ -36,6 +36,12 @@
   <link rel="stylesheet" href="{{ $cw.RelPermalink }}">
 {{- end }}
 
+{{/* Sudoku CSS */}}
+{{ if eq .Type "sudoku" -}}
+  {{- $sudoku := resources.Get "css/sudoku.css" | minify -}}
+  <link rel="stylesheet" href="{{ $sudoku.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
