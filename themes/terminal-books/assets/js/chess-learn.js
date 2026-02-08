@@ -190,23 +190,43 @@
 
     renderPositionTabs();
     updateStepCounter();
-    renderBoard();
+    renderBoard({ fadeIn: true });
   }
 
   // ── Board Rendering (read-only) ─────────────────────────
 
-  function renderBoard() {
+  function squarePos(row, col) {
+    var size = boardEl.offsetWidth / 8;
+    return { x: col * size, y: row * size };
+  }
+
+  function renderBoard(opts) {
+    opts = opts || {};
     boardEl.innerHTML = '';
+    var pieceCount = 0;
     for (var r = 0; r < 8; r++) {
       for (var c = 0; c < 8; c++) {
         var sq = document.createElement('div');
         sq.className = 'chess-square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+        sq.dataset.row = r;
+        sq.dataset.col = c;
 
         var cell = state.board[r][c];
         if (cell) {
           var key = cell.color === 'w' ? cell.piece.toLowerCase() : cell.piece;
           sq.textContent = PIECES[key];
           sq.classList.add('has-piece');
+
+          if (opts.fadeIn) {
+            sq.classList.add('piece-enter');
+            sq.style.animationDelay = (pieceCount * 25) + 'ms';
+            pieceCount++;
+          }
+        }
+
+        // Arrival settle
+        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell && !opts.fadeIn) {
+          sq.classList.add('piece-arrived');
         }
 
         // Last move highlight
@@ -219,6 +239,36 @@
 
         boardEl.appendChild(sq);
       }
+    }
+  }
+
+  function animateSlide(fromRow, fromCol, toRow, toCol) {
+    var fromPos = squarePos(fromRow, fromCol);
+    var toPos = squarePos(toRow, toCol);
+    var dx = fromPos.x - toPos.x;
+    var dy = fromPos.y - toPos.y;
+
+    // Mark captured piece
+    var capturedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+    if (capturedSq && capturedSq.classList.contains('has-piece')) {
+      capturedSq.classList.add('piece-captured');
+    }
+
+    renderBoard();
+
+    var arrivedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+    if (arrivedSq && (dx !== 0 || dy !== 0)) {
+      arrivedSq.classList.remove('piece-arrived');
+      arrivedSq.classList.add('piece-sliding');
+      arrivedSq.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+      arrivedSq.offsetHeight;
+      arrivedSq.style.transform = 'translate(0, 0)';
+      arrivedSq.addEventListener('transitionend', function onEnd() {
+        arrivedSq.removeEventListener('transitionend', onEnd);
+        arrivedSq.classList.remove('piece-sliding');
+        arrivedSq.classList.add('piece-arrived');
+        arrivedSq.style.transform = '';
+      });
     }
   }
 
@@ -257,6 +307,10 @@
     var from = ChessEngine.fromAlgebraic(step.from);
     var to = ChessEngine.fromAlgebraic(step.to);
 
+    // Save pre-move positions for slide animation
+    var slideFrom = { row: from.row, col: from.col };
+    var slideTo = { row: to.row, col: to.col };
+
     // Handle castling
     var piece = state.board[from.row][from.col];
     if (piece && piece.piece === 'K' && Math.abs(to.col - from.col) === 2) {
@@ -284,7 +338,7 @@
     state.lastMove = { from: from, to: to };
     stepCommentEl.textContent = step.comment;
     updateStepCounter();
-    renderBoard();
+    animateSlide(slideFrom.row, slideFrom.col, slideTo.row, slideTo.col);
   }
 
   function prevStep() {

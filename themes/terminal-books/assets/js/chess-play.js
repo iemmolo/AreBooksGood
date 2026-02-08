@@ -51,14 +51,21 @@
     setStatus('', '');
     statusEl.style.display = 'none';
     updateTurnIndicator();
-    render();
+    render({ fadeIn: true });
     renderMoveLog();
   }
 
   // ── Board Rendering ───────────────────────────────────
 
-  function render() {
+  function squarePos(row, col) {
+    var size = boardEl.offsetWidth / 8;
+    return { x: col * size, y: row * size };
+  }
+
+  function render(opts) {
+    opts = opts || {};
     boardEl.innerHTML = '';
+    var pieceCount = 0;
     for (var r = 0; r < 8; r++) {
       for (var c = 0; c < 8; c++) {
         var sq = document.createElement('div');
@@ -72,9 +79,15 @@
           sq.textContent = PIECES[key];
           sq.classList.add('has-piece');
           sq.title = (cell.color === 'w' ? 'White' : 'Black') + ' ' + PIECE_NAMES[cell.piece];
+
+          if (opts.fadeIn) {
+            sq.classList.add('piece-enter');
+            sq.style.animationDelay = (pieceCount * 25) + 'ms';
+            pieceCount++;
+          }
         }
 
-        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell) {
+        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell && !opts.fadeIn) {
           sq.classList.add('piece-arrived');
         }
 
@@ -103,6 +116,53 @@
         sq.addEventListener('click', handleClick);
         boardEl.appendChild(sq);
       }
+    }
+  }
+
+  function animateMove(fromRow, fromCol, toRow, toCol, callback) {
+    var fromPos = squarePos(fromRow, fromCol);
+    var toPos = squarePos(toRow, toCol);
+    var dx = fromPos.x - toPos.x;
+    var dy = fromPos.y - toPos.y;
+
+    var capturedPiece = state.board[toRow][toCol];
+    if (capturedPiece) {
+      var capturedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+      if (capturedSq) capturedSq.classList.add('piece-captured');
+    }
+
+    render();
+
+    var arrivedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+    if (arrivedSq && (dx !== 0 || dy !== 0)) {
+      arrivedSq.classList.remove('piece-arrived');
+      arrivedSq.classList.add('piece-sliding');
+      arrivedSq.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+      arrivedSq.offsetHeight;
+      arrivedSq.style.transform = 'translate(0, 0)';
+      arrivedSq.addEventListener('transitionend', function onEnd() {
+        arrivedSq.removeEventListener('transitionend', onEnd);
+        arrivedSq.classList.remove('piece-sliding');
+        arrivedSq.classList.add('piece-arrived');
+        arrivedSq.style.transform = '';
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  }
+
+  function solvedCelebration() {
+    var squares = boardEl.querySelectorAll('.chess-square');
+    for (var i = 0; i < squares.length; i++) {
+      (function (sq, idx) {
+        var row = Math.floor(idx / 8);
+        var col = idx % 8;
+        var dist = Math.abs(row - 3.5) + Math.abs(col - 3.5);
+        setTimeout(function () {
+          sq.classList.add('solve-ripple');
+        }, dist * 40);
+      })(squares[i], i);
     }
   }
 
@@ -238,8 +298,13 @@
     }
 
     updateTurnIndicator();
-    render();
     renderMoveLog();
+
+    animateMove(fromRow, fromCol, toRow, toCol, function () {
+      if (state.gameOver && state.gameResult && state.gameResult.indexOf('checkmate') !== -1) {
+        solvedCelebration();
+      }
+    });
   }
 
   // ── Move Notation ─────────────────────────────────────

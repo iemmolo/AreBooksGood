@@ -45,7 +45,8 @@
     currentErrors: 0,
     waitingForAutoPlay: false,
     drillStats: {},       // { openingId: { attempts: N, bestAccuracy: N } }
-    viewMode: 'index'
+    viewMode: 'index',
+    hintSquare: null      // {row, col} for hint pulse
   };
 
   // ── localStorage ────────────────────────────────────────
@@ -164,7 +165,7 @@
     updateCoords();
     setStatus('Your turn \u2014 make the correct move.', '');
     renderMoveList();
-    renderBoard();
+    renderBoard({ fadeIn: true });
 
     // If player is black, auto-play White's first move
     if (opening.playerColor === 'b' && state.currentMove < opening.moves.length) {
@@ -186,6 +187,8 @@
       if (state.viewMode !== 'drill') return;
 
       var move = state.currentOpening.moves[state.currentMove];
+      var from = ChessEngine.fromAlgebraic(move.from);
+      var to = ChessEngine.fromAlgebraic(move.to);
       applyMove(move.from, move.to);
       state.currentMove++;
 
@@ -198,13 +201,12 @@
       }
 
       renderMoveList();
-      renderBoard();
-      state.waitingForAutoPlay = false;
-
-      // Check if drill is complete after opponent move
-      if (state.currentMove >= state.currentOpening.moves.length) {
-        completeDrill();
-      }
+      animateMove(from.row, from.col, to.row, to.col, function () {
+        state.waitingForAutoPlay = false;
+        if (state.currentMove >= state.currentOpening.moves.length) {
+          completeDrill();
+        }
+      });
     }, AUTO_PLAY_DELAY);
   }
 
@@ -285,9 +287,19 @@
     return state.currentOpening && state.currentOpening.playerColor === 'b';
   }
 
-  function renderBoard() {
+  function squarePos(row, col) {
+    var flipped = isFlipped();
+    var ri = flipped ? 7 - row : row;
+    var ci = flipped ? 7 - col : col;
+    var size = boardEl.offsetWidth / 8;
+    return { x: ci * size, y: ri * size };
+  }
+
+  function renderBoard(opts) {
+    opts = opts || {};
     var flipped = isFlipped();
     boardEl.innerHTML = '';
+    var pieceCount = 0;
     for (var ri = 0; ri < 8; ri++) {
       for (var ci = 0; ci < 8; ci++) {
         var r = flipped ? 7 - ri : ri;
@@ -302,6 +314,22 @@
           var key = cell.color === 'w' ? cell.piece.toLowerCase() : cell.piece;
           sq.textContent = PIECES[key];
           sq.classList.add('has-piece');
+
+          if (opts.fadeIn) {
+            sq.classList.add('piece-enter');
+            sq.style.animationDelay = (pieceCount * 25) + 'ms';
+            pieceCount++;
+          }
+        }
+
+        // Arrival settle
+        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell && !opts.fadeIn) {
+          sq.classList.add('piece-arrived');
+        }
+
+        // Hint pulse
+        if (state.hintSquare && state.hintSquare.row === r && state.hintSquare.col === c) {
+          sq.classList.add('hint-pulse');
         }
 
         // Last move highlight
@@ -309,9 +337,6 @@
           if ((state.lastMove.from.row === r && state.lastMove.from.col === c) ||
               (state.lastMove.to.row === r && state.lastMove.to.col === c)) {
             sq.classList.add('last-move');
-          }
-          if (state.lastMove.to.row === r && state.lastMove.to.col === c && cell) {
-            sq.classList.add('piece-arrived');
           }
         }
 
@@ -334,12 +359,60 @@
     }
   }
 
+  function animateMove(fromRow, fromCol, toRow, toCol, callback) {
+    var fromPos = squarePos(fromRow, fromCol);
+    var toPos = squarePos(toRow, toCol);
+    var dx = fromPos.x - toPos.x;
+    var dy = fromPos.y - toPos.y;
+
+    var capturedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+    if (capturedSq && capturedSq.classList.contains('has-piece')) {
+      capturedSq.classList.add('piece-captured');
+    }
+
+    renderBoard();
+
+    var arrivedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+    if (arrivedSq && (dx !== 0 || dy !== 0)) {
+      arrivedSq.classList.remove('piece-arrived');
+      arrivedSq.classList.add('piece-sliding');
+      arrivedSq.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+      arrivedSq.offsetHeight;
+      arrivedSq.style.transform = 'translate(0, 0)';
+      arrivedSq.addEventListener('transitionend', function onEnd() {
+        arrivedSq.removeEventListener('transitionend', onEnd);
+        arrivedSq.classList.remove('piece-sliding');
+        arrivedSq.classList.add('piece-arrived');
+        arrivedSq.style.transform = '';
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  }
+
+  function solvedCelebration() {
+    var squares = boardEl.querySelectorAll('.chess-square');
+    for (var i = 0; i < squares.length; i++) {
+      (function (sq, idx) {
+        var row = Math.floor(idx / 8);
+        var col = idx % 8;
+        var dist = Math.abs(row - 3.5) + Math.abs(col - 3.5);
+        setTimeout(function () {
+          sq.classList.add('solve-ripple');
+        }, dist * 40);
+      })(squares[i], i);
+    }
+  }
+
   // ── Click Handler ───────────────────────────────────────
 
   function handleClick(e) {
     if (state.waitingForAutoPlay) return;
     if (state.currentMove >= state.currentOpening.moves.length) return;
     if (!isPlayerMove(state.currentMove)) return;
+
+    state.hintSquare = null;
 
     var sq = e.currentTarget;
     var row = parseInt(sq.dataset.row, 10);
@@ -379,6 +452,9 @@
     var from = ChessEngine.fromAlgebraic(expected.from);
     var to = ChessEngine.fromAlgebraic(expected.to);
 
+    // Clear hint on any attempt
+    state.hintSquare = null;
+
     if (fromRow === from.row && fromCol === from.col && toRow === to.row && toCol === to.col) {
       // Correct move
       applyMove(expected.from, expected.to);
@@ -388,18 +464,20 @@
 
       setStatus(expected.comment || 'Correct!', 'status-solved');
       renderMoveList();
-      renderBoard();
 
-      // Check if drill is complete
-      if (state.currentMove >= state.currentOpening.moves.length) {
-        completeDrill();
-        return;
-      }
+      animateMove(fromRow, fromCol, toRow, toCol, function () {
+        // Check if drill is complete
+        if (state.currentMove >= state.currentOpening.moves.length) {
+          completeDrill();
+          return;
+        }
 
-      // Auto-play opponent's next move if needed
-      if (!isPlayerMove(state.currentMove)) {
-        autoPlayOpponent();
-      }
+        // Auto-play opponent's next move if needed
+        if (!isPlayerMove(state.currentMove)) {
+          autoPlayOpponent();
+        }
+      });
+      return;
     } else {
       // Wrong move
       state.currentErrors++;
@@ -438,6 +516,7 @@
     drillAccuracyEl.textContent = accuracy + '% accuracy (' + state.currentErrors + ' mistake' +
       (state.currentErrors === 1 ? '' : 's') + ')';
     setStatus('Well done! You completed the ' + opening.title + '.', 'status-solved');
+    solvedCelebration();
   }
 
   // ── Back one move ───────────────────────────────────────
@@ -561,7 +640,8 @@
     var expected = state.currentOpening.moves[state.currentMove];
     var from = ChessEngine.fromAlgebraic(expected.from);
 
-    state.selected = { row: from.row, col: from.col };
+    state.hintSquare = { row: from.row, col: from.col };
+    state.selected = null;
     state.validMoves = [];
     setStatus('Try moving the piece on ' + expected.from + '.', '');
     renderBoard();
