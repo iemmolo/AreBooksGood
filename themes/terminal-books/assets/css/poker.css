@@ -1,0 +1,453 @@
+/* ============================================
+   Texas Hold'em Poker
+   ============================================ */
+
+.pk-intro {
+  margin-bottom: 20px;
+}
+
+/* ── Bankroll bar — sits above the table ──── */
+.pk-bankroll-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.pk-blind-info {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+/* ── Buttons ──────────────────────────────── */
+.pk-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pk-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.pk-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pk-btn-small {
+  padding: 3px 10px;
+  font-size: 0.85em;
+}
+
+.pk-btn-danger {
+  color: #ff4444;
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.pk-btn-danger:hover:not(:disabled) {
+  border-color: #ff4444;
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+}
+
+/* ── Table surface ────────────────────────── */
+.pk-table {
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 0 0 120px 120px;
+  padding: 20px 24px 32px;
+  box-shadow:
+    inset 0 2px 12px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 4px 20px color-mix(in srgb, #000 15%, transparent);
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    "top    top    top"
+    "left   center right"
+    "bottom bottom bottom"
+    "status status status";
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+  min-height: 380px;
+  align-items: center;
+}
+
+/* ── Seat positions ──────────────────────── */
+.pk-seat-top    { grid-area: top;    justify-self: center; }
+.pk-seat-left   { grid-area: left;   justify-self: center; }
+.pk-seat-right  { grid-area: right;  justify-self: center; }
+.pk-seat-bottom { grid-area: bottom; justify-self: center; }
+.pk-center      { grid-area: center; justify-self: center; align-self: center; }
+
+/* ── Seat base ───────────────────────────── */
+.pk-seat {
+  text-align: center;
+  padding: 8px 12px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s, opacity 0.3s, box-shadow 0.2s;
+  min-width: 120px;
+}
+
+.pk-seat.pk-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.pk-seat.pk-folded {
+  opacity: 0.35;
+}
+
+/* ── Seat info (name + badge + chips) ───── */
+.pk-seat-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.pk-name {
+  font-weight: 700;
+  font-size: 0.9em;
+}
+
+.pk-chips {
+  font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Badge (D / SB / BB) ─────────────────── */
+.pk-badge {
+  display: none;
+  font-size: 0.65em;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--background);
+  letter-spacing: 0.05em;
+}
+
+.pk-badge.pk-badge-visible {
+  display: inline-block;
+}
+
+/* ── Bet display ─────────────────────────── */
+.pk-bet {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--accent);
+  min-height: 1.2em;
+  margin-top: 4px;
+}
+
+/* ── Action label (Check / Call / Fold) ──── */
+.pk-action-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  min-height: 1.1em;
+  margin-top: 2px;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+/* ── Cards container ─────────────────────── */
+.pk-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  min-height: 126px;
+  padding: 4px 0;
+}
+
+.pk-cards-sm {
+  min-height: 76px;
+}
+
+/* ── Individual card ─────────────────────── */
+.pk-card {
+  width: 90px;
+  height: 126px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 6px;
+  background: var(--background);
+  font-size: 1.4em;
+  line-height: 1.2;
+  box-shadow: 1px 2px 6px color-mix(in srgb, #000 12%, transparent);
+  animation: pk-deal 0.35s ease-out;
+}
+
+.pk-card-sm {
+  width: 54px;
+  height: 76px;
+  font-size: 0.95em;
+  border-radius: 4px;
+}
+
+.pk-card-rank {
+  font-weight: 700;
+  font-size: 1.3em;
+}
+
+.pk-card-suit {
+  font-size: 1.6em;
+  line-height: 1;
+}
+
+.pk-card-sm .pk-card-rank {
+  font-size: 1.1em;
+}
+
+.pk-card-sm .pk-card-suit {
+  font-size: 1.2em;
+}
+
+.pk-card-red {
+  color: #ff6b6b;
+}
+
+.pk-card-black {
+  color: var(--foreground);
+}
+
+.pk-card-facedown {
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: color-mix(in srgb, var(--accent) 35%, transparent);
+  font-size: 2.4em;
+  font-weight: 700;
+  box-shadow:
+    1px 2px 6px color-mix(in srgb, #000 12%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.pk-card-sm.pk-card-facedown {
+  font-size: 1.5em;
+}
+
+@keyframes pk-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Center area (pot + community) ───────── */
+.pk-center {
+  text-align: center;
+}
+
+.pk-pot {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  min-height: 1.4em;
+}
+
+.pk-community-cards {
+  min-height: 126px;
+  gap: 8px;
+}
+
+/* ── Hand rank label ─────────────────────── */
+.pk-hand-rank {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--accent);
+  min-height: 1.2em;
+  margin-top: 4px;
+}
+
+/* ── Status message ──────────────────────── */
+.pk-status {
+  grid-area: status;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 700;
+  min-height: 1.6em;
+}
+
+.pk-status-win {
+  color: var(--accent);
+}
+
+.pk-status-lose {
+  color: #ff4444;
+}
+
+/* ── Controls ────────────────────────────── */
+.pk-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pk-raise-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pk-raise-group[hidden] {
+  display: none;
+}
+
+/* ── Stats panel ─────────────────────────── */
+.pk-stats {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+}
+
+.pk-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+}
+
+.pk-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92em;
+}
+
+.pk-stat-label {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.pk-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 480px) {
+  .pk-intro {
+    margin-bottom: 12px;
+  }
+
+  .pk-bankroll-bar {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 0.95em;
+  }
+
+  .pk-table {
+    padding: 12px 8px 20px;
+    border-radius: 0 0 60px 60px;
+    gap: 6px;
+    min-height: 300px;
+  }
+
+  .pk-seat {
+    padding: 4px 6px;
+    min-width: 80px;
+  }
+
+  .pk-cards {
+    gap: 4px;
+    min-height: 82px;
+    padding: 2px 0;
+  }
+
+  .pk-cards-sm {
+    min-height: 56px;
+  }
+
+  .pk-card {
+    width: 58px;
+    height: 82px;
+    font-size: 1.05em;
+    border-radius: 4px;
+  }
+
+  .pk-card-rank {
+    font-size: 1.2em;
+  }
+
+  .pk-card-suit {
+    font-size: 1.3em;
+  }
+
+  .pk-card-facedown {
+    font-size: 1.8em;
+  }
+
+  .pk-card-sm {
+    width: 40px;
+    height: 56px;
+    font-size: 0.75em;
+    border-radius: 3px;
+  }
+
+  .pk-card-sm.pk-card-facedown {
+    font-size: 1.1em;
+  }
+
+  .pk-community-cards {
+    min-height: 82px;
+  }
+
+  .pk-status {
+    font-size: 0.95em;
+  }
+
+  .pk-controls {
+    margin-top: 10px;
+    padding-top: 4px;
+    gap: 6px;
+  }
+
+  .pk-btn {
+    padding: 5px 12px;
+    font-size: 0.88em;
+  }
+
+  .pk-stats {
+    margin-top: 16px;
+    padding: 10px;
+  }
+
+  .pk-name {
+    font-size: 0.8em;
+  }
+
+  .pk-chips {
+    font-size: 0.7em;
+  }
+}

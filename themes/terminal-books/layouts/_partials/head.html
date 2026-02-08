@@ -42,6 +42,12 @@
   <link rel="stylesheet" href="{{ $sudoku.RelPermalink }}">
 {{- end }}
 
+{{/* Poker CSS */}}
+{{ if eq .Type "poker" -}}
+  {{- $poker := resources.Get "css/poker.css" | minify -}}
+  <link rel="stylesheet" href="{{ $poker.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">

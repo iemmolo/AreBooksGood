@@ -53,5 +53,9 @@
     {{- $sudoku := resources.Get "js/sudoku.js" | minify -}}
     <script src="{{ $sudoku.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "poker" -}}
+    {{- $poker := resources.Get "js/poker.js" | minify -}}
+    <script src="{{ $poker.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

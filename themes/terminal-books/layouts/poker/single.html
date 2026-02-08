@@ -1,0 +1,101 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="pk-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="poker-app">
+    <!-- Bankroll bar -->
+    <div class="pk-bankroll-bar">
+      <span class="pk-balance">Chips: $<span id="pk-balance">1000</span></span>
+      <span class="pk-blind-info">Blinds: $5 / $10</span>
+    </div>
+
+    <!-- The table surface -->
+    <div class="pk-table">
+      <!-- Seat 1: Alex (top) -->
+      <div id="pk-seat-1" class="pk-seat pk-seat-top">
+        <div class="pk-seat-info">
+          <span id="pk-name-1" class="pk-name">Alex</span>
+          <span id="pk-badge-1" class="pk-badge"></span>
+          <span id="pk-chips-1" class="pk-chips">$1000</span>
+        </div>
+        <div id="pk-cards-1" class="pk-cards pk-cards-sm"></div>
+        <div id="pk-bet-1" class="pk-bet"></div>
+        <div id="pk-action-1" class="pk-action-label"></div>
+      </div>
+
+      <!-- Seat 2: Sam (left) -->
+      <div id="pk-seat-2" class="pk-seat pk-seat-left">
+        <div class="pk-seat-info">
+          <span id="pk-name-2" class="pk-name">Sam</span>
+          <span id="pk-badge-2" class="pk-badge"></span>
+          <span id="pk-chips-2" class="pk-chips">$1000</span>
+        </div>
+        <div id="pk-cards-2" class="pk-cards pk-cards-sm"></div>
+        <div id="pk-bet-2" class="pk-bet"></div>
+        <div id="pk-action-2" class="pk-action-label"></div>
+      </div>
+
+      <!-- Seat 3: Jordan (right) -->
+      <div id="pk-seat-3" class="pk-seat pk-seat-right">
+        <div class="pk-seat-info">
+          <span id="pk-name-3" class="pk-name">Jordan</span>
+          <span id="pk-badge-3" class="pk-badge"></span>
+          <span id="pk-chips-3" class="pk-chips">$1000</span>
+        </div>
+        <div id="pk-cards-3" class="pk-cards pk-cards-sm"></div>
+        <div id="pk-bet-3" class="pk-bet"></div>
+        <div id="pk-action-3" class="pk-action-label"></div>
+      </div>
+
+      <!-- Center: pot + community cards -->
+      <div class="pk-center">
+        <div id="pk-pot" class="pk-pot"></div>
+        <div id="pk-community" class="pk-cards pk-community-cards"></div>
+      </div>
+
+      <!-- Seat 0: You (bottom) -->
+      <div id="pk-seat-0" class="pk-seat pk-seat-bottom">
+        <div class="pk-seat-info">
+          <span id="pk-name-0" class="pk-name">You</span>
+          <span id="pk-badge-0" class="pk-badge"></span>
+          <span id="pk-chips-0" class="pk-chips">$1000</span>
+        </div>
+        <div id="pk-cards-0" class="pk-cards"></div>
+        <div id="pk-bet-0" class="pk-bet"></div>
+        <div id="pk-hand-rank" class="pk-hand-rank"></div>
+      </div>
+
+      <!-- Status message -->
+      <div id="pk-status" class="pk-status"></div>
+    </div>
+
+    <!-- Controls -->
+    <div id="pk-controls" class="pk-controls">
+      <button id="pk-fold" class="pk-btn" hidden>Fold</button>
+      <button id="pk-check" class="pk-btn" hidden>Check</button>
+      <button id="pk-call" class="pk-btn" hidden>Call</button>
+      <div id="pk-raise-group" class="pk-raise-group" hidden>
+        <button id="pk-raise-down" class="pk-btn pk-btn-small">-</button>
+        <button id="pk-raise" class="pk-btn">Raise $<span id="pk-raise-amount">20</span></button>
+        <button id="pk-raise-up" class="pk-btn pk-btn-small">+</button>
+      </div>
+      <button id="pk-allin" class="pk-btn" hidden>All In</button>
+      <button id="pk-newhand" class="pk-btn">New Hand</button>
+    </div>
+
+    <!-- Stats panel -->
+    <div class="pk-stats">
+      <h3 class="pk-stats-title">Stats</h3>
+      <div class="pk-stats-grid">
+        <span class="pk-stat-label">Hands</span><span id="pk-stat-hands" class="pk-stat-value">0</span>
+        <span class="pk-stat-label">Wins</span><span id="pk-stat-wins" class="pk-stat-value">0</span>
+        <span class="pk-stat-label">Biggest Pot</span><span id="pk-stat-biggest" class="pk-stat-value">$0</span>
+        <span class="pk-stat-label">Earnings</span><span id="pk-stat-earnings" class="pk-stat-value">$0</span>
+        <span class="pk-stat-label">Peak</span><span id="pk-stat-peak" class="pk-stat-value">$1000</span>
+      </div>
+      <button id="pk-reset-stats" class="pk-btn pk-btn-small pk-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}
