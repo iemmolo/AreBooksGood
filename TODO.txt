@@ -10,7 +10,7 @@ AreBooksGood - Improvement TODO
 
 ## High Priority
 
-- [ ] Add a custom 404 page template
+- [x] Add a custom 404 page template
 - [ ] Remove commented-out code in home.html (line 4)
 - [ ] Add skip-to-main-content link for accessibility
 

@@ -500,6 +500,32 @@ a.site-title {
 }
 
 /* ============================================
+   404 Page
+   ============================================ */
+.not-found-links {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+
+.not-found-links li {
+  padding: 6px 0;
+}
+
+.not-found-links li::marker {
+  content: none;
+}
+
+.not-found-links a {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.not-found-links a:hover {
+  color: var(--accent);
+}
+
+/* ============================================
    Responsive
    ============================================ */
 @media (max-width: 480px) {
