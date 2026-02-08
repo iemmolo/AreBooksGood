@@ -600,6 +600,15 @@
   line-height: 1.4;
 }
 
+/* White's move comment box */
+.chess-status-white {
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: var(--foreground);
+  font-size: 0.9em;
+  margin-bottom: 12px;
+}
+
 /* Drill info indicator */
 .chess-drill-info {
   padding: 8px 12px;

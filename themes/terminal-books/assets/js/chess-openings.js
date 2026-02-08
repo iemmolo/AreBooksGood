@@ -30,6 +30,7 @@
   var drillCompleteEl = document.getElementById('drill-complete');
   var drillCompleteMsgEl = document.getElementById('drill-complete-msg');
   var drillAccuracyEl = document.getElementById('drill-accuracy');
+  var drillStatusWhiteEl = document.getElementById('drill-status-white');
   var boardWrapper = document.querySelector('.chess-board-wrapper');
 
   var state = {
@@ -188,7 +189,14 @@
       applyMove(move.from, move.to);
       state.currentMove++;
 
-      setStatus(move.comment || 'Your turn \u2014 make the correct move.', '');
+      // Show White's comment in its own box
+      if (move.comment) {
+        drillStatusWhiteEl.textContent = move.notation + ': ' + move.comment;
+        drillStatusWhiteEl.style.display = '';
+      } else {
+        drillStatusWhiteEl.style.display = 'none';
+      }
+
       renderMoveList();
       renderBoard();
       state.waitingForAutoPlay = false;
@@ -545,6 +553,20 @@
     }
   }
 
+  function showHint() {
+    if (state.waitingForAutoPlay) return;
+    if (state.currentMove >= state.currentOpening.moves.length) return;
+    if (!isPlayerMove(state.currentMove)) return;
+
+    var expected = state.currentOpening.moves[state.currentMove];
+    var from = ChessEngine.fromAlgebraic(expected.from);
+
+    state.selected = { row: from.row, col: from.col };
+    state.validMoves = [];
+    setStatus('Try moving the piece on ' + expected.from + '.', '');
+    renderBoard();
+  }
+
   function setStatus(msg, cls) {
     if (!msg) {
       drillStatusEl.style.display = 'none';
@@ -554,6 +576,8 @@
     drillStatusEl.textContent = msg;
     drillStatusEl.className = 'chess-status';
     if (cls) drillStatusEl.classList.add(cls);
+    // Hide White's box when player status updates
+    drillStatusWhiteEl.style.display = 'none';
   }
 
   // ── Event Bindings ──────────────────────────────────────
@@ -566,6 +590,7 @@
     }
   });
   document.getElementById('btn-back-move').addEventListener('click', backMove);
+  document.getElementById('btn-hint-drill').addEventListener('click', showHint);
   document.getElementById('btn-drill-again').addEventListener('click', function () {
     if (state.currentOpening) {
       var idx = openings.indexOf(state.currentOpening);
