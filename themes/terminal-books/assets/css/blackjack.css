@@ -197,6 +197,7 @@
 /* ── Player hands (split support) ─────────── */
 .bj-player-hands {
   display: flex;
+  justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
 }
@@ -247,12 +248,14 @@
 .bj-insurance {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 10px 14px;
-  margin: 8px 0;
-  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-  border-radius: 4px;
-  font-size: 0.92em;
+  padding: 6px 16px;
+  margin: 6px auto;
+  max-width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 20px;
+  font-size: 0.85em;
   background: color-mix(in srgb, var(--accent) 6%, var(--background));
 }
 
@@ -298,29 +301,91 @@
 
 /* ── Responsive ───────────────────────────── */
 @media (max-width: 480px) {
+  .bj-intro {
+    margin-bottom: 12px;
+  }
+
   .bj-bankroll-bar {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     text-align: center;
+    padding: 8px 10px;
+    font-size: 0.95em;
   }
 
   .bj-table {
-    padding: 16px 14px 24px;
-    border-radius: 0 0 80px 80px;
+    padding: 14px 10px 20px;
+    border-radius: 0 0 60px 60px;
+  }
+
+  .bj-zone-label {
+    font-size: 0.6em;
+    margin-bottom: 2px;
+  }
+
+  .bj-hand-area {
+    margin-bottom: 4px;
+  }
+
+  .bj-cards {
+    gap: 6px;
+    min-height: 90px;
+    padding: 2px 0;
   }
 
   .bj-card {
-    width: 64px;
-    height: 90px;
-    font-size: 1.15em;
+    width: 58px;
+    height: 82px;
+    font-size: 1.05em;
+    border-radius: 4px;
+  }
+
+  .bj-card-rank {
+    font-size: 1.2em;
   }
 
   .bj-card-suit {
     font-size: 1.3em;
   }
 
+  .bj-card-facedown {
+    font-size: 1.8em;
+  }
+
+  .bj-table-divider {
+    margin: 6px 0;
+  }
+
+  .bj-table-arc {
+    padding-bottom: 10px;
+  }
+
+  .bj-status {
+    font-size: 1em;
+    margin: 2px 0;
+  }
+
   .bj-insurance {
     flex-direction: column;
     text-align: center;
+    padding: 6px 12px;
+    gap: 6px;
+    font-size: 0.8em;
+  }
+
+  .bj-controls {
+    margin-top: 10px;
+    padding-top: 4px;
+    gap: 6px;
+  }
+
+  .bj-btn {
+    padding: 5px 12px;
+    font-size: 0.88em;
+  }
+
+  .bj-stats {
+    margin-top: 16px;
+    padding: 10px;
   }
 }
