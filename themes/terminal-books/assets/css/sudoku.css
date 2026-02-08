@@ -3,7 +3,45 @@
    ============================================ */
 
 .sdk-intro {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+/* ── Play area frame ─────────────────────── */
+.sdk-frame {
+  border: 2px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  border-radius: 10px;
+  padding: 20px;
+  background: color-mix(in srgb, var(--foreground) 3%, var(--background));
+  box-shadow:
+    inset 0 0 0 4px var(--background),
+    inset 0 0 0 5px color-mix(in srgb, var(--foreground) 15%, transparent),
+    0 2px 20px color-mix(in srgb, var(--foreground) 6%, transparent);
+  position: relative;
+}
+
+/* Corner accents — decorative dots at each corner */
+.sdk-frame::before,
+.sdk-frame::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.sdk-frame::before {
+  top: 8px;
+  left: 8px;
+  box-shadow: calc(100% - 16px) 0 0 0 currentColor;
+}
+
+/* Use an extra trick for bottom corners via the outer wrapper */
+.sdk-frame::after {
+  bottom: 8px;
+  right: 8px;
+  box-shadow: calc(-100% + 16px) 0 0 0 currentColor;
 }
 
 /* ── Control bar ─────────────────────────── */
@@ -12,11 +50,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  margin-bottom: 0;
-  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
-  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 6px;
   font-size: 1.05em;
   font-weight: 600;
 }
@@ -28,7 +65,7 @@
 }
 
 .sdk-select {
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-family: inherit;
   font-size: 0.9em;
   color: var(--foreground);
@@ -46,7 +83,7 @@
 
 /* ── Buttons ─────────────────────────────── */
 .sdk-btn {
-  padding: 6px 16px;
+  padding: 7px 18px;
   font-family: inherit;
   font-size: 0.95em;
   color: var(--foreground);
@@ -96,7 +133,7 @@
   border: 2px solid var(--foreground);
   background: var(--background);
   aspect-ratio: 1;
-  max-width: 500px;
+  max-width: 460px;
   margin: 0 auto;
   user-select: none;
 }
@@ -105,7 +142,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6em;
+  font-size: 1.5em;
   font-weight: 600;
   border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
   cursor: pointer;
@@ -188,13 +225,13 @@
 .sdk-numpad {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  max-width: 500px;
-  margin: 12px auto 0;
+  gap: 8px;
+  max-width: 460px;
+  margin: 18px auto 0;
 }
 
 .sdk-num-btn {
-  padding: 10px 0;
+  padding: 12px 0;
   font-family: inherit;
   font-size: 1.3em;
   font-weight: 600;
@@ -225,22 +262,22 @@
 .sdk-actions {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  max-width: 500px;
-  margin: 10px auto 0;
+  gap: 12px;
+  max-width: 460px;
+  margin: 14px auto 0;
 }
 
 /* ── Stats ───────────────────────────────── */
 .sdk-stats {
-  margin-top: 20px;
-  padding: 14px;
+  margin-top: 24px;
+  padding: 16px;
   background: color-mix(in srgb, var(--foreground) 5%, var(--background));
   border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
   border-radius: 6px;
 }
 
 .sdk-stats-title {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 1em;
   color: var(--accent);
 }
@@ -248,7 +285,7 @@
 .sdk-stats-grid {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 4px 16px;
+  gap: 6px 16px;
   font-size: 0.9em;
 }
 
@@ -285,6 +322,10 @@
 
 /* ── Responsive ──────────────────────────── */
 @media (max-width: 480px) {
+  .sdk-frame {
+    padding: 12px;
+  }
+
   .sdk-board {
     max-width: 100%;
   }
@@ -299,21 +340,24 @@
 
   .sdk-numpad {
     max-width: 100%;
-    gap: 4px;
+    gap: 5px;
+    margin-top: 14px;
   }
 
   .sdk-num-btn {
-    padding: 8px 0;
+    padding: 10px 0;
     font-size: 1.1em;
   }
 
   .sdk-actions {
     max-width: 100%;
     flex-wrap: wrap;
+    margin-top: 10px;
   }
 
   .sdk-control-bar {
     font-size: 0.9em;
     padding: 8px 10px;
+    margin-bottom: 12px;
   }
 }

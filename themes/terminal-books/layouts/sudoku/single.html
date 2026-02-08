@@ -5,42 +5,45 @@
   </div>
 
   <div id="sudoku-app">
-    <!-- Control bar -->
-    <div class="sdk-control-bar">
-      <div class="sdk-left-controls">
-        <select id="sdk-difficulty" class="sdk-select">
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
-          <option value="diabolical">Diabolical</option>
-        </select>
-        <button id="sdk-new" class="sdk-btn">New Puzzle</button>
+    <!-- Play area frame -->
+    <div class="sdk-frame">
+      <!-- Control bar -->
+      <div class="sdk-control-bar">
+        <div class="sdk-left-controls">
+          <select id="sdk-difficulty" class="sdk-select">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+            <option value="diabolical">Diabolical</option>
+          </select>
+          <button id="sdk-new" class="sdk-btn">New Puzzle</button>
+        </div>
+        <div class="sdk-timer" id="sdk-timer">0:00</div>
       </div>
-      <div class="sdk-timer" id="sdk-timer">0:00</div>
-    </div>
 
-    <!-- Board -->
-    <div class="sdk-board" id="sdk-board"></div>
+      <!-- Board -->
+      <div class="sdk-board" id="sdk-board"></div>
 
-    <!-- Number pad -->
-    <div class="sdk-numpad" id="sdk-numpad">
-      <button class="sdk-num-btn" data-num="1">1</button>
-      <button class="sdk-num-btn" data-num="2">2</button>
-      <button class="sdk-num-btn" data-num="3">3</button>
-      <button class="sdk-num-btn" data-num="4">4</button>
-      <button class="sdk-num-btn" data-num="5">5</button>
-      <button class="sdk-num-btn" data-num="6">6</button>
-      <button class="sdk-num-btn" data-num="7">7</button>
-      <button class="sdk-num-btn" data-num="8">8</button>
-      <button class="sdk-num-btn" data-num="9">9</button>
-      <button class="sdk-num-btn sdk-erase-btn" data-num="0">Erase</button>
-    </div>
+      <!-- Number pad -->
+      <div class="sdk-numpad" id="sdk-numpad">
+        <button class="sdk-num-btn" data-num="1">1</button>
+        <button class="sdk-num-btn" data-num="2">2</button>
+        <button class="sdk-num-btn" data-num="3">3</button>
+        <button class="sdk-num-btn" data-num="4">4</button>
+        <button class="sdk-num-btn" data-num="5">5</button>
+        <button class="sdk-num-btn" data-num="6">6</button>
+        <button class="sdk-num-btn" data-num="7">7</button>
+        <button class="sdk-num-btn" data-num="8">8</button>
+        <button class="sdk-num-btn" data-num="9">9</button>
+        <button class="sdk-num-btn sdk-erase-btn" data-num="0">Erase</button>
+      </div>
 
-    <!-- Action buttons -->
-    <div class="sdk-actions">
-      <button id="sdk-pencil" class="sdk-btn">Pencil: OFF</button>
-      <button id="sdk-undo" class="sdk-btn">Undo</button>
-      <button id="sdk-check" class="sdk-btn">Check</button>
+      <!-- Action buttons -->
+      <div class="sdk-actions">
+        <button id="sdk-pencil" class="sdk-btn">Pencil: OFF</button>
+        <button id="sdk-undo" class="sdk-btn">Undo</button>
+        <button id="sdk-check" class="sdk-btn">Check</button>
+      </div>
     </div>
 
     <!-- Stats -->
