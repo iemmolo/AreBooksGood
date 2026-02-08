@@ -40,7 +40,8 @@
     puzzleIndex: 0,
     solved: false,
     playerColor: 'w',
-    lastMove: null      // {from: {row,col}, to: {row,col}}
+    lastMove: null,     // {from: {row,col}, to: {row,col}}
+    hintSquare: null    // {row, col} or null — for pulse animation
   };
 
   var boardWrapper = document.querySelector('.chess-board-wrapper');
@@ -48,6 +49,20 @@
   function markSolved() {
     boardWrapper.classList.add('solved');
     hintBtn.style.display = 'none';
+  }
+
+  function solvedCelebration() {
+    var squares = boardEl.querySelectorAll('.chess-square');
+    for (var i = 0; i < squares.length; i++) {
+      (function (sq, idx) {
+        var row = Math.floor(idx / 8);
+        var col = idx % 8;
+        var dist = Math.abs(row - 3.5) + Math.abs(col - 3.5);
+        setTimeout(function () {
+          sq.classList.add('solve-ripple');
+        }, dist * 40);
+      })(squares[i], i);
+    }
   }
 
   function clearSolved() {
@@ -100,9 +115,21 @@
     return state.playerColor === 'b';
   }
 
-  function render() {
+  // Get pixel position of a board square
+  function squarePos(row, col) {
+    var flipped = isFlipped();
+    var ri = flipped ? 7 - row : row;
+    var ci = flipped ? 7 - col : col;
+    var size = boardEl.offsetWidth / 8;
+    return { x: ci * size, y: ri * size };
+  }
+
+  function render(opts) {
+    opts = opts || {};
     var flipped = isFlipped();
     boardEl.innerHTML = '';
+    var pieceCount = 0;
+
     for (var ri = 0; ri < 8; ri++) {
       for (var ci = 0; ci < 8; ci++) {
         var r = flipped ? 7 - ri : ri;
@@ -120,11 +147,23 @@
           var colorName = cell.color === 'w' ? 'White' : 'Black';
           var pieceName = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight', P: 'Pawn' }[cell.piece];
           sq.title = colorName + ' ' + pieceName;
+
+          // Staggered fade-in on puzzle load
+          if (opts.fadeIn) {
+            sq.classList.add('piece-enter');
+            sq.style.animationDelay = (pieceCount * 25) + 'ms';
+            pieceCount++;
+          }
         }
 
-        // Arrival animation on destination square of last move
-        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell) {
+        // Arrival settle animation
+        if (state.lastMove && state.lastMove.to.row === r && state.lastMove.to.col === c && cell && !opts.fadeIn) {
           sq.classList.add('piece-arrived');
+        }
+
+        // Hint pulse
+        if (state.hintSquare && state.hintSquare.row === r && state.hintSquare.col === c) {
+          sq.classList.add('hint-pulse');
         }
 
         // Selected state
@@ -162,10 +201,59 @@
     }
   }
 
+  // Animate a piece sliding from one square to another
+  function animateMove(fromRow, fromCol, toRow, toCol, callback) {
+    var fromPos = squarePos(fromRow, fromCol);
+    var toPos = squarePos(toRow, toCol);
+    var dx = fromPos.x - toPos.x;
+    var dy = fromPos.y - toPos.y;
+
+    // Check if there's a piece to capture at destination
+    var capturedPiece = state.board[toRow][toCol];
+    var capturedSq = null;
+    if (capturedPiece) {
+      capturedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+      if (capturedSq) {
+        capturedSq.classList.add('piece-captured');
+      }
+    }
+
+    // Apply the move to state
+    applyMove(fromRow, fromCol, toRow, toCol);
+
+    // Re-render to show new board state
+    render();
+
+    // Find the piece at its new position and apply slide transform
+    var arrivedSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+    if (arrivedSq && (dx !== 0 || dy !== 0)) {
+      arrivedSq.classList.remove('piece-arrived');
+      arrivedSq.classList.add('piece-sliding');
+      arrivedSq.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+
+      // Force reflow then animate to final position
+      arrivedSq.offsetHeight;
+      arrivedSq.style.transform = 'translate(0, 0)';
+
+      arrivedSq.addEventListener('transitionend', function onEnd() {
+        arrivedSq.removeEventListener('transitionend', onEnd);
+        arrivedSq.classList.remove('piece-sliding');
+        arrivedSq.classList.add('piece-arrived');
+        arrivedSq.style.transform = '';
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  }
+
   // ── Click Handler ───────────────────────────────────────
 
   function handleClick(e) {
     if (state.solved) return;
+
+    // Clear hint pulse on any click
+    state.hintSquare = null;
 
     var sq = e.currentTarget;
     var row = parseInt(sq.dataset.row, 10);
@@ -206,49 +294,54 @@
     var fromSq = ChessEngine.toAlgebraic(fromRow, fromCol);
     var toSq = ChessEngine.toAlgebraic(toRow, toCol);
 
+    // Clear hint
+    state.hintSquare = null;
+
     // Check if move matches solution
     if (fromSq === expectedMove.from && toSq === expectedMove.to) {
-      // Correct move
-      applyMove(fromRow, fromCol, toRow, toCol);
+      // Correct move — animate the slide
       addMoveToLog(expectedMove.notation, state.playerColor);
       state.solutionStep++;
 
-      // Check if puzzle is solved
       var oppColor = state.playerColor === 'w' ? 'b' : 'w';
-      if (state.solutionStep >= solution.length || ChessEngine.isCheckmate(state.board, oppColor)) {
-        state.solved = true;
-        recordSolve(puzzle.id);
-        markSolved();
-        updateCounter();
-        updateCategoryProgress();
-        setStatus('Puzzle solved! ' + (ChessEngine.isCheckmate(state.board, oppColor) ? 'Checkmate!' : ''), 'status-solved');
-        render();
-        return;
-      }
 
-      // Opponent auto-reply
-      setStatus('Correct! Opponent is thinking...', '');
-      render();
-      setTimeout(function () {
-        var oppMove = solution[state.solutionStep];
-        var oppFrom = ChessEngine.fromAlgebraic(oppMove.from);
-        var oppTo = ChessEngine.fromAlgebraic(oppMove.to);
-        applyMove(oppFrom.row, oppFrom.col, oppTo.row, oppTo.col);
-        addMoveToLog(oppMove.notation, oppColor);
-        state.solutionStep++;
-
-        if (state.solutionStep >= solution.length) {
+      animateMove(fromRow, fromCol, toRow, toCol, function () {
+        // Check if puzzle is solved
+        if (state.solutionStep >= solution.length || ChessEngine.isCheckmate(state.board, oppColor)) {
           state.solved = true;
           recordSolve(puzzle.id);
           markSolved();
           updateCounter();
           updateCategoryProgress();
-          setStatus('Puzzle solved!', 'status-solved');
-        } else {
-          setStatus('Your turn. Find the best move.', '');
+          setStatus('Puzzle solved! ' + (ChessEngine.isCheckmate(state.board, oppColor) ? 'Checkmate!' : ''), 'status-solved');
+          solvedCelebration();
+          return;
         }
-        render();
-      }, 500);
+
+        // Opponent auto-reply
+        setStatus('Correct! Opponent is thinking...', '');
+        setTimeout(function () {
+          var oppMove = solution[state.solutionStep];
+          var oppFrom = ChessEngine.fromAlgebraic(oppMove.from);
+          var oppTo = ChessEngine.fromAlgebraic(oppMove.to);
+          addMoveToLog(oppMove.notation, oppColor);
+          state.solutionStep++;
+
+          animateMove(oppFrom.row, oppFrom.col, oppTo.row, oppTo.col, function () {
+            if (state.solutionStep >= solution.length) {
+              state.solved = true;
+              recordSolve(puzzle.id);
+              markSolved();
+              updateCounter();
+              updateCategoryProgress();
+              setStatus('Puzzle solved!', 'status-solved');
+              solvedCelebration();
+            } else {
+              setStatus('Your turn. Find the best move.', '');
+            }
+          });
+        }, 400);
+      });
     } else {
       // Wrong move — show error
       setStatus('Not the best move. Try again.', 'status-error');
@@ -384,6 +477,7 @@
     state.moveHistory = [];
     state.solved = false;
     state.lastMove = null;
+    state.hintSquare = null;
     state.playerColor = puzzle.turn;
     clearSolved();
 
@@ -396,7 +490,7 @@
 
     updateCoords();
     setStatus('Your turn. Find the best move.', '');
-    render();
+    render({ fadeIn: true });
     renderMoveLog();
   }
 
@@ -428,8 +522,9 @@
 
     var from = ChessEngine.fromAlgebraic(nextMove.from);
 
-    // Highlight the piece that should move
-    state.selected = { row: from.row, col: from.col };
+    // Pulse the piece that should move
+    state.hintSquare = { row: from.row, col: from.col };
+    state.selected = null;
     state.validMoves = [];
     setStatus('Try moving the piece on ' + nextMove.from + '.', '');
     render();
