@@ -57,6 +57,93 @@
         { "from": "b3", "to": "c2", "notation": "10. Bc2", "comment": "The bishop retreats to safety, still eyeing the kingside. A typical Ruy Lopez manoeuvre." },
         { "from": "c7", "to": "c5", "notation": "10... c5", "comment": "Black strikes at the centre. The Closed Ruy Lopez \u2014 a rich middlegame ahead." }
       ]
+    },
+    {
+      "id": "italian-game",
+      "title": "Italian Game",
+      "description": "One of the oldest openings in chess. White develops the bishop to c4, targeting the vulnerable f7 square, then builds a strong pawn centre with c3 and d4. The Giuoco Piano is the main line.",
+      "playerColor": "w",
+      "startFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        { "from": "e2", "to": "e4", "notation": "1. e4", "comment": "King's pawn \u2014 claiming the centre and opening lines for the bishop." },
+        { "from": "e7", "to": "e5", "notation": "1... e5", "comment": "Black mirrors, fighting for central control." },
+        { "from": "g1", "to": "f3", "notation": "2. Nf3", "comment": "Developing the knight and attacking the e5-pawn." },
+        { "from": "b8", "to": "c6", "notation": "2... Nc6", "comment": "Black defends e5 with the knight." },
+        { "from": "f1", "to": "c4", "notation": "3. Bc4", "comment": "The Italian Game! The bishop targets the vulnerable f7 square." },
+        { "from": "f8", "to": "c5", "notation": "3... Bc5", "comment": "The Giuoco Piano \u2014 Black mirrors with an active bishop, also eyeing f2." },
+        { "from": "c2", "to": "c3", "notation": "4. c3", "comment": "Preparing d4 to build a strong pawn centre. A key Italian Game idea." },
+        { "from": "g8", "to": "f6", "notation": "4... Nf6", "comment": "Black develops the knight and counterattacks the e4-pawn." },
+        { "from": "d2", "to": "d4", "notation": "5. d4", "comment": "White strikes in the centre! The whole point of 4. c3." },
+        { "from": "e5", "to": "d4", "notation": "5... exd4", "comment": "Black captures, opening the position." },
+        { "from": "c3", "to": "d4", "notation": "6. cxd4", "comment": "White recaptures, building an ideal pawn centre on d4 and e4." },
+        { "from": "c5", "to": "b4", "notation": "6... Bb4+", "comment": "Black checks the king, disrupting White's development." },
+        { "from": "c1", "to": "d2", "notation": "7. Bd2", "comment": "Blocking the check with the bishop \u2014 the simplest response." },
+        { "from": "b4", "to": "d2", "notation": "7... Bxd2+", "comment": "Black trades bishops. The capture gives check since d2 is diagonal to e1." },
+        { "from": "b1", "to": "d2", "notation": "8. Nbxd2", "comment": "The b1-knight recaptures, keeping the f3-knight active for the centre." },
+        { "from": "d7", "to": "d5", "notation": "8... d5", "comment": "Black strikes back in the centre, challenging White's pawn duo." },
+        { "from": "e4", "to": "d5", "notation": "9. exd5", "comment": "White captures, opening the e-file." },
+        { "from": "f6", "to": "d5", "notation": "9... Nxd5", "comment": "Black recaptures with the knight, centralising it powerfully on d5." },
+        { "from": "e1", "to": "g1", "notation": "10. O-O", "comment": "White castles, getting the king to safety and connecting the rooks." },
+        { "from": "e8", "to": "g8", "notation": "10... O-O", "comment": "Black castles too. An open, dynamic middlegame lies ahead." }
+      ]
+    },
+    {
+      "id": "sicilian-najdorf",
+      "title": "Sicilian Defence \u2014 Najdorf Variation",
+      "description": "The most popular defence against 1.e4 at the highest level. Black breaks symmetry with 1...c5, fighting for the centre while creating sharp, imbalanced positions. The Najdorf is the sharpest and most ambitious Sicilian.",
+      "playerColor": "b",
+      "startFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        { "from": "e2", "to": "e4", "notation": "1. e4", "comment": "White opens with the King's pawn." },
+        { "from": "c7", "to": "c5", "notation": "1... c5", "comment": "The Sicilian! Black fights for the d4 square without mirroring White." },
+        { "from": "g1", "to": "f3", "notation": "2. Nf3", "comment": "White develops the knight and prepares d4." },
+        { "from": "d7", "to": "d6", "notation": "2... d6", "comment": "Supporting the e5 square and preparing ...Nf6. The most flexible move." },
+        { "from": "d2", "to": "d4", "notation": "3. d4", "comment": "White opens the centre \u2014 the Open Sicilian begins." },
+        { "from": "c5", "to": "d4", "notation": "3... cxd4", "comment": "Black captures, creating the asymmetric pawn structure that defines the Sicilian." },
+        { "from": "f3", "to": "d4", "notation": "4. Nxd4", "comment": "White recaptures with the knight, centralising it powerfully." },
+        { "from": "g8", "to": "f6", "notation": "4... Nf6", "comment": "Black develops and attacks the e4-pawn." },
+        { "from": "b1", "to": "c3", "notation": "5. Nc3", "comment": "White defends e4 and develops the knight." },
+        { "from": "a7", "to": "a6", "notation": "5... a6", "comment": "The Najdorf! A flexible move controlling b5 and preparing ...e5 or ...b5." },
+        { "from": "f1", "to": "e2", "notation": "6. Be2", "comment": "White develops calmly \u2014 the classical approach against the Najdorf." },
+        { "from": "e7", "to": "e5", "notation": "6... e5", "comment": "Black seizes space in the centre and pushes the knight away." },
+        { "from": "d4", "to": "b3", "notation": "7. Nb3", "comment": "The knight retreats to b3, still influencing d4 and c5." },
+        { "from": "f8", "to": "e7", "notation": "7... Be7", "comment": "Black develops the bishop, preparing to castle." },
+        { "from": "e1", "to": "g1", "notation": "8. O-O", "comment": "White castles, getting the king to safety." },
+        { "from": "e8", "to": "g8", "notation": "8... O-O", "comment": "Black castles too. Both kings are safe." },
+        { "from": "c1", "to": "e3", "notation": "9. Be3", "comment": "White develops the last minor piece, eyeing the a7\u2013g1 diagonal." },
+        { "from": "c8", "to": "e6", "notation": "9... Be6", "comment": "Black develops the bishop actively, connecting it with the d5 square." },
+        { "from": "f2", "to": "f3", "notation": "10. f3", "comment": "Solid support for e4 and preparing a potential kingside expansion." },
+        { "from": "b8", "to": "d7", "notation": "10... Nbd7", "comment": "Black develops the last piece. A classic Najdorf position \u2014 rich middlegame ahead." }
+      ]
+    },
+    {
+      "id": "queens-gambit",
+      "title": "Queen's Gambit Declined",
+      "description": "White's most classical opening with 1.d4. The c4 pawn offers a gambit to lure Black's d-pawn from the centre. The Queen's Gambit Declined is Black's most solid and reliable response.",
+      "playerColor": "w",
+      "startFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "moves": [
+        { "from": "d2", "to": "d4", "notation": "1. d4", "comment": "Queen's pawn \u2014 claiming the centre and opening a path for the bishop." },
+        { "from": "d7", "to": "d5", "notation": "1... d5", "comment": "Black occupies the centre symmetrically." },
+        { "from": "c2", "to": "c4", "notation": "2. c4", "comment": "The Queen's Gambit! Offering a pawn to deflect Black's d5-pawn from the centre." },
+        { "from": "e7", "to": "e6", "notation": "2... e6", "comment": "The Queen's Gambit Declined \u2014 Black holds the centre solidly with pawns." },
+        { "from": "b1", "to": "c3", "notation": "3. Nc3", "comment": "Developing the knight and increasing pressure on d5." },
+        { "from": "g8", "to": "f6", "notation": "3... Nf6", "comment": "Black develops and adds another defender to d5." },
+        { "from": "c1", "to": "g5", "notation": "4. Bg5", "comment": "Pinning the knight to the queen \u2014 a key QGD move. The bishop pressures d5 indirectly." },
+        { "from": "f8", "to": "e7", "notation": "4... Be7", "comment": "Black develops and breaks the pin, preparing to castle." },
+        { "from": "e2", "to": "e3", "notation": "5. e3", "comment": "Solidifying the d4-pawn and opening the diagonal for the f1-bishop." },
+        { "from": "e8", "to": "g8", "notation": "5... O-O", "comment": "Black castles, getting the king to safety." },
+        { "from": "g1", "to": "f3", "notation": "6. Nf3", "comment": "White develops the knight to its best square." },
+        { "from": "b8", "to": "d7", "notation": "6... Nbd7", "comment": "Black develops the knight, preparing ...c6 or ...dxc4 followed by ...c5." },
+        { "from": "a1", "to": "c1", "notation": "7. Rc1", "comment": "The rook eyes the c-file, anticipating it opening after ...dxc4." },
+        { "from": "c7", "to": "c6", "notation": "7... c6", "comment": "Black reinforces d5 and prepares the freeing break ...dxc4 followed by ...b5." },
+        { "from": "f1", "to": "d3", "notation": "8. Bd3", "comment": "Developing the bishop to an active diagonal, eyeing the kingside." },
+        { "from": "d5", "to": "c4", "notation": "8... dxc4", "comment": "Black releases the tension, capturing the c4-pawn." },
+        { "from": "d3", "to": "c4", "notation": "9. Bxc4", "comment": "White recaptures \u2014 the bishop lands on an excellent diagonal targeting f7." },
+        { "from": "f6", "to": "d5", "notation": "9... Nd5", "comment": "The knight centralises on d5, attacking both the Bg5 and Nc3." },
+        { "from": "g5", "to": "e7", "notation": "10. Bxe7", "comment": "White trades the bishop before Black can play ...Nxc3, keeping the position clean." },
+        { "from": "d8", "to": "e7", "notation": "10... Qxe7", "comment": "Black recaptures with the queen. The Capablanca Variation \u2014 a rich strategic battle ahead." }
+      ]
     }
   ]
 }

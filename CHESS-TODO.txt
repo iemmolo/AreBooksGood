@@ -67,10 +67,10 @@ Shipped openings:
   1. [x] Caro-Kann (black) — 1.e4 c6 2.d4 d5 main line, 10 moves per side
   2. [x] Ruy Lopez (white) — 1.e4 e5 2.Nf3 Nc6 3.Bb5 Closed Morphy Defence, 10 moves per side
 
-Future openings (not yet built):
-- [ ] Italian Game (white) — 1.e4 e5 2.Nf3 Nc6 3.Bc4
-- [ ] Sicilian Defence (black) — 1.e4 c5
-- [ ] Queen's Gambit (white) — 1.d4 d5 2.c4
+More shipped openings:
+  3. [x] Italian Game (white) — 1.e4 e5 2.Nf3 Nc6 3.Bc4, Giuoco Piano main line, 10 moves per side
+  4. [x] Sicilian Defence — Najdorf (black) — 1.e4 c5, Be2 system, 10 moves per side
+  5. [x] Queen's Gambit Declined (white) — 1.d4 d5 2.c4, Capablanca Variation, 10 moves per side
 
 Future enhancements:
 - [ ] Variation branches: after main line, drill common deviations
@@ -81,7 +81,7 @@ Future enhancements:
 - [ ] Keyboard navigation for accessibility (all chess pages)
 - [ ] Animation for piece movement
 - [ ] Shared chess engine improvements (promotion UI, etc.)
-- [ ] Add more openings (Italian, Sicilian, Queen's Gambit, etc.)
+- [x] Add more openings (Italian, Sicilian, Queen's Gambit)
 - [ ] Add more lessons (endgame basics, pawn structure, etc.)
 
 ## Done (historical)
