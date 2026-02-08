@@ -769,6 +769,13 @@
       dom.status.classList.add('pk-status-lose');
     }
 
+    // Celebrate
+    var winnerIndices = [];
+    for (var ci = 0; ci < winners.length; ci++) {
+      winnerIndices.push(winners[ci].index);
+    }
+    celebrateWin(winnerIndices);
+
     renderAllSeats();
     renderBalance();
     renderStats();
@@ -803,6 +810,8 @@
     state.phase = 'settled';
     dom.status.textContent = PLAYERS[winner].name + ' wins $' + state.pot + ' (everyone else folded)';
     dom.status.className = 'pk-status pk-status-win';
+
+    celebrateWin([winner]);
 
     hidePlayerControls();
     clearActivePlayer();
@@ -926,6 +935,74 @@
     return total;
   }
 
+  // ── Celebrations ────────────────────────────────────────
+
+  var CHIP_SYMBOLS = ['\u{1FA99}', '$', '\u2666', '\u2605'];
+
+  function celebrateWin(winnerIndices) {
+    spawnChipParticles(winnerIndices);
+    highlightWinnerSeats(winnerIndices);
+    sweepPot();
+  }
+
+  function spawnChipParticles(winnerIndices) {
+    var table = document.querySelector('.pk-table');
+    if (!table) return;
+    var tableRect = table.getBoundingClientRect();
+    var potEl = dom.pot;
+    var potRect = potEl.getBoundingClientRect();
+    var originX = potRect.left + potRect.width / 2 - tableRect.left;
+    var originY = potRect.top + potRect.height / 2 - tableRect.top;
+
+    for (var w = 0; w < winnerIndices.length; w++) {
+      var seatEl = dom.seats[winnerIndices[w]];
+      var seatRect = seatEl.getBoundingClientRect();
+      var targetX = seatRect.left + seatRect.width / 2 - tableRect.left;
+      var targetY = seatRect.top + seatRect.height / 2 - tableRect.top;
+
+      var dx = targetX - originX;
+      var dy = targetY - originY;
+
+      for (var p = 0; p < 8; p++) {
+        (function (delay, flyX, flyY) {
+          setTimeout(function () {
+            var chip = document.createElement('span');
+            chip.className = 'pk-chip-particle';
+            chip.textContent = CHIP_SYMBOLS[Math.floor(Math.random() * CHIP_SYMBOLS.length)];
+            var spread = 30;
+            var sx = flyX + (Math.random() - 0.5) * spread;
+            var sy = flyY + (Math.random() - 0.5) * spread;
+            chip.style.left = originX + 'px';
+            chip.style.top = originY + 'px';
+            chip.style.setProperty('--fly-x', sx + 'px');
+            chip.style.setProperty('--fly-y', sy + 'px');
+            table.appendChild(chip);
+            setTimeout(function () {
+              if (chip.parentNode) chip.parentNode.removeChild(chip);
+            }, 1100);
+          }, delay);
+        })(p * 80, dx, dy);
+      }
+    }
+  }
+
+  function highlightWinnerSeats(winnerIndices) {
+    for (var i = 0; i < winnerIndices.length; i++) {
+      var seat = dom.seats[winnerIndices[i]];
+      seat.classList.add('pk-winner');
+    }
+    setTimeout(function () {
+      for (var j = 0; j < winnerIndices.length; j++) {
+        dom.seats[winnerIndices[j]].classList.remove('pk-winner');
+      }
+    }, 2500);
+  }
+
+  function sweepPot() {
+    dom.pot.classList.remove('pk-pot-big');
+    dom.pot.classList.add('pk-pot-sweep');
+  }
+
   // ── Rendering ──────────────────────────────────────────
 
   function renderCard(card, faceDown, small) {
@@ -963,6 +1040,7 @@
 
   function appendCommunityCard(card) {
     var cardEl = renderCard(card, false, false);
+    cardEl.classList.add('pk-card-community-new');
     dom.community.appendChild(cardEl);
   }
 
@@ -971,7 +1049,13 @@
     dom.cards[playerIndex].innerHTML = '';
     var small = (playerIndex !== 0);
     for (var i = 0; i < p.holeCards.length; i++) {
-      dom.cards[playerIndex].appendChild(renderCard(p.holeCards[i], false, small));
+      var wrapper = document.createElement('div');
+      wrapper.className = 'pk-card-flip-container';
+      var inner = document.createElement('div');
+      inner.className = 'pk-card-flip-inner';
+      inner.appendChild(renderCard(p.holeCards[i], false, small));
+      wrapper.appendChild(inner);
+      dom.cards[playerIndex].appendChild(wrapper);
     }
   }
 
@@ -1023,6 +1107,10 @@
 
   function renderPot() {
     dom.pot.textContent = state.pot > 0 ? 'Pot: $' + state.pot : '';
+    dom.pot.classList.remove('pk-pot-big', 'pk-pot-sweep');
+    if (state.pot >= 200) {
+      dom.pot.classList.add('pk-pot-big');
+    }
   }
 
   function renderBalance() {
@@ -1057,11 +1145,12 @@
     dom.status.className = 'pk-status';
     dom.handRank.textContent = '';
     dom.pot.textContent = '';
+    dom.pot.classList.remove('pk-pot-big', 'pk-pot-sweep');
 
     for (var i = 0; i < 4; i++) {
       dom.cards[i].innerHTML = '';
       dom.bets[i].textContent = '';
-      dom.seats[i].classList.remove('pk-folded', 'pk-active');
+      dom.seats[i].classList.remove('pk-folded', 'pk-active', 'pk-winner');
       if (dom.actions[i]) dom.actions[i].textContent = '';
     }
   }
