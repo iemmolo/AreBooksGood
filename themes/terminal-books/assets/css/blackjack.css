@@ -1,0 +1,276 @@
+/* ============================================
+   Blackjack
+   ============================================ */
+
+.bj-intro {
+  margin-bottom: 20px;
+}
+
+/* Bankroll bar */
+.bj-bankroll-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  border-radius: 4px;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.bj-bet-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bj-bet-amount {
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Buttons */
+.bj-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bj-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.bj-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bj-btn-small {
+  padding: 3px 10px;
+  font-size: 0.85em;
+}
+
+.bj-btn-danger {
+  color: #ff4444;
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.bj-btn-danger:hover:not(:disabled) {
+  border-color: #ff4444;
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+}
+
+/* Hand areas */
+.bj-hand-area {
+  margin-bottom: 12px;
+}
+
+.bj-hand-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.95em;
+}
+
+.bj-score {
+  font-weight: 400;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+/* Cards container */
+.bj-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 84px;
+  padding: 8px 0;
+}
+
+/* Individual card */
+.bj-card {
+  width: 60px;
+  height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid color-mix(in srgb, var(--foreground) 35%, transparent);
+  border-radius: 4px;
+  background: var(--background);
+  font-size: 1.1em;
+  line-height: 1.2;
+  animation: bj-deal 0.3s ease-out;
+}
+
+.bj-card-rank {
+  font-weight: 700;
+  font-size: 1.15em;
+}
+
+.bj-card-suit {
+  font-size: 1.3em;
+  line-height: 1;
+}
+
+.bj-card-red {
+  color: #ff6b6b;
+}
+
+.bj-card-black {
+  color: var(--foreground);
+}
+
+.bj-card-facedown {
+  background: color-mix(in srgb, var(--accent) 15%, var(--background));
+  border-color: var(--accent);
+  color: color-mix(in srgb, var(--accent) 50%, transparent);
+  font-size: 1.8em;
+  font-weight: 700;
+}
+
+@keyframes bj-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Player hands (split support) */
+.bj-player-hands {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bj-player-hands > .bj-hand-container {
+  padding: 6px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+}
+
+.bj-hand-container.bj-hand-active {
+  border-color: var(--accent);
+}
+
+.bj-hand-container .bj-hand-result {
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Status message */
+.bj-status {
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  min-height: 1.6em;
+  margin: 8px 0;
+}
+
+.bj-status-win {
+  color: var(--accent);
+}
+
+.bj-status-lose {
+  color: #ff4444;
+}
+
+.bj-status-push {
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.bj-status-blackjack {
+  color: var(--accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* Insurance prompt */
+.bj-insurance {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin: 8px 0;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 0.92em;
+  background: color-mix(in srgb, var(--accent) 5%, var(--background));
+}
+
+/* Controls */
+.bj-controls {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+/* Stats panel */
+.bj-stats {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+}
+
+.bj-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+}
+
+.bj-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92em;
+}
+
+.bj-stat-label {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.bj-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .bj-bankroll-bar {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .bj-card {
+    width: 48px;
+    height: 68px;
+    font-size: 0.95em;
+  }
+
+  .bj-card-suit {
+    font-size: 1.1em;
+  }
+
+  .bj-controls {
+    justify-content: center;
+  }
+
+  .bj-insurance {
+    flex-direction: column;
+    text-align: center;
+  }
+}

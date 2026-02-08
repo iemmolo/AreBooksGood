@@ -41,5 +41,9 @@
     {{- $openings := resources.Get "js/chess-openings.js" | minify -}}
     <script src="{{ $openings.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "blackjack" -}}
+    {{- $blackjack := resources.Get "js/blackjack.js" | minify -}}
+    <script src="{{ $blackjack.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

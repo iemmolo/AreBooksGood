@@ -26,6 +26,10 @@ theme = 'terminal-books'
     pageRef = '/chess'
     weight = 30
   [[menus.main]]
+    name = 'Blackjack'
+    pageRef = '/blackjack'
+    weight = 40
+  [[menus.main]]
     name = 'About'
     pageRef = '/about'
     weight = 50

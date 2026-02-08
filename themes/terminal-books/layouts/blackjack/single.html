@@ -1,0 +1,66 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="bj-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="blackjack-app">
+    <!-- Bankroll bar -->
+    <div class="bj-bankroll-bar">
+      <span class="bj-balance">Balance: $<span id="bj-balance">1000</span></span>
+      <div class="bj-bet-controls">
+        <span class="bj-bet-label">Bet:</span>
+        <button id="bj-bet-down" class="bj-btn bj-btn-small" title="Decrease bet">-</button>
+        <span id="bj-bet-amount" class="bj-bet-amount">$25</span>
+        <button id="bj-bet-up" class="bj-btn bj-btn-small" title="Increase bet">+</button>
+      </div>
+    </div>
+
+    <!-- Dealer area -->
+    <div class="bj-hand-area">
+      <div class="bj-hand-label">Dealer <span id="bj-dealer-score" class="bj-score"></span></div>
+      <div id="bj-dealer-cards" class="bj-cards"></div>
+    </div>
+
+    <!-- Status message -->
+    <div id="bj-status" class="bj-status"></div>
+
+    <!-- Insurance prompt -->
+    <div id="bj-insurance" class="bj-insurance" hidden>
+      <span>Insurance? (Half your bet, pays 2:1 if dealer has blackjack)</span>
+      <button id="bj-insurance-yes" class="bj-btn bj-btn-small">Yes</button>
+      <button id="bj-insurance-no" class="bj-btn bj-btn-small">No</button>
+    </div>
+
+    <!-- Player area -->
+    <div id="bj-player-area" class="bj-hand-area">
+      <div class="bj-hand-label">Player <span id="bj-player-score" class="bj-score"></span></div>
+      <div id="bj-player-hands" class="bj-player-hands">
+        <div class="bj-cards" data-hand="0"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="bj-controls">
+      <button id="bj-deal" class="bj-btn">Deal</button>
+      <button id="bj-hit" class="bj-btn" hidden>Hit</button>
+      <button id="bj-stand" class="bj-btn" hidden>Stand</button>
+      <button id="bj-double" class="bj-btn" hidden>Double</button>
+      <button id="bj-split" class="bj-btn" hidden>Split</button>
+    </div>
+
+    <!-- Stats panel -->
+    <div class="bj-stats">
+      <h3 class="bj-stats-title">Stats</h3>
+      <div class="bj-stats-grid">
+        <span class="bj-stat-label">Hands</span><span id="bj-stat-hands" class="bj-stat-value">0</span>
+        <span class="bj-stat-label">Wins</span><span id="bj-stat-wins" class="bj-stat-value">0</span>
+        <span class="bj-stat-label">Losses</span><span id="bj-stat-losses" class="bj-stat-value">0</span>
+        <span class="bj-stat-label">Pushes</span><span id="bj-stat-pushes" class="bj-stat-value">0</span>
+        <span class="bj-stat-label">Blackjacks</span><span id="bj-stat-blackjacks" class="bj-stat-value">0</span>
+        <span class="bj-stat-label">Peak</span><span id="bj-stat-peak" class="bj-stat-value">$1000</span>
+      </div>
+      <button id="bj-reset-stats" class="bj-btn bj-btn-small bj-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}

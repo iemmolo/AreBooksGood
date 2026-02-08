@@ -24,6 +24,12 @@
   <link rel="stylesheet" href="{{ $chess.RelPermalink }}">
 {{- end }}
 
+{{/* Blackjack CSS */}}
+{{ if eq .Type "blackjack" -}}
+  {{- $blackjack := resources.Get "css/blackjack.css" | minify -}}
+  <link rel="stylesheet" href="{{ $blackjack.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
