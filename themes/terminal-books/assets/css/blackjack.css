@@ -244,19 +244,8 @@
   text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
-/* ── Insurance prompt ─────────────────────── */
-.bj-insurance {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 6px 16px;
-  margin: 6px auto;
-  max-width: fit-content;
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  border-radius: 20px;
-  font-size: 0.85em;
-  background: color-mix(in srgb, var(--accent) 6%, var(--background));
+.bj-status .bj-btn {
+  margin-left: 4px;
 }
 
 /* ── Controls — inside the table ──────────── */
@@ -363,14 +352,6 @@
   .bj-status {
     font-size: 1em;
     margin: 2px 0;
-  }
-
-  .bj-insurance {
-    flex-direction: column;
-    text-align: center;
-    padding: 6px 12px;
-    gap: 6px;
-    font-size: 0.8em;
   }
 
   .bj-controls {

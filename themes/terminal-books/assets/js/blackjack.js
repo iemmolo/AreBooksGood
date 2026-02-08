@@ -32,9 +32,6 @@
     playerHands:  document.getElementById('bj-player-hands'),
     playerScore:  document.getElementById('bj-player-score'),
     status:       document.getElementById('bj-status'),
-    insurance:    document.getElementById('bj-insurance'),
-    insuranceYes: document.getElementById('bj-insurance-yes'),
-    insuranceNo:  document.getElementById('bj-insurance-no'),
     deal:         document.getElementById('bj-deal'),
     hit:          document.getElementById('bj-hit'),
     stand:        document.getElementById('bj-stand'),
@@ -582,7 +579,20 @@
         renderBankroll();
       }
     } else if (state.phase === 'insurance') {
-      dom.status.textContent = 'Dealer shows Ace';
+      dom.status.innerHTML = '';
+      var label = document.createTextNode('Insurance? ');
+      var yesBtn = document.createElement('button');
+      yesBtn.className = 'bj-btn bj-btn-small';
+      yesBtn.textContent = 'Yes';
+      yesBtn.addEventListener('click', takeInsurance);
+      var noBtn = document.createElement('button');
+      noBtn.className = 'bj-btn bj-btn-small';
+      noBtn.textContent = 'No';
+      noBtn.addEventListener('click', declineInsurance);
+      dom.status.appendChild(label);
+      dom.status.appendChild(yesBtn);
+      dom.status.appendChild(document.createTextNode(' '));
+      dom.status.appendChild(noBtn);
     } else if (state.phase === 'playing' && state.playerHands.length > 1) {
       dom.status.textContent = 'Playing hand ' + (state.activeHandIndex + 1);
     }
@@ -649,7 +659,6 @@
       dom.split.hidden = true;
     }
 
-    dom.insurance.hidden = !isInsurance;
   }
 
   // ── Bet controls ───────────────────────────────────────
@@ -723,8 +732,6 @@
   dom.stand.addEventListener('click', stand);
   dom.double.addEventListener('click', doubleDown);
   dom.split.addEventListener('click', splitHand);
-  dom.insuranceYes.addEventListener('click', takeInsurance);
-  dom.insuranceNo.addEventListener('click', declineInsurance);
   dom.betUp.addEventListener('click', function () { changeBet(1); });
   dom.betDown.addEventListener('click', function () { changeBet(-1); });
   dom.resetStats.addEventListener('click', resetStats);
