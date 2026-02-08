@@ -23,7 +23,12 @@
   var counterEl = document.getElementById('puzzle-counter');
   var categorySelect = document.getElementById('category-select');
   var categoryDescEl = document.getElementById('category-description');
+  var difficultyEl = document.getElementById('puzzle-difficulty');
+  var categoryProgressEl = document.getElementById('category-progress');
   var hintBtn = document.getElementById('btn-hint');
+
+  var STORAGE_KEY = 'chess-puzzle-stats';
+  var solveStats = {}; // { "puzzle-id": { solved: true, solveCount: N } }
 
   var state = {
     board: null,        // 8x8 array [row][col], null or {piece, color}
@@ -48,6 +53,31 @@
   function clearSolved() {
     boardWrapper.classList.remove('solved');
     hintBtn.style.display = '';
+  }
+
+  // ── localStorage ────────────────────────────────────────
+
+  function loadSolveStats() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) solveStats = JSON.parse(saved);
+    } catch (e) {
+      solveStats = {};
+    }
+  }
+
+  function saveSolveStats() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(solveStats));
+    } catch (e) { /* ignore */ }
+  }
+
+  function recordSolve(puzzleId) {
+    var entry = solveStats[puzzleId] || { solved: false, solveCount: 0 };
+    entry.solved = true;
+    entry.solveCount++;
+    solveStats[puzzleId] = entry;
+    saveSolveStats();
   }
 
   // ── Category Helpers ──────────────────────────────────────
@@ -187,7 +217,10 @@
       var oppColor = state.playerColor === 'w' ? 'b' : 'w';
       if (state.solutionStep >= solution.length || ChessEngine.isCheckmate(state.board, oppColor)) {
         state.solved = true;
+        recordSolve(puzzle.id);
         markSolved();
+        updateCounter();
+        updateCategoryProgress();
         setStatus('Puzzle solved! ' + (ChessEngine.isCheckmate(state.board, oppColor) ? 'Checkmate!' : ''), 'status-solved');
         render();
         return;
@@ -206,7 +239,10 @@
 
         if (state.solutionStep >= solution.length) {
           state.solved = true;
+          recordSolve(puzzle.id);
           markSolved();
+          updateCounter();
+          updateCategoryProgress();
           setStatus('Puzzle solved!', 'status-solved');
         } else {
           setStatus('Your turn. Find the best move.', '');
@@ -312,10 +348,30 @@
     state.puzzleIndex = 0;
     categorySelect.value = index;
     categoryDescEl.textContent = currentCategory().description;
+    updateCategoryProgress();
     loadPuzzle(0);
   }
 
+  function updateCategoryProgress() {
+    var puzzles = currentPuzzles();
+    var solved = 0;
+    for (var i = 0; i < puzzles.length; i++) {
+      if (solveStats[puzzles[i].id] && solveStats[puzzles[i].id].solved) solved++;
+    }
+    categoryProgressEl.textContent = solved + ' / ' + puzzles.length + ' solved';
+  }
+
   // ── Puzzle Loading ──────────────────────────────────────
+
+  function updateCounter() {
+    var puzzle = currentPuzzle();
+    var puzzles = currentPuzzles();
+    var text = (state.puzzleIndex + 1) + ' / ' + puzzles.length;
+    if (solveStats[puzzle.id] && solveStats[puzzle.id].solved) {
+      text += ' \u2713';
+    }
+    counterEl.textContent = text;
+  }
 
   function loadPuzzle(index) {
     state.puzzleIndex = index;
@@ -333,7 +389,10 @@
 
     titleEl.textContent = puzzle.title;
     descEl.textContent = puzzle.description;
-    counterEl.textContent = (index + 1) + ' / ' + puzzles.length;
+    updateCounter();
+
+    difficultyEl.textContent = puzzle.difficulty;
+    difficultyEl.className = 'chess-puzzle-difficulty difficulty-' + puzzle.difficulty;
 
     updateCoords();
     setStatus('Your turn. Find the best move.', '');
@@ -385,17 +444,12 @@
   document.getElementById('btn-hint').addEventListener('click', showHint);
 
   document.getElementById('prev-puzzle').addEventListener('click', function () {
-    if (state.puzzleIndex > 0) {
-      state.puzzleIndex--;
-      loadPuzzle(state.puzzleIndex);
-    }
+    var len = currentPuzzles().length;
+    loadPuzzle((state.puzzleIndex - 1 + len) % len);
   });
 
   document.getElementById('next-puzzle').addEventListener('click', function () {
-    if (state.puzzleIndex < currentPuzzles().length - 1) {
-      state.puzzleIndex++;
-      loadPuzzle(state.puzzleIndex);
-    }
+    loadPuzzle((state.puzzleIndex + 1) % currentPuzzles().length);
   });
 
   categorySelect.addEventListener('change', function () {
@@ -404,6 +458,7 @@
 
   // ── Init ────────────────────────────────────────────────
 
+  loadSolveStats();
   populateCategories();
   loadCategory(0);
 })();
