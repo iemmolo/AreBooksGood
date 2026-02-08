@@ -18,7 +18,10 @@
           </select>
           <button id="sdk-new" class="sdk-btn">New Puzzle</button>
         </div>
-        <div class="sdk-timer" id="sdk-timer">0:00</div>
+        <div class="sdk-timer-group">
+          <div class="sdk-timer" id="sdk-timer">0:00</div>
+          <button id="sdk-pause" class="sdk-btn sdk-btn-small" title="Pause/Resume">&#9208;</button>
+        </div>
       </div>
 
       <!-- Board -->
@@ -41,8 +44,16 @@
       <!-- Action buttons -->
       <div class="sdk-actions">
         <button id="sdk-pencil" class="sdk-btn">Pencil: OFF</button>
+        <button id="sdk-auto-pencil" class="sdk-btn">Auto Pencil</button>
         <button id="sdk-undo" class="sdk-btn">Undo</button>
         <button id="sdk-check" class="sdk-btn">Check</button>
+      </div>
+
+      <!-- Completion message -->
+      <div id="sdk-complete-msg" class="sdk-complete-msg" style="display: none;">
+        <span class="sdk-complete-check">&#10003;</span>
+        <span>Solved in <strong id="sdk-complete-time"></strong></span>
+        <button id="sdk-complete-new" class="sdk-btn">New Puzzle</button>
       </div>
     </div>
 

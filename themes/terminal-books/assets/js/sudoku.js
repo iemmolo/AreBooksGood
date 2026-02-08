@@ -3,6 +3,7 @@
 
   // ── Constants ────────────────────────────────────────────
   var STORAGE_KEY = 'sudoku-stats';
+  var STATE_KEY = 'sudoku-state';
   var DIFFICULTIES = ['easy', 'medium', 'hard', 'diabolical'];
 
   // ── DOM refs ─────────────────────────────────────────────
@@ -10,15 +11,20 @@
   if (!app) return;
 
   var dom = {
-    board:       document.getElementById('sdk-board'),
-    difficulty:  document.getElementById('sdk-difficulty'),
-    newBtn:      document.getElementById('sdk-new'),
-    timer:       document.getElementById('sdk-timer'),
-    numpad:      document.getElementById('sdk-numpad'),
-    pencilBtn:   document.getElementById('sdk-pencil'),
-    undoBtn:     document.getElementById('sdk-undo'),
-    checkBtn:    document.getElementById('sdk-check'),
-    resetStats:  document.getElementById('sdk-reset-stats')
+    board:          document.getElementById('sdk-board'),
+    difficulty:     document.getElementById('sdk-difficulty'),
+    newBtn:         document.getElementById('sdk-new'),
+    timer:          document.getElementById('sdk-timer'),
+    numpad:         document.getElementById('sdk-numpad'),
+    pencilBtn:      document.getElementById('sdk-pencil'),
+    autoPencilBtn:  document.getElementById('sdk-auto-pencil'),
+    undoBtn:        document.getElementById('sdk-undo'),
+    checkBtn:       document.getElementById('sdk-check'),
+    pauseBtn:       document.getElementById('sdk-pause'),
+    completeMsg:    document.getElementById('sdk-complete-msg'),
+    completeMsgTime: document.getElementById('sdk-complete-time'),
+    completeNewBtn: document.getElementById('sdk-complete-new'),
+    resetStats:     document.getElementById('sdk-reset-stats')
   };
 
   var statEls = {};
@@ -39,6 +45,7 @@
   // ── State ────────────────────────────────────────────────
   var state = {
     puzzle: null,       // 81-char string (original)
+    puzzleId: null,     // puzzle id for state persistence
     solution: null,     // 81-char string (solved)
     grid: [],           // current player grid (0=empty)
     pencil: [],         // pencil[i] = Set of marks
@@ -47,6 +54,7 @@
     history: [],        // undo stack: {index, prevValue, prevPencil}
     timerSeconds: 0,
     timerInterval: null,
+    paused: false,
     completed: false,
     difficulty: 'easy',
     usedPuzzles: {}     // track used puzzles per difficulty
@@ -68,7 +76,6 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         var parsed = JSON.parse(raw);
-        // Ensure all difficulties exist
         DIFFICULTIES.forEach(function (d) {
           if (!parsed[d]) parsed[d] = { solved: 0, best: null };
         });
@@ -89,11 +96,107 @@
     });
   }
 
+  // ── State persistence ────────────────────────────────────
+  function saveState() {
+    if (state.completed) {
+      clearSavedState();
+      return;
+    }
+    try {
+      var pencilData = [];
+      for (var i = 0; i < 81; i++) {
+        pencilData.push(Array.from(state.pencil[i]));
+      }
+      var obj = {
+        puzzleId: state.puzzleId,
+        difficulty: state.difficulty,
+        grid: state.grid.slice(),
+        pencil: pencilData,
+        pencilMode: state.pencilMode,
+        timerSeconds: state.timerSeconds,
+        history: state.history.map(function (h) {
+          return { index: h.index, prevValue: h.prevValue, prevPencil: Array.from(h.prevPencil) };
+        })
+      };
+      localStorage.setItem(STATE_KEY, JSON.stringify(obj));
+    } catch (e) { /* ignore */ }
+  }
+
+  function loadSavedState() {
+    try {
+      var raw = localStorage.getItem(STATE_KEY);
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      if (!obj.puzzleId || !obj.difficulty || !obj.grid) return null;
+      var pool = puzzlesByDiff[obj.difficulty];
+      if (!pool) return null;
+      var entry = null;
+      for (var i = 0; i < pool.length; i++) {
+        if (pool[i].id === obj.puzzleId) { entry = pool[i]; break; }
+      }
+      if (!entry) return null;
+      return { entry: entry, saved: obj };
+    } catch (e) { return null; }
+  }
+
+  function clearSavedState() {
+    try { localStorage.removeItem(STATE_KEY); } catch (e) { /* ignore */ }
+  }
+
+  function restoreState(entry, saved) {
+    state.puzzle = entry.puzzle;
+    state.puzzleId = entry.id;
+    state.solution = entry.solution;
+    state.difficulty = saved.difficulty;
+    state.grid = saved.grid;
+    state.pencil = [];
+    for (var i = 0; i < 81; i++) {
+      state.pencil.push(new Set(saved.pencil[i] || []));
+    }
+    state.pencilMode = saved.pencilMode || false;
+    state.timerSeconds = saved.timerSeconds || 0;
+    state.history = (saved.history || []).map(function (h) {
+      return { index: h.index, prevValue: h.prevValue, prevPencil: new Set(h.prevPencil || []) };
+    });
+    state.selected = -1;
+    state.completed = false;
+    state.paused = false;
+
+    dom.difficulty.value = saved.difficulty;
+    dom.pencilBtn.textContent = 'Pencil: ' + (state.pencilMode ? 'ON' : 'OFF');
+    if (state.pencilMode) {
+      dom.pencilBtn.classList.add('sdk-active');
+    } else {
+      dom.pencilBtn.classList.remove('sdk-active');
+    }
+    dom.board.classList.remove('sdk-complete');
+    dom.board.classList.remove('sdk-paused');
+    dom.completeMsg.style.display = 'none';
+    dom.pauseBtn.textContent = '\u23F8';
+
+    buildBoard();
+    dom.timer.textContent = formatTime(state.timerSeconds);
+    startTimerFromCurrent();
+    updateNumpadState();
+  }
+
   // ── Timer ────────────────────────────────────────────────
   function startTimer() {
     stopTimer();
     state.timerSeconds = 0;
+    state.paused = false;
     dom.timer.textContent = '0:00';
+    dom.pauseBtn.textContent = '\u23F8';
+    dom.board.classList.remove('sdk-paused');
+    state.timerInterval = setInterval(function () {
+      state.timerSeconds++;
+      dom.timer.textContent = formatTime(state.timerSeconds);
+    }, 1000);
+  }
+
+  function startTimerFromCurrent() {
+    stopTimer();
+    state.paused = false;
     state.timerInterval = setInterval(function () {
       state.timerSeconds++;
       dom.timer.textContent = formatTime(state.timerSeconds);
@@ -104,6 +207,24 @@
     if (state.timerInterval) {
       clearInterval(state.timerInterval);
       state.timerInterval = null;
+    }
+  }
+
+  function togglePause() {
+    if (state.completed) return;
+    if (state.paused) {
+      state.paused = false;
+      dom.pauseBtn.textContent = '\u23F8';
+      dom.board.classList.remove('sdk-paused');
+      state.timerInterval = setInterval(function () {
+        state.timerSeconds++;
+        dom.timer.textContent = formatTime(state.timerSeconds);
+      }, 1000);
+    } else {
+      stopTimer();
+      state.paused = true;
+      dom.pauseBtn.textContent = '\u25B6';
+      dom.board.classList.add('sdk-paused');
     }
   }
 
@@ -138,6 +259,7 @@
     state.usedPuzzles[diff].push(entry.id);
 
     state.puzzle = entry.puzzle;
+    state.puzzleId = entry.id;
     state.solution = entry.solution;
     state.grid = entry.puzzle.split('').map(Number);
     state.pencil = [];
@@ -146,14 +268,19 @@
     state.pencilMode = false;
     state.history = [];
     state.completed = false;
+    state.paused = false;
 
     dom.pencilBtn.textContent = 'Pencil: OFF';
     dom.pencilBtn.classList.remove('sdk-active');
     dom.board.classList.remove('sdk-complete');
+    dom.board.classList.remove('sdk-paused');
+    dom.completeMsg.style.display = 'none';
+    dom.pauseBtn.textContent = '\u23F8';
 
     buildBoard();
     startTimer();
     updateNumpadState();
+    saveState();
   }
 
   // ── Board rendering ──────────────────────────────────────
@@ -261,24 +388,35 @@
       if (state.grid[i] !== 0) counts[state.grid[i]]++;
     }
 
+    var activeNum = 0;
+    if (state.selected >= 0) {
+      activeNum = state.grid[state.selected];
+    }
+
     var btns = dom.numpad.querySelectorAll('.sdk-num-btn[data-num]');
     for (var j = 0; j < btns.length; j++) {
       var num = parseInt(btns[j].dataset.num, 10);
       if (num >= 1 && num <= 9) {
         btns[j].disabled = counts[num] >= 9 && !state.pencilMode;
+        if (num === activeNum && activeNum !== 0) {
+          btns[j].classList.add('sdk-num-active');
+        } else {
+          btns[j].classList.remove('sdk-num-active');
+        }
       }
     }
   }
 
   // ── Input handling ───────────────────────────────────────
   function selectCell(idx) {
-    if (state.completed) return;
+    if (state.completed || state.paused) return;
     state.selected = idx;
     renderBoard();
+    updateNumpadState();
   }
 
   function enterNumber(num) {
-    if (state.completed || state.selected < 0) return;
+    if (state.completed || state.paused || state.selected < 0) return;
     var idx = state.selected;
     if (state.puzzle.charAt(idx) !== '0') return; // can't edit given
 
@@ -313,6 +451,7 @@
 
     renderBoard();
     updateNumpadState();
+    saveState();
     checkCompletion();
   }
 
@@ -332,16 +471,17 @@
   }
 
   function undo() {
-    if (state.completed || state.history.length === 0) return;
+    if (state.completed || state.paused || state.history.length === 0) return;
     var entry = state.history.pop();
     state.grid[entry.index] = entry.prevValue;
     state.pencil[entry.index] = entry.prevPencil;
     renderBoard();
     updateNumpadState();
+    saveState();
   }
 
   function checkErrors() {
-    if (state.completed) return;
+    if (state.completed || state.paused) return;
     var cells = dom.board.children;
     var hasError = false;
 
@@ -364,6 +504,52 @@
     }
   }
 
+  // ── Auto-pencil fill ─────────────────────────────────────
+  function autoPencilFill() {
+    if (state.completed || state.paused) return;
+
+    for (var i = 0; i < 81; i++) {
+      if (state.grid[i] !== 0) continue;
+
+      var row = Math.floor(i / 9);
+      var col = i % 9;
+      var boxR = Math.floor(row / 3) * 3;
+      var boxC = Math.floor(col / 3) * 3;
+
+      var used = new Set();
+      for (var j = 0; j < 9; j++) {
+        if (state.grid[row * 9 + j] !== 0) used.add(state.grid[row * 9 + j]);
+        if (state.grid[j * 9 + col] !== 0) used.add(state.grid[j * 9 + col]);
+        var br = boxR + Math.floor(j / 3);
+        var bc = boxC + (j % 3);
+        if (state.grid[br * 9 + bc] !== 0) used.add(state.grid[br * 9 + bc]);
+      }
+
+      var marks = new Set();
+      for (var n = 1; n <= 9; n++) {
+        if (!used.has(n)) marks.add(n);
+      }
+      state.pencil[i] = marks;
+    }
+
+    renderBoard();
+    saveState();
+  }
+
+  // ── Tab to next empty cell ───────────────────────────────
+  function tabToNextEmpty(reverse) {
+    if (state.completed || state.paused) return;
+    var start = state.selected >= 0 ? state.selected : -1;
+    var step = reverse ? -1 : 1;
+    for (var count = 0; count < 81; count++) {
+      start = (start + step + 81) % 81;
+      if (state.grid[start] === 0 && state.puzzle.charAt(start) === '0') {
+        selectCell(start);
+        return;
+      }
+    }
+  }
+
   // ── Completion ───────────────────────────────────────────
   function checkCompletion() {
     // Check if grid matches solution
@@ -374,6 +560,7 @@
     // Puzzle complete!
     state.completed = true;
     stopTimer();
+    clearSavedState();
 
     // Update stats
     var diff = state.difficulty;
@@ -383,6 +570,10 @@
     }
     saveStats();
     renderStats();
+
+    // Show completion message
+    dom.completeMsgTime.textContent = formatTime(state.timerSeconds);
+    dom.completeMsg.style.display = '';
 
     // Celebration animation
     dom.board.classList.add('sdk-complete');
@@ -404,6 +595,15 @@
     if (state.completed) return;
 
     var key = e.key;
+
+    // Tab to next empty cell
+    if (key === 'Tab') {
+      e.preventDefault();
+      tabToNextEmpty(e.shiftKey);
+      return;
+    }
+
+    if (state.paused) return;
 
     // Arrow navigation
     if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
@@ -456,6 +656,7 @@
       dom.pencilBtn.classList.remove('sdk-active');
     }
     updateNumpadState();
+    saveState();
   }
 
   // ── Event listeners ──────────────────────────────────────
@@ -470,11 +671,23 @@
   });
 
   dom.pencilBtn.addEventListener('click', togglePencil);
+  dom.autoPencilBtn.addEventListener('click', autoPencilFill);
   dom.undoBtn.addEventListener('click', undo);
   dom.checkBtn.addEventListener('click', checkErrors);
-  dom.newBtn.addEventListener('click', loadNewPuzzle);
+  dom.pauseBtn.addEventListener('click', togglePause);
+
+  dom.newBtn.addEventListener('click', function () {
+    clearSavedState();
+    loadNewPuzzle();
+  });
+
+  dom.completeNewBtn.addEventListener('click', function () {
+    clearSavedState();
+    loadNewPuzzle();
+  });
 
   dom.difficulty.addEventListener('change', function () {
+    clearSavedState();
     loadNewPuzzle();
   });
 
@@ -490,5 +703,10 @@
 
   // ── Init ─────────────────────────────────────────────────
   renderStats();
-  loadNewPuzzle();
+  var saved = loadSavedState();
+  if (saved) {
+    restoreState(saved.entry, saved.saved);
+  } else {
+    loadNewPuzzle();
+  }
 })();
