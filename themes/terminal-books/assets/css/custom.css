@@ -398,40 +398,105 @@ a.site-title {
 }
 
 /* ============================================
-   Chess Hub
+   Chess Sub-Nav
    ============================================ */
-.chess-hub {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+.chess-sub-nav {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-top: 8px;
+  margin-top: 8px;
 }
 
-.chess-hub-link {
+.chess-sub-nav-links {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 14px 0;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chess-sub-nav-links li {
+  padding: 0;
+  margin: 0;
+}
+
+.chess-sub-nav-links li::marker {
+  content: none;
+}
+
+.chess-sub-nav-links a {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
   text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  font-size: 0.9em;
 }
 
-.chess-hub-link:last-child {
-  border-bottom: none;
-}
-
-.chess-hub-link:hover .chess-hub-name {
+.chess-sub-nav-links a:hover,
+.chess-sub-nav-links a.active {
   color: var(--accent);
 }
 
-.chess-hub-name {
-  color: var(--foreground);
-  font-weight: 600;
-  white-space: nowrap;
+/* ============================================
+   Chess Tile Grid
+   ============================================ */
+.chess-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 20px;
 }
 
-.chess-hub-desc {
-  color: color-mix(in srgb, var(--foreground) 50%, transparent);
-  font-size: 0.9em;
+.chess-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-decoration: none;
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+}
+
+.chess-tile:hover {
+  border-color: var(--accent);
+}
+
+.chess-mini-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 200px;
+}
+
+.chess-mini-board .sq {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  line-height: 1;
+}
+
+.chess-mini-board .sq.l {
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+}
+
+.chess-mini-board .sq.d {
+  background: color-mix(in srgb, var(--foreground) 18%, var(--background));
+}
+
+.chess-mini-board .sq.pc {
+  font-size: clamp(0.7rem, 2.5vw, 1.2rem);
+}
+
+.chess-tile-label {
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.chess-tile:hover .chess-tile-label {
+  color: var(--accent);
 }
 
 /* ============================================
@@ -446,6 +511,15 @@ a.site-title {
   .nav-links {
     flex-wrap: wrap;
     gap: 1em;
+  }
+
+  .chess-sub-nav-links {
+    flex-wrap: wrap;
+    gap: 1em;
+  }
+
+  .chess-tile-grid {
+    grid-template-columns: 1fr;
   }
 
   .footer-inner {

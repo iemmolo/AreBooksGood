@@ -4,22 +4,75 @@
     {{ .Content }}
   </div>
 
-  <nav class="chess-hub">
-    <a href="{{ "chess/puzzles/" | relURL }}" class="chess-hub-link">
-      <span class="chess-hub-name">> puzzles</span>
-      <span class="chess-hub-desc">solve tactical puzzles from Lichess</span>
+  <div class="chess-tile-grid">
+    {{/* Puzzles tile — knight fork: Nf3(45) attacks Ke1(60) and Rh4(39) */}}
+    <a href="{{ "chess/puzzles/" | relURL }}" class="chess-tile">
+      <div class="chess-mini-board">
+        {{- range $i := seq 0 63 -}}
+          {{- $row := div $i 8 -}}
+          {{- $col := mod $i 8 -}}
+          {{- $light := eq (mod (add $row $col) 2) 0 -}}
+          {{- $cls := cond $light "sq l" "sq d" -}}
+          {{- if eq $i 45 }}<span class="{{ $cls }} pc">&#9816;</span>
+          {{- else if eq $i 60 }}<span class="{{ $cls }} pc">&#9818;</span>
+          {{- else if eq $i 39 }}<span class="{{ $cls }} pc">&#9820;</span>
+          {{- else }}<span class="{{ $cls }}"></span>
+          {{- end -}}
+        {{- end -}}
+      </div>
+      <span class="chess-tile-label">> puzzles</span>
     </a>
-    <a href="{{ "chess/learn/" | relURL }}" class="chess-hub-link">
-      <span class="chess-hub-name">> learn</span>
-      <span class="chess-hub-desc">lessons on tactical chess fundamentals</span>
+
+    {{/* Learn tile — king + pawn basics: Ke1(60), Pe4(36) */}}
+    <a href="{{ "chess/learn/" | relURL }}" class="chess-tile">
+      <div class="chess-mini-board">
+        {{- range $i := seq 0 63 -}}
+          {{- $row := div $i 8 -}}
+          {{- $col := mod $i 8 -}}
+          {{- $light := eq (mod (add $row $col) 2) 0 -}}
+          {{- $cls := cond $light "sq l" "sq d" -}}
+          {{- if eq $i 60 }}<span class="{{ $cls }} pc">&#9812;</span>
+          {{- else if eq $i 36 }}<span class="{{ $cls }} pc">&#9817;</span>
+          {{- else }}<span class="{{ $cls }}"></span>
+          {{- end -}}
+        {{- end -}}
+      </div>
+      <span class="chess-tile-label">> learn</span>
     </a>
-    <a href="{{ "chess/play/" | relURL }}" class="chess-hub-link">
-      <span class="chess-hub-name">> play</span>
-      <span class="chess-hub-desc">local 2-player game</span>
+
+    {{/* Play tile — white bishop vs black knight: Bc4(34), nf6(21) */}}
+    <a href="{{ "chess/play/" | relURL }}" class="chess-tile">
+      <div class="chess-mini-board">
+        {{- range $i := seq 0 63 -}}
+          {{- $row := div $i 8 -}}
+          {{- $col := mod $i 8 -}}
+          {{- $light := eq (mod (add $row $col) 2) 0 -}}
+          {{- $cls := cond $light "sq l" "sq d" -}}
+          {{- if eq $i 34 }}<span class="{{ $cls }} pc">&#9815;</span>
+          {{- else if eq $i 21 }}<span class="{{ $cls }} pc">&#9822;</span>
+          {{- else }}<span class="{{ $cls }}"></span>
+          {{- end -}}
+        {{- end -}}
+      </div>
+      <span class="chess-tile-label">> play</span>
     </a>
-    <a href="{{ "chess/openings/" | relURL }}" class="chess-hub-link">
-      <span class="chess-hub-name">> openings</span>
-      <span class="chess-hub-desc">drill opening sequences</span>
+
+    {{/* Openings tile — e4 e5 Nf3: Pe4(36), pe5(28), Nf3(45) */}}
+    <a href="{{ "chess/openings/" | relURL }}" class="chess-tile">
+      <div class="chess-mini-board">
+        {{- range $i := seq 0 63 -}}
+          {{- $row := div $i 8 -}}
+          {{- $col := mod $i 8 -}}
+          {{- $light := eq (mod (add $row $col) 2) 0 -}}
+          {{- $cls := cond $light "sq l" "sq d" -}}
+          {{- if eq $i 36 }}<span class="{{ $cls }} pc">&#9817;</span>
+          {{- else if eq $i 28 }}<span class="{{ $cls }} pc">&#9823;</span>
+          {{- else if eq $i 45 }}<span class="{{ $cls }} pc">&#9816;</span>
+          {{- else }}<span class="{{ $cls }}"></span>
+          {{- end -}}
+        {{- end -}}
+      </div>
+      <span class="chess-tile-label">> openings</span>
     </a>
-  </nav>
+  </div>
 {{ end }}

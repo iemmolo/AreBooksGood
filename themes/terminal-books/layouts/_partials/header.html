@@ -21,3 +21,13 @@
     {{- end }}
   </ul>
 </nav>
+{{ if eq .Section "chess" }}
+<nav class="chess-sub-nav">
+  <ul class="chess-sub-nav-links">
+    <li><a href="{{ "chess/puzzles/" | relURL }}"{{ if eq .RelPermalink "/chess/puzzles/" }} class="active"{{ end }}>Puzzles</a></li>
+    <li><a href="{{ "chess/learn/" | relURL }}"{{ if eq .RelPermalink "/chess/learn/" }} class="active"{{ end }}>Learn</a></li>
+    <li><a href="{{ "chess/play/" | relURL }}"{{ if eq .RelPermalink "/chess/play/" }} class="active"{{ end }}>Play</a></li>
+    <li><a href="{{ "chess/openings/" | relURL }}"{{ if eq .RelPermalink "/chess/openings/" }} class="active"{{ end }}>Openings</a></li>
+  </ul>
+</nav>
+{{ end }}
