@@ -17,6 +17,8 @@
   var STORAGE_KEY = 'blackjack-stats';
   var BET_STEPS = [5, 10, 25, 50, 100, 250, 500];
   var DEALER_DELAY = 400;
+  var DEAL_DELAY = 300;
+  var dealing = false;
 
   // ── DOM refs ───────────────────────────────────────────
   var app = document.getElementById('blackjack-app');
@@ -157,6 +159,7 @@
 
   // ── Game flow ──────────────────────────────────────────
   function deal() {
+    if (dealing) return;
     var bet = stats.lastBet;
     if (bet > stats.bankroll) {
       bet = stats.bankroll;
@@ -164,10 +167,18 @@
     }
     if (bet <= 0) return;
 
+    dealing = true;
     stats.bankroll -= bet;
-    state.dealerHand = [drawCard(), drawCard()];
+
+    // Draw all 4 cards upfront
+    var pCard1 = drawCard();
+    var dCard1 = drawCard();
+    var pCard2 = drawCard();
+    var dCard2 = drawCard();
+
+    state.dealerHand = [dCard1, dCard2];
     state.playerHands = [{
-      cards: [drawCard(), drawCard()],
+      cards: [pCard1, pCard2],
       bet: bet,
       standing: false,
       doubled: false,
@@ -176,15 +187,59 @@
     }];
     state.activeHandIndex = 0;
     state.insuranceBet = 0;
+    state.phase = 'dealing';
 
-    // Check if dealer shows ace for insurance
-    if (state.dealerHand[0].rank === 'A') {
-      state.phase = 'insurance';
-      render();
-      return;
-    }
+    // Clear table
+    renderBankroll();
+    renderStats();
+    updateControls();
+    dom.status.className = 'bj-status';
+    dom.status.textContent = '';
+    dom.dealerCards.innerHTML = '';
+    dom.dealerScore.textContent = '';
+    dom.playerHands.innerHTML = '';
+    dom.playerScore.textContent = '';
 
-    afterInsurance();
+    // Create player cards container
+    var playerCardsDiv = document.createElement('div');
+    playerCardsDiv.className = 'bj-cards';
+    dom.playerHands.appendChild(playerCardsDiv);
+
+    // Step 1: Player card 1
+    setTimeout(function () {
+      playerCardsDiv.appendChild(renderCard(pCard1, false));
+
+      // Step 2: Dealer card 1 (face up)
+      setTimeout(function () {
+        dom.dealerCards.appendChild(renderCard(dCard1, false));
+        dom.dealerScore.textContent = '(' + RANK_VALUES[dCard1.rank] + ')';
+
+        // Step 3: Player card 2
+        setTimeout(function () {
+          playerCardsDiv.appendChild(renderCard(pCard2, false));
+          var pVal = handValue(state.playerHands[0].cards);
+          var pLabel = '(' + pVal + ')';
+          if (isSoft(state.playerHands[0].cards) && pVal <= 21) pLabel = '(soft ' + pVal + ')';
+          dom.playerScore.textContent = pLabel;
+
+          // Step 4: Dealer card 2 (face down)
+          setTimeout(function () {
+            dom.dealerCards.appendChild(renderCard(dCard2, true));
+            dealing = false;
+
+            // Now proceed with game logic
+            if (state.dealerHand[0].rank === 'A') {
+              state.phase = 'insurance';
+              renderStatus();
+              updateControls();
+              return;
+            }
+
+            afterInsurance();
+          }, DEAL_DELAY);
+        }, DEAL_DELAY);
+      }, DEAL_DELAY);
+    }, DEAL_DELAY);
   }
 
   function takeInsurance() {
@@ -642,13 +697,13 @@
     var isPlaying = state.phase === 'playing';
     var isInsurance = state.phase === 'insurance';
 
-    dom.deal.hidden = !isBetting;
-    dom.deal.disabled = stats.bankroll <= 0;
-    dom.hit.hidden = !isPlaying;
-    dom.stand.hidden = !isPlaying;
+    dom.deal.hidden = !(isBetting && !dealing);
+    dom.deal.disabled = stats.bankroll <= 0 || dealing;
+    dom.hit.hidden = !isPlaying || dealing;
+    dom.stand.hidden = !isPlaying || dealing;
 
-    dom.betUp.disabled = !isBetting;
-    dom.betDown.disabled = !isBetting;
+    dom.betUp.disabled = !isBetting || dealing;
+    dom.betDown.disabled = !isBetting || dealing;
 
     if (isPlaying) {
       var hand = state.playerHands[state.activeHandIndex];
