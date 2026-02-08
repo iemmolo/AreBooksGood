@@ -66,10 +66,17 @@
 
   // ── Board Rendering ─────────────────────────────────────
 
+  function isFlipped() {
+    return state.playerColor === 'b';
+  }
+
   function render() {
+    var flipped = isFlipped();
     boardEl.innerHTML = '';
-    for (var r = 0; r < 8; r++) {
-      for (var c = 0; c < 8; c++) {
+    for (var ri = 0; ri < 8; ri++) {
+      for (var ci = 0; ci < 8; ci++) {
+        var r = flipped ? 7 - ri : ri;
+        var c = flipped ? 7 - ci : ci;
         var sq = document.createElement('div');
         sq.className = 'chess-square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
         sq.dataset.row = r;
@@ -214,12 +221,13 @@
       render();
 
       // Shake the destination square
-      var squares = boardEl.querySelectorAll('.chess-square');
-      var idx = toRow * 8 + toCol;
-      squares[idx].classList.add('wrong-move');
-      setTimeout(function () {
-        squares[idx].classList.remove('wrong-move');
-      }, 300);
+      var targetSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
+      if (targetSq) {
+        targetSq.classList.add('wrong-move');
+        setTimeout(function () {
+          targetSq.classList.remove('wrong-move');
+        }, 300);
+      }
     }
   }
 
@@ -327,9 +335,28 @@
     descEl.textContent = puzzle.description;
     counterEl.textContent = (index + 1) + ' / ' + puzzles.length;
 
+    updateCoords();
     setStatus('Your turn. Find the best move.', '');
     render();
     renderMoveLog();
+  }
+
+  function updateCoords() {
+    var flipped = isFlipped();
+    var files = boardWrapper.querySelector('.chess-coords-files');
+    var ranks = boardWrapper.querySelector('.chess-coords-ranks');
+    var fileLetters = ['a','b','c','d','e','f','g','h'];
+    var rankNumbers = ['8','7','6','5','4','3','2','1'];
+    if (flipped) {
+      fileLetters.reverse();
+      rankNumbers.reverse();
+    }
+    var fileSpans = files.querySelectorAll('span');
+    var rankSpans = ranks.querySelectorAll('span');
+    for (var i = 0; i < 8; i++) {
+      fileSpans[i].textContent = fileLetters[i];
+      rankSpans[i].textContent = rankNumbers[i];
+    }
   }
 
   // ── Hint ────────────────────────────────────────────────

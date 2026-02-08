@@ -160,6 +160,7 @@
     var colorLabel = opening.playerColor === 'b' ? 'Black' : 'White';
     drillColorEl.textContent = 'You play as ' + colorLabel;
 
+    updateCoords();
     setStatus('Your turn \u2014 make the correct move.', '');
     renderMoveList();
     renderBoard();
@@ -272,10 +273,17 @@
 
   // ── Board Rendering ─────────────────────────────────────
 
+  function isFlipped() {
+    return state.currentOpening && state.currentOpening.playerColor === 'b';
+  }
+
   function renderBoard() {
+    var flipped = isFlipped();
     boardEl.innerHTML = '';
-    for (var r = 0; r < 8; r++) {
-      for (var c = 0; c < 8; c++) {
+    for (var ri = 0; ri < 8; ri++) {
+      for (var ci = 0; ci < 8; ci++) {
+        var r = flipped ? 7 - ri : ri;
+        var c = flipped ? 7 - ci : ci;
         var sq = document.createElement('div');
         sq.className = 'chess-square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
         sq.dataset.row = r;
@@ -393,8 +401,7 @@
       renderBoard();
 
       // Shake animation on the target square
-      var squares = boardEl.querySelectorAll('.chess-square');
-      var targetSq = squares[toRow * 8 + toCol];
+      var targetSq = boardEl.querySelector('[data-row="' + toRow + '"][data-col="' + toCol + '"]');
       if (targetSq) {
         targetSq.classList.add('wrong-move');
         setTimeout(function () {
@@ -519,6 +526,24 @@
   }
 
   // ── UI Helpers ──────────────────────────────────────────
+
+  function updateCoords() {
+    var flipped = isFlipped();
+    var files = boardWrapper.querySelector('.chess-coords-files');
+    var ranks = boardWrapper.querySelector('.chess-coords-ranks');
+    var fileLetters = ['a','b','c','d','e','f','g','h'];
+    var rankNumbers = ['8','7','6','5','4','3','2','1'];
+    if (flipped) {
+      fileLetters.reverse();
+      rankNumbers.reverse();
+    }
+    var fileSpans = files.querySelectorAll('span');
+    var rankSpans = ranks.querySelectorAll('span');
+    for (var i = 0; i < 8; i++) {
+      fileSpans[i].textContent = fileLetters[i];
+      rankSpans[i].textContent = rankNumbers[i];
+    }
+  }
 
   function setStatus(msg, cls) {
     if (!msg) {
