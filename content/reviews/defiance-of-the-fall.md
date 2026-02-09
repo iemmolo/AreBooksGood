@@ -18,4 +18,4 @@ My main problem was the MC. I understand his choices and why he makes them. I'm 
 
 If you like darker-themed MCs who are willing to cross the line while balancing complex world building, system design, and cultivation systems, then this might be for you.
 
-I'll give it a 3/5. It's fine I guess.
+I'll give it a 3/5. It's fine, I guess.
