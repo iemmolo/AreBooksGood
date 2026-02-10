@@ -337,7 +337,7 @@
     else if (type === 'lose') dom.status.classList.add('cw-status-lose');
 
     if (Wallet.isBroke()) {
-      dom.status.textContent = message + ' — You\'re broke! Earn coins in another game.';
+      showBegPrompt();
     } else {
       dom.status.textContent = message;
     }
@@ -425,7 +425,27 @@
   dom.betDown.addEventListener('click', function () { changeBet(-1); });
   dom.resetStats.addEventListener('click', resetStats);
 
+  function showBegPrompt() {
+    if (!Wallet.isBroke()) return;
+    dom.status.className = 'cw-status cw-status-lose';
+    dom.status.innerHTML = '';
+    dom.status.appendChild(document.createTextNode('You\'re broke! '));
+    var begBtn = document.createElement('button');
+    begBtn.className = 'cw-btn cw-btn-small';
+    begBtn.textContent = 'Beg for coins';
+    begBtn.addEventListener('click', function () {
+      var result = Wallet.beg();
+      if (result) {
+        dom.status.textContent = result.message;
+        renderBankroll();
+        renderControls();
+      }
+    });
+    dom.status.appendChild(begBtn);
+  }
+
   createShoe();
   loadStats();
   render();
+  showBegPrompt();
 })();

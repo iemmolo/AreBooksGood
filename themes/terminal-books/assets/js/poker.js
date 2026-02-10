@@ -340,8 +340,7 @@
 
     // Check if player is broke
     if (state.players[0].chips <= 0) {
-      dom.status.textContent = 'You\'re broke! Earn coins in another game.';
-      dom.status.className = 'pk-status pk-status-lose';
+      showBegPrompt();
       showNewHandButton();
       return;
     }
@@ -1344,6 +1343,24 @@
 
   dom.resetStats.addEventListener('click', resetStats);
 
+  function showBegPrompt() {
+    if (!Wallet.isBroke()) return;
+    dom.status.className = 'pk-status pk-status-lose';
+    dom.status.innerHTML = '';
+    dom.status.appendChild(document.createTextNode('You\'re broke! '));
+    var begBtn = document.createElement('button');
+    begBtn.className = 'pk-btn pk-btn-small';
+    begBtn.textContent = 'Beg for coins';
+    begBtn.addEventListener('click', function () {
+      var result = Wallet.beg();
+      if (result) {
+        dom.status.textContent = result.message;
+        renderBalance();
+      }
+    });
+    dom.status.appendChild(begBtn);
+  }
+
   // Init
   createShoe();
   loadStats();
@@ -1352,4 +1369,5 @@
   renderStats();
   renderAllSeats();
   dom.newhand.hidden = false;
+  showBegPrompt();
 })();

@@ -625,7 +625,7 @@
       }
 
       if (Wallet.isBroke()) {
-        dom.status.textContent += ' — You\'re broke! Earn coins in another game.';
+        showBegPrompt();
       }
     } else if (state.phase === 'insurance') {
       dom.status.innerHTML = '';
@@ -784,7 +784,27 @@
   dom.betDown.addEventListener('click', function () { changeBet(-1); });
   dom.resetStats.addEventListener('click', resetStats);
 
+  function showBegPrompt() {
+    if (!Wallet.isBroke()) return;
+    dom.status.className = 'bj-status bj-status-lose';
+    dom.status.innerHTML = '';
+    dom.status.appendChild(document.createTextNode('You\'re broke! '));
+    var begBtn = document.createElement('button');
+    begBtn.className = 'bj-btn bj-btn-small';
+    begBtn.textContent = 'Beg for coins';
+    begBtn.addEventListener('click', function () {
+      var result = Wallet.beg();
+      if (result) {
+        dom.status.textContent = result.message;
+        renderBankroll();
+        updateControls();
+      }
+    });
+    dom.status.appendChild(begBtn);
+  }
+
   createShoe();
   loadStats();
   render();
+  showBegPrompt();
 })();

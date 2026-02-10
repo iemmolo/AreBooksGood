@@ -8,11 +8,25 @@
   var listeners = [];
   var wallet = load();
 
+  var BEG_MESSAGES = [
+    { amount: 100, message: 'The house takes pity on you. Here\'s 100 coins.' },
+    { amount: 100, message: 'Fine... here\'s another 100. Try not to lose it all immediately.' },
+    { amount: 75,  message: 'You again? Here\'s 75. This is getting embarrassing.' },
+    { amount: 50,  message: '...50 coins. The pit boss is watching.' },
+    { amount: 50,  message: 'Security considered escorting you out. 50 coins.' },
+    { amount: 25,  message: 'The dealer sighs audibly. 25 coins.' },
+    { amount: 25,  message: 'Even the cards feel sorry for you. 25 coins.' },
+    { amount: 10,  message: 'A coin rolls out from under the table. 10 coins.' },
+    { amount: 10,  message: 'You find some coins in the couch cushions. 10 coins.' },
+    { amount: 10,  message: 'A stranger whispers "quit while you\'re behind" and hands you 10 coins.' }
+  ];
+
   function defaultWallet() {
     return {
       coins: STARTING_BALANCE,
       totalEarned: 0,
       totalSpent: 0,
+      begCount: 0,
       lastUpdated: Date.now()
     };
   }
@@ -26,6 +40,7 @@
           coins: saved.coins || 0,
           totalEarned: saved.totalEarned || 0,
           totalSpent: saved.totalSpent || 0,
+          begCount: saved.begCount || 0,
           lastUpdated: saved.lastUpdated || Date.now()
         };
       }
@@ -111,11 +126,24 @@
       }
     },
 
+    beg: function () {
+      if (wallet.coins > 0) return null;
+      var idx = Math.min(wallet.begCount, BEG_MESSAGES.length - 1);
+      var entry = BEG_MESSAGES[idx];
+      wallet.coins += entry.amount;
+      wallet.totalEarned += entry.amount;
+      wallet.begCount++;
+      save();
+      notify();
+      return { amount: entry.amount, message: entry.message };
+    },
+
     getStats: function () {
       return {
         coins: wallet.coins,
         totalEarned: wallet.totalEarned,
         totalSpent: wallet.totalSpent,
+        begCount: wallet.begCount,
         lastUpdated: wallet.lastUpdated
       };
     }
