@@ -98,14 +98,15 @@
 
   var stats = defaultStats();
 
+  var playerStartChips = 0;
+
   function defaultStats() {
     return {
-      bankroll: STARTING_CHIPS,
       hands: 0,
       wins: 0,
       biggestPot: 0,
       earnings: 0,
-      peak: STARTING_CHIPS
+      peak: Wallet.getBalance()
     };
   }
 
@@ -289,7 +290,7 @@
   function initPlayers() {
     state.players = [];
     for (var i = 0; i < PLAYERS.length; i++) {
-      var chips = (i === 0) ? stats.bankroll : STARTING_CHIPS;
+      var chips = (i === 0) ? Wallet.getBalance() : STARTING_CHIPS;
       state.players.push({
         index: i,
         chips: chips,
@@ -326,16 +327,23 @@
       p.acted = false;
     }
 
-    // Auto-rebuy busted players
-    for (var r = 0; r < 4; r++) {
+    // Sync player chips from wallet and snapshot
+    state.players[0].chips = Wallet.getBalance();
+    playerStartChips = Wallet.getBalance();
+
+    // Auto-rebuy busted AI players
+    for (var r = 1; r < 4; r++) {
       if (state.players[r].chips <= 0) {
-        if (r === 0) {
-          stats.bankroll = STARTING_CHIPS;
-          state.players[r].chips = STARTING_CHIPS;
-        } else {
-          state.players[r].chips = STARTING_CHIPS;
-        }
+        state.players[r].chips = STARTING_CHIPS;
       }
+    }
+
+    // Check if player is broke
+    if (state.players[0].chips <= 0) {
+      dom.status.textContent = 'You\'re broke! Earn coins in another game.';
+      dom.status.className = 'pk-status pk-status-lose';
+      showNewHandButton();
+      return;
     }
 
     // Clear UI
@@ -370,9 +378,6 @@
     p.totalBet = actual;
     state.pot += actual;
     if (p.chips === 0) p.allIn = true;
-    if (playerIndex === 0) {
-      stats.bankroll = p.chips;
-    }
   }
 
   function dealHoleCards(callback) {
@@ -517,9 +522,6 @@
     }
 
     p.acted = true;
-    if (playerIndex === 0) {
-      stats.bankroll = p.chips;
-    }
 
     // Show action label for AI
     if (playerIndex !== 0 && dom.actions[playerIndex]) {
@@ -725,10 +727,15 @@
       var wp = state.players[winners[wi].index];
       var award = share + (wi === 0 ? remainder : 0);
       wp.chips += award;
-      if (winners[wi].index === 0) {
-        stats.bankroll = wp.chips;
-      }
       winnerNames.push(PLAYERS[winners[wi].index].name);
+    }
+
+    // Sync wallet with delta
+    var delta = state.players[0].chips - playerStartChips;
+    if (delta > 0) {
+      Wallet.add(delta);
+    } else if (delta < 0) {
+      Wallet.deduct(-delta);
     }
 
     // Update stats
@@ -749,7 +756,7 @@
       stats.earnings -= state.players[0].totalBet;
     }
 
-    if (stats.bankroll > stats.peak) stats.peak = stats.bankroll;
+    if (Wallet.getBalance() > stats.peak) stats.peak = Wallet.getBalance();
 
     // Show result
     var handName = activePlayers[0].hand.name;
@@ -795,8 +802,16 @@
     if (winner === null) return;
 
     state.players[winner].chips += state.pot;
+
+    // Sync wallet with delta
+    var delta = state.players[0].chips - playerStartChips;
+    if (delta > 0) {
+      Wallet.add(delta);
+    } else if (delta < 0) {
+      Wallet.deduct(-delta);
+    }
+
     if (winner === 0) {
-      stats.bankroll = state.players[winner].chips;
       stats.wins++;
       stats.earnings += state.pot - state.players[0].totalBet;
     } else {
@@ -805,7 +820,7 @@
 
     stats.hands++;
     if (state.pot > stats.biggestPot) stats.biggestPot = state.pot;
-    if (stats.bankroll > stats.peak) stats.peak = stats.bankroll;
+    if (Wallet.getBalance() > stats.peak) stats.peak = Wallet.getBalance();
 
     state.phase = 'settled';
     dom.status.textContent = PLAYERS[winner].name + ' wins $' + state.pot + ' (everyone else folded)';
@@ -1114,7 +1129,7 @@
   }
 
   function renderBalance() {
-    dom.balance.textContent = stats.bankroll;
+    dom.balance.textContent = Wallet.getBalance();
   }
 
   function renderActivePlayer() {
@@ -1238,12 +1253,11 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         var saved = JSON.parse(raw);
-        stats.bankroll = saved.bankroll || STARTING_CHIPS;
         stats.hands = saved.hands || 0;
         stats.wins = saved.wins || 0;
         stats.biggestPot = saved.biggestPot || 0;
         stats.earnings = saved.earnings || 0;
-        stats.peak = saved.peak || STARTING_CHIPS;
+        stats.peak = saved.peak || Wallet.getBalance();
       }
     } catch (e) {
       // Ignore parse errors
@@ -1259,7 +1273,7 @@
   }
 
   function resetStats() {
-    if (!confirm('Reset all stats and chips?')) return;
+    if (!confirm('Reset all stats?')) return;
     stats = defaultStats();
     state.phase = 'waiting';
     initPlayers();

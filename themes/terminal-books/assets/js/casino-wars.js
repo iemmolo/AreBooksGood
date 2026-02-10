@@ -51,12 +51,11 @@
 
   function defaultStats() {
     return {
-      bankroll: 1000,
       hands: 0,
       wins: 0,
       losses: 0,
       wars: 0,
-      peak: 1000,
+      peak: Wallet.getBalance(),
       lastBet: 25
     };
   }
@@ -96,13 +95,13 @@
   function deal() {
     if (dealing) return;
     var bet = stats.lastBet;
-    if (bet > stats.bankroll) bet = stats.bankroll;
+    if (bet > Wallet.getBalance()) bet = Wallet.getBalance();
     if (bet <= 0) return;
 
     dealing = true;
     stats.lastBet = bet;
     state.bet = bet;
-    stats.bankroll -= bet;
+    Wallet.deduct(bet);
 
     state.dealerCards = [drawCard()];
     state.playerCards = [drawCard()];
@@ -145,7 +144,7 @@
     var pRank = RANK_ORDER[state.playerCards[0].rank];
 
     if (pRank > dRank) {
-      stats.bankroll += state.bet * 2;
+      Wallet.add(state.bet * 2);
       stats.wins++;
       stats.hands++;
       state.phase = 'settled';
@@ -176,8 +175,8 @@
     dealing = true;
     stats.wars++;
     var warBet = state.bet;
-    if (warBet > stats.bankroll) warBet = stats.bankroll;
-    stats.bankroll -= warBet;
+    if (warBet > Wallet.getBalance()) warBet = Wallet.getBalance();
+    Wallet.deduct(warBet);
     renderBankroll();
 
     // Burn a card each, then deal one each
@@ -211,7 +210,7 @@
           var pRank = RANK_ORDER[state.playerCards[1].rank];
 
           if (pRank >= dRank) {
-            stats.bankroll += state.bet * 2 + warBet;
+            Wallet.add(state.bet * 2 + warBet);
             stats.wins++;
           } else {
             stats.losses++;
@@ -239,7 +238,7 @@
 
   function surrender() {
     // Get half bet back
-    stats.bankroll += Math.floor(state.bet / 2);
+    Wallet.add(Math.floor(state.bet / 2));
     stats.losses++;
     stats.hands++;
     state.phase = 'settled';
@@ -250,8 +249,8 @@
   }
 
   function updatePeak() {
-    if (stats.bankroll > stats.peak) {
-      stats.peak = stats.bankroll;
+    if (Wallet.getBalance() > stats.peak) {
+      stats.peak = Wallet.getBalance();
     }
   }
 
@@ -283,14 +282,14 @@
   }
 
   function renderBankroll() {
-    dom.balance.textContent = stats.bankroll;
+    dom.balance.textContent = Wallet.getBalance();
     dom.betAmount.textContent = '$' + stats.lastBet;
   }
 
   function renderControls() {
     var isBetting = state.phase === 'betting' || state.phase === 'settled';
     dom.deal.hidden = !isBetting;
-    dom.deal.disabled = stats.bankroll <= 0 || dealing;
+    dom.deal.disabled = Wallet.isBroke() || dealing;
     dom.betUp.disabled = !isBetting || dealing;
     dom.betDown.disabled = !isBetting || dealing;
   }
@@ -301,14 +300,6 @@
     dom.statLosses.textContent = stats.losses;
     dom.statWars.textContent = stats.wars;
     dom.statPeak.textContent = '$' + stats.peak;
-
-    // Bankruptcy
-    if (state.phase === 'settled' && stats.bankroll <= 0) {
-      stats.bankroll = 1000;
-      stats.peak = Math.max(stats.peak, 1000);
-      saveStats();
-      dom.balance.textContent = stats.bankroll;
-    }
   }
 
   function render() {
@@ -345,8 +336,8 @@
     if (type === 'win') dom.status.classList.add('cw-status-win');
     else if (type === 'lose') dom.status.classList.add('cw-status-lose');
 
-    if (state.phase === 'settled' && stats.bankroll <= 0) {
-      dom.status.textContent = message + ' — Bankrupt! Bankroll reset.';
+    if (Wallet.isBroke()) {
+      dom.status.textContent = message + ' — You\'re broke! Earn coins in another game.';
     } else {
       dom.status.textContent = message;
     }
@@ -388,7 +379,7 @@
     if (idx < 0) idx = 0;
     if (idx >= BET_STEPS.length) idx = BET_STEPS.length - 1;
     stats.lastBet = BET_STEPS[idx];
-    if (stats.lastBet > stats.bankroll) stats.lastBet = stats.bankroll;
+    if (stats.lastBet > Wallet.getBalance()) stats.lastBet = Wallet.getBalance();
     dom.betAmount.textContent = '$' + stats.lastBet;
     saveStats();
   }
@@ -399,12 +390,11 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         var saved = JSON.parse(raw);
-        stats.bankroll = saved.bankroll || 1000;
         stats.hands = saved.hands || 0;
         stats.wins = saved.wins || 0;
         stats.losses = saved.losses || 0;
         stats.wars = saved.wars || 0;
-        stats.peak = saved.peak || 1000;
+        stats.peak = saved.peak || Wallet.getBalance();
         stats.lastBet = saved.lastBet || 25;
       }
     } catch (e) {}

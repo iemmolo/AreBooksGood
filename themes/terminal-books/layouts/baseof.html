@@ -17,7 +17,9 @@
   </div>
   {{- $js := resources.Get "js/theme-switcher.js" | minify -}}
   <script src="{{ $js.RelPermalink }}"></script>
-  {{ if and .IsSection (ne .Type "chess") -}}
+  {{- $wallet := resources.Get "js/wallet.js" | minify -}}
+  <script src="{{ $wallet.RelPermalink }}"></script>
+  {{ if and .IsSection (ne .Type "chess") (ne .Section "casino") -}}
     {{- $filter := resources.Get "js/review-filter.js" | minify -}}
     <script src="{{ $filter.RelPermalink }}"></script>
   {{- end }}

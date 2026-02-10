@@ -1,0 +1,36 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="casino-intro">
+    {{ .Content }}
+  </div>
+
+  <div class="casino-tile-grid">
+    <a href="{{ "casino/poker/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        ♠ ♥<br>♦ ♣
+      </div>
+      <span class="casino-tile-label">> poker</span>
+    </a>
+
+    <a href="{{ "casino/blackjack/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        A ♠<br>10 ♥
+      </div>
+      <span class="casino-tile-label">> blackjack</span>
+    </a>
+
+    <a href="{{ "casino/casino-wars/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        ♠ vs ♦
+      </div>
+      <span class="casino-tile-label">> casino wars</span>
+    </a>
+
+    <a href="#" class="casino-tile">
+      <div class="casino-tile-visual">
+        $ $ $
+      </div>
+      <span class="casino-tile-label">> shop</span>
+    </a>
+  </div>
+{{ end }}

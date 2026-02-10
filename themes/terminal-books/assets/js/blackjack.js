@@ -62,13 +62,12 @@
 
   function defaultStats() {
     return {
-      bankroll: 1000,
       hands: 0,
       wins: 0,
       losses: 0,
       pushes: 0,
       blackjacks: 0,
-      peak: 1000,
+      peak: Wallet.getBalance(),
       lastBet: 25,
       history: []
     };
@@ -148,27 +147,27 @@
            hand.cards[0].rank === hand.cards[1].rank &&
            !hand.doubled &&
            state.playerHands.length < 2 &&
-           stats.bankroll >= hand.bet;
+           Wallet.getBalance() >= hand.bet;
   }
 
   function canDouble(hand) {
     return hand.cards.length === 2 &&
            !hand.doubled &&
-           stats.bankroll >= hand.bet;
+           Wallet.getBalance() >= hand.bet;
   }
 
   // ── Game flow ──────────────────────────────────────────
   function deal() {
     if (dealing) return;
     var bet = stats.lastBet;
-    if (bet > stats.bankroll) {
-      bet = stats.bankroll;
+    if (bet > Wallet.getBalance()) {
+      bet = Wallet.getBalance();
       stats.lastBet = bet;
     }
     if (bet <= 0) return;
 
     dealing = true;
-    stats.bankroll -= bet;
+    Wallet.deduct(bet);
 
     // Draw all 4 cards upfront
     var pCard1 = drawCard();
@@ -244,9 +243,9 @@
 
   function takeInsurance() {
     var amount = Math.floor(state.playerHands[0].bet / 2);
-    if (amount > stats.bankroll) amount = stats.bankroll;
+    if (amount > Wallet.getBalance()) amount = Wallet.getBalance();
     state.insuranceBet = amount;
-    stats.bankroll -= amount;
+    Wallet.deduct(amount);
     afterInsurance();
   }
 
@@ -260,13 +259,13 @@
     if (isBlackjack(state.dealerHand)) {
       // Pay insurance 2:1
       if (state.insuranceBet > 0) {
-        stats.bankroll += state.insuranceBet * 3; // original + 2x payout
+        Wallet.add(state.insuranceBet * 3); // original + 2x payout
       }
       // Check player blackjack
       if (isBlackjack(state.playerHands[0].cards)) {
         // Push — return bet
         state.playerHands[0].result = 'push';
-        stats.bankroll += state.playerHands[0].bet;
+        Wallet.add(state.playerHands[0].bet);
         stats.pushes++;
       } else {
         state.playerHands[0].result = 'lose';
@@ -286,7 +285,7 @@
     if (isBlackjack(state.playerHands[0].cards)) {
       state.playerHands[0].result = 'blackjack';
       // Blackjack pays 3:2
-      stats.bankroll += state.playerHands[0].bet + Math.floor(state.playerHands[0].bet * 1.5);
+      Wallet.add(state.playerHands[0].bet + Math.floor(state.playerHands[0].bet * 1.5));
       stats.blackjacks++;
       stats.hands++;
       updatePeak();
@@ -328,7 +327,7 @@
 
   function doubleDown() {
     var hand = state.playerHands[state.activeHandIndex];
-    stats.bankroll -= hand.bet;
+    Wallet.deduct(hand.bet);
     hand.bet *= 2;
     hand.doubled = true;
     hand.cards.push(drawCard());
@@ -349,7 +348,7 @@
     var splitCard = hand.cards.pop();
 
     // Deduct bet for second hand
-    stats.bankroll -= hand.bet;
+    Wallet.deduct(hand.bet);
 
     var newHand = {
       cards: [splitCard, drawCard()],
@@ -439,11 +438,11 @@
 
       if (dealerBust || playerVal > dealerVal) {
         hand.result = 'win';
-        stats.bankroll += hand.bet * 2;
+        Wallet.add(hand.bet * 2);
         stats.wins++;
       } else if (playerVal === dealerVal) {
         hand.result = 'push';
-        stats.bankroll += hand.bet;
+        Wallet.add(hand.bet);
         stats.pushes++;
       } else {
         hand.result = 'lose';
@@ -464,7 +463,7 @@
     stats.history.push({
       bet: hand.bet,
       result: hand.result,
-      bankrollAfter: stats.bankroll,
+      bankrollAfter: Wallet.getBalance(),
       timestamp: Date.now()
     });
     if (stats.history.length > 100) {
@@ -473,8 +472,8 @@
   }
 
   function updatePeak() {
-    if (stats.bankroll > stats.peak) {
-      stats.peak = stats.bankroll;
+    if (Wallet.getBalance() > stats.peak) {
+      stats.peak = Wallet.getBalance();
     }
   }
 
@@ -592,7 +591,7 @@
   }
 
   function renderBankroll() {
-    dom.balance.textContent = stats.bankroll;
+    dom.balance.textContent = Wallet.getBalance();
     dom.betAmount.textContent = '$' + stats.lastBet;
   }
 
@@ -625,13 +624,8 @@
         else dom.status.classList.add('bj-status-push');
       }
 
-      // Auto-reset on bankruptcy
-      if (stats.bankroll <= 0) {
-        dom.status.textContent += ' — Bankrupt! Bankroll reset.';
-        stats.bankroll = 1000;
-        stats.peak = Math.max(stats.peak, 1000);
-        saveStats();
-        renderBankroll();
+      if (Wallet.isBroke()) {
+        dom.status.textContent += ' — You\'re broke! Earn coins in another game.';
       }
     } else if (state.phase === 'insurance') {
       dom.status.innerHTML = '';
@@ -698,7 +692,7 @@
     var isInsurance = state.phase === 'insurance';
 
     dom.deal.hidden = !(isBetting && !dealing);
-    dom.deal.disabled = stats.bankroll <= 0 || dealing;
+    dom.deal.disabled = Wallet.isBroke() || dealing;
     dom.hit.hidden = !isPlaying || dealing;
     dom.stand.hidden = !isPlaying || dealing;
 
@@ -732,8 +726,8 @@
     if (idx >= BET_STEPS.length) idx = BET_STEPS.length - 1;
 
     stats.lastBet = BET_STEPS[idx];
-    if (stats.lastBet > stats.bankroll) {
-      stats.lastBet = stats.bankroll;
+    if (stats.lastBet > Wallet.getBalance()) {
+      stats.lastBet = Wallet.getBalance();
     }
     renderBankroll();
     saveStats();
@@ -745,13 +739,12 @@
       var raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         var saved = JSON.parse(raw);
-        stats.bankroll = saved.bankroll || 1000;
         stats.hands = saved.hands || 0;
         stats.wins = saved.wins || 0;
         stats.losses = saved.losses || 0;
         stats.pushes = saved.pushes || 0;
         stats.blackjacks = saved.blackjacks || 0;
-        stats.peak = saved.peak || 1000;
+        stats.peak = saved.peak || Wallet.getBalance();
         stats.lastBet = saved.lastBet || 25;
         stats.history = saved.history || [];
       }

@@ -500,6 +500,108 @@ a.site-title {
 }
 
 /* ============================================
+   Wallet Widget
+   ============================================ */
+.wallet-widget {
+  font-family: inherit;
+  font-size: 0.85em;
+  color: var(--foreground);
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.wallet-widget:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ============================================
+   Casino Sub-Nav
+   ============================================ */
+.casino-sub-nav {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.casino-sub-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.casino-sub-nav-links li {
+  padding: 0;
+  margin: 0;
+}
+
+.casino-sub-nav-links li::marker {
+  content: none;
+}
+
+.casino-sub-nav-links a {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.casino-sub-nav-links a:hover,
+.casino-sub-nav-links a.active {
+  color: var(--accent);
+}
+
+/* ============================================
+   Casino Tile Grid
+   ============================================ */
+.casino-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.casino-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-decoration: none;
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+}
+
+.casino-tile:hover {
+  border-color: var(--accent);
+}
+
+.casino-tile-visual {
+  font-size: 2.5em;
+  line-height: 1.2;
+  text-align: center;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  letter-spacing: 0.1em;
+}
+
+.casino-tile:hover .casino-tile-visual {
+  color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.casino-tile-label {
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.casino-tile:hover .casino-tile-label {
+  color: var(--accent);
+}
+
+/* ============================================
    404 Page
    ============================================ */
 .not-found-links {
@@ -539,12 +641,14 @@ a.site-title {
     gap: 1em;
   }
 
-  .chess-sub-nav-links {
+  .chess-sub-nav-links,
+  .casino-sub-nav-links {
     flex-wrap: wrap;
     gap: 1em;
   }
 
-  .chess-tile-grid {
+  .chess-tile-grid,
+  .casino-tile-grid {
     grid-template-columns: 1fr;
   }
 
