@@ -258,11 +258,22 @@
     };
   }
 
-  // ── Init ────────────────────────────────────────────
+  // ── Init (with retry for async PetSystem) ───────────
+  var initAttempts = 0;
+  var MAX_INIT_ATTEMPTS = 20; // 20 x 250ms = 5s max wait
+
   function init() {
     var ps = getPetSystem();
     var farm = getFarmAPI();
-    if (!ps || !farm) return;
+    if (!ps || !ps.getState) {
+      // PetSystem not ready yet (sprite XHR still loading) — retry
+      initAttempts++;
+      if (initAttempts < MAX_INIT_ATTEMPTS) {
+        setTimeout(init, 250);
+      }
+      return;
+    }
+    if (!farm) return;
 
     // Apply dragon bonus on load
     applyDragonBonus();
