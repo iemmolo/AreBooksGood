@@ -4,7 +4,7 @@
   var PET_STORAGE_KEY = 'arebooksgood-pet';
   var SPRITE_SIZE = 16;
   var PIXEL_SCALE = 3;
-  var MOBILE_PIXEL_SCALE = 2;
+  var MOBILE_PIXEL_SCALE = 3;
   var MOBILE_BREAK = 768;
   var IDLE_TIMEOUT = 30000;     // 30s no mouse → sleep
   var ANIMATION_FPS = 4;        // sprite frame rate
@@ -178,7 +178,7 @@
       var x = px * scale;
       var y = py * scale;
       var color = pixelGrid[i] === 1 ? 'var(--foreground)' : pixelGrid[i] === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-      shadows.push(x + 'px ' + y + 'px 0 0 ' + color);
+      shadows.push(x + 'px ' + y + 'px 0 0.5px ' + color);
     }
 
     return shadows.join(',');
@@ -249,7 +249,7 @@
       var x = px * scale;
       var y = py * scale;
       var color = overlayPixels[p].value === 1 ? 'var(--foreground)' : overlayPixels[p].value === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-      shadows.push(x + 'px ' + y + 'px 0 0 ' + color);
+      shadows.push(x + 'px ' + y + 'px 0 0.5px ' + color);
     }
 
     var overlay = document.createElement('div');
