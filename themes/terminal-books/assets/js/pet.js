@@ -501,7 +501,7 @@
     else dockPet();
   }
 
-  function dockPet() {
+  function dockPet(silent) {
     if (!dockEl || !container) return;
     isDocked = true;
     petState.position.docked = true;
@@ -513,7 +513,7 @@
 
     moveTo(dockCenterX, dockCenterY);
     dockEl.classList.add('pet-dock-occupied');
-    speak('*settles in*');
+    if (!silent) speak('*settles in*');
     setAnimState('idle');
     savePetState();
   }
@@ -881,7 +881,7 @@
 
     // Restore docked state
     if (petState.position.docked) {
-      dockPet();
+      dockPet(true);
     }
 
     // Events
