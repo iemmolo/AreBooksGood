@@ -1,0 +1,166 @@
+/* ============================================
+   Virtual Pet
+   ============================================ */
+.pet-container {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: auto;
+  cursor: grab;
+  image-rendering: pixelated;
+  transition: none;
+}
+
+.pet-container.pet-dragging {
+  cursor: grabbing;
+}
+
+.pet-container.pet-following {
+  transition: left 0.15s ease-out, top 0.15s ease-out;
+}
+
+.pet-sprite {
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+
+.pet-pixel-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ── Idle bob animation ────────────────────── */
+.pet-state-idle .pet-sprite {
+  animation: pet-bob 2s ease-in-out infinite;
+}
+
+@keyframes pet-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ── Celebrate jump ────────────────────────── */
+.pet-state-celebrating .pet-sprite {
+  animation: pet-jump 0.4s ease-in-out 3;
+}
+
+@keyframes pet-jump {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-12px); }
+}
+
+/* ── Sad droop ─────────────────────────────── */
+.pet-state-sad .pet-sprite {
+  animation: pet-droop 1.5s ease-in-out infinite;
+}
+
+@keyframes pet-droop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
+}
+
+/* ── Sleep Zzz ─────────────────────────────── */
+.pet-state-sleeping .pet-sprite {
+  animation: pet-sleep-bob 3s ease-in-out infinite;
+}
+
+@keyframes pet-sleep-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1px); }
+}
+
+.pet-zzz {
+  position: absolute;
+  top: -14px;
+  right: -8px;
+  font-size: 10px;
+  color: var(--foreground);
+  opacity: 0;
+  animation: pet-zzz-float 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pet-zzz-float {
+  0% { opacity: 0; transform: translateY(0); }
+  30% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ── Flung spin ────────────────────────────── */
+.pet-state-flung .pet-sprite {
+  animation: pet-spin 0.3s linear infinite;
+}
+
+@keyframes pet-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Speech Bubble ─────────────────────────── */
+.pet-speech {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--foreground);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: inherit;
+  white-space: nowrap;
+  pointer-events: none;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-speech::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--foreground);
+}
+
+/* ── Coin particle ─────────────────────────── */
+.pet-coin-particle {
+  position: fixed;
+  z-index: 10000;
+  font-size: 12px;
+  pointer-events: none;
+  animation: pet-coin-fly 0.8s ease-out forwards;
+}
+
+@keyframes pet-coin-fly {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+/* ── Mobile: smaller sprite ────────────────── */
+@media (max-width: 768px) {
+  .pet-sprite {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* ── Pet toggle button (in header) ─────────── */
+.pet-toggle {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 0.75em;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.pet-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}

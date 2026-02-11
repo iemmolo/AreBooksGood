@@ -55,6 +55,12 @@
     {{- $sudoku := resources.Get "js/sudoku.js" | minify -}}
     <script src="{{ $sudoku.RelPermalink }}"></script>
   {{- end }}
+  {{- $pet := resources.Get "js/pet.js" | minify -}}
+  <script src="{{ $pet.RelPermalink }}"></script>
+  {{ if eq .Type "pet-shop" -}}
+    {{- $shop := resources.Get "js/shop.js" | minify -}}
+    <script src="{{ $shop.RelPermalink }}"></script>
+  {{- end }}
   {{ if eq .Type "poker" -}}
     {{- $poker := resources.Get "js/poker.js" | minify -}}
     <script src="{{ $poker.RelPermalink }}"></script>

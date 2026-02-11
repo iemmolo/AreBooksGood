@@ -271,6 +271,15 @@
         state.playerHands[0].result = 'lose';
         stats.losses++;
       }
+      // Pet integration
+      if (window.PetEvents) {
+        window.PetEvents.onGameResult({
+          game: 'blackjack',
+          outcome: state.playerHands[0].result === 'push' ? 'push' : 'lose',
+          bet: state.playerHands[0].bet,
+          payout: state.playerHands[0].result === 'push' ? state.playerHands[0].bet : 0
+        });
+      }
       stats.hands++;
       addHistory(state.playerHands[0]);
       state.phase = 'settled';
@@ -285,7 +294,17 @@
     if (isBlackjack(state.playerHands[0].cards)) {
       state.playerHands[0].result = 'blackjack';
       // Blackjack pays 3:2
-      Wallet.add(state.playerHands[0].bet + Math.floor(state.playerHands[0].bet * 1.5));
+      var bjPayout = state.playerHands[0].bet + Math.floor(state.playerHands[0].bet * 1.5);
+      Wallet.add(bjPayout);
+      // Pet integration
+      if (window.PetEvents) {
+        window.PetEvents.onGameResult({
+          game: 'blackjack',
+          outcome: 'win',
+          bet: state.playerHands[0].bet,
+          payout: bjPayout
+        });
+      }
       stats.blackjacks++;
       stats.hands++;
       updatePeak();
@@ -451,6 +470,26 @@
 
       stats.hands++;
       addHistory(hand);
+    }
+
+    // Pet integration
+    if (window.PetEvents) {
+      var petOutcome = 'push';
+      var totalBet = 0;
+      var totalPayout = 0;
+      for (var pi = 0; pi < state.playerHands.length; pi++) {
+        var ph = state.playerHands[pi];
+        totalBet += ph.bet;
+        if (ph.result === 'win') { petOutcome = 'win'; totalPayout += ph.bet * 2; }
+        else if (ph.result === 'blackjack') { petOutcome = 'win'; totalPayout += ph.bet + Math.floor(ph.bet * 1.5); }
+        else if (ph.result === 'lose' && petOutcome !== 'win') { petOutcome = 'lose'; }
+      }
+      window.PetEvents.onGameResult({
+        game: 'blackjack',
+        outcome: petOutcome,
+        bet: totalBet,
+        payout: totalPayout
+      });
     }
 
     updatePeak();

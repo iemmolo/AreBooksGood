@@ -147,6 +147,9 @@
       Wallet.add(state.bet * 2);
       stats.wins++;
       stats.hands++;
+      if (window.PetEvents) {
+        window.PetEvents.onGameResult({ game: 'casino-wars', outcome: 'win', bet: state.bet, payout: state.bet * 2 });
+      }
       state.phase = 'settled';
       updatePeak();
       renderBankroll();
@@ -157,6 +160,9 @@
     } else if (pRank < dRank) {
       stats.losses++;
       stats.hands++;
+      if (window.PetEvents) {
+        window.PetEvents.onGameResult({ game: 'casino-wars', outcome: 'lose', bet: state.bet, payout: 0 });
+      }
       state.phase = 'settled';
       renderBankroll();
       renderControls();
@@ -212,8 +218,14 @@
           if (pRank >= dRank) {
             Wallet.add(state.bet * 2 + warBet);
             stats.wins++;
+            if (window.PetEvents) {
+              window.PetEvents.onGameResult({ game: 'casino-wars', outcome: 'win', bet: state.bet + warBet, payout: state.bet * 2 + warBet });
+            }
           } else {
             stats.losses++;
+            if (window.PetEvents) {
+              window.PetEvents.onGameResult({ game: 'casino-wars', outcome: 'lose', bet: state.bet + warBet, payout: 0 });
+            }
           }
 
           stats.hands++;

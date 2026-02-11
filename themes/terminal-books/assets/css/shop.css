@@ -1,0 +1,204 @@
+/* ============================================
+   Pet Shop
+   ============================================ */
+.shop-intro {
+  margin-bottom: 20px;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.shop-balance {
+  font-weight: 600;
+  font-size: 1.1em;
+  margin-bottom: 24px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  display: inline-block;
+}
+
+.shop-section {
+  margin-bottom: 32px;
+}
+
+.shop-section-title {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--accent);
+}
+
+/* ── Shop Grid ─────────────────────────────── */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.shop-card {
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shop-card:hover {
+  border-color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.shop-card-name {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.shop-card-desc {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  flex: 1;
+}
+
+.shop-card-passive {
+  font-size: 0.8em;
+  color: var(--accent);
+  font-style: italic;
+}
+
+.shop-card-cost {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.shop-card-preview {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Buttons ───────────────────────────────── */
+.shop-btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 6px 16px;
+  font: inherit;
+  font-size: 0.85em;
+  cursor: pointer;
+  text-align: center;
+}
+
+.shop-btn:hover {
+  background: var(--accent);
+  color: var(--background);
+}
+
+.shop-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.shop-btn:disabled:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.shop-btn-owned {
+  border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  cursor: default;
+}
+
+.shop-btn-owned:hover {
+  background: transparent;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.shop-btn-active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.shop-btn-equip {
+  font-size: 0.8em;
+  padding: 4px 10px;
+}
+
+/* ── Active Pet Info ───────────────────────── */
+.shop-active-info {
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shop-active-name {
+  font-weight: 600;
+}
+
+.shop-active-level {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.shop-active-passive {
+  font-size: 0.85em;
+  color: var(--accent);
+}
+
+/* ── Evolution Panel ───────────────────────── */
+.shop-evo-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.shop-evo-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.shop-evo-req {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  margin-bottom: 4px;
+}
+
+.shop-evo-req-met {
+  color: var(--accent);
+}
+
+.shop-evo-bar {
+  height: 8px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  margin: 8px 0;
+  position: relative;
+}
+
+.shop-evo-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+/* ── Accessory slot labels ─────────────────── */
+.shop-card-slot {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+/* ── Responsive ────────────────────────────── */
+@media (max-width: 600px) {
+  .shop-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+}

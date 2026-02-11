@@ -766,6 +766,16 @@
       statusText = 'Split pot! ' + winnerNames.join(' & ') + ' each win $' + share + ' with ' + handName;
     }
 
+    // Pet integration
+    if (window.PetEvents) {
+      window.PetEvents.onGameResult({
+        game: 'poker',
+        outcome: playerInWinners ? 'win' : 'lose',
+        bet: state.players[0].totalBet,
+        payout: playerInWinners ? (share + (winners[0].index === 0 ? remainder : 0)) : 0
+      });
+    }
+
     state.phase = 'settled';
     dom.status.textContent = statusText;
     dom.status.className = 'pk-status';
@@ -815,6 +825,16 @@
       stats.earnings += state.pot - state.players[0].totalBet;
     } else {
       stats.earnings -= state.players[0].totalBet;
+    }
+
+    // Pet integration
+    if (window.PetEvents) {
+      window.PetEvents.onGameResult({
+        game: 'poker',
+        outcome: winner === 0 ? 'win' : 'lose',
+        bet: state.players[0].totalBet,
+        payout: winner === 0 ? state.pot : 0
+      });
     }
 
     stats.hands++;

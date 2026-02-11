@@ -48,6 +48,16 @@
   <link rel="stylesheet" href="{{ $poker.RelPermalink }}">
 {{- end }}
 
+{{/* Pet CSS (global) */}}
+{{- $petcss := resources.Get "css/pet.css" | minify -}}
+<link rel="stylesheet" href="{{ $petcss.RelPermalink }}">
+
+{{/* Pet Shop CSS */}}
+{{ if eq .Type "pet-shop" -}}
+  {{- $shop := resources.Get "css/shop.css" | minify -}}
+  <link rel="stylesheet" href="{{ $shop.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">

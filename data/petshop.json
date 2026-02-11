@@ -1,0 +1,48 @@
+{
+  "pets": {
+    "cat": {
+      "name": "Cat",
+      "cost": 500,
+      "description": "A mischievous pixel cat with lucky paws.",
+      "passive": "Lucky Paws",
+      "passiveDesc": "Refunds coins after losing streaks",
+      "levels": {
+        "1": { "effect": "25% refund after 3 losses" },
+        "2": { "cost": 2000, "gamesRequired": 50, "effect": "40% refund after 3 losses" },
+        "3": { "cost": 10000, "gamesRequired": 200, "effect": "50% refund after 2 losses" }
+      }
+    },
+    "dragon": {
+      "name": "Dragon",
+      "cost": 750,
+      "description": "A fiery pixel dragon that hoards bonus coins.",
+      "passive": "Dragon's Hoard",
+      "passiveDesc": "Chance for bonus coins on wins",
+      "levels": {
+        "1": { "effect": "5% chance, +10% of bet" },
+        "2": { "cost": 2000, "gamesRequired": 50, "effect": "10% chance, +15% of bet" },
+        "3": { "cost": 10000, "gamesRequired": 200, "effect": "15% chance, +20% of bet" }
+      }
+    },
+    "robot": {
+      "name": "Robot",
+      "cost": 1000,
+      "description": "A calculated pixel robot with insurance protocols.",
+      "passive": "Probability Core",
+      "passiveDesc": "Recovers coins periodically",
+      "levels": {
+        "1": { "effect": "30% recovery per 10 hands" },
+        "2": { "cost": 2000, "gamesRequired": 50, "effect": "40% recovery per 8 hands" },
+        "3": { "cost": 10000, "gamesRequired": 200, "effect": "50% recovery per 5 hands" }
+      }
+    }
+  },
+  "accessories": {
+    "tophat": { "name": "Top Hat", "slot": "head", "cost": 200 },
+    "crown": { "name": "Crown", "slot": "head", "cost": 500 },
+    "monocle": { "name": "Monocle", "slot": "head", "cost": 300 },
+    "bowtie": { "name": "Bow Tie", "slot": "body", "cost": 150 },
+    "cape": { "name": "Cape", "slot": "body", "cost": 400 },
+    "partyhat": { "name": "Party Hat", "slot": "head", "cost": 100 }
+  }
+}
