@@ -180,8 +180,10 @@
 
     renderAll();
 
-    // Notify pet system if loaded
-    if (window.PetSystem && window.PetSystem.reload) {
+    // Spawn with animation for new pet
+    if (window.PetSystem && window.PetSystem.spawnNew) {
+      window.PetSystem.spawnNew();
+    } else if (window.PetSystem && window.PetSystem.reload) {
       window.PetSystem.reload();
     }
   }
@@ -192,7 +194,10 @@
     savePetState(petState);
     renderAll();
 
-    if (window.PetSystem && window.PetSystem.reload) {
+    // Spawn with animation when switching pets
+    if (window.PetSystem && window.PetSystem.spawnNew) {
+      window.PetSystem.spawnNew();
+    } else if (window.PetSystem && window.PetSystem.reload) {
       window.PetSystem.reload();
     }
   }

@@ -997,6 +997,71 @@
           isDocked = false;
         }
       },
+      spawnNew: function () {
+        petState = loadPetState();
+        if (!petState.activePet || !petState.pets[petState.activePet]) return;
+
+        // Force center-screen position for dramatic entrance
+        petState.position.x = null;
+        petState.position.y = null;
+        petState.position.docked = false;
+
+        loadSpriteData(function () {
+          createPetDOM();
+
+          // Override position to center of viewport
+          var size = getSpriteSize();
+          var cx = Math.round(window.innerWidth / 2 - size / 2);
+          var cy = Math.round(window.innerHeight / 2 - size / 2);
+          moveTo(cx, cy);
+
+          // Add spawn animation class
+          container.classList.add('pet-spawning');
+
+          // Glow ring
+          var glow = document.createElement('div');
+          glow.className = 'pet-spawn-glow';
+          container.appendChild(glow);
+
+          // Burst sparkle particles
+          for (var i = 0; i < 12; i++) {
+            var angle = (i / 12) * Math.PI * 2;
+            var dist = 30 + Math.random() * 40;
+            var sparkle = document.createElement('div');
+            sparkle.className = 'pet-spawn-sparkle';
+            sparkle.style.left = (cx + size / 2) + 'px';
+            sparkle.style.top = (cy + size / 2) + 'px';
+            sparkle.style.setProperty('--sx', Math.round(Math.cos(angle) * dist) + 'px');
+            sparkle.style.setProperty('--sy', Math.round(Math.sin(angle) * dist) + 'px');
+            sparkle.style.animationDelay = (Math.random() * 0.2) + 's';
+            document.body.appendChild(sparkle);
+            (function (el) {
+              setTimeout(function () {
+                if (el.parentNode) el.parentNode.removeChild(el);
+              }, 1000);
+            })(sparkle);
+          }
+
+          // Clean up after animation
+          setTimeout(function () {
+            if (container) {
+              container.classList.remove('pet-spawning');
+              var g = container.querySelector('.pet-spawn-glow');
+              if (g) g.remove();
+            }
+
+            // Greeting speech
+            var greetings = {
+              cat: '*appears* ...meow?',
+              dragon: '*materializes* RAWR!',
+              robot: 'BOOT SEQUENCE COMPLETE'
+            };
+            var petId = petState.activePet;
+            speak(greetings[petId] || 'hello!');
+          }, 900);
+        });
+      },
+
       toggle: toggleVisibility,
       celebrate: celebrate,
       showSad: showSad,
