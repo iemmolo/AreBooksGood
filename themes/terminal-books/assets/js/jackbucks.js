@@ -93,5 +93,13 @@
     window.JackBucks.onChange(function (bucks) {
       balanceEl.textContent = bucks;
     });
+
+    // Click JB balance → navigate to Silk Road
+    balanceEl.style.cursor = 'pointer';
+    balanceEl.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = '/casino/silk-road/';
+    });
   }
 })();

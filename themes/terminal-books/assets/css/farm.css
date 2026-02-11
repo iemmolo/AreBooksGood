@@ -73,7 +73,7 @@
 }
 
 .farm-plot-watered::after {
-  content: '\uD83D\uDCA7';
+  content: '\1F4A7';
   position: absolute;
   top: 1px;
   right: 1px;
@@ -149,6 +149,24 @@
   font-size: 11px;
 }
 
+.farm-seed-count {
+  font-size: 10px;
+  color: color-mix(in srgb, var(--accent) 80%, transparent);
+  min-width: 28px;
+  text-align: center;
+}
+
+.farm-seed-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.farm-seed-disabled:hover {
+  border-color: transparent;
+  color: var(--foreground);
+  background: none;
+}
+
 /* ── JB float particle ───────────────────────── */
 .farm-jb-float {
   position: fixed;
@@ -210,6 +228,106 @@
               0 0 16px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
+/* ── Farmhouse widget ─────────────────────────── */
+.farm-house-widget {
+  position: fixed;
+  bottom: 80px;
+  right: 12px;
+  width: 48px;
+  height: 48px;
+  z-index: 9997;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farm-house-widget:hover {
+  filter: brightness(1.2);
+}
+
+.farm-house-sprite {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  image-rendering: pixelated;
+}
+
+/* ── Farmhouse upgrade animation ─────────────── */
+.farm-house-upgrading {
+  animation: farm-house-upgrade-flash 0.6s ease-out;
+}
+
+@keyframes farm-house-upgrade-flash {
+  0% { filter: brightness(1); transform: scale(1); }
+  30% { filter: brightness(2.5) saturate(0); transform: scale(1.2); }
+  60% { filter: brightness(1.5); transform: scale(1.1); }
+  100% { filter: brightness(1); transform: scale(1); }
+}
+
+/* ── Farmhouse panel ─────────────────────────── */
+.farm-house-panel {
+  position: fixed;
+  bottom: 136px;
+  right: 12px;
+  z-index: 10001;
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  padding: 10px 12px;
+  min-width: 180px;
+  max-width: 240px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--foreground);
+}
+
+.farm-house-panel-header {
+  font-weight: bold;
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-bottom: 4px;
+}
+
+.farm-house-panel-bonuses {
+  font-size: 10px;
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
+  margin-bottom: 8px;
+}
+
+.farm-house-panel-timers {
+  margin-bottom: 8px;
+}
+
+.farm-house-timer-row {
+  font-size: 11px;
+  padding: 1px 0;
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+}
+
+.farm-house-panel-sell {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  cursor: pointer;
+}
+
+.farm-house-panel-sell:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.farm-house-panel-stat {
+  font-size: 10px;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
   .farm-bar {
@@ -225,5 +343,22 @@
 
   .farm-seed-picker {
     min-width: 110px;
+  }
+
+  .farm-house-widget {
+    bottom: 72px;
+    right: 10px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .farm-house-sprite {
+    width: 42px;
+    height: 42px;
+  }
+
+  .farm-house-panel {
+    bottom: 120px;
+    right: 10px;
   }
 }

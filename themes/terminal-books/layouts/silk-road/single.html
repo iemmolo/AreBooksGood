@@ -1,0 +1,39 @@
+{{ define "main" }}
+<div class="sr-page">
+  <div class="sr-header">
+    <pre class="sr-merchant">
+    _____
+   /     \
+  | o   o |
+  |   >   |
+  |  \_/  |
+  |_______|
+   /|   |\
+  / |   | \
+    |   |
+   _|   |_
+    </pre>
+    <div class="sr-title">> THE SILK ROAD</div>
+    <div class="sr-balance">Balance: <span id="sr-balance">0</span> JB</div>
+  </div>
+
+  <div class="sr-dialogue" id="sr-dialogue">
+    > You didn't get these seeds from me.
+  </div>
+
+  <h2 class="sr-section-title">> Seeds</h2>
+  <div class="sr-grid" id="sr-seeds-grid">
+    <!-- Populated by silk-road.js -->
+  </div>
+
+  <h2 class="sr-section-title">> Upgrades</h2>
+  <div class="sr-grid" id="sr-upgrades-grid">
+    <!-- Plot unlock card populated by JS -->
+  </div>
+
+  <h2 class="sr-section-title">> Farmhouse</h2>
+  <div class="sr-farmhouse" id="sr-farmhouse">
+    <!-- Farmhouse upgrade card populated by JS -->
+  </div>
+</div>
+{{ end }}

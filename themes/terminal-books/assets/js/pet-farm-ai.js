@@ -376,6 +376,18 @@
         }
       }, 400);
     }
+
+    // Farmhouse level 5 bonus: 5% chance to drop a random seed
+    if (farm.getFarmhouseLevel && farm.getFarmhouseLevel() >= 5 && Math.random() < 0.05) {
+      var seedOptions = ['tomato', 'corn', 'pumpkin'];
+      var dropped = seedOptions[Math.floor(Math.random() * seedOptions.length)];
+      if (farm.addSeeds) {
+        farm.addSeeds(dropped, 1);
+        setTimeout(function () {
+          ps.speak('found a ' + dropped + ' seed!');
+        }, 800);
+      }
+    }
   }
 
   // ── Dragon "Warm Soil" bonus ────────────────────────

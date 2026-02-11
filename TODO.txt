@@ -62,15 +62,24 @@ AreBooksGood - Improvement TODO
 - [x] Add farming bonuses to pet shop cards (blue text, updated intro)
 - [ ] Add pet mood/happiness system tied to interactions
 
-### Phase 3: Silk Road Store & Farmhouse
-- [ ] Create Silk Road page layout with terminal black-market aesthetic
-- [ ] Implement seed purchasing → inventory system
-- [ ] Add common crops (tomato, corn, pumpkin) and rare crops (golden apple, crystal herb, dragon fruit)
-- [ ] Add plot expansion upgrade (max 6 plots)
+### Phase 3: Silk Road Store & Farmhouse (Done)
+- [x] Create Silk Road page layout with terminal black-market aesthetic
+- [x] Implement seed purchasing → inventory system
+- [x] Add common crops (tomato, corn, pumpkin)
+- [x] Add plot expansion upgrade (max 6 plots)
+- [x] Add merchant dialogue system
+- [x] Add farmhouse (pixel-art, 5 upgrade levels, bonuses)
+- [x] Add farmhouse widget with status panel (crop timers, quick-sell, lifetime JB)
+- [x] Add farmhouse bonuses (sell price, grow speed, auto-water, rare seed drops)
+- [x] Add pet AI level 5 seed drop bonus
+- [ ] Add rare crops (golden apple, crystal herb, dragon fruit)
 - [ ] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
-- [ ] Add merchant dialogue system
-- [ ] Add farmhouse (pixel-art, 5 upgrade levels, bonuses)
 - [ ] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
+
+## Future Ideas
+
+- [ ] Pet minigames: Flappy Wing & Doodle Jump style games using pet sprite, earning JB
+- [ ] Add pet sprite previews to casino tile cards
 
 ## Low Priority / Nice-to-Have
 

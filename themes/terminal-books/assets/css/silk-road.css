@@ -1,0 +1,209 @@
+/* ============================================
+   Silk Road — Black Market Store
+   ============================================ */
+
+.sr-page {
+  --sr-fg: #33ff33;
+  --sr-fg-dim: #228822;
+  --sr-bg: #0a0f0a;
+  --sr-border: #1a3a1a;
+  --sr-card-bg: #0d150d;
+  --sr-btn: #33ff33;
+  --sr-btn-hover: #44ff44;
+  --sr-disabled: #334433;
+  color: var(--sr-fg);
+}
+
+/* ── Header ─────────────────────────────────── */
+.sr-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.sr-merchant {
+  color: var(--sr-fg-dim);
+  font-size: 12px;
+  line-height: 1.2;
+  margin: 0 auto 8px;
+  display: inline-block;
+}
+
+.sr-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--sr-fg);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.sr-balance {
+  font-size: 14px;
+  color: var(--sr-fg-dim);
+}
+
+#sr-balance {
+  color: var(--sr-fg);
+  font-weight: bold;
+}
+
+/* ── Dialogue ────────────────────────────────── */
+.sr-dialogue {
+  border: 1px solid var(--sr-border);
+  padding: 10px 14px;
+  margin-bottom: 24px;
+  font-style: italic;
+  color: var(--sr-fg-dim);
+  font-size: 13px;
+  min-height: 38px;
+}
+
+/* ── Section titles ──────────────────────────── */
+.sr-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--sr-fg);
+  margin: 20px 0 10px;
+  letter-spacing: 1px;
+}
+
+/* ── Card grid ───────────────────────────────── */
+.sr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ── Cards ───────────────────────────────────── */
+.sr-card {
+  border: 1px solid var(--sr-border);
+  background: var(--sr-card-bg);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sr-card-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--sr-fg);
+}
+
+.sr-card-info {
+  font-size: 11px;
+  color: var(--sr-fg-dim);
+  line-height: 1.4;
+}
+
+.sr-card-price {
+  font-size: 12px;
+  color: var(--sr-fg);
+  font-weight: bold;
+}
+
+.sr-card-btn {
+  display: block;
+  width: 100%;
+  padding: 5px 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--sr-bg);
+  background: var(--sr-btn);
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.sr-card-btn:hover {
+  background: var(--sr-btn-hover);
+}
+
+.sr-card-btn:disabled {
+  background: var(--sr-disabled);
+  color: var(--sr-fg-dim);
+  cursor: not-allowed;
+}
+
+.sr-card-owned {
+  font-size: 10px;
+  color: var(--sr-fg-dim);
+}
+
+/* ── Farmhouse section ───────────────────────── */
+.sr-farmhouse {
+  margin-bottom: 24px;
+}
+
+.sr-farmhouse-card {
+  border: 1px solid var(--sr-border);
+  background: var(--sr-card-bg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sr-farmhouse-current {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--sr-fg);
+}
+
+.sr-farmhouse-bonuses {
+  font-size: 11px;
+  color: var(--sr-fg-dim);
+  line-height: 1.4;
+}
+
+.sr-farmhouse-next {
+  font-size: 12px;
+  color: var(--sr-fg);
+  margin-top: 4px;
+}
+
+.sr-farmhouse-next-bonuses {
+  font-size: 10px;
+  color: var(--sr-fg-dim);
+}
+
+.sr-farmhouse-max {
+  font-size: 13px;
+  color: var(--sr-fg);
+  font-weight: bold;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* ── Purchase flash ──────────────────────────── */
+.sr-card-flash {
+  animation: sr-flash 0.4s ease-out;
+}
+
+@keyframes sr-flash {
+  0% { background: var(--sr-btn); }
+  100% { background: var(--sr-card-bg); }
+}
+
+/* ── Mobile ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .sr-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sr-merchant {
+    font-size: 10px;
+  }
+
+  .sr-title {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sr-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -56,6 +56,12 @@
 {{- $farmcss := resources.Get "css/farm.css" | minify -}}
 <link rel="stylesheet" href="{{ $farmcss.RelPermalink }}">
 
+{{/* Silk Road CSS */}}
+{{ if eq .Type "silk-road" -}}
+  {{- $sr := resources.Get "css/silk-road.css" | minify -}}
+  <link rel="stylesheet" href="{{ $sr.RelPermalink }}">
+{{- end }}
+
 {{/* Pet Shop CSS */}}
 {{ if eq .Type "pet-shop" -}}
   {{- $shop := resources.Get "css/shop.css" | minify -}}
