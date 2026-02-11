@@ -47,6 +47,7 @@
   var lastDragX = 0;
   var lastDragY = 0;
   var lastDragTime = 0;
+  var walkSettleTimer = null;
 
   // ── Load sprite data ───────────────────────────────
   function loadSpriteData(callback) {
@@ -176,7 +177,7 @@
       var py = Math.floor(i / SPRITE_SIZE);
       var x = px * scale;
       var y = py * scale;
-      var color = pixelGrid[i] === 1 ? 'var(--foreground)' : 'var(--accent)';
+      var color = pixelGrid[i] === 1 ? 'var(--foreground)' : pixelGrid[i] === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
       shadows.push(x + 'px ' + y + 'px 0 0 ' + color);
     }
 
@@ -247,7 +248,7 @@
       var py = Math.floor(overlayPixels[p].index / SPRITE_SIZE);
       var x = px * scale;
       var y = py * scale;
-      var color = overlayPixels[p].value === 1 ? 'var(--foreground)' : 'var(--accent)';
+      var color = overlayPixels[p].value === 1 ? 'var(--foreground)' : overlayPixels[p].value === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
       shadows.push(x + 'px ' + y + 'px 0 0 ' + color);
     }
 
@@ -335,15 +336,19 @@
     var dy = targetY - currentY;
     var dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist > 5) {
+    if (dist > 40) {
+      if (walkSettleTimer) { clearTimeout(walkSettleTimer); walkSettleTimer = null; }
       if (currentAnim !== 'celebrating' && currentAnim !== 'sad') {
         setAnimState('walk');
       }
       container.classList.add('pet-following');
     } else {
       container.classList.remove('pet-following');
-      if (currentAnim === 'walk') {
-        setAnimState('idle');
+      if (currentAnim === 'walk' && !walkSettleTimer) {
+        walkSettleTimer = setTimeout(function () {
+          walkSettleTimer = null;
+          if (currentAnim === 'walk') setAnimState('idle');
+        }, 300);
       }
     }
 
