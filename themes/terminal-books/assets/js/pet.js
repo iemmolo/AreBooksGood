@@ -506,12 +506,20 @@
     isDocked = true;
     petState.position.docked = true;
 
+    // Anchor pet with bottom/right to stay locked with dock on viewport resize
     var dockRect = dockEl.getBoundingClientRect();
     var size = getSpriteSize();
-    var dockCenterX = dockRect.left + dockRect.width / 2 - size / 2;
-    var dockCenterY = dockRect.top + dockRect.height / 2 - size / 2;
+    var rightOffset = window.innerWidth - dockRect.right + Math.round((dockRect.width - size) / 2);
+    var bottomOffset = window.innerHeight - dockRect.bottom + Math.round((dockRect.height - size) / 2);
 
-    moveTo(dockCenterX, dockCenterY);
+    container.style.left = 'auto';
+    container.style.top = 'auto';
+    container.style.right = rightOffset + 'px';
+    container.style.bottom = bottomOffset + 'px';
+
+    currentX = Math.round(dockRect.left + (dockRect.width - size) / 2);
+    currentY = Math.round(dockRect.top + (dockRect.height - size) / 2);
+
     dockEl.classList.add('pet-dock-occupied');
     if (!silent) speak('*settles in*');
     setAnimState('idle');
@@ -522,6 +530,13 @@
     isDocked = false;
     petState.position.docked = false;
     if (dockEl) dockEl.classList.remove('pet-dock-occupied');
+
+    // Restore left/top positioning
+    container.style.right = 'auto';
+    container.style.bottom = 'auto';
+    container.style.left = currentX + 'px';
+    container.style.top = currentY + 'px';
+
     savePetState();
   }
 
