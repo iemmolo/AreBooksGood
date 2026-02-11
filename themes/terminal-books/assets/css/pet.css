@@ -148,6 +148,61 @@
   }
 }
 
+/* ── Pet dock ─────────────────────────────────── */
+.pet-dock {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  width: 64px;
+  height: 64px;
+  z-index: 9998;
+  cursor: pointer;
+  border: 1px dashed color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 2px;
+}
+
+.pet-dock::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 12px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+}
+
+.pet-dock::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 20px;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+}
+
+.pet-dock-occupied {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  animation: dock-glow 2s ease-in-out infinite;
+}
+
+@keyframes dock-glow {
+  0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
+  50% { box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent); }
+}
+
+@media (max-width: 768px) {
+  .pet-dock {
+    width: 58px;
+    height: 58px;
+  }
+}
+
 /* ── Pet toggle button (in header) ─────────── */
 .pet-toggle {
   background: transparent;

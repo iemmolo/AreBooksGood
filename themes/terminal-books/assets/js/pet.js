@@ -36,6 +36,9 @@
   var isVisible = true;
   var celebrateTimeout = null;
   var sadTimeout = null;
+  var isDocked = false;
+  var dockEl = null;
+  var tapWalkTimer = null;
 
   // ── Fling state ─────────────────────────────────────
   var isFlung = false;
@@ -89,7 +92,7 @@
       activePet: null,
       pets: {},
       accessories: { owned: [], equipped: { head: null, body: null } },
-      position: { x: null, y: null },
+      position: { x: null, y: null, docked: false },
       visible: true,
       milestones: {
         totalGamesPlayed: 0, biggestSingleWin: 0,
@@ -114,7 +117,10 @@
             state.accessories.equipped.body = saved.accessories.equipped.body || null;
           }
         }
-        if (saved.position) state.position = saved.position;
+        if (saved.position) {
+          state.position = saved.position;
+          if (typeof state.position.docked === 'undefined') state.position.docked = false;
+        }
         if (typeof saved.visible === 'boolean') state.visible = saved.visible;
         if (saved.milestones) {
           for (var k in state.milestones) {
@@ -319,8 +325,8 @@
     var size = getSpriteSize();
     var maxX = window.innerWidth - size;
     var maxY = window.innerHeight - size;
-    x = Math.max(0, Math.min(x, maxX));
-    y = Math.max(0, Math.min(y, maxY));
+    x = Math.round(Math.max(0, Math.min(x, maxX)));
+    y = Math.round(Math.max(0, Math.min(y, maxY)));
     currentX = x;
     currentY = y;
     container.style.left = x + 'px';
@@ -328,7 +334,7 @@
   }
 
   function followCursor() {
-    if (isDragging || isFlung || isMobile) return;
+    if (isDragging || isFlung || isMobile || isDocked) return;
     targetX = mouseX + FOLLOW_OFFSET_X;
     targetY = mouseY + FOLLOW_OFFSET_Y;
 
@@ -368,6 +374,8 @@
   function onPointerDown(e) {
     if (!container) return;
     e.preventDefault();
+    if (isDocked) undockPet();
+
     isDragging = true;
     isFlung = false;
     if (flingTimer) cancelAnimationFrame(flingTimer);
@@ -418,6 +426,20 @@
     var dt = now - lastDragTime;
     if (dt < 1) dt = 1;
 
+    // Check dock collision (padded hitbox for easier docking)
+    if (dockEl) {
+      var size = getSpriteSize();
+      var petCenterX = currentX + size / 2;
+      var petCenterY = currentY + size / 2;
+      var dockRect = dockEl.getBoundingClientRect();
+      var dockPad = 20;
+      if (petCenterX >= dockRect.left - dockPad && petCenterX <= dockRect.right + dockPad &&
+          petCenterY >= dockRect.top - dockPad && petCenterY <= dockRect.bottom + dockPad) {
+        dockPet();
+        return;
+      }
+    }
+
     var vx = (clientX - lastDragX) / dt * 16;
     var vy = (clientY - lastDragY) / dt * 16;
     var speed = Math.sqrt(vx * vx + vy * vy);
@@ -430,6 +452,77 @@
       petState.position.y = currentY;
       savePetState();
     }
+  }
+
+  // ── Tap-to-walk (mobile) ────────────────────────
+  function onDocumentTap(e) {
+    if (isDragging || isFlung || isDocked) return;
+
+    var target = e.target;
+    if (container && container.contains(target)) return;
+    if (dockEl && dockEl.contains(target)) return;
+    if (target.closest && target.closest('a, button, input, textarea, select')) return;
+
+    var touch = e.changedTouches && e.changedTouches[0];
+    if (!touch) return;
+
+    var size = getSpriteSize();
+    var tapX = touch.clientX - size / 2;
+    var tapY = touch.clientY - size / 2;
+
+    setAnimState('walk');
+    container.classList.add('pet-following');
+    moveTo(tapX, tapY);
+
+    if (tapWalkTimer) clearTimeout(tapWalkTimer);
+    tapWalkTimer = setTimeout(function () {
+      tapWalkTimer = null;
+      setAnimState('idle');
+      container.classList.remove('pet-following');
+      petState.position.x = currentX;
+      petState.position.y = currentY;
+      savePetState();
+    }, 500);
+  }
+
+  // ── Dock ───────────────────────────────────────
+  function createDock() {
+    if (dockEl) dockEl.remove();
+
+    dockEl = document.createElement('div');
+    dockEl.className = 'pet-dock';
+    dockEl.addEventListener('click', onDockClick);
+    document.body.appendChild(dockEl);
+  }
+
+  function onDockClick(e) {
+    e.stopPropagation();
+    if (isDocked) undockPet();
+    else dockPet();
+  }
+
+  function dockPet() {
+    if (!dockEl || !container) return;
+    isDocked = true;
+    petState.position.docked = true;
+
+    var dockRect = dockEl.getBoundingClientRect();
+    var size = getSpriteSize();
+    var dockCenterX = dockRect.left + dockRect.width / 2 - size / 2;
+    var dockCenterY = dockRect.top + dockRect.height / 2 - size / 2;
+
+    moveTo(dockCenterX, dockCenterY);
+    dockEl.classList.add('pet-dock-occupied');
+    speak('*settles in*');
+    setAnimState('idle');
+    savePetState();
+  }
+
+  function undockPet() {
+    isDocked = false;
+    petState.position.docked = false;
+    if (dockEl) dockEl.classList.remove('pet-dock-occupied');
+    savePetState();
   }
 
   // ── Fling Physics ───────────────────────────────────
@@ -772,6 +865,9 @@
 
     document.body.appendChild(container);
 
+    // Create dock
+    createDock();
+
     // Position
     isMobile = window.innerWidth <= MOBILE_BREAK;
 
@@ -781,6 +877,11 @@
       moveTo(window.innerWidth - getSpriteSize() - 10, window.innerHeight - getSpriteSize() - 10);
     } else {
       moveTo(window.innerWidth / 2, window.innerHeight - getSpriteSize() - 20);
+    }
+
+    // Restore docked state
+    if (petState.position.docked) {
+      dockPet();
     }
 
     // Events
@@ -797,6 +898,10 @@
     document.addEventListener('touchmove', onPointerMove, { passive: false });
     document.addEventListener('touchend', onPointerUp);
 
+    if (isMobile) {
+      document.addEventListener('touchend', onDocumentTap);
+    }
+
     // Start animation
     startAnimation();
     resetIdleTimer();
@@ -812,6 +917,9 @@
 
     if (container) {
       container.style.display = isVisible ? '' : 'none';
+    }
+    if (dockEl) {
+      dockEl.style.display = isVisible ? '' : 'none';
     }
   }
 
@@ -858,6 +966,8 @@
         } else if (container) {
           container.remove();
           container = null;
+          if (dockEl) { dockEl.remove(); dockEl = null; }
+          isDocked = false;
         }
       },
       toggle: toggleVisibility,
