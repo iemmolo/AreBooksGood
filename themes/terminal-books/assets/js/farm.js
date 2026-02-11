@@ -495,7 +495,8 @@
           index: i,
           crop: plot.crop || null,
           stage: getPlotStage(plot),
-          growthPct: getGrowthPct(plot)
+          growthPct: getGrowthPct(plot),
+          wateredAt: plot.wateredAt || null
         });
       }
       return result;
@@ -543,6 +544,42 @@
     setGrowTimeMultiplier: function (m) {
       growTimeMultiplier = m;
       updatePlots();
+    },
+
+    water: function (plotIndex) {
+      var plot = farmState.plots[plotIndex];
+      if (!plot || !plot.crop) return false;
+      var stage = getPlotStage(plot);
+      if (stage === 'ready' || stage === 'planted') return false;
+      if (plot.wateredAt) return false; // already watered this cycle
+
+      var crop = CROPS[plot.crop];
+      if (!crop) return false;
+
+      // Shift plantedAt forward by 10% of total grow time (speeds up growth)
+      var boost = Math.floor(crop.growTime * 0.10);
+      plot.plantedAt -= boost;
+      plot.wateredAt = Date.now();
+      saveState();
+      updatePlots();
+      return true;
+    },
+
+    showWaterParticle: function (plotIndex) {
+      var plotEl = this.getPlotElement(plotIndex);
+      if (!plotEl) return;
+
+      var rect = plotEl.getBoundingClientRect();
+      var particle = document.createElement('div');
+      particle.className = 'farm-water-particle';
+      particle.textContent = '\uD83D\uDCA7';
+      particle.style.left = (rect.left + rect.width / 2 - 8) + 'px';
+      particle.style.top = (rect.top - 5) + 'px';
+      document.body.appendChild(particle);
+
+      setTimeout(function () {
+        if (particle.parentNode) particle.parentNode.removeChild(particle);
+      }, 1200);
     },
 
     showHarvestParticle: function (plotIndex, cropKey) {

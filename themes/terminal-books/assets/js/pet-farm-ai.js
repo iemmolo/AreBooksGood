@@ -5,6 +5,8 @@
   var AI_TICK_MIN = 20000;  // 20s
   var AI_TICK_MAX = 30000;  // 30s
   var INTERACT_DELAY = 1500; // time pet "tends" the plot
+  var WATER_DELAY = 1200;    // time pet waters
+  var IDLE_LOOK_DELAY = 1500; // time pet looks at an element
   var RETURN_DELAY = 500;
 
   // ── Farm speech lines per pet ───────────────────────
@@ -14,6 +16,12 @@
     robot:  ['CROP STATUS: READY', 'harvesting...', 'yield: optimal', 'soil pH: 6.5']
   };
 
+  var WATER_SPEECH = {
+    cat:    ['*splashes water*', '*paws at puddle*', 'wet paws!', '*shakes off water*'],
+    dragon: ['*steam hiss*', 'gentle warmth~', '*breathes mist*', 'grow, little one'],
+    robot:  ['H2O DISPENSED', 'irrigation: active', 'moisture: +10%', 'watering protocol']
+  };
+
   var DOUBLE_HARVEST_SPEECH = {
     cat:    'double harvest! *purrs*',
     dragon: 'DOUBLE FIRE HARVEST!',
@@ -21,6 +29,40 @@
   };
 
   var REPLANT_SPEECH = '*plants another*';
+
+  // ── Idle interaction speech per target ───────────────
+  var IDLE_SPEECH = {
+    wallet: {
+      cat:    ['my coins!', '*counts fish*', 'need more treats', '*taps wallet*'],
+      dragon: ['my hoard!', 'not enough gold', '*guards coins*', 'MINE'],
+      robot:  ['balance: checked', 'funds: noted', 'calculating ROI', 'portfolio: stable']
+    },
+    theme: {
+      cat:    ['ooh colors', '*bats at switch*', 'dark mode plz', '*curious paw*'],
+      dragon: ['matrix looks cool', '*smoke changes color*', 'pretty lights', 'fire theme when?'],
+      robot:  ['UI PREFERENCE: noted', 'theme: optimal', 'display calibrated', 'contrast: good']
+    },
+    title: {
+      cat:    ['are books good?', 'yes.', '*rubs against logo*', 'I prefer fish books'],
+      dragon: ['nice site name', '*perches on title*', 'books have gold?', 'good domain'],
+      robot:  ['SITE: identified', 'brand: recognized', 'title: verified', 'name: approved']
+    },
+    nav: {
+      cat:    ['where does this go?', '*curious sniff*', 'adventure!', '*paws at link*'],
+      dragon: ['treasure map!', '*follows the link*', 'new territory', 'explore!'],
+      robot:  ['LINK: scanning', 'href: analyzed', 'navigation: logged', 'route: mapped']
+    },
+    emptyPlot: {
+      cat:    ['*digs in dirt*', 'plant something!', '*buries toy*', 'empty...'],
+      dragon: ['needs seeds', '*pokes dirt*', 'barren land', 'plant fire flowers!'],
+      robot:  ['PLOT: vacant', 'soil: idle', 'suggestion: plant crop', 'utilization: 0%']
+    },
+    dock: {
+      cat:    ['*sniffs bed*', 'nap later', 'comfy spot', '*circles bed*'],
+      dragon: ['my nest!', '*fluffs bedding*', 'guard post', 'home base'],
+      robot:  ['DOCK: operational', 'recharge station', 'home coordinates', 'standby mode: later']
+    }
+  };
 
   // ── State ───────────────────────────────────────────
   var aiTimer = null;
@@ -44,14 +86,23 @@
     return window.FarmAPI || null;
   }
 
+  function isInViewport(el) {
+    var rect = el.getBoundingClientRect();
+    return rect.top >= 0 && rect.left >= 0 &&
+           rect.bottom <= window.innerHeight &&
+           rect.right <= window.innerWidth &&
+           rect.width > 0 && rect.height > 0;
+  }
+
   // ── Cancel callback for drag interruption ───────────
   function onCancel() {
     cancelled = true;
     busy = false;
-    // Remove tending class from all plots
-    var plots = document.querySelectorAll('.farm-plot-pet-tending');
-    for (var i = 0; i < plots.length; i++) {
-      plots[i].classList.remove('farm-plot-pet-tending');
+    // Remove indicator classes from all plots
+    var tending = document.querySelectorAll('.farm-plot-pet-tending, .farm-plot-watering');
+    for (var i = 0; i < tending.length; i++) {
+      tending[i].classList.remove('farm-plot-pet-tending');
+      tending[i].classList.remove('farm-plot-watering');
     }
     var ps = getPetSystem();
     if (ps) ps.setFarming(false, null);
@@ -67,6 +118,27 @@
       if (plots[i].stage === 'ready') return plots[i];
     }
     return null;
+  }
+
+  // ── Find best plot to water ─────────────────────────
+  function findWaterablePlot() {
+    var farm = getFarmAPI();
+    if (!farm) return null;
+
+    var plots = farm.getPlots();
+    var best = null;
+    for (var i = 0; i < plots.length; i++) {
+      var p = plots[i];
+      if (!p.crop || p.wateredAt) continue;
+      // Only water between 25% and 90% growth
+      if (p.growthPct < 0.25 || p.growthPct > 0.90) continue;
+      if (p.stage === 'ready') continue;
+      // Prefer highest progress
+      if (!best || p.growthPct > best.growthPct) {
+        best = p;
+      }
+    }
+    return best;
   }
 
   // ── Walk → Interact → Harvest → Return sequence ────
@@ -129,6 +201,143 @@
         }, RETURN_DELAY);
 
       }, INTERACT_DELAY);
+    });
+
+    if (!walked) {
+      cleanup();
+    }
+  }
+
+  // ── Walk → Water → Return sequence ─────────────────
+  function waterSequence(plot) {
+    var ps = getPetSystem();
+    var farm = getFarmAPI();
+    if (!ps || !farm) { busy = false; return; }
+
+    var state = ps.getState();
+    if (!state) { busy = false; return; }
+
+    cancelled = false;
+    busy = true;
+
+    ps.setFarming(true, onCancel);
+
+    var petId = state.petId;
+    var lines = WATER_SPEECH[petId] || WATER_SPEECH.cat;
+    ps.speak(randomMessage(lines));
+
+    var plotEl = farm.getPlotElement(plot.index);
+    if (!plotEl) { cleanup(); return; }
+
+    var rect = plotEl.getBoundingClientRect();
+    var size = 48;
+    var plotX = rect.left + rect.width / 2 - size / 2;
+    var plotY = rect.top - size;
+
+    var walked = ps.walkTo(plotX, plotY, function (wasDocked) {
+      if (cancelled) return;
+
+      plotEl.classList.add('farm-plot-watering');
+
+      setTimeout(function () {
+        if (cancelled) return;
+
+        plotEl.classList.remove('farm-plot-watering');
+
+        // Apply water boost
+        var watered = farm.water(plot.index);
+        if (watered) {
+          farm.showWaterParticle(plot.index);
+        }
+
+        setTimeout(function () {
+          if (cancelled) return;
+          ps.returnToPosition(wasDocked);
+          cleanup();
+        }, RETURN_DELAY);
+
+      }, WATER_DELAY);
+    });
+
+    if (!walked) {
+      cleanup();
+    }
+  }
+
+  // ── Idle interaction with page elements ─────────────
+  function idleInteraction(petId) {
+    var ps = getPetSystem();
+    if (!ps) { busy = false; return; }
+
+    // Build list of valid targets
+    var targets = [];
+
+    var wallet = document.getElementById('wallet-widget');
+    if (wallet && isInViewport(wallet)) targets.push({ el: wallet, key: 'wallet' });
+
+    var themeSelect = document.getElementById('theme-select');
+    if (themeSelect && isInViewport(themeSelect)) targets.push({ el: themeSelect, key: 'theme' });
+
+    var siteTitle = document.querySelector('.site-title');
+    if (siteTitle && isInViewport(siteTitle)) targets.push({ el: siteTitle, key: 'title' });
+
+    var navLinks = document.querySelectorAll('.nav-links a');
+    for (var i = 0; i < navLinks.length; i++) {
+      if (isInViewport(navLinks[i])) {
+        targets.push({ el: navLinks[i], key: 'nav' });
+        break; // only add one nav link
+      }
+    }
+
+    var emptyPlots = document.querySelectorAll('.farm-plot-empty');
+    for (var j = 0; j < emptyPlots.length; j++) {
+      if (isInViewport(emptyPlots[j])) {
+        targets.push({ el: emptyPlots[j], key: 'emptyPlot' });
+        break;
+      }
+    }
+
+    var dock = document.querySelector('.pet-dock');
+    if (dock && isInViewport(dock)) targets.push({ el: dock, key: 'dock' });
+
+    if (targets.length === 0) { busy = false; return; }
+
+    // Pick a random target
+    var target = targets[Math.floor(Math.random() * targets.length)];
+
+    cancelled = false;
+    busy = true;
+
+    ps.setFarming(true, onCancel);
+
+    var rect = target.el.getBoundingClientRect();
+    var size = 48;
+    var tx = rect.left + rect.width / 2 - size / 2;
+    var ty = rect.top - size;
+    // Keep pet on screen
+    if (ty < 0) ty = rect.bottom + 4;
+
+    var walked = ps.walkTo(tx, ty, function (wasDocked) {
+      if (cancelled) return;
+
+      // Pet looks at the element
+      setTimeout(function () {
+        if (cancelled) return;
+
+        // Speak reaction
+        var speechSet = IDLE_SPEECH[target.key];
+        if (speechSet) {
+          var lines = speechSet[petId] || speechSet.cat;
+          ps.speak(randomMessage(lines));
+        }
+
+        setTimeout(function () {
+          if (cancelled) return;
+          ps.returnToPosition(wasDocked);
+          cleanup();
+        }, RETURN_DELAY);
+
+      }, IDLE_LOOK_DELAY);
     });
 
     if (!walked) {
@@ -223,20 +432,37 @@
       return;
     }
 
-    // Find a ready plot
-    var target = findReadyPlot();
-    if (!target) {
-      // 10% chance to speak a farm line anyway
-      if (Math.random() < 0.10) {
-        var lines = FARM_SPEECH[state.petId] || FARM_SPEECH.cat;
-        ps.speak(randomMessage(lines));
-      }
+    var petId = state.petId;
+
+    // Priority 1: Harvest ready crops
+    var readyPlot = findReadyPlot();
+    if (readyPlot) {
+      farmSequence(readyPlot);
       scheduleTick();
       return;
     }
 
-    // Execute farming sequence
-    farmSequence(target);
+    // Priority 2: Water growing crops
+    var waterPlot = findWaterablePlot();
+    if (waterPlot) {
+      waterSequence(waterPlot);
+      scheduleTick();
+      return;
+    }
+
+    // Priority 3: 15% chance idle interaction
+    if (Math.random() < 0.15) {
+      idleInteraction(petId);
+      scheduleTick();
+      return;
+    }
+
+    // Priority 4: 10% chance random farm speech
+    if (Math.random() < 0.10) {
+      var lines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
+      ps.speak(randomMessage(lines));
+    }
+
     scheduleTick();
   }
 

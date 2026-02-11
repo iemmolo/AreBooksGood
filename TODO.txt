@@ -45,12 +45,19 @@ AreBooksGood - Improvement TODO
 - [x] Farm bar with 2 plots, 3 starter crops, timestamp growth, harvest for JB
 - [x] JB display in header wallet widget
 
-### Phase 2: Pet Farming AI
-- [ ] Add autonomous walk-to-plot behavior on idle timer (every 20-30s)
-- [ ] Add pet harvesting interaction (walk to plot → celebrate → collect)
-- [ ] Add per-pet farming bonuses (cat: auto-replant 15%, dragon: +10% grow speed, robot: auto-harvest)
-- [ ] Add farm-specific speech lines per pet type
-- [ ] Add harvest particle effects (crop icon floats up)
+### Phase 2: Pet Farming AI (Done)
+- [x] Add autonomous walk-to-plot behavior on idle timer (every 20-30s)
+- [x] Add pet harvesting interaction (walk to plot → celebrate → collect)
+- [x] Add per-pet farming bonuses (cat: auto-replant 15%, dragon: +10% grow speed, robot: auto-harvest)
+- [x] Add farm-specific speech lines per pet type
+- [x] Add harvest particle effects (crop icon floats up)
+
+### Phase 2.5: Pet Life — Watering & Idle Interactions (Done)
+- [x] Add auto-watering behavior (pet walks to growing crop, waters it, 10% speed boost)
+- [x] Add random idle interactions with page elements (wallet, theme, title, nav, dock, empty plots)
+- [x] Add per-pet speech lines for all interaction targets
+- [x] Add watering particle effects (blue glow + water droplet)
+- [ ] Add pet mood/happiness system tied to interactions
 
 ### Phase 3: Silk Road Store & Farmhouse
 - [ ] Create Silk Road page layout with terminal black-market aesthetic

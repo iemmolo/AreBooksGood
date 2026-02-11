@@ -159,6 +159,28 @@
   100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
 }
 
+/* ── Watering indicator (blue glow) ─────────── */
+.farm-plot-watering {
+  border-color: #4a9eff !important;
+  box-shadow: 0 0 8px rgba(74, 158, 255, 0.4),
+              0 0 16px rgba(74, 158, 255, 0.15);
+}
+
+/* ── Water droplet particle ────────────────── */
+.farm-water-particle {
+  position: fixed;
+  z-index: 10002;
+  font-size: 16px;
+  pointer-events: none;
+  animation: farm-water-fly 1.2s ease-out forwards;
+}
+
+@keyframes farm-water-fly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-20px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-35px) scale(0.7); }
+}
+
 /* ── Pet tending indicator ──────────────────── */
 .farm-plot-pet-tending {
   border-color: var(--accent) !important;
