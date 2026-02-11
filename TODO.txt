@@ -21,6 +21,23 @@ AreBooksGood - Improvement TODO
 - [ ] Add reading time metadata to reviews
 - [ ] Optimize images (WebP with JPEG fallback)
 
+## Pet System Quick Wins
+
+### High Impact
+- [ ] Add PetSprites.renderPreview() — shop calls it but it's undefined, falls back to ASCII art. ~50 lines reusing box-shadow technique from pet.js
+- [ ] Add level-up animation — evolution completes silently, needs flash/pulse CSS keyframe + JS trigger
+- [ ] Increase fling coin rewards — currently 1-5 coins but evolution costs 2000+. Scale to 5-15 or velocity-based (1-line change in pet.js:507)
+
+### Bug Fixes
+- [x] Fix idle speech interval leak — store setInterval handle, clear on re-entry
+- [x] Save pet position on drag end — was only saving on fling release
+- [x] Increase walk settle timer from 300ms to 500ms for smoother transition
+- [x] Increase fling coin rewards from 1-5 to 5-15
+
+### Polish
+- [ ] Add aria-live="polite" to speech bubbles for screen readers (pet.js:769)
+- [ ] Add tooltip on disabled evolution button showing what's missing (coins vs games watched)
+
 ## Low Priority / Nice-to-Have
 
 - [ ] Add search functionality (Pagefind or Lunr.js)

@@ -348,7 +348,7 @@
         walkSettleTimer = setTimeout(function () {
           walkSettleTimer = null;
           if (currentAnim === 'walk') setAnimState('idle');
-        }, 300);
+        }, 500);
       }
     }
 
@@ -425,12 +425,10 @@
     if (speed > 3) {
       startFling(vx, vy);
     } else {
-      // Save position for mobile
-      if (isMobile) {
-        petState.position.x = currentX;
-        petState.position.y = currentY;
-        savePetState();
-      }
+      // Save position after drag (mobile and desktop)
+      petState.position.x = currentX;
+      petState.position.y = currentY;
+      savePetState();
     }
   }
 
@@ -504,7 +502,7 @@
   }
 
   function dropCoin(x, y) {
-    var amount = Math.floor(Math.random() * 5) + 1;
+    var amount = Math.floor(Math.random() * 11) + 5;
     Wallet.add(amount);
 
     var el = document.createElement('span');
@@ -583,8 +581,11 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
+  var idleSpeechTimer = null;
+
   function startIdleSpeech() {
-    setInterval(function () {
+    if (idleSpeechTimer) clearInterval(idleSpeechTimer);
+    idleSpeechTimer = setInterval(function () {
       if (!petState || !petState.activePet || currentAnim !== 'idle') return;
       if (Math.random() > 0.3) return; // 30% chance each tick
 
