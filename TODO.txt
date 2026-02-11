@@ -57,6 +57,9 @@ AreBooksGood - Improvement TODO
 - [x] Add random idle interactions with page elements (wallet, theme, title, nav, dock, empty plots)
 - [x] Add per-pet speech lines for all interaction targets
 - [x] Add watering particle effects (blue glow + water droplet)
+- [x] Add watered crop visual indicator (droplet badge, blue border, gradient progress bar)
+- [x] Add spawn animation for pet purchase/switch (glow ring, sparkles, elastic bounce, greeting)
+- [x] Add farming bonuses to pet shop cards (blue text, updated intro)
 - [ ] Add pet mood/happiness system tied to interactions
 
 ### Phase 3: Silk Road Store & Farmhouse
