@@ -11,19 +11,25 @@
         name: 'Cat', cost: 500,
         description: 'A mischievous pixel cat with lucky paws.',
         passive: 'Lucky Paws',
-        passiveDesc: 'Refunds coins after losing streaks'
+        passiveDesc: 'Refunds coins after losing streaks',
+        farmBonus: 'Green Paw',
+        farmBonusDesc: '15% chance to auto-replant after harvest'
       },
       dragon: {
         name: 'Dragon', cost: 750,
         description: 'A fiery pixel dragon that hoards bonus coins.',
         passive: "Dragon's Hoard",
-        passiveDesc: 'Chance for bonus coins on wins'
+        passiveDesc: 'Chance for bonus coins on wins',
+        farmBonus: 'Warm Soil',
+        farmBonusDesc: '10% faster crop growth globally'
       },
       robot: {
         name: 'Robot', cost: 1000,
         description: 'A calculated pixel robot with insurance protocols.',
         passive: 'Probability Core',
-        passiveDesc: 'Recovers coins periodically'
+        passiveDesc: 'Recovers coins periodically',
+        farmBonus: 'Auto-Harvest',
+        farmBonusDesc: 'Harvests all ready crops on page load'
       }
     },
     accessories: {
@@ -291,6 +297,11 @@
       passive.className = 'shop-card-passive';
       passive.textContent = info.passive + ': ' + info.passiveDesc;
       card.appendChild(passive);
+
+      var farmPassive = document.createElement('div');
+      farmPassive.className = 'shop-card-passive shop-card-farm-bonus';
+      farmPassive.textContent = info.farmBonus + ': ' + info.farmBonusDesc;
+      card.appendChild(farmPassive);
 
       if (owned) {
         var level = document.createElement('div');
