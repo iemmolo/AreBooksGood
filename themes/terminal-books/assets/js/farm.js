@@ -276,11 +276,17 @@
     } else {
       el.classList.add('farm-plot-growing');
 
-      // Progress bar
+      // Progress bar — watered plots get blue tint
       var progress = document.createElement('div');
       progress.className = 'farm-plot-progress';
+      if (plot.wateredAt) progress.classList.add('farm-plot-progress-watered');
       progress.style.width = (getGrowthPct(plot) * 100) + '%';
       el.appendChild(progress);
+    }
+
+    // Watered badge
+    if (plot.wateredAt && stage !== 'ready') {
+      el.classList.add('farm-plot-watered');
     }
 
     // Crop sprite

@@ -61,6 +61,28 @@
   transition: width 10s linear;
 }
 
+.farm-plot-progress-watered {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 60%, transparent),
+    rgba(74, 158, 255, 0.6));
+}
+
+/* ── Watered badge ─────────────────────────────── */
+.farm-plot-watered {
+  border-color: color-mix(in srgb, #4a9eff 40%, transparent);
+}
+
+.farm-plot-watered::after {
+  content: '\uD83D\uDCA7';
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  font-size: 9px;
+  line-height: 1;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
 /* ── Ready plot — pulse ──────────────────────── */
 .farm-plot-ready {
   border-color: color-mix(in srgb, var(--accent) 70%, transparent);
