@@ -2,15 +2,27 @@
    Farm System
    ============================================ */
 
-/* ── Farm bar ────────────────────────────────── */
-.farm-bar {
+/* ── Farm scene strip ────────────────────────── */
+.farm-scene {
   position: fixed;
-  bottom: 12px;
+  bottom: 0;
   left: 12px;
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  align-items: flex-end;
+  gap: 10px;
   z-index: 9997;
+  pointer-events: auto;
+  padding-bottom: 3px;
+  border-bottom: 2px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+/* ── Farm bar ────────────────────────────────── */
+.farm-bar {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
   pointer-events: auto;
 }
 
@@ -230,16 +242,14 @@
 
 /* ── Farmhouse widget ─────────────────────────── */
 .farm-house-widget {
-  position: fixed;
-  bottom: 80px;
-  right: 12px;
-  width: 48px;
-  height: 48px;
-  z-index: 9997;
+  position: relative;
+  width: 128px;
+  height: 128px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .farm-house-widget:hover {
@@ -247,8 +257,8 @@
 }
 
 .farm-house-sprite {
-  width: 48px;
-  height: 48px;
+  width: 128px;
+  height: 128px;
   position: relative;
   image-rendering: pixelated;
 }
@@ -267,9 +277,10 @@
 
 /* ── Farmhouse panel ─────────────────────────── */
 .farm-house-panel {
-  position: fixed;
-  bottom: 136px;
-  right: 12px;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: -36px;
   z-index: 10001;
   background: var(--background);
   border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
@@ -330,9 +341,12 @@
 
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
+  .farm-scene {
+    left: 8px;
+    gap: 6px;
+  }
+
   .farm-bar {
-    bottom: 10px;
-    left: 10px;
     gap: 6px;
   }
 
@@ -346,19 +360,14 @@
   }
 
   .farm-house-widget {
-    bottom: 72px;
-    right: 10px;
-    width: 42px;
-    height: 42px;
+    width: 96px;
+    height: 96px;
   }
 
   .farm-house-sprite {
-    width: 42px;
-    height: 42px;
-  }
-
-  .farm-house-panel {
-    bottom: 120px;
-    right: 10px;
+    width: 128px;
+    height: 128px;
+    transform: scale(0.75);
+    transform-origin: bottom center;
   }
 }

@@ -25,6 +25,7 @@
 
   // ── 8x8 Crop sprites (box-shadow pixel art) ────────────
   var PIXEL = 3;
+  var HOUSE_PIXEL = 8; // 16x16 farmhouse grid at 8px/pixel = 128x128px
 
   var SPRITES = {
     carrot: {
@@ -370,6 +371,7 @@
   // ── State ───────────────────────────────────────────────
   var farmState;
   var farmBarEl;
+  var farmSceneEl;
   var pickerEl;
   var activePlotIndex = -1;
   var updateTimer;
@@ -492,6 +494,13 @@
   }
 
   // ── DOM creation ────────────────────────────────────────
+  function createFarmScene() {
+    farmSceneEl = document.createElement('div');
+    farmSceneEl.className = 'farm-scene';
+    farmSceneEl.id = 'farm-scene';
+    document.body.appendChild(farmSceneEl);
+  }
+
   function createFarmBar() {
     farmBarEl = document.createElement('div');
     farmBarEl.className = 'farm-bar';
@@ -501,7 +510,7 @@
       farmBarEl.appendChild(createPlotEl(i));
     }
 
-    document.body.appendChild(farmBarEl);
+    farmSceneEl.appendChild(farmBarEl);
 
     // Sync visibility with pet
     syncVisibility();
@@ -764,8 +773,7 @@
       }
     } catch (e) {}
 
-    if (farmBarEl) farmBarEl.style.display = hidden ? 'none' : '';
-    if (farmhouseEl) farmhouseEl.style.display = hidden ? 'none' : '';
+    if (farmSceneEl) farmSceneEl.style.display = hidden ? 'none' : '';
   }
 
   // Hook into pet toggle
@@ -790,7 +798,7 @@
     });
 
     renderFarmhouseSprite();
-    document.body.appendChild(farmhouseEl);
+    farmSceneEl.appendChild(farmhouseEl);
   }
 
   function renderFarmhouseSprite() {
@@ -800,7 +808,7 @@
     farmhouseEl.innerHTML = '';
     var spriteContainer = document.createElement('div');
     spriteContainer.className = 'farm-house-sprite';
-    renderSprite(spriteContainer, pixels, PIXEL);
+    renderSprite(spriteContainer, pixels, HOUSE_PIXEL);
     farmhouseEl.appendChild(spriteContainer);
   }
 
@@ -898,7 +906,7 @@
       farmhousePanelEl.appendChild(lifetime);
     }
 
-    document.body.appendChild(farmhousePanelEl);
+    farmhouseEl.appendChild(farmhousePanelEl);
 
     // Close on outside click
     setTimeout(function () {
@@ -1148,8 +1156,9 @@
   function init() {
     farmState = loadState();
     applyFarmhouseBonuses();
-    createFarmBar();
+    createFarmScene();
     createFarmhouseWidget();
+    createFarmBar();
     updatePlots(); // Immediate catch-up for offline growth
     updateTimer = setInterval(updatePlots, UPDATE_INTERVAL);
     watchPetToggle();

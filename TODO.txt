@@ -79,7 +79,7 @@ AreBooksGood - Improvement TODO
 ## Silk Road & Farmhouse Polish
 
 - [x] Fix Silk Road page styling
-- [ ] Make farmhouse pixel art bigger
+- [x] Make farmhouse pixel art bigger
 - [ ] Show pet inside or in front of farmhouse (visible but connected to house)
 
 ## New Casino Games
