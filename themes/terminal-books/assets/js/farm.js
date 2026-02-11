@@ -3,6 +3,7 @@
 
   var STORAGE_KEY = 'arebooksgood-farm';
   var UPDATE_INTERVAL = 10000; // 10s refresh
+  var growTimeMultiplier = 1;
 
   // ── Crop definitions ────────────────────────────────────
   var CROPS = {
@@ -189,7 +190,8 @@
     var crop = CROPS[plot.crop];
     if (!crop) return null;
     var elapsed = Date.now() - plot.plantedAt;
-    var pct = elapsed / crop.growTime;
+    var effectiveTime = crop.growTime * growTimeMultiplier;
+    var pct = elapsed / effectiveTime;
     if (pct >= 1) return 'ready';
     if (pct >= 0.75) return 'flowering';
     if (pct >= 0.50) return 'growing';
@@ -202,7 +204,8 @@
     var crop = CROPS[plot.crop];
     if (!crop) return 0;
     var elapsed = Date.now() - plot.plantedAt;
-    return Math.min(1, elapsed / crop.growTime);
+    var effectiveTime = crop.growTime * growTimeMultiplier;
+    return Math.min(1, elapsed / effectiveTime);
   }
 
   // ── Sprite rendering (box-shadow pixel art) ─────────────
@@ -480,6 +483,87 @@
       };
     }
   }
+
+  // ── FarmAPI — exposed for pet-farm-ai.js ────────────────
+  window.FarmAPI = {
+    getPlots: function () {
+      if (!farmState) return [];
+      var result = [];
+      for (var i = 0; i < farmState.plots.length; i++) {
+        var plot = farmState.plots[i];
+        result.push({
+          index: i,
+          crop: plot.crop || null,
+          stage: getPlotStage(plot),
+          growthPct: getGrowthPct(plot)
+        });
+      }
+      return result;
+    },
+
+    harvest: function (plotIndex) {
+      var plot = farmState.plots[plotIndex];
+      if (!plot || !plot.crop) return null;
+      if (getPlotStage(plot) !== 'ready') return null;
+
+      var crop = CROPS[plot.crop];
+      if (!crop) return null;
+
+      var cropKey = plot.crop;
+      var sellValue = crop.sell;
+
+      if (window.JackBucks) {
+        window.JackBucks.add(sellValue);
+      }
+
+      farmState.plots[plotIndex] = { crop: null };
+      saveState();
+      updatePlots();
+      showJBFloat(plotIndex, sellValue);
+
+      return { crop: cropKey, amount: sellValue };
+    },
+
+    plant: function (plotIndex, cropKey) {
+      if (!CROPS[cropKey]) return false;
+      if (plotIndex < 0 || plotIndex >= farmState.plots.length) return false;
+      var plot = farmState.plots[plotIndex];
+      if (plot && plot.crop) return false; // already planted
+
+      plantSeed(plotIndex, cropKey);
+      return true;
+    },
+
+    getPlotElement: function (plotIndex) {
+      if (!farmBarEl) return null;
+      var els = farmBarEl.querySelectorAll('.farm-plot');
+      return els[plotIndex] || null;
+    },
+
+    setGrowTimeMultiplier: function (m) {
+      growTimeMultiplier = m;
+      updatePlots();
+    },
+
+    showHarvestParticle: function (plotIndex, cropKey) {
+      var plotEl = this.getPlotElement(plotIndex);
+      if (!plotEl) return;
+      var crop = CROPS[cropKey];
+      if (!crop) return;
+
+      var rect = plotEl.getBoundingClientRect();
+      var particle = document.createElement('div');
+      particle.className = 'farm-harvest-particle';
+      particle.textContent = crop.icon;
+      particle.style.left = (rect.left + rect.width / 2 - 8) + 'px';
+      particle.style.top = (rect.top - 5) + 'px';
+      document.body.appendChild(particle);
+
+      setTimeout(function () {
+        if (particle.parentNode) particle.parentNode.removeChild(particle);
+      }, 1200);
+    }
+  };
 
   // ── Init ────────────────────────────────────────────────
   function init() {

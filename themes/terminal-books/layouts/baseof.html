@@ -61,6 +61,8 @@
   <script src="{{ $jb.RelPermalink }}"></script>
   {{- $farm := resources.Get "js/farm.js" | minify -}}
   <script src="{{ $farm.RelPermalink }}"></script>
+  {{- $petFarmAI := resources.Get "js/pet-farm-ai.js" | minify -}}
+  <script src="{{ $petFarmAI.RelPermalink }}"></script>
   {{ if eq .Type "pet-shop" -}}
     {{- $shop := resources.Get "js/shop.js" | minify -}}
     <script src="{{ $shop.RelPermalink }}"></script>

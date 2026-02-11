@@ -144,6 +144,28 @@
   100% { opacity: 0; transform: translateY(-30px); }
 }
 
+/* ── Harvest particle (crop icon floats up) ──── */
+.farm-harvest-particle {
+  position: fixed;
+  z-index: 10002;
+  font-size: 18px;
+  pointer-events: none;
+  animation: farm-harvest-fly 1.2s ease-out forwards;
+}
+
+@keyframes farm-harvest-fly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  60% { opacity: 1; transform: translateY(-25px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+}
+
+/* ── Pet tending indicator ──────────────────── */
+.farm-plot-pet-tending {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent),
+              0 0 16px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
   .farm-bar {

@@ -34,7 +34,7 @@ theme = 'terminal-books'
     pageRef = '/sudoku'
     weight = 47
   [[menus.main]]
-    name = 'Shop'
+    name = 'Pets'
     pageRef = '/casino/shop'
     weight = 48
   [[menus.main]]

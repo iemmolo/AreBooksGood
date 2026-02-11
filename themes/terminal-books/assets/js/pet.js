@@ -52,6 +52,10 @@
   var lastDragTime = 0;
   var walkSettleTimer = null;
 
+  // ── Farming state ─────────────────────────────────
+  var isFarming = false;
+  var farmingCancelCb = null;
+
   // ── Load sprite data ───────────────────────────────
   function loadSpriteData(callback) {
     // Try to fetch from Hugo's data directory
@@ -374,6 +378,14 @@
   function onPointerDown(e) {
     if (!container) return;
     e.preventDefault();
+
+    // Cancel farming sequence if active
+    if (isFarming && farmingCancelCb) {
+      farmingCancelCb();
+      isFarming = false;
+      farmingCancelCb = null;
+    }
+
     if (isDocked) undockPet();
 
     isDragging = true;
@@ -988,7 +1000,66 @@
       toggle: toggleVisibility,
       celebrate: celebrate,
       showSad: showSad,
-      speak: speak
+      speak: speak,
+
+      getState: function () {
+        if (!petState || !petState.activePet) return null;
+        var pet = petState.pets[petState.activePet];
+        if (!pet) return null;
+        return {
+          petId: petState.activePet,
+          level: pet.level,
+          anim: currentAnim,
+          isDocked: isDocked,
+          isDragging: isDragging,
+          isFlung: isFlung,
+          isVisible: isVisible,
+          x: currentX,
+          y: currentY
+        };
+      },
+
+      walkTo: function (x, y, callback) {
+        if (!container || isDragging || isFlung || !isVisible) return false;
+        if (currentAnim === 'celebrating' || currentAnim === 'sad') return false;
+
+        var wasDocked = isDocked;
+        if (isDocked) undockPet();
+
+        setAnimState('walk');
+        container.classList.add('pet-following');
+        moveTo(x, y);
+
+        setTimeout(function () {
+          container.classList.remove('pet-following');
+          setAnimState('idle');
+          if (callback) callback(wasDocked);
+        }, 300);
+
+        return true;
+      },
+
+      returnToPosition: function (wasDocked) {
+        if (!container) return;
+        if (wasDocked && dockEl) {
+          dockPet(true);
+        } else {
+          setAnimState('idle');
+        }
+        resetIdleTimer();
+      },
+
+      isBusy: function () {
+        return isDragging || isFlung || !isVisible ||
+               currentAnim === 'celebrating' || currentAnim === 'sad';
+      },
+
+      setFarming: function (active, cancelCb) {
+        isFarming = active;
+        farmingCancelCb = active ? cancelCb : null;
+      },
+
+      resetIdleTimer: resetIdleTimer
     };
   }
 
