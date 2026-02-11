@@ -57,6 +57,10 @@
   {{- end }}
   {{- $pet := resources.Get "js/pet.js" | minify -}}
   <script src="{{ $pet.RelPermalink }}"></script>
+  {{- $jb := resources.Get "js/jackbucks.js" | minify -}}
+  <script src="{{ $jb.RelPermalink }}"></script>
+  {{- $farm := resources.Get "js/farm.js" | minify -}}
+  <script src="{{ $farm.RelPermalink }}"></script>
   {{ if eq .Type "pet-shop" -}}
     {{- $shop := resources.Get "js/shop.js" | minify -}}
     <script src="{{ $shop.RelPermalink }}"></script>

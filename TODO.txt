@@ -38,6 +38,30 @@ AreBooksGood - Improvement TODO
 - [ ] Add aria-live="polite" to speech bubbles for screen readers (pet.js:769)
 - [ ] Add tooltip on disabled evolution button showing what's missing (coins vs games watched)
 
+## Farm System
+
+### Phase 1 (Done)
+- [x] JB wallet module (jackbucks.js)
+- [x] Farm bar with 2 plots, 3 starter crops, timestamp growth, harvest for JB
+- [x] JB display in header wallet widget
+
+### Phase 2: Pet Farming AI
+- [ ] Add autonomous walk-to-plot behavior on idle timer (every 20-30s)
+- [ ] Add pet harvesting interaction (walk to plot → celebrate → collect)
+- [ ] Add per-pet farming bonuses (cat: auto-replant 15%, dragon: +10% grow speed, robot: auto-harvest)
+- [ ] Add farm-specific speech lines per pet type
+- [ ] Add harvest particle effects (crop icon floats up)
+
+### Phase 3: Silk Road Store & Farmhouse
+- [ ] Create Silk Road page layout with terminal black-market aesthetic
+- [ ] Implement seed purchasing → inventory system
+- [ ] Add common crops (tomato, corn, pumpkin) and rare crops (golden apple, crystal herb, dragon fruit)
+- [ ] Add plot expansion upgrade (max 6 plots)
+- [ ] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
+- [ ] Add merchant dialogue system
+- [ ] Add farmhouse (pixel-art, 5 upgrade levels, bonuses)
+- [ ] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
+
 ## Low Priority / Nice-to-Have
 
 - [ ] Add search functionality (Pagefind or Lunr.js)

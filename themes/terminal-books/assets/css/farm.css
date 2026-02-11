@@ -1,0 +1,163 @@
+/* ============================================
+   Farm System
+   ============================================ */
+
+/* ── Farm bar ────────────────────────────────── */
+.farm-bar {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  z-index: 9997;
+  pointer-events: auto;
+}
+
+/* ── Plot base ───────────────────────────────── */
+.farm-plot {
+  width: 48px;
+  height: 48px;
+  border: 1px dashed color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+/* ── Empty plot ──────────────────────────────── */
+.farm-plot-empty::after {
+  content: '+';
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  font-size: 20px;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.farm-plot-empty:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.farm-plot-empty:hover::after {
+  color: var(--accent);
+}
+
+/* ── Growing plot — progress bar ─────────────── */
+.farm-plot-growing {
+  border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+.farm-plot-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 0 0 2px 2px;
+  transition: width 10s linear;
+}
+
+/* ── Ready plot — pulse ──────────────────────── */
+.farm-plot-ready {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  animation: farm-plot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes farm-plot-pulse {
+  0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
+  50% { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent); }
+}
+
+/* ── Crop sprite container ───────────────────── */
+.farm-crop-sprite {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  image-rendering: pixelated;
+}
+
+.farm-crop-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ── Seed picker ─────────────────────────────── */
+.farm-seed-picker {
+  position: fixed;
+  z-index: 10001;
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.farm-seed-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--foreground);
+  background: none;
+  border: 1px solid transparent;
+}
+
+.farm-seed-option:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.farm-seed-name {
+  flex: 1;
+}
+
+.farm-seed-time {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  font-size: 11px;
+}
+
+/* ── JB float particle ───────────────────────── */
+.farm-jb-float {
+  position: fixed;
+  z-index: 10002;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--accent);
+  pointer-events: none;
+  animation: farm-jb-fly 1s ease-out forwards;
+}
+
+@keyframes farm-jb-fly {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+/* ── Mobile ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .farm-bar {
+    bottom: 10px;
+    left: 10px;
+    gap: 6px;
+  }
+
+  .farm-plot {
+    width: 42px;
+    height: 42px;
+  }
+
+  .farm-seed-picker {
+    min-width: 110px;
+  }
+}

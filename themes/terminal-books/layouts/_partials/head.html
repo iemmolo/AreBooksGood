@@ -52,6 +52,10 @@
 {{- $petcss := resources.Get "css/pet.css" | minify -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">
 
+{{/* Farm CSS (global) */}}
+{{- $farmcss := resources.Get "css/farm.css" | minify -}}
+<link rel="stylesheet" href="{{ $farmcss.RelPermalink }}">
+
 {{/* Pet Shop CSS */}}
 {{ if eq .Type "pet-shop" -}}
   {{- $shop := resources.Get "css/shop.css" | minify -}}
