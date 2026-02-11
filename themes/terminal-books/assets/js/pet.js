@@ -1027,24 +1027,38 @@
         if (isDocked) undockPet();
 
         setAnimState('walk');
-        container.classList.add('pet-following');
+        container.classList.add('pet-farming-walk');
         moveTo(x, y);
 
         setTimeout(function () {
-          container.classList.remove('pet-following');
+          container.classList.remove('pet-farming-walk');
           setAnimState('idle');
           if (callback) callback(wasDocked);
-        }, 300);
+        }, 850);
 
         return true;
       },
 
       returnToPosition: function (wasDocked) {
         if (!container) return;
+        container.classList.add('pet-farming-walk');
+
         if (wasDocked && dockEl) {
-          dockPet(true);
+          // Walk back visually, then snap into dock anchoring
+          var dockRect = dockEl.getBoundingClientRect();
+          var size = getSpriteSize();
+          var dockX = Math.round(dockRect.left + (dockRect.width - size) / 2);
+          var dockY = Math.round(dockRect.top + (dockRect.height - size) / 2);
+          setAnimState('walk');
+          moveTo(dockX, dockY);
+
+          setTimeout(function () {
+            container.classList.remove('pet-farming-walk');
+            dockPet(true);
+          }, 850);
         } else {
           setAnimState('idle');
+          container.classList.remove('pet-farming-walk');
         }
         resetIdleTimer();
       },

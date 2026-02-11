@@ -18,6 +18,10 @@
   transition: left 0.15s ease-out, top 0.15s ease-out;
 }
 
+.pet-container.pet-farming-walk {
+  transition: left 0.8s ease-in-out, top 0.8s ease-in-out;
+}
+
 .pet-sprite {
   width: 48px;
   height: 48px;
