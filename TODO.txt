@@ -76,6 +76,18 @@ AreBooksGood - Improvement TODO
 - [ ] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
 - [ ] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
 
+## Silk Road & Farmhouse Polish
+
+- [x] Fix Silk Road page styling
+- [ ] Make farmhouse pixel art bigger
+- [ ] Show pet inside or in front of farmhouse (visible but connected to house)
+
+## New Casino Games
+
+- [ ] Build slot machine game
+- [ ] Build solitaire game
+- [ ] Build spider solitaire game
+
 ## Future Ideas
 
 - [ ] Pet minigames: Flappy Wing & Doodle Jump style games using pet sprite, earning JB
