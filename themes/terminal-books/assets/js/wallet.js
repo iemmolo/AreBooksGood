@@ -157,4 +157,16 @@
       balanceEl.textContent = coins;
     });
   }
+
+  // Hidden cheat: type "rich" to add 50,000 coins
+  var cheatBuf = '';
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    cheatBuf += e.key.toLowerCase();
+    if (cheatBuf.length > 4) cheatBuf = cheatBuf.slice(-4);
+    if (cheatBuf === 'rich') {
+      cheatBuf = '';
+      window.Wallet.add(50000);
+    }
+  });
 })();
