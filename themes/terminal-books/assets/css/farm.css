@@ -33,31 +33,10 @@
   z-index: 0;
 }
 
-/* ── Farm decorations ──────────────────────── */
-.farm-decoration {
+.farm-tree {
   position: relative;
   pointer-events: none;
   flex-shrink: 0;
-}
-
-.farm-path {
-  display: flex;
-  flex-direction: row;
-  gap: 2px;
-  align-items: flex-end;
-  pointer-events: none;
-  flex-shrink: 0;
-}
-
-.farm-path-tile {
-  position: relative;
-  image-rendering: pixelated;
-}
-
-.farm-grass-tuft {
-  position: absolute;
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* ── Farm bar ────────────────────────────────── */
@@ -394,13 +373,13 @@
     height: 12px;
   }
 
-  .farm-decoration {
-    transform: scale(0.7);
-    transform-origin: bottom center;
+  .farm-house-widget {
+    align-items: flex-end;
   }
 
-  .farm-path {
-    gap: 1px;
+  .farm-tree {
+    transform: scale(0.7);
+    transform-origin: bottom center;
   }
 
   .farm-bar {
