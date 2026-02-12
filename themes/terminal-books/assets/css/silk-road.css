@@ -173,6 +173,23 @@
   padding: 8px 0;
 }
 
+/* ── Rare card styling ───────────────────────── */
+.sr-card-rare {
+  border-color: #DAA520;
+  box-shadow: 0 0 8px rgba(218, 165, 32, 0.2),
+              inset 0 0 8px rgba(218, 165, 32, 0.05);
+}
+
+.sr-card-rare:hover {
+  border-color: #FFD700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3),
+              inset 0 0 10px rgba(255, 215, 0, 0.08);
+}
+
+.sr-card-rare .sr-card-name {
+  color: #FFD700;
+}
+
 /* ── Purchase flash ──────────────────────────── */
 .sr-card-flash {
   animation: sr-flash 0.4s ease-out;

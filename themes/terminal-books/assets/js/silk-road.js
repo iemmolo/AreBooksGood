@@ -12,7 +12,10 @@
     "The feds don't know about this page.",
     "Tell your friends. Actually, don't.",
     "Dragon fruit? Straight from the dark web.",
-    "Grade A, organic, totally legitimate."
+    "Grade A, organic, totally legitimate.",
+    "Golden apples... not from any orchard you'd find on a map.",
+    "Crystal herbs. Handle with care. Or don't. I'm not your mother.",
+    "Dragon fruit seeds. Grew these in a volcano. Don't ask which one."
   ];
 
   // ── Farmhouse level definitions ───────────────────────
@@ -87,10 +90,11 @@
 
         var card = document.createElement('div');
         card.className = 'sr-card';
+        if (crop.rarity === 'rare') card.classList.add('sr-card-rare');
 
         var name = document.createElement('div');
         name.className = 'sr-card-name';
-        name.textContent = crop.name;
+        name.textContent = crop.rarity === 'rare' ? '\u2605 ' + crop.name : crop.name;
 
         var info = document.createElement('div');
         info.className = 'sr-card-info';

@@ -194,6 +194,14 @@
   text-align: center;
 }
 
+.farm-seed-rare .farm-seed-name {
+  color: #FFD700;
+}
+
+.farm-seed-rare:hover .farm-seed-name {
+  color: #FFED4A;
+}
+
 .farm-seed-disabled {
   opacity: 0.35;
   cursor: not-allowed;

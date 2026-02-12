@@ -379,7 +379,7 @@
 
     // Farmhouse level 5 bonus: 5% chance to drop a random seed
     if (farm.getFarmhouseLevel && farm.getFarmhouseLevel() >= 5 && Math.random() < 0.05) {
-      var seedOptions = ['tomato', 'corn', 'pumpkin'];
+      var seedOptions = ['tomato', 'corn', 'pumpkin', 'golden_apple', 'crystal_herb', 'dragon_fruit'];
       var dropped = seedOptions[Math.floor(Math.random() * seedOptions.length)];
       if (farm.addSeeds) {
         farm.addSeeds(dropped, 1);
