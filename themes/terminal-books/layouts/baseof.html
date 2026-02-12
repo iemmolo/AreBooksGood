@@ -83,5 +83,9 @@
     {{- $slots := resources.Get "js/slots.js" | minify -}}
     <script src="{{ $slots.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "flappy" -}}
+    {{- $flappy := resources.Get "js/flappy.js" | minify -}}
+    <script src="{{ $flappy.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

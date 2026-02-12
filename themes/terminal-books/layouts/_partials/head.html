@@ -60,6 +60,12 @@
   <link rel="stylesheet" href="{{ $slots.RelPermalink }}">
 {{- end }}
 
+{{/* Flappy Bird CSS */}}
+{{ if eq .Type "flappy" -}}
+  {{- $flappy := resources.Get "css/flappy.css" | minify -}}
+  <link rel="stylesheet" href="{{ $flappy.RelPermalink }}">
+{{- end }}
+
 {{/* Pet CSS (global) */}}
 {{- $petcss := resources.Get "css/pet.css" | minify -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">

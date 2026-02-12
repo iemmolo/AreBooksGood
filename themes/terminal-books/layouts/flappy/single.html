@@ -1,0 +1,60 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="fb-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="flappy-app">
+    <!-- Game area (HUD + canvas, sized by JS) -->
+    <div id="fb-game-area" class="fb-game-area">
+      <!-- HUD bar -->
+      <div class="fb-hud">
+        <span class="fb-hud-item">Score: <span id="fb-score">0</span></span>
+        <span class="fb-hud-item">Coins: <span id="fb-coins">0</span></span>
+        <span class="fb-hud-item">JB: <span id="fb-jb">0</span></span>
+        <span class="fb-hud-item">Best: <span id="fb-best">0</span></span>
+      </div>
+
+      <!-- Canvas wrapper -->
+      <div class="fb-canvas-wrap">
+        <canvas id="fb-canvas"></canvas>
+
+        <!-- Start screen overlay -->
+        <div id="fb-start-overlay" class="fb-overlay">
+          <div class="fb-overlay-inner">
+            <div id="fb-pet-preview" class="fb-pet-preview"></div>
+            <h2 class="fb-overlay-title">Flappy Bird</h2>
+            <p class="fb-overlay-hint">Click / Tap / Space to flap</p>
+            <button id="fb-play-btn" class="fb-btn fb-btn-play">PLAY</button>
+          </div>
+        </div>
+
+        <!-- Game over overlay -->
+        <div id="fb-gameover-overlay" class="fb-overlay fb-hidden">
+          <div class="fb-overlay-inner">
+            <h2 class="fb-overlay-title">Game Over</h2>
+            <div class="fb-results">
+              <span class="fb-result-label">Score</span><span id="fb-final-score" class="fb-result-value">0</span>
+              <span class="fb-result-label">Coins</span><span id="fb-final-coins" class="fb-result-value">0</span>
+              <span class="fb-result-label">JB</span><span id="fb-final-jb" class="fb-result-value">0</span>
+            </div>
+            <button id="fb-retry-btn" class="fb-btn fb-btn-play">RETRY</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats panel -->
+    <div class="fb-stats">
+      <h3 class="fb-stats-title">Stats</h3>
+      <div class="fb-stats-grid">
+        <span class="fb-stat-label">Games</span><span id="fb-stat-games" class="fb-stat-value">0</span>
+        <span class="fb-stat-label">Best Score</span><span id="fb-stat-best" class="fb-stat-value">0</span>
+        <span class="fb-stat-label">Total Coins</span><span id="fb-stat-coins" class="fb-stat-value">0</span>
+        <span class="fb-stat-label">Total JB</span><span id="fb-stat-jb" class="fb-stat-value">0</span>
+        <span class="fb-stat-label">Pipes Passed</span><span id="fb-stat-pipes" class="fb-stat-value">0</span>
+      </div>
+      <button id="fb-reset-stats" class="fb-btn fb-btn-small fb-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}
