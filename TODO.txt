@@ -84,7 +84,7 @@ AreBooksGood - Improvement TODO
 
 ## New Casino Games
 
-- [ ] Build slot machine game
+- [x] Build slot machine game
 - [ ] Build solitaire game
 - [ ] Build spider solitaire game
 
