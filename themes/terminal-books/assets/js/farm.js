@@ -1179,9 +1179,9 @@
     ground.className = 'farm-ground';
     farmSceneEl.appendChild(ground);
 
-    // Tree between farmhouse and crop plots
+    // Tree behind farmhouse (peeks out above/right)
     var tree = createTree();
-    farmSceneEl.insertBefore(tree, farmBarEl);
+    farmhouseEl.appendChild(tree);
   }
 
   function createTree() {

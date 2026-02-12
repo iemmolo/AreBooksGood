@@ -34,9 +34,13 @@
 }
 
 .farm-tree {
-  position: relative;
+  position: absolute;
   pointer-events: none;
-  flex-shrink: 0;
+  z-index: -1;
+  transform: scale(0.7);
+  transform-origin: bottom center;
+  right: -42px;
+  bottom: 0px;
 }
 
 /* ── Farm bar ────────────────────────────────── */
@@ -273,6 +277,8 @@
   justify-content: center;
   flex-shrink: 0;
   pointer-events: auto;
+  z-index: 1;
+  margin-right: 24px;
 }
 
 .farm-house-widget:hover {
@@ -378,8 +384,8 @@
   }
 
   .farm-tree {
-    transform: scale(0.7);
-    transform-origin: bottom center;
+    right: -42px;
+    bottom: 0px;
   }
 
   .farm-bar {
