@@ -607,6 +607,24 @@ a.site-title {
   color: var(--accent);
 }
 
+.casino-tile-pet {
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.casino-tile-pet-pixel {
+  position: relative;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.casino-tile:hover .casino-tile-pet-pixel {
+  opacity: 1;
+}
+
 /* ============================================
    404 Page
    ============================================ */

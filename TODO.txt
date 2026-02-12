@@ -72,7 +72,7 @@ AreBooksGood - Improvement TODO
 - [x] Add farmhouse widget with status panel (crop timers, quick-sell, lifetime JB)
 - [x] Add farmhouse bonuses (sell price, grow speed, auto-water, rare seed drops)
 - [x] Add pet AI level 5 seed drop bonus
-- [ ] Add rare crops (golden apple, crystal herb, dragon fruit)
+- [x] Add rare crops (golden apple, crystal herb, dragon fruit) + pixel art, golden styling, merchant lines
 - [ ] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
 - [ ] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
 
@@ -85,13 +85,15 @@ AreBooksGood - Improvement TODO
 ## New Casino Games
 
 - [x] Build slot machine game
+- [x] Build Flappy Bird game (pet sprite as bird, coins + JB pickups, grace period, dynamic canvas)
+- [ ] Build Doodle Jump style game using pet sprite
 - [ ] Build solitaire game
 - [ ] Build spider solitaire game
 
 ## Future Ideas
 
-- [ ] Pet minigames: Flappy Wing & Doodle Jump style games using pet sprite, earning JB
-- [ ] Add pet sprite previews to casino tile cards
+- [x] Add pet sprite previews to casino tile cards
+- [ ] Integrate pet sprites into existing casino games (poker, blackjack, casino wars, slots)
 
 ## Low Priority / Nice-to-Have
 
