@@ -359,6 +359,81 @@
     ]
   };
 
+  // ── Decoration sprites (trees, path, grass) ───────────────
+  var TREE_PIXEL = 6;
+
+  var TREE_SPRITES = [
+    // Variant 0 — Round Oak
+    [
+      // Canopy
+      [6,5,'#228B22'],[7,5,'#2EA043'],[8,5,'#2EA043'],[9,5,'#228B22'],
+      [5,6,'#1A6B1A'],[6,6,'#228B22'],[7,6,'#2EA043'],[8,6,'#33CC33'],[9,6,'#2EA043'],[10,6,'#1A6B1A'],
+      [4,7,'#1A6B1A'],[5,7,'#228B22'],[6,7,'#2EA043'],[7,7,'#33CC33'],[8,7,'#33CC33'],[9,7,'#2EA043'],[10,7,'#228B22'],[11,7,'#1A6B1A'],
+      [4,8,'#1A6B1A'],[5,8,'#228B22'],[6,8,'#33CC33'],[7,8,'#2EA043'],[8,8,'#33CC33'],[9,8,'#228B22'],[10,8,'#2EA043'],[11,8,'#1A6B1A'],
+      [4,9,'#1A6B1A'],[5,9,'#228B22'],[6,9,'#2EA043'],[7,9,'#228B22'],[8,9,'#228B22'],[9,9,'#2EA043'],[10,9,'#228B22'],[11,9,'#1A6B1A'],
+      [5,10,'#228B22'],[6,10,'#1A6B1A'],[7,10,'#228B22'],[8,10,'#228B22'],[9,10,'#1A6B1A'],[10,10,'#228B22'],
+      [6,11,'#228B22'],[7,11,'#1A6B1A'],[8,11,'#1A6B1A'],[9,11,'#228B22'],
+      // Trunk
+      [7,12,'#8B4513'],[8,12,'#A0522D'],
+      [7,13,'#6B3410'],[8,13,'#8B4513'],
+      [7,14,'#6B3410'],[8,14,'#6B3410'],
+      // Soil
+      [6,15,'#5A2D0C'],[7,15,'#6B3410'],[8,15,'#6B3410'],[9,15,'#5A2D0C']
+    ],
+    // Variant 1 — Pine
+    [
+      // Tip
+      [7,3,'#228B22'],[8,3,'#2EA043'],
+      // First tier
+      [6,4,'#1A6B1A'],[7,4,'#228B22'],[8,4,'#2EA043'],[9,4,'#1A6B1A'],
+      [5,5,'#1A6B1A'],[6,5,'#228B22'],[7,5,'#2EA043'],[8,5,'#33CC33'],[9,5,'#228B22'],[10,5,'#1A6B1A'],
+      // Second tier
+      [6,6,'#1A6B1A'],[7,6,'#2EA043'],[8,6,'#228B22'],[9,6,'#1A6B1A'],
+      [5,7,'#1A6B1A'],[6,7,'#228B22'],[7,7,'#33CC33'],[8,7,'#2EA043'],[9,7,'#228B22'],[10,7,'#1A6B1A'],
+      [4,8,'#1A6B1A'],[5,8,'#228B22'],[6,8,'#2EA043'],[7,8,'#33CC33'],[8,8,'#2EA043'],[9,8,'#228B22'],[10,8,'#228B22'],[11,8,'#1A6B1A'],
+      // Third tier
+      [5,9,'#1A6B1A'],[6,9,'#228B22'],[7,9,'#228B22'],[8,9,'#2EA043'],[9,9,'#228B22'],[10,9,'#1A6B1A'],
+      [4,10,'#1A6B1A'],[5,10,'#228B22'],[6,10,'#2EA043'],[7,10,'#33CC33'],[8,10,'#2EA043'],[9,10,'#228B22'],[10,10,'#228B22'],[11,10,'#1A6B1A'],
+      [3,11,'#1A6B1A'],[4,11,'#228B22'],[5,11,'#228B22'],[6,11,'#2EA043'],[7,11,'#33CC33'],[8,11,'#2EA043'],[9,11,'#228B22'],[10,11,'#228B22'],[11,11,'#228B22'],[12,11,'#1A6B1A'],
+      // Trunk
+      [7,12,'#8B4513'],[8,12,'#A0522D'],
+      [7,13,'#6B3410'],[8,13,'#8B4513'],
+      [7,14,'#6B3410'],[8,14,'#6B3410'],
+      // Soil
+      [6,15,'#5A2D0C'],[7,15,'#6B3410'],[8,15,'#6B3410'],[9,15,'#5A2D0C']
+    ]
+  ];
+
+  var PATH_SPRITE = [
+    [1,1,'#A0875A'],[2,1,'#C4A96A'],[3,1,'#C4A96A'],[4,1,'#C4A96A'],[5,1,'#C4A96A'],[6,1,'#A0875A'],
+    [0,2,'#8B7355'],[1,2,'#C4A96A'],[2,2,'#D4B87A'],[3,2,'#C4A96A'],[4,2,'#D4B87A'],[5,2,'#C4A96A'],[6,2,'#D4B87A'],[7,2,'#8B7355'],
+    [0,3,'#8B7355'],[1,3,'#D4B87A'],[2,3,'#C4A96A'],[3,3,'#B89B68'],[4,3,'#C4A96A'],[5,3,'#D4B87A'],[6,3,'#C4A96A'],[7,3,'#8B7355'],
+    [0,4,'#8B7355'],[1,4,'#C4A96A'],[2,4,'#D4B87A'],[3,4,'#C4A96A'],[4,4,'#B89B68'],[5,4,'#C4A96A'],[6,4,'#D4B87A'],[7,4,'#8B7355'],
+    [0,5,'#8B7355'],[1,5,'#D4B87A'],[2,5,'#C4A96A'],[3,5,'#D4B87A'],[4,5,'#C4A96A'],[5,5,'#D4B87A'],[6,5,'#C4A96A'],[7,5,'#8B7355'],
+    [1,6,'#A0875A'],[2,6,'#C4A96A'],[3,6,'#C4A96A'],[4,6,'#C4A96A'],[5,6,'#C4A96A'],[6,6,'#A0875A']
+  ];
+
+  var GRASS_SPRITES = [
+    // Variant 0
+    [
+      [0,0,'#2EA043'],[2,0,'#228B22'],
+      [0,1,'#33CC33'],[1,1,'#228B22'],[2,1,'#33CC33'],
+      [1,2,'#228B22']
+    ],
+    // Variant 1
+    [
+      [1,0,'#228B22'],[3,0,'#2EA043'],
+      [1,1,'#2EA043'],[2,1,'#33CC33'],[3,1,'#228B22'],
+      [2,2,'#2EA043']
+    ],
+    // Variant 2
+    [
+      [1,0,'#33CC33'],
+      [0,1,'#228B22'],[1,1,'#2EA043'],[2,1,'#228B22'],
+      [1,2,'#1A6B1A']
+    ]
+  ];
+
   // ── Farmhouse level definitions ──────────────────────────
   var FARMHOUSE_LEVELS = {
     1: { name: 'Dirt Shack',       cost: 0,    sellBonus: 1.0,  growBonus: 1.0,  autoWater: false },
@@ -1152,6 +1227,84 @@
     }
   };
 
+  // ── Decorations (trees, path, grass) ────────────────────
+  function createDecorations() {
+    if (!farmSceneEl || !farmhouseEl || !farmBarEl) return;
+
+    // Ground strip
+    var ground = document.createElement('div');
+    ground.className = 'farm-ground';
+    farmSceneEl.appendChild(ground);
+
+    // Left tree (oak) — insert before farmhouse
+    var leftTree = createTree(0);
+    farmSceneEl.insertBefore(leftTree, farmhouseEl);
+
+    // Path tiles between farmhouse and farm bar
+    var pathWrap = document.createElement('div');
+    pathWrap.className = 'farm-path';
+    var tileCount = window.innerWidth < 768 ? 2 : 4;
+    for (var i = 0; i < tileCount; i++) {
+      pathWrap.appendChild(createPathTile());
+    }
+    farmSceneEl.insertBefore(pathWrap, farmBarEl);
+
+    // Right tree (pine) — after farm bar
+    var rightTree = createTree(1);
+    farmSceneEl.appendChild(rightTree);
+
+    // Grass tufts scattered in the scene
+    var tufts = [
+      { v: 0, b: 16, l: '2%' },
+      { v: 1, b: 18, l: '20%' },
+      { v: 2, b: 15, l: '50%' },
+      { v: 0, b: 17, l: '75%' },
+      { v: 1, b: 14, l: '92%' }
+    ];
+    for (var j = 0; j < tufts.length; j++) {
+      var tuft = createGrassTuft(tufts[j].v);
+      tuft.style.bottom = tufts[j].b + 'px';
+      tuft.style.left = tufts[j].l;
+      farmSceneEl.appendChild(tuft);
+    }
+  }
+
+  function createTree(variant) {
+    var el = document.createElement('div');
+    el.className = 'farm-decoration';
+    var sprite = document.createElement('div');
+    sprite.style.position = 'relative';
+    sprite.style.width = (16 * TREE_PIXEL) + 'px';
+    sprite.style.height = (16 * TREE_PIXEL) + 'px';
+    sprite.style.imageRendering = 'pixelated';
+    renderSprite(sprite, TREE_SPRITES[variant], TREE_PIXEL);
+    el.appendChild(sprite);
+    return el;
+  }
+
+  function createPathTile() {
+    var el = document.createElement('div');
+    el.className = 'farm-path-tile';
+    el.style.position = 'relative';
+    el.style.width = (8 * PIXEL) + 'px';
+    el.style.height = (8 * PIXEL) + 'px';
+    renderSprite(el, PATH_SPRITE, PIXEL);
+    return el;
+  }
+
+  function createGrassTuft(variant) {
+    var el = document.createElement('div');
+    el.className = 'farm-grass-tuft';
+    var sprite = document.createElement('div');
+    sprite.style.position = 'relative';
+    sprite.style.width = (4 * PIXEL) + 'px';
+    sprite.style.height = (4 * PIXEL) + 'px';
+    sprite.style.imageRendering = 'pixelated';
+    renderSprite(sprite, GRASS_SPRITES[variant] || GRASS_SPRITES[0], PIXEL);
+    el.appendChild(sprite);
+    return el;
+  }
+
   // ── Init ────────────────────────────────────────────────
   function init() {
     farmState = loadState();
@@ -1159,6 +1312,7 @@
     createFarmScene();
     createFarmhouseWidget();
     createFarmBar();
+    createDecorations();
     updatePlots(); // Immediate catch-up for offline growth
     updateTimer = setInterval(updatePlots, UPDATE_INTERVAL);
     watchPetToggle();
