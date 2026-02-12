@@ -55,6 +55,10 @@
     {{- $sudoku := resources.Get "js/sudoku.js" | minify -}}
     <script src="{{ $sudoku.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "wordle" -}}
+    {{- $wordle := resources.Get "js/wordle.js" | minify -}}
+    <script src="{{ $wordle.RelPermalink }}"></script>
+  {{- end }}
   {{- $pet := resources.Get "js/pet.js" | minify -}}
   <script src="{{ $pet.RelPermalink }}"></script>
   {{- $jb := resources.Get "js/jackbucks.js" | minify -}}

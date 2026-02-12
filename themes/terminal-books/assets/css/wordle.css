@@ -1,0 +1,339 @@
+/* Wordle — terminal-themed */
+
+.wl-intro {
+  margin-bottom: 1.5rem;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+/* ── Board ── */
+#wordle-app {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.wl-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 1rem;
+}
+
+.wl-row {
+  display: flex;
+  gap: 5px;
+}
+
+.wl-tile {
+  width: 58px;
+  height: 58px;
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--foreground);
+  font-family: inherit;
+  line-height: 1;
+  transition: border-color 0.1s;
+  background: var(--background);
+}
+
+.wl-tile.wl-filled {
+  border-color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+/* Flip animation */
+.wl-tile.wl-flip {
+  animation: wl-flip 0.5s ease forwards;
+}
+
+@keyframes wl-flip {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+
+/* Pop animation on letter entry */
+.wl-tile.wl-pop {
+  animation: wl-pop 0.1s ease;
+}
+
+@keyframes wl-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Color states */
+.wl-tile.wl-correct {
+  background: var(--accent);
+  color: var(--background);
+  border-color: var(--accent);
+}
+
+.wl-tile.wl-present {
+  background: #b59f3b;
+  color: #fff;
+  border-color: #b59f3b;
+}
+
+.wl-tile.wl-absent {
+  background: color-mix(in srgb, var(--foreground) 25%, var(--background));
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  border-color: color-mix(in srgb, var(--foreground) 25%, var(--background));
+}
+
+/* Shake animation for invalid guess */
+.wl-row.wl-shake {
+  animation: wl-shake 0.3s ease;
+}
+
+@keyframes wl-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+/* Bounce on win */
+.wl-tile.wl-bounce {
+  animation: wl-bounce 0.5s ease;
+}
+
+@keyframes wl-bounce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-20px); }
+  60% { transform: translateY(-10px); }
+}
+
+/* ── Message ── */
+.wl-message {
+  text-align: center;
+  min-height: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  color: var(--foreground);
+  font-size: 0.95rem;
+}
+
+/* ── Virtual Keyboard ── */
+.wl-keyboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.wl-kb-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.wl-spacer-half {
+  flex: 0.5;
+}
+
+.wl-key {
+  min-width: 35px;
+  height: 50px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--foreground) 10%, var(--background));
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 6px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.wl-key:hover {
+  background: color-mix(in srgb, var(--foreground) 20%, var(--background));
+}
+
+.wl-key:active {
+  transform: scale(0.95);
+}
+
+.wl-key-wide {
+  min-width: 60px;
+  font-size: 0.75rem;
+}
+
+/* Keyboard color states */
+.wl-key.wl-correct {
+  background: var(--accent);
+  color: var(--background);
+  border-color: var(--accent);
+}
+
+.wl-key.wl-present {
+  background: #b59f3b;
+  color: #fff;
+  border-color: #b59f3b;
+}
+
+.wl-key.wl-absent {
+  background: color-mix(in srgb, var(--foreground) 20%, var(--background));
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-color: color-mix(in srgb, var(--foreground) 15%, var(--background));
+}
+
+/* ── Controls ── */
+.wl-controls {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.wl-btn {
+  background: color-mix(in srgb, var(--foreground) 10%, var(--background));
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  padding: 0.4rem 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.wl-btn:hover {
+  background: color-mix(in srgb, var(--foreground) 20%, var(--background));
+}
+
+.wl-btn-small {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.wl-btn-danger {
+  color: #cc4444;
+  border-color: #cc4444;
+}
+
+.wl-btn-danger:hover {
+  background: color-mix(in srgb, #cc4444 15%, var(--background));
+}
+
+/* ── Stats ── */
+.wl-stats {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding-top: 1rem;
+  margin-bottom: 3rem;
+}
+
+.wl-stats-title {
+  margin: 0 0 0.75rem 0;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.wl-stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.wl-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wl-stat-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.wl-stat-label {
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wl-dist-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--foreground);
+}
+
+.wl-distribution {
+  margin-bottom: 1rem;
+}
+
+.wl-dist-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 3px;
+}
+
+.wl-dist-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  width: 1rem;
+  text-align: right;
+  color: var(--foreground);
+}
+
+.wl-dist-bar {
+  min-width: 1.5rem;
+  height: 1.2rem;
+  background: color-mix(in srgb, var(--foreground) 25%, var(--background));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.3rem;
+  transition: width 0.3s ease;
+}
+
+.wl-dist-bar.wl-dist-highlight {
+  background: var(--accent);
+}
+
+.wl-dist-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.wl-dist-bar.wl-dist-highlight .wl-dist-count {
+  color: var(--background);
+}
+
+/* ── Responsive ── */
+@media (max-width: 400px) {
+  .wl-tile {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+
+  .wl-key {
+    min-width: 28px;
+    height: 44px;
+    font-size: 0.75rem;
+    padding: 0 4px;
+  }
+
+  .wl-key-wide {
+    min-width: 48px;
+    font-size: 0.65rem;
+  }
+
+  .wl-stats-summary {
+    gap: 1rem;
+  }
+}

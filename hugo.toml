@@ -30,6 +30,10 @@ theme = 'terminal-books'
     pageRef = '/casino'
     weight = 35
   [[menus.main]]
+    name = 'Wordle'
+    pageRef = '/wordle'
+    weight = 37
+  [[menus.main]]
     name = 'Sudoku'
     pageRef = '/sudoku'
     weight = 47

@@ -42,6 +42,12 @@
   <link rel="stylesheet" href="{{ $sudoku.RelPermalink }}">
 {{- end }}
 
+{{/* Wordle CSS */}}
+{{ if eq .Type "wordle" -}}
+  {{- $wordle := resources.Get "css/wordle.css" | minify -}}
+  <link rel="stylesheet" href="{{ $wordle.RelPermalink }}">
+{{- end }}
+
 {{/* Poker CSS */}}
 {{ if eq .Type "poker" -}}
   {{- $poker := resources.Get "css/poker.css" | minify -}}

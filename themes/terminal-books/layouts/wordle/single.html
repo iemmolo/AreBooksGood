@@ -1,0 +1,102 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="wl-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="wordle-app">
+    <!-- Board: 6 rows x 5 tiles -->
+    <div class="wl-board" id="wl-board">
+      {{ range seq 6 }}
+      <div class="wl-row">
+        <div class="wl-tile"></div>
+        <div class="wl-tile"></div>
+        <div class="wl-tile"></div>
+        <div class="wl-tile"></div>
+        <div class="wl-tile"></div>
+      </div>
+      {{ end }}
+    </div>
+
+    <!-- Status message -->
+    <div id="wl-message" class="wl-message"></div>
+
+    <!-- Virtual keyboard -->
+    <div class="wl-keyboard" id="wl-keyboard">
+      <div class="wl-kb-row">
+        <button class="wl-key" data-key="Q">Q</button>
+        <button class="wl-key" data-key="W">W</button>
+        <button class="wl-key" data-key="E">E</button>
+        <button class="wl-key" data-key="R">R</button>
+        <button class="wl-key" data-key="T">T</button>
+        <button class="wl-key" data-key="Y">Y</button>
+        <button class="wl-key" data-key="U">U</button>
+        <button class="wl-key" data-key="I">I</button>
+        <button class="wl-key" data-key="O">O</button>
+        <button class="wl-key" data-key="P">P</button>
+      </div>
+      <div class="wl-kb-row">
+        <div class="wl-spacer-half"></div>
+        <button class="wl-key" data-key="A">A</button>
+        <button class="wl-key" data-key="S">S</button>
+        <button class="wl-key" data-key="D">D</button>
+        <button class="wl-key" data-key="F">F</button>
+        <button class="wl-key" data-key="G">G</button>
+        <button class="wl-key" data-key="H">H</button>
+        <button class="wl-key" data-key="J">J</button>
+        <button class="wl-key" data-key="K">K</button>
+        <button class="wl-key" data-key="L">L</button>
+        <div class="wl-spacer-half"></div>
+      </div>
+      <div class="wl-kb-row">
+        <button class="wl-key wl-key-wide" data-key="ENTER">ENTER</button>
+        <button class="wl-key" data-key="Z">Z</button>
+        <button class="wl-key" data-key="X">X</button>
+        <button class="wl-key" data-key="C">C</button>
+        <button class="wl-key" data-key="V">V</button>
+        <button class="wl-key" data-key="B">B</button>
+        <button class="wl-key" data-key="N">N</button>
+        <button class="wl-key" data-key="M">M</button>
+        <button class="wl-key wl-key-wide" data-key="BACKSPACE">&#9003;</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="wl-controls">
+      <button id="wl-new-game" class="wl-btn">New Game</button>
+    </div>
+
+    <!-- Stats panel -->
+    <div class="wl-stats" id="wl-stats">
+      <h3 class="wl-stats-title">Stats</h3>
+      <div class="wl-stats-summary">
+        <div class="wl-stat-box">
+          <span class="wl-stat-num" id="wl-stat-played">0</span>
+          <span class="wl-stat-label">Played</span>
+        </div>
+        <div class="wl-stat-box">
+          <span class="wl-stat-num" id="wl-stat-pct">0</span>
+          <span class="wl-stat-label">Win %</span>
+        </div>
+        <div class="wl-stat-box">
+          <span class="wl-stat-num" id="wl-stat-streak">0</span>
+          <span class="wl-stat-label">Streak</span>
+        </div>
+        <div class="wl-stat-box">
+          <span class="wl-stat-num" id="wl-stat-max">0</span>
+          <span class="wl-stat-label">Best</span>
+        </div>
+      </div>
+      <h4 class="wl-dist-title">Guess Distribution</h4>
+      <div class="wl-distribution" id="wl-distribution">
+        <div class="wl-dist-row"><span class="wl-dist-label">1</span><div class="wl-dist-bar" data-guess="1"><span class="wl-dist-count">0</span></div></div>
+        <div class="wl-dist-row"><span class="wl-dist-label">2</span><div class="wl-dist-bar" data-guess="2"><span class="wl-dist-count">0</span></div></div>
+        <div class="wl-dist-row"><span class="wl-dist-label">3</span><div class="wl-dist-bar" data-guess="3"><span class="wl-dist-count">0</span></div></div>
+        <div class="wl-dist-row"><span class="wl-dist-label">4</span><div class="wl-dist-bar" data-guess="4"><span class="wl-dist-count">0</span></div></div>
+        <div class="wl-dist-row"><span class="wl-dist-label">5</span><div class="wl-dist-bar" data-guess="5"><span class="wl-dist-count">0</span></div></div>
+        <div class="wl-dist-row"><span class="wl-dist-label">6</span><div class="wl-dist-bar" data-guess="6"><span class="wl-dist-count">0</span></div></div>
+      </div>
+      <button id="wl-reset-stats" class="wl-btn wl-btn-small wl-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}
