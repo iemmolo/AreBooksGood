@@ -141,6 +141,22 @@
   background: color-mix(in srgb, #ff4444 10%, var(--background));
 }
 
+/* -- Controls toggle ---------------------- */
+.dj-btn-controls {
+  display: none;
+  margin: 10px auto 0;
+  font-size: 0.85em;
+  padding: 5px 14px;
+}
+
+@media (pointer: coarse) {
+  .dj-btn-controls {
+    display: inline-block;
+  }
+}
+
+/* Touch zone arrows (drawn on canvas in JS) */
+
 /* -- Results grid (game over) ------------- */
 .dj-results {
   display: grid;

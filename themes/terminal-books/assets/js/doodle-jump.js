@@ -141,6 +141,17 @@
   var touchCurrentX = null;
   var tiltX = 0;
   var usingTilt = false;
+  var touchZone = 0; // -1 left, 0 none, 1 right (for touch controls mode)
+
+  // Control mode: 'tilt' or 'touch'
+  var CONTROLS_KEY = 'doodle-jump-controls';
+  var controlMode = 'tilt';
+  try {
+    var savedMode = localStorage.getItem(CONTROLS_KEY);
+    if (savedMode === 'touch') controlMode = 'touch';
+  } catch (e) {}
+
+  var controlsToggle = document.getElementById('dj-controls-toggle');
 
   // ── Theme colors ──────────────────────────────
   var colorBg = '#000';
@@ -567,19 +578,23 @@
     if (keysDown['ArrowLeft'] || keysDown['KeyA']) inputX = -1;
     if (keysDown['ArrowRight'] || keysDown['KeyD']) inputX = 1;
 
-    // Touch drag (takes priority over tilt)
-    if (touchStartX !== null && touchCurrentX !== null) {
-      var dragDelta = touchCurrentX - touchStartX;
-      if (Math.abs(dragDelta) > 10) {
-        inputX = dragDelta > 0 ? 1 : -1;
+    if (controlMode === 'touch') {
+      // Zone-based touch: hold left/right side of canvas
+      if (touchZone !== 0) {
+        inputX = touchZone;
       }
-    }
-    // Device tilt (only when not touching)
-    else if (usingTilt && Math.abs(tiltX) > 10) {
-      // Proportional tilt: ramp from 0 at 10° to full at 35°
-      var tiltStrength = (Math.abs(tiltX) - 10) / 25;
-      if (tiltStrength > 1) tiltStrength = 1;
-      inputX = tiltX > 0 ? -tiltStrength : tiltStrength;
+    } else {
+      // Tilt mode (with drag fallback)
+      if (touchStartX !== null && touchCurrentX !== null) {
+        var dragDelta = touchCurrentX - touchStartX;
+        if (Math.abs(dragDelta) > 10) {
+          inputX = dragDelta > 0 ? 1 : -1;
+        }
+      } else if (usingTilt && Math.abs(tiltX) > 10) {
+        var tiltStrength = (Math.abs(tiltX) - 10) / 25;
+        if (tiltStrength > 1) tiltStrength = 1;
+        inputX = tiltX > 0 ? -tiltStrength : tiltStrength;
+      }
     }
 
     if (inputX !== 0) {
@@ -986,6 +1001,21 @@
       drawParticle(particles[pi]);
     }
 
+    // ── Touch zone hints (only in touch mode while playing)
+    if (state === 'playing' && controlMode === 'touch') {
+      ctx.save();
+      ctx.font = 'bold 22px monospace';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = colorFg;
+      ctx.globalAlpha = touchZone === -1 ? 0.18 : 0.06;
+      ctx.textAlign = 'left';
+      ctx.fillText('<', 10, CANVAS_H / 2);
+      ctx.globalAlpha = touchZone === 1 ? 0.18 : 0.06;
+      ctx.textAlign = 'right';
+      ctx.fillText('>', CANVAS_W - 10, CANVAS_H / 2);
+      ctx.restore();
+    }
+
     // ── Score on canvas (faint, centered)
     if (state === 'playing') {
       ctx.save();
@@ -1321,20 +1351,33 @@
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('keyup', onKeyUp);
 
-  // Touch input (drag left/right)
+  // Touch input
   canvas.addEventListener('touchstart', function (e) {
     e.preventDefault();
     if (state === 'idle') { startGame(); return; }
     if (state === 'dead') return;
     var t = e.touches[0];
-    touchStartX = t.clientX;
-    touchCurrentX = t.clientX;
+    if (controlMode === 'touch') {
+      // Zone-based: left half = left, right half = right
+      var rect = canvas.getBoundingClientRect();
+      var relX = t.clientX - rect.left;
+      touchZone = relX < rect.width / 2 ? -1 : 1;
+    } else {
+      touchStartX = t.clientX;
+      touchCurrentX = t.clientX;
+    }
   }, { passive: false });
 
   canvas.addEventListener('touchmove', function (e) {
     e.preventDefault();
     if (e.touches.length > 0) {
-      touchCurrentX = e.touches[0].clientX;
+      if (controlMode === 'touch') {
+        var rect = canvas.getBoundingClientRect();
+        var relX = e.touches[0].clientX - rect.left;
+        touchZone = relX < rect.width / 2 ? -1 : 1;
+      } else {
+        touchCurrentX = e.touches[0].clientX;
+      }
     }
   }, { passive: false });
 
@@ -1342,15 +1385,40 @@
     e.preventDefault();
     touchStartX = null;
     touchCurrentX = null;
+    touchZone = 0;
   }, { passive: false });
 
-  // Device orientation (tilt)
+  // Device orientation (tilt) — always listen, only used in tilt mode
   if (window.DeviceOrientationEvent) {
     window.addEventListener('deviceorientation', function (e) {
       if (e.gamma !== null) {
         usingTilt = true;
-        tiltX = e.gamma; // -90 to 90 degrees
+        tiltX = e.gamma;
       }
+    });
+  }
+
+  // Controls toggle button
+  var controlsHint = document.getElementById('dj-controls-hint');
+
+  function updateControlsBtn() {
+    if (controlsToggle) {
+      controlsToggle.textContent = 'Controls: ' + (controlMode === 'tilt' ? 'Tilt' : 'Touch');
+    }
+    if (controlsHint) {
+      controlsHint.textContent = controlMode === 'touch'
+        ? 'Tap left / right side to move'
+        : 'Arrow keys / A D / Tilt to move';
+    }
+  }
+  updateControlsBtn();
+
+  if (controlsToggle) {
+    controlsToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      controlMode = controlMode === 'tilt' ? 'touch' : 'tilt';
+      try { localStorage.setItem(CONTROLS_KEY, controlMode); } catch (ex) {}
+      updateControlsBtn();
     });
   }
 
