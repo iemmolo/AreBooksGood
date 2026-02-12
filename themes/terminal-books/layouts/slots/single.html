@@ -1,0 +1,76 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="sl-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="slots-app">
+    <!-- Bankroll bar -->
+    <div class="sl-bankroll-bar">
+      <span class="sl-balance">Coins: $<span id="sl-balance">1000</span></span>
+      <div class="sl-bet-controls">
+        <button id="sl-bet-down" class="sl-btn sl-btn-small">-</button>
+        <span class="sl-bet-label">Bet: $<span id="sl-bet-amount">25</span></span>
+        <button id="sl-bet-up" class="sl-btn sl-btn-small">+</button>
+      </div>
+    </div>
+
+    <!-- Slot machine -->
+    <div class="sl-machine">
+      <!-- Reels -->
+      <div class="sl-reels">
+        <div class="sl-reel-window" id="sl-reel-0">
+          <div class="sl-reel-strip"></div>
+        </div>
+        <div class="sl-reel-window" id="sl-reel-1">
+          <div class="sl-reel-strip"></div>
+        </div>
+        <div class="sl-reel-window" id="sl-reel-2">
+          <div class="sl-reel-strip"></div>
+        </div>
+      </div>
+
+      <!-- Payline indicator -->
+      <div class="sl-payline"></div>
+    </div>
+
+    <!-- Spin button + auto-spin -->
+    <div class="sl-controls">
+      <button id="sl-spin" class="sl-btn sl-btn-spin">SPIN</button>
+      <button id="sl-auto" class="sl-btn sl-btn-small">Auto: OFF</button>
+    </div>
+
+    <!-- Status -->
+    <div id="sl-status" class="sl-status"></div>
+
+    <!-- Pay table (collapsible) -->
+    <details class="sl-paytable">
+      <summary class="sl-paytable-title">Pay Table</summary>
+      <div class="sl-paytable-grid">
+        <span class="sl-pt-symbol">💎💎💎</span><span class="sl-pt-payout">50x JACKPOT</span>
+        <span class="sl-pt-symbol">7️⃣7️⃣7️⃣</span><span class="sl-pt-payout">25x</span>
+        <span class="sl-pt-symbol">🔔🔔🔔</span><span class="sl-pt-payout">15x</span>
+        <span class="sl-pt-symbol">⭐⭐⭐</span><span class="sl-pt-payout">10x</span>
+        <span class="sl-pt-symbol">🍒🍒🍒</span><span class="sl-pt-payout">8x</span>
+        <span class="sl-pt-symbol">🍋🍋🍋</span><span class="sl-pt-payout">5x</span>
+        <span class="sl-pt-symbol">🍀🍀🍀</span><span class="sl-pt-payout">3x</span>
+        <span class="sl-pt-symbol">🍒🍒 ─</span><span class="sl-pt-payout">2x</span>
+        <span class="sl-pt-symbol">🍒 ─ ─</span><span class="sl-pt-payout">1x</span>
+      </div>
+    </details>
+
+    <!-- Stats panel -->
+    <div class="sl-stats">
+      <h3 class="sl-stats-title">Stats</h3>
+      <div class="sl-stats-grid">
+        <span class="sl-stat-label">Spins</span><span id="sl-stat-spins" class="sl-stat-value">0</span>
+        <span class="sl-stat-label">Wins</span><span id="sl-stat-wins" class="sl-stat-value">0</span>
+        <span class="sl-stat-label">Losses</span><span id="sl-stat-losses" class="sl-stat-value">0</span>
+        <span class="sl-stat-label">Jackpots</span><span id="sl-stat-jackpots" class="sl-stat-value">0</span>
+        <span class="sl-stat-label">Biggest Win</span><span id="sl-stat-biggest" class="sl-stat-value">$0</span>
+        <span class="sl-stat-label">Peak</span><span id="sl-stat-peak" class="sl-stat-value">$1000</span>
+      </div>
+      <button id="sl-reset-stats" class="sl-btn sl-btn-small sl-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}

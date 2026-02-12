@@ -48,6 +48,12 @@
   <link rel="stylesheet" href="{{ $poker.RelPermalink }}">
 {{- end }}
 
+{{/* Slots CSS */}}
+{{ if eq .Type "slots" -}}
+  {{- $slots := resources.Get "css/slots.css" | minify -}}
+  <link rel="stylesheet" href="{{ $slots.RelPermalink }}">
+{{- end }}
+
 {{/* Pet CSS (global) */}}
 {{- $petcss := resources.Get "css/pet.css" | minify -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">

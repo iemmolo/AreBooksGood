@@ -75,5 +75,9 @@
     {{- $poker := resources.Get "js/poker.js" | minify -}}
     <script src="{{ $poker.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "slots" -}}
+    {{- $slots := resources.Get "js/slots.js" | minify -}}
+    <script src="{{ $slots.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

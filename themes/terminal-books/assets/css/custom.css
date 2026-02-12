@@ -127,6 +127,11 @@ a.site-title {
   align-items: center;
 }
 
+.footer-links {
+  display: flex;
+  gap: 12px;
+}
+
 /* ============================================
    Review Filters
    ============================================ */

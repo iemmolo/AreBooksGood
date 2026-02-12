@@ -1,4 +1,8 @@
 <div class="footer-inner">
   <span>&copy; {{ now.Year }} {{ site.Title }}</span>
-  <span>{{ with .OutputFormats.Get "rss" }}<a href="{{ .Permalink }}">rss</a>{{ end }}</span>
+  <span class="footer-links">
+    <a href="{{ "casino/shop/" | relURL }}">shop</a>
+    <a href="{{ "casino/silk-road/" | relURL }}">silk road</a>
+    {{ with .OutputFormats.Get "rss" }}<a href="{{ .Permalink }}">rss</a>{{ end }}
+  </span>
 </div>
