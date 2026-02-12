@@ -579,7 +579,7 @@
       // Proportional tilt: ramp from 0 at 10° to full at 35°
       var tiltStrength = (Math.abs(tiltX) - 10) / 25;
       if (tiltStrength > 1) tiltStrength = 1;
-      inputX = tiltX > 0 ? tiltStrength : -tiltStrength;
+      inputX = tiltX > 0 ? -tiltStrength : tiltStrength;
     }
 
     if (inputX !== 0) {
