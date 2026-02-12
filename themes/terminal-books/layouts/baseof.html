@@ -19,7 +19,7 @@
   <script src="{{ $js.RelPermalink }}"></script>
   {{- $wallet := resources.Get "js/wallet.js" | minify -}}
   <script src="{{ $wallet.RelPermalink }}"></script>
-  {{ if and .IsSection (ne .Type "chess") (ne .Section "casino") -}}
+  {{ if and .IsSection (ne .Type "chess") (ne .Section "games") (ne .Section "shops") -}}
     {{- $filter := resources.Get "js/review-filter.js" | minify -}}
     <script src="{{ $filter.RelPermalink }}"></script>
   {{- end }}

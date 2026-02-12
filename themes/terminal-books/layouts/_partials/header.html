@@ -1,6 +1,6 @@
 <div class="top-bar">
   <a href="{{ "/" | relURL }}" class="site-title">> AreBooksGood</a>
-  <a href="{{ "casino/" | relURL }}" class="wallet-widget" id="wallet-widget">[ <span id="wallet-balance">0</span> coins | <span id="jackbucks-balance">0</span> JB ]</a>
+  <a href="{{ "games/" | relURL }}" class="wallet-widget" id="wallet-widget">[ <span id="wallet-balance">0</span> coins | <span id="jackbucks-balance">0</span> JB ]</a>
   <select id="theme-select" class="theme-select" aria-label="Select theme">
     <option value="pistachio">pistachio</option>
     <option value="matrix">matrix</option>
@@ -32,15 +32,24 @@
   </ul>
 </nav>
 {{ end }}
-{{ if eq .Section "casino" }}
-<nav class="casino-sub-nav">
-  <ul class="casino-sub-nav-links">
-    <li><a href="{{ "casino/poker/" | relURL }}"{{ if eq .RelPermalink "/casino/poker/" }} class="active"{{ end }}>Poker</a></li>
-    <li><a href="{{ "casino/blackjack/" | relURL }}"{{ if eq .RelPermalink "/casino/blackjack/" }} class="active"{{ end }}>Blackjack</a></li>
-    <li><a href="{{ "casino/casino-wars/" | relURL }}"{{ if eq .RelPermalink "/casino/casino-wars/" }} class="active"{{ end }}>Casino Wars</a></li>
-    <li><a href="{{ "casino/slots/" | relURL }}"{{ if eq .RelPermalink "/casino/slots/" }} class="active"{{ end }}>Slots</a></li>
-    <li><a href="{{ "casino/shop/" | relURL }}"{{ if eq .RelPermalink "/casino/shop/" }} class="active"{{ end }}>Shop</a></li>
-    <li><a href="{{ "casino/silk-road/" | relURL }}"{{ if eq .RelPermalink "/casino/silk-road/" }} class="active"{{ end }}>Silk Road</a></li>
+{{ if eq .Section "games" }}
+<nav class="games-sub-nav">
+  <ul class="games-sub-nav-links">
+    <li><a href="{{ "games/poker/" | relURL }}"{{ if eq .RelPermalink "/games/poker/" }} class="active"{{ end }}>Poker</a></li>
+    <li><a href="{{ "games/blackjack/" | relURL }}"{{ if eq .RelPermalink "/games/blackjack/" }} class="active"{{ end }}>Blackjack</a></li>
+    <li><a href="{{ "games/casino-wars/" | relURL }}"{{ if eq .RelPermalink "/games/casino-wars/" }} class="active"{{ end }}>Casino Wars</a></li>
+    <li><a href="{{ "games/slots/" | relURL }}"{{ if eq .RelPermalink "/games/slots/" }} class="active"{{ end }}>Slots</a></li>
+    <li><a href="{{ "games/flappy/" | relURL }}"{{ if eq .RelPermalink "/games/flappy/" }} class="active"{{ end }}>Flappy</a></li>
+    <li><a href="{{ "games/wordle/" | relURL }}"{{ if eq .RelPermalink "/games/wordle/" }} class="active"{{ end }}>Wordle</a></li>
+    <li><a href="{{ "games/sudoku/" | relURL }}"{{ if eq .RelPermalink "/games/sudoku/" }} class="active"{{ end }}>Sudoku</a></li>
+  </ul>
+</nav>
+{{ end }}
+{{ if eq .Section "shops" }}
+<nav class="shops-sub-nav">
+  <ul class="shops-sub-nav-links">
+    <li><a href="{{ "shops/pet-shop/" | relURL }}"{{ if eq .RelPermalink "/shops/pet-shop/" }} class="active"{{ end }}>Pet Shop</a></li>
+    <li><a href="{{ "shops/silk-road/" | relURL }}"{{ if eq .RelPermalink "/shops/silk-road/" }} class="active"{{ end }}>Silk Road</a></li>
   </ul>
 </nav>
 {{ end }}

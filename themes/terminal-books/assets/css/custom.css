@@ -524,15 +524,15 @@ a.site-title {
 }
 
 /* ============================================
-   Casino Sub-Nav
+   Games Sub-Nav
    ============================================ */
-.casino-sub-nav {
+.games-sub-nav {
   border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
   padding-top: 8px;
   margin-top: 8px;
 }
 
-.casino-sub-nav-links {
+.games-sub-nav-links {
   display: flex;
   align-items: center;
   gap: 1.5em;
@@ -541,23 +541,61 @@ a.site-title {
   padding: 0;
 }
 
-.casino-sub-nav-links li {
+.games-sub-nav-links li {
   padding: 0;
   margin: 0;
 }
 
-.casino-sub-nav-links li::marker {
+.games-sub-nav-links li::marker {
   content: none;
 }
 
-.casino-sub-nav-links a {
+.games-sub-nav-links a {
   color: color-mix(in srgb, var(--foreground) 45%, transparent);
   text-decoration: none;
   font-size: 0.9em;
 }
 
-.casino-sub-nav-links a:hover,
-.casino-sub-nav-links a.active {
+.games-sub-nav-links a:hover,
+.games-sub-nav-links a.active {
+  color: var(--accent);
+}
+
+/* ============================================
+   Shops Sub-Nav
+   ============================================ */
+.shops-sub-nav {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.shops-sub-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.shops-sub-nav-links li {
+  padding: 0;
+  margin: 0;
+}
+
+.shops-sub-nav-links li::marker {
+  content: none;
+}
+
+.shops-sub-nav-links a {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.shops-sub-nav-links a:hover,
+.shops-sub-nav-links a.active {
   color: var(--accent);
 }
 
@@ -608,8 +646,8 @@ a.site-title {
 }
 
 .casino-tile-pet {
-  height: 34px;
-  display: flex;
+  height: 0;
+  display: none;
   align-items: center;
   justify-content: center;
   overflow: visible;
@@ -687,7 +725,8 @@ a.site-title {
   }
 
   .chess-sub-nav-links,
-  .casino-sub-nav-links {
+  .games-sub-nav-links,
+  .shops-sub-nav-links {
     flex-wrap: wrap;
     gap: 0.5em 0.8em;
     font-size: 0.85em;

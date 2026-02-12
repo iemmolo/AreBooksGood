@@ -721,7 +721,7 @@
       var path = window.location.pathname;
       if (path.indexOf('/reviews/') !== -1 || path === '/reviews/') {
         if (Math.random() < 0.4) messages = CONTEXT_MESSAGES.review;
-      } else if (path.indexOf('/casino/') !== -1) {
+      } else if (path.indexOf('/games/') !== -1) {
         if (Math.random() < 0.4) messages = CONTEXT_MESSAGES.casino;
       } else if (path.indexOf('/chess/') !== -1) {
         if (Math.random() < 0.4) messages = CONTEXT_MESSAGES.chess;

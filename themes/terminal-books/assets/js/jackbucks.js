@@ -99,7 +99,7 @@
     balanceEl.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      window.location.href = '/casino/silk-road/';
+      window.location.href = '/shops/silk-road/';
     });
   }
 })();
