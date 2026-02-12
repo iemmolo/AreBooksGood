@@ -714,8 +714,11 @@
           highlightDistBar(guessRow + 1);
           /* gameOver stays true */
         } else if (guessRow >= MAX_GUESSES - 1) {
-          /* Lose */
+          /* Lose — flash board red and shake */
           showMessage(targetWord.toUpperCase(), 0);
+          var boardEl = document.getElementById('wl-board');
+          boardEl.classList.add('wl-lose');
+          setTimeout(function() { boardEl.classList.remove('wl-lose'); }, 1500);
           stats.played++;
           stats.streak = 0;
           saveStats();

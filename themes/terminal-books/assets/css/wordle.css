@@ -86,6 +86,27 @@
   border-color: color-mix(in srgb, var(--foreground) 25%, var(--background));
 }
 
+/* Lose — board turns red and shakes */
+.wl-board.wl-lose {
+  animation: wl-lose-shake 0.5s ease;
+}
+
+.wl-board.wl-lose .wl-tile,
+.wl-board.wl-lose .wl-tile.wl-correct,
+.wl-board.wl-lose .wl-tile.wl-present,
+.wl-board.wl-lose .wl-tile.wl-absent {
+  background: #cc4444 !important;
+  border-color: #cc4444 !important;
+  color: #fff !important;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+@keyframes wl-lose-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 50%, 90% { transform: translateX(-3px); }
+  30%, 70% { transform: translateX(3px); }
+}
+
 /* Shake animation for invalid guess */
 .wl-row.wl-shake {
   animation: wl-shake 0.3s ease;
