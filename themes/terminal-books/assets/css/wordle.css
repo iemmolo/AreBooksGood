@@ -107,6 +107,13 @@
   30%, 70% { transform: translateX(3px); }
 }
 
+/* Invalid word — tiles flash red */
+.wl-tile.wl-invalid {
+  border-color: #cc4444 !important;
+  background: color-mix(in srgb, #cc4444 20%, var(--background)) !important;
+  transition: border-color 0.15s, background 0.15s;
+}
+
 /* Shake animation for invalid guess */
 .wl-row.wl-shake {
   animation: wl-shake 0.3s ease;

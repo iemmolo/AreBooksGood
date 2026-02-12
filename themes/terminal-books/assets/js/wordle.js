@@ -1279,6 +1279,12 @@
       if (!validSet[guess]) {
         showMessage('Not in word list', 1500);
         shakeRow(currentRow);
+        /* Flash tiles red */
+        var rowTiles = board[currentRow];
+        for (var t = 0; t < rowTiles.length; t++) { rowTiles[t].classList.add('wl-invalid'); }
+        setTimeout(function() {
+          for (var t = 0; t < rowTiles.length; t++) { rowTiles[t].classList.remove('wl-invalid'); }
+        }, 600);
         return;
       }
 
