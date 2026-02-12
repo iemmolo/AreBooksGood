@@ -838,6 +838,28 @@
     openFarmhousePanel();
   }
 
+  function getPetBonusText() {
+    if (!window.PetSystem || !window.PetSystem.getState) return null;
+    var ps = window.PetSystem.getState();
+    if (!ps) return null;
+    var id = ps.petId;
+    var lv = ps.level;
+    if (id === 'cat') {
+      var pct = lv === 1 ? 25 : lv === 2 ? 40 : 50;
+      return 'Cat: ' + pct + '% loss refund';
+    }
+    if (id === 'dragon') {
+      var pct = lv === 1 ? 10 : lv === 2 ? 15 : 20;
+      return 'Dragon: ' + pct + '% win bonus';
+    }
+    if (id === 'robot') {
+      var every = lv === 1 ? 10 : lv === 2 ? 8 : 5;
+      var pct = lv === 1 ? 30 : lv === 2 ? 40 : 50;
+      return 'Robot: ' + pct + '% every ' + every + ' games';
+    }
+    return null;
+  }
+
   function openFarmhousePanel() {
     closeFarmhousePanel();
 
@@ -861,6 +883,10 @@
     if (def.growBonus < 1) bonusLines.push(Math.round((1 - def.growBonus) * 100) + '% faster growth');
     if (def.autoWater) bonusLines.push('Auto-water');
     if (level >= 5) bonusLines.push('Rare seed drops');
+    // Pet bonus
+    var petBonus = getPetBonusText();
+    if (petBonus) bonusLines.push(petBonus);
+
     bonuses.textContent = bonusLines.length > 0 ? bonusLines.join(' | ') : 'No bonuses yet';
     farmhousePanelEl.appendChild(bonuses);
 
