@@ -1,0 +1,222 @@
+/* ============================================
+   Doodle Jump
+   ============================================ */
+
+.dj-intro {
+  margin-bottom: 20px;
+}
+
+/* -- Game area (sized by JS) -------------- */
+.dj-game-area {
+  margin: 0 auto;
+}
+
+/* -- HUD bar ------------------------------ */
+.dj-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.dj-hud-item {
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Canvas wrapper ----------------------- */
+.dj-canvas-wrap {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 6%, var(--background));
+  box-shadow:
+    inset 0 2px 12px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 4px 20px color-mix(in srgb, #000 15%, transparent);
+}
+
+#dj-canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* -- Overlays ----------------------------- */
+.dj-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  z-index: 10;
+}
+
+.dj-hidden {
+  display: none !important;
+}
+
+.dj-overlay-inner {
+  text-align: center;
+  padding: 24px;
+}
+
+.dj-overlay-title {
+  margin: 12px 0 8px;
+  font-size: 1.6em;
+  color: var(--accent);
+}
+
+.dj-overlay-hint {
+  margin: 0 0 16px;
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.dj-pet-preview {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+}
+
+/* -- Buttons ------------------------------ */
+.dj-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dj-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.dj-btn-play {
+  padding: 12px 48px;
+  font-size: 1.3em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--background);
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  text-transform: uppercase;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+.dj-btn-play:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.dj-btn-play:active {
+  transform: scale(0.97);
+}
+
+.dj-btn-small {
+  padding: 3px 10px;
+  font-size: 0.85em;
+}
+
+.dj-btn-danger {
+  color: #ff4444;
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.dj-btn-danger:hover:not(:disabled) {
+  border-color: #ff4444;
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+}
+
+/* -- Results grid (game over) ------------- */
+.dj-results {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 12px auto 20px;
+  max-width: 180px;
+  font-size: 1.05em;
+}
+
+.dj-result-label {
+  text-align: left;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.dj-result-value {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+/* -- Stats panel -------------------------- */
+.dj-stats {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+}
+
+.dj-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+}
+
+.dj-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92em;
+}
+
+.dj-stat-label {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.dj-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Responsive --------------------------- */
+@media (max-width: 480px) {
+  .dj-intro {
+    margin-bottom: 12px;
+  }
+
+  .dj-hud {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 8px 10px;
+    font-size: 0.9em;
+  }
+
+  .dj-overlay-title {
+    font-size: 1.3em;
+  }
+
+  .dj-btn-play {
+    padding: 10px 36px;
+    font-size: 1.1em;
+  }
+
+  .dj-stats {
+    margin-top: 16px;
+    padding: 10px;
+  }
+}

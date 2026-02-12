@@ -87,5 +87,9 @@
     {{- $flappy := resources.Get "js/flappy.js" | minify -}}
     <script src="{{ $flappy.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "doodle-jump" -}}
+    {{- $dj := resources.Get "js/doodle-jump.js" | minify -}}
+    <script src="{{ $dj.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

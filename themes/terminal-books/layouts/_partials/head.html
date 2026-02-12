@@ -66,6 +66,12 @@
   <link rel="stylesheet" href="{{ $flappy.RelPermalink }}">
 {{- end }}
 
+{{/* Doodle Jump CSS */}}
+{{ if eq .Type "doodle-jump" -}}
+  {{- $dj := resources.Get "css/doodle-jump.css" | minify -}}
+  <link rel="stylesheet" href="{{ $dj.RelPermalink }}">
+{{- end }}
+
 {{/* Pet CSS (global) */}}
 {{- $petcss := resources.Get "css/pet.css" | minify -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">

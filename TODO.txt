@@ -86,7 +86,7 @@ AreBooksGood - Improvement TODO
 
 - [x] Build slot machine game
 - [x] Build Flappy Bird game (pet sprite as bird, coins + JB pickups, grace period, dynamic canvas)
-- [ ] Build Doodle Jump style game using pet sprite
+- [x] Build Doodle Jump style game using pet sprite
 - [ ] Build solitaire game
 - [ ] Build spider solitaire game
 

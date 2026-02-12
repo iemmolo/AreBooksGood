@@ -1,0 +1,60 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="dj-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="doodle-app">
+    <!-- Game area (sized by JS) -->
+    <div id="dj-game-area" class="dj-game-area">
+      <!-- HUD bar -->
+      <div class="dj-hud">
+        <span class="dj-hud-item">Score: <span id="dj-score">0</span></span>
+        <span class="dj-hud-item">Coins: <span id="dj-coins">0</span></span>
+        <span class="dj-hud-item">JB: <span id="dj-jb">0</span></span>
+        <span class="dj-hud-item">Best: <span id="dj-best">0</span></span>
+      </div>
+
+      <!-- Canvas wrapper -->
+      <div class="dj-canvas-wrap">
+        <canvas id="dj-canvas"></canvas>
+
+        <!-- Start screen overlay -->
+        <div id="dj-start-overlay" class="dj-overlay">
+          <div class="dj-overlay-inner">
+            <div id="dj-pet-preview" class="dj-pet-preview"></div>
+            <h2 class="dj-overlay-title">Doodle Jump</h2>
+            <p class="dj-overlay-hint">Arrow keys / A D / Tilt to move</p>
+            <button id="dj-play-btn" class="dj-btn dj-btn-play">PLAY</button>
+          </div>
+        </div>
+
+        <!-- Game over overlay -->
+        <div id="dj-gameover-overlay" class="dj-overlay dj-hidden">
+          <div class="dj-overlay-inner">
+            <h2 class="dj-overlay-title">Game Over</h2>
+            <div class="dj-results">
+              <span class="dj-result-label">Score</span><span id="dj-final-score" class="dj-result-value">0</span>
+              <span class="dj-result-label">Coins</span><span id="dj-final-coins" class="dj-result-value">0</span>
+              <span class="dj-result-label">JB</span><span id="dj-final-jb" class="dj-result-value">0</span>
+            </div>
+            <button id="dj-retry-btn" class="dj-btn dj-btn-play">RETRY</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats panel -->
+    <div class="dj-stats">
+      <h3 class="dj-stats-title">Stats</h3>
+      <div class="dj-stats-grid">
+        <span class="dj-stat-label">Games</span><span id="dj-stat-games" class="dj-stat-value">0</span>
+        <span class="dj-stat-label">Best Score</span><span id="dj-stat-best" class="dj-stat-value">0</span>
+        <span class="dj-stat-label">Total Coins</span><span id="dj-stat-coins" class="dj-stat-value">0</span>
+        <span class="dj-stat-label">Total JB</span><span id="dj-stat-jb" class="dj-stat-value">0</span>
+        <span class="dj-stat-label">Max Height</span><span id="dj-stat-height" class="dj-stat-value">0</span>
+      </div>
+      <button id="dj-reset-stats" class="dj-btn dj-btn-small dj-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}
