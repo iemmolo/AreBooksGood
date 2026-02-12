@@ -22,6 +22,7 @@
   var animTimer = null;
   var idleTimer = null;
   var speechTimer = null;
+  var typewriterTimer = null;
   var targetX = 0;
   var targetY = 0;
   var currentX = 0;
@@ -677,6 +678,10 @@
   function speak(message) {
     if (!speechEl || !container || !isVisible) return;
 
+    // Cancel any in-progress typewriter animation
+    if (typewriterTimer) clearTimeout(typewriterTimer);
+    if (speechTimer) clearTimeout(speechTimer);
+
     speechEl.textContent = '';
     speechEl.style.display = 'block';
 
@@ -686,9 +691,9 @@
       if (i < message.length) {
         speechEl.textContent += message[i];
         i++;
-        setTimeout(typeNext, 40);
+        typewriterTimer = setTimeout(typeNext, 40);
       } else {
-        if (speechTimer) clearTimeout(speechTimer);
+        typewriterTimer = null;
         speechTimer = setTimeout(function () {
           speechEl.style.display = 'none';
         }, 3000);

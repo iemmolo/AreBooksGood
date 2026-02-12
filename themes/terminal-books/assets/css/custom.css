@@ -117,6 +117,7 @@ a.site-title {
   border-top: 2px solid var(--accent);
   padding: 20px 0;
   margin-top: 40px;
+  margin-bottom: 100px;
   color: color-mix(in srgb, var(--foreground) 60%, transparent);
   font-size: 0.9em;
 }
