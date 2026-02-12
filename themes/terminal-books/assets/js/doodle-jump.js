@@ -567,22 +567,24 @@
     if (keysDown['ArrowLeft'] || keysDown['KeyA']) inputX = -1;
     if (keysDown['ArrowRight'] || keysDown['KeyD']) inputX = 1;
 
-    // Touch drag
+    // Touch drag (takes priority over tilt)
     if (touchStartX !== null && touchCurrentX !== null) {
       var dragDelta = touchCurrentX - touchStartX;
       if (Math.abs(dragDelta) > 10) {
         inputX = dragDelta > 0 ? 1 : -1;
       }
     }
-
-    // Device tilt
-    if (usingTilt && Math.abs(tiltX) > 2) {
-      inputX = tiltX > 0 ? 1 : -1;
+    // Device tilt (only when not touching)
+    else if (usingTilt && Math.abs(tiltX) > 10) {
+      // Proportional tilt: ramp from 0 at 10° to full at 35°
+      var tiltStrength = (Math.abs(tiltX) - 10) / 25;
+      if (tiltStrength > 1) tiltStrength = 1;
+      inputX = tiltX > 0 ? tiltStrength : -tiltStrength;
     }
 
     if (inputX !== 0) {
       playerVelX += inputX * MOVE_SPEED * 0.3;
-      facingRight = inputX > 0;
+      if (Math.abs(inputX) > 0.1) facingRight = inputX > 0;
     }
     playerVelX *= MOVE_FRICTION;
 
