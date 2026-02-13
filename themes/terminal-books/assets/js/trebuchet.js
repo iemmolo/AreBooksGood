@@ -209,6 +209,10 @@
   var trampolines = [];
   var trampolinesHit = 0;
 
+  // JB Pickups
+  var jbPickups = [];
+  var jbCollected = 0;
+
   // ── Canvas sizing ─────────────────────────────
   function sizeCanvas() {
     var area = document.getElementById('tb-game-area');
@@ -597,6 +601,11 @@
 
     // Trampolines
     drawTrampolines(colors);
+
+    // JB Pickups
+    if (gamePhase === 'flight' || gamePhase === 'landed') {
+      drawJBPickups(colors);
+    }
 
     // Castles
     drawCastles(colors);
@@ -1601,6 +1610,135 @@
     playSweep(200, 800, 0.15, 'sine');
   }
 
+  // ── JB Icon & Pickups ─────────────────────────
+  function drawJBIcon(ctx, x, y, size, color) {
+    var lw = size * 0.12;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Vertical stem with pointed top and J-hook bottom
+    ctx.beginPath();
+    // Pointed serif/spike at top
+    ctx.moveTo(x - size * 0.12, y - size * 0.45);
+    ctx.lineTo(x, y - size * 0.55);
+    ctx.lineTo(x + size * 0.12, y - size * 0.45);
+    // Vertical stem down
+    ctx.moveTo(x, y - size * 0.55);
+    ctx.lineTo(x, y + size * 0.2);
+    // J-hook curving left
+    ctx.quadraticCurveTo(x, y + size * 0.45, x - size * 0.25, y + size * 0.45);
+    ctx.stroke();
+
+    // Two horizontal crossbars
+    var barW = size * 0.28;
+    ctx.beginPath();
+    ctx.moveTo(x - barW, y - size * 0.15);
+    ctx.lineTo(x + barW, y - size * 0.15);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - barW, y + size * 0.05);
+    ctx.lineTo(x + barW, y + size * 0.05);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function initJBPickups() {
+    jbPickups = [];
+    jbCollected = 0;
+    var count = 5 + Math.floor(Math.random() * 4); // 5-8
+    for (var i = 0; i < count; i++) {
+      var dist = 80 + Math.random() * 770; // 80m-850m
+      var worldX = TREBUCHET_X + dist * PIXELS_PER_METER;
+      // Avoid castles (40px clearance)
+      var ok = true;
+      for (var ci = 0; ci < castles.length; ci++) {
+        if (Math.abs(worldX - castles[ci].x) < 40) { ok = false; break; }
+      }
+      if (!ok) continue;
+      jbPickups.push({
+        x: worldX,
+        y: 80 + Math.random() * 140, // 80-220 (in the air)
+        collected: false,
+        bobOffset: Math.random() * Math.PI * 2,
+        value: 1
+      });
+    }
+  }
+
+  function drawJBPickups(colors) {
+    for (var i = 0; i < jbPickups.length; i++) {
+      var p = jbPickups[i];
+      if (p.collected) continue;
+      var px = p.x - cameraX;
+      if (px < -30 || px > CANVAS_W + 30) continue;
+      var bob = Math.sin(Date.now() * 0.003 + p.bobOffset) * 4;
+      var py = p.y + bob;
+
+      // Faint accent glow circle
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = colors.accent;
+      ctx.beginPath();
+      ctx.arc(px, py, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Draw JB icon
+      drawJBIcon(ctx, px, py, 14, colors.accent);
+    }
+  }
+
+  function checkJBPickupCollision() {
+    for (var i = 0; i < jbPickups.length; i++) {
+      var p = jbPickups[i];
+      if (p.collected) continue;
+      var dx = projectilePos.x - p.x;
+      var dy = projectilePos.y - p.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 18) {
+        p.collected = true;
+        jbCollected++;
+
+        // Accent particles (8)
+        var colors = getThemeColors();
+        for (var pi = 0; pi < 8; pi++) {
+          var angle = (pi / 8) * Math.PI * 2;
+          var speed = 1.5 + Math.random() * 2;
+          particles.push({
+            x: p.x,
+            y: p.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 1,
+            life: 20,
+            maxLife: 20,
+            color: colors.accent
+          });
+        }
+
+        // Floating "+1 JB" text
+        bonusTexts.push({
+          x: p.x,
+          y: p.y - 10,
+          text: '+1 JB',
+          life: 45,
+          maxLife: 45
+        });
+
+        // Sound
+        playJBCollectSound();
+      }
+    }
+  }
+
+  function playJBCollectSound() {
+    if (!audioCtx || isMuted) return;
+    playTone(800, 0.05, 'sine', 0.12);
+    setTimeout(function () { playTone(1200, 0.05, 'sine', 0.12); }, 50);
+  }
+
   // ── Power meter & angle aimer ─────────────────
   function drawPowerMeter(colors) {
     var barX = CANVAS_W - 50;
@@ -1916,6 +2054,7 @@
     initCrowds();
     initHills();
     initTrampolines();
+    initJBPickups();
     generateWind();
     launchBtn.disabled = true;
     dealHand();
@@ -2049,6 +2188,7 @@
     checkCastleCollision();
     checkCrowdCollision();
     checkTrampolineCollision();
+    checkJBPickupCollision();
     spawnWindParticles();
 
     // Post-launch trebuchet decay animation
@@ -2221,7 +2361,7 @@
     var isRecord = dist > stats.bestDistance;
     var coinReward = Math.floor(dist / 5);
     var recordBonus = 0;
-    var jbReward = 0;
+    var jbReward = jbCollected;
     var unlockText = '';
 
     // Pet bonuses
@@ -2344,6 +2484,17 @@
       }
     }
 
+    // JB collected results
+    var jbCollectedRow = document.getElementById('tb-result-jbcollected-row');
+    if (jbCollectedRow) {
+      if (jbCollected > 0) {
+        jbCollectedRow.textContent = 'JB Collected: ' + jbCollected;
+        jbCollectedRow.classList.remove('tb-hidden');
+      } else {
+        jbCollectedRow.classList.add('tb-hidden');
+      }
+    }
+
     if (isRecord) {
       resultRecord.classList.remove('tb-hidden');
     } else {
@@ -2434,6 +2585,7 @@
   initCrowds();
   initHills();
   initTrampolines();
+  initJBPickups();
   updateHUD();
   updateStatsPanel();
   partsContainer.style.display = 'none';

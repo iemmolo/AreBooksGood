@@ -76,6 +76,13 @@ AreBooksGood - Improvement TODO
 - [ ] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
 - [ ] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
 
+## Pet Teleporter & Farm Rework
+
+- [ ] Replace dock with teleporter — beam animation that transports pet to the farm
+- [ ] Farm scene: pet walks up and down grass, tends crops autonomously
+- [ ] Add idle furniture (chair/bench/hammock) for pet to rest on between farming cycles
+- [ ] Scope out full design (animation style, farm layout, idle behaviors, transitions)
+
 ## Silk Road & Farmhouse Polish
 
 - [x] Fix Silk Road page styling
