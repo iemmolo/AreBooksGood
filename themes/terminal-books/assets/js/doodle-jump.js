@@ -367,7 +367,7 @@
       springs.push({
         x: x + PLAT_W / 2 - 8,
         y: y - 16,
-        platIdx: platforms.length - 1,
+        plat: p,
         compressed: false,
         compressTimer: 0
       });
@@ -670,7 +670,7 @@
           var hitSpring = false;
           for (var si = 0; si < springs.length; si++) {
             var sp = springs[si];
-            if (sp.platIdx === i &&
+            if (sp.plat === p &&
                 playerCX > sp.x && playerCX < sp.x + 16) {
               hitSpring = true;
               sp.compressed = true;
