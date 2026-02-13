@@ -1,0 +1,93 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="tb-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="trebuchet-app">
+    <!-- Game area -->
+    <div id="tb-game-area" class="tb-game-area">
+      <!-- HUD bar -->
+      <div class="tb-hud">
+        <span class="tb-hud-item">Best: <span id="tb-best">0</span>m</span>
+        <span class="tb-hud-item">Launches: <span id="tb-launches">0</span></span>
+        <span class="tb-hud-item">Unlocks: <span id="tb-unlocks">0</span>/8</span>
+      </div>
+
+      <!-- Canvas wrapper -->
+      <div class="tb-canvas-wrap">
+        <canvas id="tb-canvas"></canvas>
+
+        <!-- Start overlay -->
+        <div id="tb-start-overlay" class="tb-overlay">
+          <div class="tb-overlay-inner">
+            <h2 class="tb-overlay-title">Trebuchet Builder</h2>
+            <p class="tb-overlay-hint">Build. Launch. Dominate.</p>
+            <button id="tb-play-btn" class="tb-btn tb-btn-play">START</button>
+          </div>
+        </div>
+
+        <!-- Results overlay -->
+        <div id="tb-results-overlay" class="tb-overlay tb-hidden">
+          <div class="tb-overlay-inner">
+            <h2 class="tb-overlay-title">Impact!</h2>
+            <div class="tb-results">
+              <span class="tb-result-label">Distance</span><span id="tb-result-distance" class="tb-result-value">0m</span>
+              <span class="tb-result-label">Coins</span><span id="tb-result-coins" class="tb-result-value">+0</span>
+              <span class="tb-result-label">JB</span><span id="tb-result-jb" class="tb-result-value">+0</span>
+            </div>
+            <div id="tb-result-record" class="tb-result-record tb-hidden">NEW RECORD!</div>
+            <div id="tb-result-unlock" class="tb-result-unlock tb-hidden"></div>
+            <button id="tb-next-btn" class="tb-btn tb-btn-play">NEXT ROUND</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wind display -->
+    <div class="tb-wind" id="tb-wind">
+      WIND: <span id="tb-wind-arrow"></span> <span id="tb-wind-speed">0</span> km/h
+    </div>
+
+    <!-- Part selection -->
+    <div id="tb-parts" class="tb-parts">
+      <div class="tb-part-row">
+        <span class="tb-part-label">Counterweight</span>
+        <div class="tb-part-cards" id="tb-counterweight-cards"></div>
+      </div>
+      <div class="tb-part-row">
+        <span class="tb-part-label">Arm</span>
+        <div class="tb-part-cards" id="tb-arm-cards"></div>
+      </div>
+      <div class="tb-part-row">
+        <span class="tb-part-label">Sling</span>
+        <div class="tb-part-cards" id="tb-sling-cards"></div>
+      </div>
+      <div class="tb-part-row">
+        <span class="tb-part-label">Projectile</span>
+        <div class="tb-part-cards" id="tb-projectile-cards"></div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="tb-actions" id="tb-actions">
+      <button id="tb-launch-btn" class="tb-btn tb-btn-play" disabled>LAUNCH</button>
+      <button id="tb-reroll-btn" class="tb-btn tb-btn-reroll">RE-ROLL</button>
+    </div>
+
+    <!-- Stats panel -->
+    <div class="tb-stats">
+      <h3 class="tb-stats-title">Stats</h3>
+      <div class="tb-stats-grid">
+        <span class="tb-stat-label">Best Distance</span><span id="tb-stat-best" class="tb-stat-value">0m</span>
+        <span class="tb-stat-label">Total Launches</span><span id="tb-stat-launches" class="tb-stat-value">0</span>
+        <span class="tb-stat-label">Total Distance</span><span id="tb-stat-total-dist" class="tb-stat-value">0m</span>
+        <span class="tb-stat-label">Coins Earned</span><span id="tb-stat-coins" class="tb-stat-value">0</span>
+        <span class="tb-stat-label">JB Earned</span><span id="tb-stat-jb" class="tb-stat-value">0</span>
+        <span class="tb-stat-label">Unlocks</span><span id="tb-stat-unlocks" class="tb-stat-value">0 / 8</span>
+      </div>
+      <div class="tb-milestones" id="tb-milestones"></div>
+      <button id="tb-reset-stats" class="tb-btn tb-btn-small tb-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}

@@ -91,5 +91,9 @@
     {{- $dj := resources.Get "js/doodle-jump.js" | minify -}}
     <script src="{{ $dj.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "trebuchet" -}}
+    {{- $tb := resources.Get "js/trebuchet.js" | minify -}}
+    <script src="{{ $tb.RelPermalink }}"></script>
+  {{- end }}
 </body>
 </html>

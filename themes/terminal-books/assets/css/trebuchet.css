@@ -1,0 +1,439 @@
+/* ============================================
+   Trebuchet Builder
+   ============================================ */
+
+.tb-intro {
+  margin-bottom: 20px;
+}
+
+/* -- Game area -------------------------------- */
+.tb-game-area {
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+/* -- HUD bar ---------------------------------- */
+.tb-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 0;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.tb-hud-item {
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Canvas wrapper --------------------------- */
+.tb-canvas-wrap {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 6%, var(--background));
+  box-shadow:
+    inset 0 2px 12px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 4px 20px color-mix(in srgb, #000 15%, transparent);
+}
+
+#tb-canvas {
+  display: block;
+  width: 100%;
+}
+
+/* -- Overlays --------------------------------- */
+.tb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  z-index: 10;
+}
+
+.tb-hidden {
+  display: none !important;
+}
+
+.tb-overlay-inner {
+  text-align: center;
+  padding: 24px;
+}
+
+.tb-overlay-title {
+  margin: 12px 0 8px;
+  font-size: 1.6em;
+  color: var(--accent);
+}
+
+.tb-overlay-hint {
+  margin: 0 0 16px;
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* -- Buttons ---------------------------------- */
+.tb-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.95em;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tb-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.tb-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tb-btn-play {
+  padding: 12px 48px;
+  font-size: 1.3em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--background);
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  text-transform: uppercase;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+.tb-btn-play:hover:not(:disabled) {
+  transform: scale(1.04);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.tb-btn-play:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.tb-btn-play:disabled {
+  opacity: 0.5;
+}
+
+.tb-btn-reroll {
+  padding: 10px 24px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.tb-btn-small {
+  padding: 3px 10px;
+  font-size: 0.85em;
+}
+
+.tb-btn-danger {
+  color: #ff4444;
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.tb-btn-danger:hover:not(:disabled) {
+  border-color: #ff4444;
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+}
+
+/* -- Wind display ----------------------------- */
+.tb-wind {
+  margin-top: 12px;
+  padding: 8px 14px;
+  font-size: 1.05em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+}
+
+/* -- Part selection --------------------------- */
+.tb-parts {
+  margin-top: 12px;
+}
+
+.tb-part-row {
+  margin-bottom: 8px;
+}
+
+.tb-part-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tb-part-cards {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tb-card {
+  flex: 1;
+  min-width: 90px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 4px;
+  background: var(--background);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  text-align: center;
+}
+
+.tb-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, var(--background));
+}
+
+.tb-card.tb-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.tb-card-name {
+  display: block;
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.tb-card-tier {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 0.7em;
+  font-weight: 700;
+  border-radius: 2px;
+  margin-bottom: 2px;
+}
+
+.tb-tier-1 {
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.tb-tier-2 {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.tb-tier-3 {
+  color: var(--background);
+  background: var(--accent);
+}
+
+.tb-card-stat {
+  display: block;
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+/* -- Action buttons row ----------------------- */
+.tb-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* -- Results ---------------------------------- */
+.tb-results {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 12px auto 16px;
+  max-width: 180px;
+  font-size: 1.05em;
+}
+
+.tb-result-label {
+  text-align: left;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.tb-result-value {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.tb-result-record {
+  margin-bottom: 12px;
+  padding: 4px 12px;
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--background);
+  background: var(--accent);
+  border-radius: 4px;
+  display: inline-block;
+  animation: tb-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes tb-pulse {
+  from { opacity: 0.7; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1.03); }
+}
+
+.tb-result-unlock {
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+}
+
+/* -- Stats panel ------------------------------ */
+.tb-stats {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+}
+
+.tb-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+}
+
+.tb-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92em;
+}
+
+.tb-stat-label {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.tb-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- Milestones ------------------------------- */
+.tb-milestones {
+  margin-bottom: 12px;
+}
+
+.tb-milestone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.85em;
+}
+
+.tb-milestone-check {
+  width: 14px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.tb-milestone-done .tb-milestone-check {
+  color: var(--accent);
+}
+
+.tb-milestone-pending {
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.tb-milestone-done .tb-milestone-text {
+  color: var(--foreground);
+}
+
+.tb-milestone-pending .tb-milestone-text {
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+/* -- Responsive ------------------------------- */
+@media (max-width: 480px) {
+  .tb-intro {
+    margin-bottom: 12px;
+  }
+
+  .tb-hud {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 8px 10px;
+    font-size: 0.9em;
+  }
+
+  .tb-overlay-inner {
+    padding: 10px 14px;
+  }
+
+  .tb-overlay-title {
+    margin: 4px 0 4px;
+    font-size: 1.1em;
+  }
+
+  .tb-overlay-hint {
+    margin: 0 0 8px;
+    font-size: 0.8em;
+  }
+
+  .tb-results {
+    gap: 2px 12px;
+    margin: 6px auto 8px;
+    font-size: 0.9em;
+  }
+
+  .tb-result-record {
+    margin-bottom: 6px;
+    padding: 2px 8px;
+    font-size: 0.9em;
+  }
+
+  .tb-result-unlock {
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    font-size: 0.8em;
+  }
+
+  .tb-btn-play {
+    padding: 8px 28px;
+    font-size: 1em;
+  }
+
+  .tb-card {
+    min-width: 70px;
+    padding: 6px 8px;
+  }
+
+  .tb-card-name {
+    font-size: 0.8em;
+  }
+
+  .tb-stats {
+    margin-top: 16px;
+    padding: 10px;
+  }
+}

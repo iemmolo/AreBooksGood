@@ -72,6 +72,12 @@
   <link rel="stylesheet" href="{{ $dj.RelPermalink }}">
 {{- end }}
 
+{{/* Trebuchet CSS */}}
+{{ if eq .Type "trebuchet" -}}
+  {{- $tb := resources.Get "css/trebuchet.css" | minify -}}
+  <link rel="stylesheet" href="{{ $tb.RelPermalink }}">
+{{- end }}
+
 {{/* Pet CSS (global) */}}
 {{- $petcss := resources.Get "css/pet.css" | minify -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">
