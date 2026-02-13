@@ -1388,6 +1388,7 @@
     try {
       if (localStorage.getItem(DIM_STORAGE_KEY) === '1') {
         farmSceneEl.classList.add('farm-dimmed');
+        document.body.classList.add('farm-dimmed-mode');
         dimToggleEl.classList.add('farm-dim-active');
       }
     } catch (e) {}
@@ -1395,6 +1396,7 @@
 
   function toggleDim() {
     var dimmed = farmSceneEl.classList.toggle('farm-dimmed');
+    document.body.classList.toggle('farm-dimmed-mode', dimmed);
     if (dimToggleEl) dimToggleEl.classList.toggle('farm-dim-active', dimmed);
     try {
       if (dimmed) {

@@ -428,6 +428,24 @@
   transition: opacity 0.3s ease;
 }
 
+/* Pet dims with farm */
+body.farm-dimmed-mode .pet-container {
+  opacity: 0.15;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+body.farm-dimmed-mode .pet-dock {
+  opacity: 0.15;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+body:not(.farm-dimmed-mode) .pet-container,
+body:not(.farm-dimmed-mode) .pet-dock {
+  transition: opacity 0.3s ease;
+}
+
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
   .farm-scene {
