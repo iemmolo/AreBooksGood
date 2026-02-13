@@ -376,10 +376,62 @@
   color: color-mix(in srgb, var(--foreground) 50%, transparent);
 }
 
+/* ── Dim toggle button ──────────────────────── */
+.farm-dim-toggle {
+  position: absolute;
+  top: -20px;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  pointer-events: auto;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+.farm-dim-toggle:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.farm-dim-toggle.farm-dim-active {
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+/* ── Dimmed state ───────────────────────────── */
+.farm-scene.farm-dimmed {
+  opacity: 0.15;
+  transition: opacity 0.3s ease;
+}
+
+.farm-scene.farm-dimmed .farm-bar,
+.farm-scene.farm-dimmed .farm-house-widget {
+  pointer-events: none;
+}
+
+.farm-scene.farm-dimmed .farm-dim-toggle {
+  pointer-events: auto;
+  opacity: 0.9;
+  color: var(--accent);
+}
+
+.farm-scene:not(.farm-dimmed) {
+  transition: opacity 0.3s ease;
+}
+
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
   .farm-scene {
-    padding: 0 8px 12px;
+    padding: 0 78px 12px 8px;
     gap: 6px;
   }
 
@@ -398,6 +450,9 @@
 
   .farm-bar {
     gap: 6px;
+    flex-wrap: wrap;
+    max-height: 96px;
+    align-content: flex-end;
   }
 
   .farm-plot {
@@ -419,5 +474,10 @@
     height: 128px;
     transform: scale(0.75);
     transform-origin: bottom center;
+  }
+
+  .farm-dim-toggle {
+    top: -18px;
+    font-size: 12px;
   }
 }

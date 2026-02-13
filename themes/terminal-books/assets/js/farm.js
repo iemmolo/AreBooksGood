@@ -1310,6 +1310,18 @@
       updatePlots();
     },
 
+    dim: function () {
+      if (farmSceneEl && !farmSceneEl.classList.contains('farm-dimmed')) toggleDim();
+    },
+
+    undim: function () {
+      if (farmSceneEl && farmSceneEl.classList.contains('farm-dimmed')) toggleDim();
+    },
+
+    isDimmed: function () {
+      return farmSceneEl ? farmSceneEl.classList.contains('farm-dimmed') : false;
+    },
+
     getCropDefs: function () {
       var defs = {};
       var keys = Object.keys(CROPS);
@@ -1356,6 +1368,43 @@
     return el;
   }
 
+  // ── Dim toggle ─────────────────────────────────────────
+  var dimToggleEl;
+  var DIM_STORAGE_KEY = 'arebooksgood-farm-dimmed';
+
+  function createDimToggle() {
+    dimToggleEl = document.createElement('button');
+    dimToggleEl.className = 'farm-dim-toggle';
+    dimToggleEl.type = 'button';
+    dimToggleEl.title = 'Toggle farm visibility';
+    dimToggleEl.textContent = '\uD83D\uDCA1'; // light bulb
+    dimToggleEl.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleDim();
+    });
+    farmSceneEl.appendChild(dimToggleEl);
+
+    // Restore saved dim state
+    try {
+      if (localStorage.getItem(DIM_STORAGE_KEY) === '1') {
+        farmSceneEl.classList.add('farm-dimmed');
+        dimToggleEl.classList.add('farm-dim-active');
+      }
+    } catch (e) {}
+  }
+
+  function toggleDim() {
+    var dimmed = farmSceneEl.classList.toggle('farm-dimmed');
+    if (dimToggleEl) dimToggleEl.classList.toggle('farm-dim-active', dimmed);
+    try {
+      if (dimmed) {
+        localStorage.setItem(DIM_STORAGE_KEY, '1');
+      } else {
+        localStorage.removeItem(DIM_STORAGE_KEY);
+      }
+    } catch (e) {}
+  }
+
   // ── Init ────────────────────────────────────────────────
   function init() {
     farmState = loadState();
@@ -1368,6 +1417,8 @@
     updateTimer = setInterval(updatePlots, UPDATE_INTERVAL);
     watchPetToggle();
     syncVisibility();
+
+    createDimToggle();
   }
 
   if (document.readyState === 'loading') {
