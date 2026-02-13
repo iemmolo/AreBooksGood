@@ -155,8 +155,8 @@
     if (savedInvert === 'true') invertTilt = true;
   } catch (e) {}
 
-  var controlsToggle = document.getElementById('dj-controls-toggle');
-  var invertToggle = document.getElementById('dj-invert-toggle');
+  var controlsToggles = document.querySelectorAll('.dj-controls-toggle');
+  var invertToggles = document.querySelectorAll('.dj-invert-toggle');
 
   // ── Theme colors ──────────────────────────────
   var colorBg = '#000';
@@ -1416,12 +1416,12 @@
   var controlsHint = document.getElementById('dj-controls-hint');
 
   function updateControlsBtn() {
-    if (controlsToggle) {
-      controlsToggle.textContent = 'Controls: ' + (controlMode === 'tilt' ? 'Tilt' : 'Touch');
+    for (var i = 0; i < controlsToggles.length; i++) {
+      controlsToggles[i].textContent = 'Controls: ' + (controlMode === 'tilt' ? 'Tilt' : 'Touch');
     }
-    if (invertToggle) {
-      invertToggle.textContent = 'Tilt: ' + (invertTilt ? 'Inverted' : 'Normal');
-      invertToggle.style.display = controlMode === 'tilt' ? '' : 'none';
+    for (var j = 0; j < invertToggles.length; j++) {
+      invertToggles[j].textContent = 'Tilt: ' + (invertTilt ? 'Inverted' : 'Normal');
+      invertToggles[j].style.display = controlMode === 'tilt' ? '' : 'none';
     }
     if (controlsHint) {
       controlsHint.textContent = controlMode === 'touch'
@@ -1431,8 +1431,8 @@
   }
   updateControlsBtn();
 
-  if (controlsToggle) {
-    controlsToggle.addEventListener('click', function (e) {
+  for (var ci = 0; ci < controlsToggles.length; ci++) {
+    controlsToggles[ci].addEventListener('click', function (e) {
       e.stopPropagation();
       controlMode = controlMode === 'tilt' ? 'touch' : 'tilt';
       try { localStorage.setItem(CONTROLS_KEY, controlMode); } catch (ex) {}
@@ -1440,8 +1440,8 @@
     });
   }
 
-  if (invertToggle) {
-    invertToggle.addEventListener('click', function (e) {
+  for (var ii = 0; ii < invertToggles.length; ii++) {
+    invertToggles[ii].addEventListener('click', function (e) {
       e.stopPropagation();
       invertTilt = !invertTilt;
       try { localStorage.setItem(INVERT_KEY, invertTilt ? 'true' : 'false'); } catch (ex) {}
