@@ -90,6 +90,17 @@
   var actionsContainer = document.getElementById('tb-actions');
   var windArrow = document.getElementById('tb-wind-arrow');
   var windSpeed = document.getElementById('tb-wind-speed');
+  var selectedSummary = document.getElementById('tb-selected-summary');
+
+  // Tab state
+  var activeTab = 'counterweight';
+  var tabButtons = document.querySelectorAll('.tb-tab');
+  var tabPanels = {
+    counterweight: document.getElementById('tb-panel-counterweight'),
+    arm: document.getElementById('tb-panel-arm'),
+    sling: document.getElementById('tb-panel-sling'),
+    projectile: document.getElementById('tb-panel-projectile')
+  };
 
   var resultDistance = document.getElementById('tb-result-distance');
   var resultCoins = document.getElementById('tb-result-coins');
@@ -184,16 +195,32 @@
   var crowdBonus = 0;
   var crowdsScattered = 0;
 
+  // Trebuchet throw animation
+  var trebRecoilX = 0;
+  var trebRecoilY = 0;
+  var cwPendulumAngle = 0;
+  var postLaunchFrame = 0;
+
+  // Slow-mo landing
+  var dtMultiplier = 1;
+  var landCountUp = -1;
+
+  // Trampolines
+  var trampolines = [];
+  var trampolinesHit = 0;
+
   // ── Canvas sizing ─────────────────────────────
   function sizeCanvas() {
     var area = document.getElementById('tb-game-area');
     var w = area ? area.clientWidth : CANVAS_W;
     if (w > CANVAS_W) w = CANVAS_W;
     var ratio = w / CANVAS_W;
+    // On mobile, make canvas display taller so it's more visible
+    var heightMult = 1;
     canvas.width = CANVAS_W;
     canvas.height = CANVAS_H;
     canvas.style.width = w + 'px';
-    canvas.style.height = Math.floor(CANVAS_H * ratio) + 'px';
+    canvas.style.height = Math.floor(CANVAS_H * ratio * heightMult) + 'px';
   }
 
   sizeCanvas();
@@ -300,6 +327,12 @@
 
   function dealHand() {
     var categories = ['counterweight', 'arm', 'sling', 'projectile'];
+    var prevSelections = {
+      counterweight: selectedParts.counterweight,
+      arm: selectedParts.arm,
+      sling: selectedParts.sling,
+      projectile: selectedParts.projectile
+    };
     for (var c = 0; c < categories.length; c++) {
       var cat = categories[c];
       // Show ALL parts, sorted best (highest stat) to worst
@@ -309,7 +342,24 @@
       });
       currentHand[cat] = all;
     }
+    // Restore previous selections if the part is still available (unlocked)
     selectedParts = { counterweight: null, arm: null, sling: null, projectile: null };
+    for (var r = 0; r < categories.length; r++) {
+      var rCat = categories[r];
+      var prev = prevSelections[rCat];
+      if (!prev) continue;
+      var maxTier = stats.unlockedTiers[rCat] || 1;
+      if (prev.tier <= maxTier) {
+        // Find matching part in current hand by name
+        for (var pi = 0; pi < currentHand[rCat].length; pi++) {
+          if (currentHand[rCat][pi].name === prev.name) {
+            selectedParts[rCat] = currentHand[rCat][pi];
+            break;
+          }
+        }
+      }
+    }
+    updateSelectedSummary();
   }
 
   // ── Card rendering ────────────────────────────
@@ -358,6 +408,7 @@
     var idx = parseInt(card.getAttribute('data-idx'), 10);
     selectedParts[cat] = currentHand[cat][idx];
     renderCards();
+    updateSelectedSummary();
     drawScene();
   }
 
@@ -365,6 +416,50 @@
     var ready = selectedParts.counterweight && selectedParts.arm &&
                 selectedParts.sling && selectedParts.projectile;
     launchBtn.disabled = !ready;
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    var categories = ['counterweight', 'arm', 'sling', 'projectile'];
+    for (var i = 0; i < categories.length; i++) {
+      var cat = categories[i];
+      if (tabPanels[cat]) {
+        if (cat === tab) {
+          tabPanels[cat].classList.remove('tb-hidden');
+        } else {
+          tabPanels[cat].classList.add('tb-hidden');
+        }
+      }
+    }
+    for (var j = 0; j < tabButtons.length; j++) {
+      if (tabButtons[j].getAttribute('data-tab') === tab) {
+        tabButtons[j].classList.add('tb-tab-active');
+      } else {
+        tabButtons[j].classList.remove('tb-tab-active');
+      }
+    }
+  }
+
+  function updateSelectedSummary() {
+    if (!selectedSummary) return;
+    var parts = [];
+    var labels = { counterweight: 'CW', arm: 'ARM', sling: 'SLG', projectile: 'PRJ' };
+    var categories = ['counterweight', 'arm', 'sling', 'projectile'];
+    for (var i = 0; i < categories.length; i++) {
+      var cat = categories[i];
+      var p = selectedParts[cat];
+      if (p) {
+        parts.push(labels[cat] + ': ' + p.name);
+      }
+    }
+    selectedSummary.textContent = parts.length > 0 ? parts.join(' | ') : '';
+  }
+
+  // Wire up tab clicks
+  for (var tbi = 0; tbi < tabButtons.length; tbi++) {
+    tabButtons[tbi].addEventListener('click', function () {
+      switchTab(this.getAttribute('data-tab'));
+    });
   }
 
   // ── Physics ───────────────────────────────────
@@ -404,15 +499,16 @@
   function stepProjectile() {
     var proj = selectedParts.projectile;
     var windMult = (proj.special === 'windcatcher') ? 2 : 1;
+    var dt = DT * dtMultiplier;
     var windForce = wind.direction * wind.speed * 0.15 * (1 - proj.weight / 100) * windMult;
 
-    projectileVel.x += windForce * DT;
-    projectileVel.x *= (1 - proj.drag * DT * 0.5);
-    projectileVel.y *= (1 - proj.drag * DT * 0.12);
-    projectileVel.y += GRAVITY * DT * 3.5;
+    projectileVel.x += windForce * dt;
+    projectileVel.x *= (1 - proj.drag * dt * 0.5);
+    projectileVel.y *= (1 - proj.drag * dt * 0.12);
+    projectileVel.y += GRAVITY * dt * 3.5;
 
-    projectilePos.x += projectileVel.x;
-    projectilePos.y += projectileVel.y;
+    projectilePos.x += projectileVel.x * dtMultiplier;
+    projectilePos.y += projectileVel.y * dtMultiplier;
 
     trail.push({ x: projectilePos.x, y: projectilePos.y });
     if (trail.length > 300) trail.shift();
@@ -499,6 +595,9 @@
     ctx.closePath();
     ctx.fill();
 
+    // Trampolines
+    drawTrampolines(colors);
+
     // Castles
     drawCastles(colors);
 
@@ -551,6 +650,16 @@
       ctx.font = 'bold 12px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(Math.floor(launchDistance) + 'm', fx, GROUND_Y - 34);
+    }
+
+    // Distance count-up text during landing
+    if (gamePhase === 'landed' && landCountUp >= 0) {
+      ctx.fillStyle = colors.accent;
+      ctx.font = 'bold 36px monospace';
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.9;
+      ctx.fillText(landCountUp + 'm', CANVAS_W / 2, CANVAS_H / 2 - 20);
+      ctx.globalAlpha = 1;
     }
 
     // Particles
@@ -627,8 +736,8 @@
   }
 
   function drawTrebuchet(colors) {
-    var bx = TREBUCHET_X - cameraX;
-    var by = GROUND_Y - HILL_HEIGHT;
+    var bx = TREBUCHET_X - cameraX + trebRecoilX;
+    var by = GROUND_Y - HILL_HEIGHT - trebRecoilY;
 
     // Base (A-frame)
     ctx.strokeStyle = colorMix(colors.fg, 0.7, colors.bg);
@@ -668,7 +777,7 @@
     ctx.lineTo(longX, longY);
     ctx.stroke();
 
-    // Counterweight (on short end)
+    // Counterweight (on short end) with pendulum swing
     var cwSize = 10;
     if (selectedParts.counterweight) {
       cwSize = 8 + selectedParts.counterweight.power * 0.06;
@@ -676,7 +785,9 @@
     var cwColor = colorMix(colors.fg, 0.6, colors.bg);
     if (selectedParts.counterweight && selectedParts.counterweight.tier >= 2) cwColor = colors.accent;
     ctx.fillStyle = cwColor;
-    ctx.fillRect(shortX - cwSize / 2, shortY - cwSize / 2, cwSize, cwSize);
+    var cwDrawX = shortX + Math.sin(cwPendulumAngle) * cwSize;
+    var cwDrawY = shortY + Math.cos(cwPendulumAngle) * cwSize * 0.5;
+    ctx.fillRect(cwDrawX - cwSize / 2, cwDrawY - cwSize / 2, cwSize, cwSize);
 
     // Sling (on long end) — a dangling line + projectile
     if (gamePhase !== 'flight' && gamePhase !== 'landed') {
@@ -1350,6 +1461,146 @@
     }
   }
 
+  // ── Trampolines ────────────────────────────────
+  function initTrampolines() {
+    trampolines = [];
+    trampolinesHit = 0;
+    var count = 2 + Math.floor(Math.random() * 3); // 2-4
+    var placed = [];
+    for (var i = 0; i < count; i++) {
+      var dist = 100 + Math.random() * 700; // 100m-800m
+      var worldX = TREBUCHET_X + dist * PIXELS_PER_METER;
+      // Avoid castles (40px), other trampolines (60px), trebuchet (100px)
+      var ok = true;
+      if (Math.abs(worldX - TREBUCHET_X) < 100) ok = false;
+      for (var ci = 0; ci < castles.length; ci++) {
+        if (Math.abs(worldX - castles[ci].x) < 40) { ok = false; break; }
+      }
+      for (var ti = 0; ti < placed.length; ti++) {
+        if (Math.abs(worldX - placed[ti]) < 60) { ok = false; break; }
+      }
+      if (!ok) continue;
+      placed.push(worldX);
+      trampolines.push({
+        x: worldX,
+        width: 30,
+        height: 8,
+        activated: false,
+        bounceTimer: 0
+      });
+    }
+  }
+
+  function drawTrampolines(colors) {
+    for (var i = 0; i < trampolines.length; i++) {
+      var tr = trampolines[i];
+      var tx = tr.x - cameraX;
+      if (tx < -40 || tx > CANVAS_W + 40) continue;
+
+      var groundAtTr = getGroundY(tr.x);
+      var squish = 0;
+      if (tr.bounceTimer > 0) {
+        squish = Math.sin(tr.bounceTimer / 10 * Math.PI) * 4;
+        tr.bounceTimer--;
+      }
+
+      var padY = groundAtTr - tr.height + squish;
+      var halfW = tr.width / 2;
+
+      // Spring legs (zigzag lines)
+      ctx.strokeStyle = colorMix(colors.accent, 0.6, colors.bg);
+      ctx.lineWidth = 1.5;
+      for (var s = -1; s <= 1; s += 2) {
+        var legX = tx + s * halfW * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(legX, groundAtTr);
+        var segments = 4;
+        var segH = (groundAtTr - padY) / segments;
+        for (var seg = 0; seg < segments; seg++) {
+          var zy = groundAtTr - (seg + 1) * segH;
+          var zx = legX + (seg % 2 === 0 ? 3 : -3) * s;
+          ctx.lineTo(zx, zy);
+        }
+        ctx.stroke();
+      }
+
+      // Pad (flat accent-colored rectangle on top)
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(tx - halfW, padY, tr.width, 3);
+
+      // Glow when activated
+      if (tr.activated) {
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = colors.accent;
+        ctx.fillRect(tx - halfW - 2, padY - 2, tr.width + 4, 7);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function checkTrampolineCollision() {
+    if (projectileVel.y <= 0) return; // only when descending
+    var proj = selectedParts.projectile;
+    var pr = proj ? 3 + proj.weight * 0.04 : 5;
+    for (var i = 0; i < trampolines.length; i++) {
+      var tr = trampolines[i];
+      if (tr.activated) continue;
+      var groundAtTr = getGroundY(tr.x);
+      var padY = groundAtTr - tr.height;
+      var halfW = tr.width / 2;
+      // Check overlap
+      if (projectilePos.x + pr > tr.x - halfW && projectilePos.x - pr < tr.x + halfW &&
+          projectilePos.y + pr > padY && projectilePos.y - pr < padY + 6) {
+        // Bounce!
+        tr.activated = true;
+        tr.bounceTimer = 10;
+        trampolinesHit++;
+
+        // Velocity boost
+        projectileVel.y = -Math.abs(projectileVel.y) * 1.3;
+        projectileVel.x *= 1.1;
+        // Move above pad
+        projectilePos.y = padY - pr - 2;
+
+        // Combo integration
+        comboCount++;
+        if (comboCount >= 3) comboMultiplier = 3;
+        else if (comboCount >= 2) comboMultiplier = 2;
+        else if (comboCount >= 1) comboMultiplier = 1.5;
+        comboDisplayTimer = 30;
+        if (comboCount > bestCombo) bestCombo = comboCount;
+
+        // Particles
+        var colors = getThemeColors();
+        spawnImpactParticles(tr.x, padY, colors.accent, 12);
+
+        // Screen shake
+        shakeFrames = 5;
+        shakeIntensity = 4;
+
+        // Floating text
+        var comboStr = comboCount > 1 ? ' x' + comboMultiplier : '';
+        bonusTexts.push({
+          x: tr.x,
+          y: padY - 15,
+          text: 'BOUNCE!' + comboStr,
+          life: 50,
+          maxLife: 50
+        });
+
+        // Sound
+        playTrampolineSound();
+        if (comboCount > 1) playComboSound(comboCount);
+
+        break; // one per frame
+      }
+    }
+  }
+
+  function playTrampolineSound() {
+    playSweep(200, 800, 0.15, 'sine');
+  }
+
   // ── Power meter & angle aimer ─────────────────
   function drawPowerMeter(colors) {
     var barX = CANVAS_W - 50;
@@ -1654,14 +1905,21 @@
     angleSweepValue = 45;
     angleSweepDir = 1;
     lockedAngle = 45;
+    trebRecoilX = 0;
+    trebRecoilY = 0;
+    cwPendulumAngle = 0;
+    postLaunchFrame = 0;
+    dtMultiplier = 1;
+    landCountUp = -1;
 
     initCastles();
     initCrowds();
     initHills();
+    initTrampolines();
     generateWind();
+    launchBtn.disabled = true;
     dealHand();
     renderCards();
-    launchBtn.disabled = true;
     drawScene();
   }
 
@@ -1744,14 +2002,35 @@
 
     // Arm swings from rest (0.3 rad) to upright (~1.3 rad)
     var progress = Math.min(animFrame / SWING_FRAMES, 1);
-    var ease = 1 - Math.pow(1 - progress, 3); // ease out cubic
-    swingAngle = 0.3 + ease * 1.0;
+    // Spring overshoot: ease with slight wobble past target
+    var ease = 1 - Math.pow(1 - progress, 3);
+    var overshoot = progress > 0.7 ? Math.sin((progress - 0.7) / 0.3 * Math.PI * 2) * 0.08 * (1 - progress) : 0;
+    swingAngle = 0.3 + ease * 1.0 + overshoot;
+
+    // Recoil during launch (kicks back and up)
+    if (progress > 0.3) {
+      var recoilPhase = (progress - 0.3) / 0.7;
+      trebRecoilX = -Math.sin(recoilPhase * Math.PI) * 4;
+      trebRecoilY = Math.sin(recoilPhase * Math.PI) * 2;
+    }
+
+    // Spawn dust at trebuchet base at launch moment (progress ~0.5)
+    if (animFrame === Math.floor(SWING_FRAMES * 0.5)) {
+      var colors = getThemeColors();
+      spawnImpactParticles(TREBUCHET_X, GROUND_Y - HILL_HEIGHT, colors.fg, 10);
+    }
+    // Second dust burst at arm peak (release moment)
+    if (animFrame === SWING_FRAMES - 1) {
+      var colors2 = getThemeColors();
+      spawnImpactParticles(TREBUCHET_X, GROUND_Y - HILL_HEIGHT - 30, colors2.fg, 8);
+    }
 
     drawScene();
 
     if (animFrame >= SWING_FRAMES) {
       gamePhase = 'flight';
       animFrame = 0;
+      postLaunchFrame = 30;
       startWhoosh();
       requestAnimationFrame(tickFlight);
       return;
@@ -1769,7 +2048,22 @@
     updateWhoosh(flightSpeed);
     checkCastleCollision();
     checkCrowdCollision();
+    checkTrampolineCollision();
     spawnWindParticles();
+
+    // Post-launch trebuchet decay animation
+    if (postLaunchFrame > 0) {
+      postLaunchFrame--;
+      var decay = postLaunchFrame / 30;
+      var t = 30 - postLaunchFrame;
+      trebRecoilX = Math.sin(t * Math.PI * 3 / 30) * 3 * decay;
+      trebRecoilY = Math.sin(t * Math.PI * 3 / 30) * 1.5 * decay;
+      cwPendulumAngle = Math.sin(t * Math.PI * 4 / 30) * 0.3 * decay;
+    } else {
+      trebRecoilX = 0;
+      trebRecoilY = 0;
+      cwPendulumAngle = 0;
+    }
 
     // Best flag flash detection
     if (stats.bestDistance > 0 && bestFlagFlash === 0) {
@@ -1784,8 +2078,15 @@
     if (targetCameraX < 0) targetCameraX = 0;
     cameraX += (targetCameraX - cameraX) * CAM_EASE;
 
-    // Check if landed or bouncing
+    // Slow-mo on terminal descent
     var groundAtX = getGroundY(projectilePos.x);
+    var proj = selectedParts.projectile;
+    var maxBounces = (proj.special === 'shockwave') ? 4 : 3;
+    if (bounceCount >= maxBounces && projectileVel.y > 0 && projectilePos.y > groundAtX - 40) {
+      dtMultiplier = 0.3;
+    }
+
+    // Check if landed or bouncing
     if (projectilePos.y >= groundAtX && animFrame > 5) {
       projectilePos.y = groundAtX;
       var impactSpeed = Math.sqrt(projectileVel.x * projectileVel.x + projectileVel.y * projectileVel.y);
@@ -1836,10 +2137,15 @@
     requestAnimationFrame(tickFlight);
   }
 
+  function playTickSound() {
+    playTone(600, 0.03, 'sine', 0.1);
+  }
+
   function onLanded() {
     gamePhase = 'landed';
     stopWhoosh();
     playLandingSound();
+    dtMultiplier = 1;
     var colors = getThemeColors();
 
     // Screen shake
@@ -1868,19 +2174,42 @@
       launchDistance *= 1.2;
     }
 
-    // Zoom out to show distance
-    var showCamX = Math.max(0, flagX - CANVAS_W * 0.8);
+    // Zoom to center the flag
+    var showCamX = Math.max(0, flagX - CANVAS_W * 0.5);
     targetCameraX = showCamX;
 
-    // Animate landing for a moment then show results
+    // Extended landing sequence: camera ease -> count-up -> hold -> results
     var landFrames = 0;
+    var finalDist = Math.floor(launchDistance);
+    landCountUp = 0;
+
     function tickLand() {
       landFrames++;
       cameraX += (targetCameraX - cameraX) * 0.1;
+
+      // Phase A: Camera eases to center flag (frames 1-20)
+      // Phase B: Distance count-up (frames 20-70)
+      if (landFrames > 20 && landFrames <= 70) {
+        var countProgress = (landFrames - 20) / 50;
+        // Ease-out cubic
+        var eased = 1 - Math.pow(1 - countProgress, 3);
+        landCountUp = Math.floor(eased * finalDist);
+        // Tick sound every ~5 frames
+        if ((landFrames - 20) % 5 === 0) playTickSound();
+      }
+      // Phase C: Hold on final number (frames 70-90)
+      if (landFrames >= 70) {
+        landCountUp = finalDist;
+      }
+
       drawScene();
-      if (landFrames < 40) {
+
+      // Phase D: Show results overlay (frame 90+)
+      if (landFrames < 88) {
         requestAnimationFrame(tickLand);
       } else {
+        landCountUp = -1;
+        drawScene();
         showResults();
       }
     }
@@ -2004,6 +2333,17 @@
       }
     }
 
+    // Trampoline results
+    var trampolineRow = document.getElementById('tb-result-trampolines-row');
+    if (trampolineRow) {
+      if (trampolinesHit > 0) {
+        trampolineRow.textContent = 'Trampolines: ' + trampolinesHit;
+        trampolineRow.classList.remove('tb-hidden');
+      } else {
+        trampolineRow.classList.add('tb-hidden');
+      }
+    }
+
     if (isRecord) {
       resultRecord.classList.remove('tb-hidden');
     } else {
@@ -2093,6 +2433,7 @@
   initCastles();
   initCrowds();
   initHills();
+  initTrampolines();
   updateHUD();
   updateStatsPanel();
   partsContainer.style.display = 'none';

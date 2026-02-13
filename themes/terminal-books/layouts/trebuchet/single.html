@@ -12,6 +12,9 @@
         <span class="tb-hud-item">Best: <span id="tb-best">0</span>m</span>
         <span class="tb-hud-item">Launches: <span id="tb-launches">0</span></span>
         <span class="tb-hud-item">Unlocks: <span id="tb-unlocks">0</span>/8</span>
+        <span class="tb-hud-item tb-hud-wind" id="tb-wind">
+          <span id="tb-wind-arrow"></span> <span id="tb-wind-speed">0</span>km/h
+        </span>
         <button id="tb-mute-btn" class="tb-btn tb-btn-small tb-mute-btn">[&#9834;]</button>
       </div>
 
@@ -42,6 +45,7 @@
             </div>
             <div id="tb-result-crowds-row" class="tb-result-castles-row tb-hidden"></div>
             <div id="tb-result-combo-row" class="tb-result-castles-row tb-hidden"></div>
+            <div id="tb-result-trampolines-row" class="tb-result-castles-row tb-hidden"></div>
             <div id="tb-result-record" class="tb-result-record tb-hidden">NEW RECORD!</div>
             <div id="tb-result-unlock" class="tb-result-unlock tb-hidden"></div>
             <button id="tb-next-btn" class="tb-btn tb-btn-play">NEXT ROUND</button>
@@ -50,28 +54,28 @@
       </div>
     </div>
 
-    <!-- Wind display -->
-    <div class="tb-wind" id="tb-wind">
-      WIND: <span id="tb-wind-arrow"></span> <span id="tb-wind-speed">0</span> km/h
-    </div>
-
-    <!-- Part selection -->
+    <!-- Part selection with tabs -->
     <div id="tb-parts" class="tb-parts">
-      <div class="tb-part-row">
-        <span class="tb-part-label">Counterweight</span>
-        <div class="tb-part-cards" id="tb-counterweight-cards"></div>
+      <div class="tb-tabs" id="tb-tabs">
+        <button class="tb-tab tb-tab-active" data-tab="counterweight">CW</button>
+        <button class="tb-tab" data-tab="arm">ARM</button>
+        <button class="tb-tab" data-tab="sling">SLING</button>
+        <button class="tb-tab" data-tab="projectile">PROJ</button>
       </div>
-      <div class="tb-part-row">
-        <span class="tb-part-label">Arm</span>
-        <div class="tb-part-cards" id="tb-arm-cards"></div>
-      </div>
-      <div class="tb-part-row">
-        <span class="tb-part-label">Sling</span>
-        <div class="tb-part-cards" id="tb-sling-cards"></div>
-      </div>
-      <div class="tb-part-row">
-        <span class="tb-part-label">Projectile</span>
-        <div class="tb-part-cards" id="tb-projectile-cards"></div>
+      <div id="tb-selected-summary" class="tb-selected-summary"></div>
+      <div class="tb-tab-content">
+        <div class="tb-part-row tb-tab-panel" id="tb-panel-counterweight">
+          <div class="tb-part-cards" id="tb-counterweight-cards"></div>
+        </div>
+        <div class="tb-part-row tb-tab-panel tb-hidden" id="tb-panel-arm">
+          <div class="tb-part-cards" id="tb-arm-cards"></div>
+        </div>
+        <div class="tb-part-row tb-tab-panel tb-hidden" id="tb-panel-sling">
+          <div class="tb-part-cards" id="tb-sling-cards"></div>
+        </div>
+        <div class="tb-part-row tb-tab-panel tb-hidden" id="tb-panel-projectile">
+          <div class="tb-part-cards" id="tb-projectile-cards"></div>
+        </div>
       </div>
     </div>
 
@@ -80,9 +84,9 @@
       <button id="tb-launch-btn" class="tb-btn tb-btn-play" disabled>LAUNCH</button>
     </div>
 
-    <!-- Stats panel -->
-    <div class="tb-stats">
-      <h3 class="tb-stats-title">Stats</h3>
+    <!-- Stats panel (collapsible) -->
+    <details class="tb-stats">
+      <summary class="tb-stats-title">Stats</summary>
       <div class="tb-stats-grid">
         <span class="tb-stat-label">Best Distance</span><span id="tb-stat-best" class="tb-stat-value">0m</span>
         <span class="tb-stat-label">Total Launches</span><span id="tb-stat-launches" class="tb-stat-value">0</span>
@@ -93,6 +97,6 @@
       </div>
       <div class="tb-milestones" id="tb-milestones"></div>
       <button id="tb-reset-stats" class="tb-btn tb-btn-small tb-btn-danger">Reset Stats</button>
-    </div>
+    </details>
   </div>
 {{ end }}

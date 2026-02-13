@@ -17,6 +17,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   padding: 10px 14px;
   margin-bottom: 0;
   background: color-mix(in srgb, var(--foreground) 8%, var(--background));
@@ -29,6 +31,10 @@
 
 .tb-hud-item {
   font-variant-numeric: tabular-nums;
+}
+
+.tb-hud-wind {
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
 }
 
 .tb-mute-btn {
@@ -153,22 +159,55 @@
   background: color-mix(in srgb, #ff4444 10%, var(--background));
 }
 
-/* -- Wind display ----------------------------- */
-.tb-wind {
+/* -- Tabs ------------------------------------- */
+.tb-tabs {
+  display: flex;
+  gap: 0;
   margin-top: 12px;
-  padding: 8px 14px;
-  font-size: 1.05em;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  border-bottom: 2px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.tb-tab {
+  flex: 1;
+  padding: 8px 4px;
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tb-tab:hover {
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+}
+
+.tb-tab.tb-tab-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tb-selected-summary {
+  padding: 6px 8px;
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
   text-align: center;
-  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  min-height: 1.2em;
+}
+
+.tb-tab-content {
+  padding-top: 4px;
 }
 
 /* -- Part selection --------------------------- */
 .tb-parts {
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .tb-part-row {
@@ -346,7 +385,7 @@
   background: color-mix(in srgb, var(--accent) 8%, var(--background));
 }
 
-/* -- Stats panel ------------------------------ */
+/* -- Stats panel (collapsible) ---------------- */
 .tb-stats {
   margin-top: 24px;
   padding: 14px;
@@ -355,8 +394,25 @@
 }
 
 .tb-stats-title {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  padding: 0 0 10px;
+}
+
+.tb-stats-title::-webkit-details-marker {
+  display: none;
+}
+
+.tb-stats-title::before {
+  content: '+ ';
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+details[open].tb-stats > .tb-stats-title::before {
+  content: '- ';
 }
 
 .tb-stats-grid {
@@ -418,10 +474,9 @@
   }
 
   .tb-hud {
-    flex-wrap: wrap;
-    gap: 4px 12px;
+    gap: 4px 8px;
     padding: 8px 10px;
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
 
   .tb-overlay-inner {
@@ -478,5 +533,14 @@
   .tb-stats {
     margin-top: 16px;
     padding: 10px;
+  }
+
+  .tb-tab {
+    padding: 6px 2px;
+    font-size: 0.8em;
+  }
+
+  .tb-selected-summary {
+    font-size: 0.7em;
   }
 }
