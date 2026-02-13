@@ -145,13 +145,18 @@
 
   // Control mode: 'tilt' or 'touch'
   var CONTROLS_KEY = 'doodle-jump-controls';
+  var INVERT_KEY = 'doodle-jump-invert-tilt';
   var controlMode = 'tilt';
+  var invertTilt = false;
   try {
     var savedMode = localStorage.getItem(CONTROLS_KEY);
     if (savedMode === 'touch') controlMode = 'touch';
+    var savedInvert = localStorage.getItem(INVERT_KEY);
+    if (savedInvert === 'true') invertTilt = true;
   } catch (e) {}
 
   var controlsToggle = document.getElementById('dj-controls-toggle');
+  var invertToggle = document.getElementById('dj-invert-toggle');
 
   // ── Theme colors ──────────────────────────────
   var colorBg = '#000';
@@ -587,13 +592,14 @@
       // Tilt mode (with drag fallback)
       if (touchStartX !== null && touchCurrentX !== null) {
         var dragDelta = touchCurrentX - touchStartX;
-        if (Math.abs(dragDelta) > 10) {
+        if (Math.abs(dragDelta) > 30) {
           inputX = dragDelta > 0 ? 1 : -1;
         }
-      } else if (usingTilt && Math.abs(tiltX) > 10) {
-        var tiltStrength = (Math.abs(tiltX) - 10) / 25;
+      } else if (usingTilt && Math.abs(tiltX) > 12) {
+        var tiltStrength = (Math.abs(tiltX) - 12) / 30;
         if (tiltStrength > 1) tiltStrength = 1;
-        inputX = tiltX > 0 ? -tiltStrength : tiltStrength;
+        var tiltDir = tiltX > 0 ? 1 : -1;
+        inputX = invertTilt ? -tiltDir * tiltStrength : tiltDir * tiltStrength;
       }
     }
 
@@ -1405,6 +1411,10 @@
     if (controlsToggle) {
       controlsToggle.textContent = 'Controls: ' + (controlMode === 'tilt' ? 'Tilt' : 'Touch');
     }
+    if (invertToggle) {
+      invertToggle.textContent = 'Tilt: ' + (invertTilt ? 'Inverted' : 'Normal');
+      invertToggle.style.display = controlMode === 'tilt' ? '' : 'none';
+    }
     if (controlsHint) {
       controlsHint.textContent = controlMode === 'touch'
         ? 'Tap left / right side to move'
@@ -1418,6 +1428,15 @@
       e.stopPropagation();
       controlMode = controlMode === 'tilt' ? 'touch' : 'tilt';
       try { localStorage.setItem(CONTROLS_KEY, controlMode); } catch (ex) {}
+      updateControlsBtn();
+    });
+  }
+
+  if (invertToggle) {
+    invertToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      invertTilt = !invertTilt;
+      try { localStorage.setItem(INVERT_KEY, invertTilt ? 'true' : 'false'); } catch (ex) {}
       updateControlsBtn();
     });
   }
