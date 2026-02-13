@@ -31,6 +31,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.tb-mute-btn {
+  padding: 2px 6px;
+  font-size: 0.85em;
+  line-height: 1;
+}
+
 /* -- Canvas wrapper --------------------------- */
 .tb-canvas-wrap {
   position: relative;
@@ -252,6 +258,15 @@
   font-size: 0.8em;
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.tb-card-special {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.65em;
+  font-style: italic;
+  color: var(--accent);
+  text-transform: capitalize;
 }
 
 .tb-card-lock {

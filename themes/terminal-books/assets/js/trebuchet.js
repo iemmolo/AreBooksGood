@@ -7,9 +7,9 @@
   var CANVAS_H = 340;
   var GROUND_Y = 280; // y position of ground line on canvas
   var GRAVITY = 9.8;
-  var BASE_POWER = 35;
+  var BASE_POWER = 26;
   var DT = 0.05;
-  var PIXELS_PER_METER = 4; // for camera / distance rendering
+  var PIXELS_PER_METER = 3; // for camera / distance rendering
   var TREBUCHET_X = 80; // world x position of trebuchet base
   var HILL_HEIGHT = 30;
 
@@ -49,12 +49,12 @@
       { name: 'Titanium Chain', tier: 3, accuracy: 95, angleMod: 0 }
     ],
     projectile: [
-      { name: 'Rock',            tier: 1, weight: 60, drag: 0.3 },
-      { name: 'Pumpkin',         tier: 1, weight: 30, drag: 0.5 },
-      { name: 'Iron Ball',       tier: 2, weight: 80, drag: 0.2 },
-      { name: 'Hay Bale',        tier: 2, weight: 20, drag: 0.7 },
-      { name: 'Cannonball',      tier: 3, weight: 90, drag: 0.15 },
-      { name: 'Flaming Boulder', tier: 3, weight: 75, drag: 0.25 }
+      { name: 'Rock',            tier: 1, weight: 60, drag: 0.3, special: 'none' },
+      { name: 'Pumpkin',         tier: 1, weight: 30, drag: 0.5, special: 'explode' },
+      { name: 'Iron Ball',       tier: 2, weight: 80, drag: 0.2, special: 'pierce' },
+      { name: 'Hay Bale',        tier: 2, weight: 20, drag: 0.7, special: 'windcatcher' },
+      { name: 'Cannonball',      tier: 3, weight: 90, drag: 0.15, special: 'shockwave' },
+      { name: 'Flaming Boulder', tier: 3, weight: 75, drag: 0.25, special: 'inferno' }
     ]
   };
 
@@ -134,6 +134,19 @@
   var shakeIntensity = 0;
   var flagX = 0;
   var bounceCount = 0;
+  var bestFlagFlash = 0; // frames remaining for best-flag flash effect
+
+  // Wind particles
+  var windParticles = [];
+
+  // Combo system
+  var comboCount = 0;
+  var comboMultiplier = 1;
+  var comboDisplayTimer = 0;
+  var bestCombo = 0;
+
+  // Terrain hills/valleys
+  var hills = [];
 
   // Power meter state
   var powerMeterValue = 0;
@@ -165,6 +178,11 @@
   var castleBonus = 0;
   var castlesDestroyed = 0;
   var bonusTexts = []; // floating "+BONUS" texts
+
+  // Crowds
+  var crowds = [];
+  var crowdBonus = 0;
+  var crowdsScattered = 0;
 
   // ── Canvas sizing ─────────────────────────────
   function sizeCanvas() {
@@ -317,9 +335,11 @@
         else statText = 'WGT ' + part.weight;
 
         var lockIcon = locked ? '<span class="tb-card-lock">LOCKED</span>' : '';
+        var specialText = (cat === 'projectile' && part.special && part.special !== 'none')
+          ? '<span class="tb-card-special">' + part.special + '</span>' : '';
         card.innerHTML = '<span class="tb-card-tier tb-tier-' + part.tier + '">T' + part.tier + '</span>' +
           '<span class="tb-card-name">' + part.name + '</span>' +
-          '<span class="tb-card-stat">' + statText + '</span>' + lockIcon;
+          '<span class="tb-card-stat">' + statText + '</span>' + specialText + lockIcon;
 
         if (!locked) {
           card.setAttribute('data-cat', cat);
@@ -375,11 +395,16 @@
 
     trail = [];
     bounceCount = 0;
+    comboCount = 0;
+    comboMultiplier = 1;
+    comboDisplayTimer = 0;
+    bestCombo = 0;
   }
 
   function stepProjectile() {
     var proj = selectedParts.projectile;
-    var windForce = wind.direction * wind.speed * 0.15 * (1 - proj.weight / 100);
+    var windMult = (proj.special === 'windcatcher') ? 2 : 1;
+    var windForce = wind.direction * wind.speed * 0.15 * (1 - proj.weight / 100) * windMult;
 
     projectileVel.x += windForce * DT;
     projectileVel.x *= (1 - proj.drag * DT * 0.5);
@@ -437,6 +462,11 @@
     }
     ctx.globalAlpha = 1;
 
+    // Wind particles (during flight)
+    if (gamePhase === 'flight') {
+      drawWindParticles(colors);
+    }
+
     // Ground
     ctx.fillStyle = colorMix(colors.fg, 0.12, colors.bg);
     ctx.fillRect(0, GROUND_Y, CANVAS_W, CANVAS_H - GROUND_Y);
@@ -449,8 +479,14 @@
     ctx.lineTo(CANVAS_W, GROUND_Y);
     ctx.stroke();
 
+    // Terrain hills/valleys
+    drawHills(colors);
+
     // Distance markers
     drawDistanceMarkers(colors);
+
+    // Best distance flag
+    drawBestFlag(colors);
 
     // Hill under trebuchet
     // Quadratic bezier peak at t=0.5 = (start + 2*control + end)/4
@@ -465,6 +501,9 @@
 
     // Castles
     drawCastles(colors);
+
+    // Crowds
+    drawCrowds(colors);
 
     // Trebuchet
     drawTrebuchet(colors);
@@ -546,6 +585,20 @@
       ctx.font = '14px monospace';
       ctx.textAlign = 'right';
       ctx.fillText('WIND ' + windStr + ' ' + wind.speed + 'km/h', CANVAS_W - 10, 20);
+    }
+
+    // Combo display during flight
+    if (gamePhase === 'flight' && comboCount > 0) {
+      var scale = comboDisplayTimer > 20 ? 1.3 : 1;
+      ctx.save();
+      ctx.translate(60, 25);
+      ctx.scale(scale, scale);
+      ctx.fillStyle = colors.accent;
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('COMBO x' + comboMultiplier, 0, 0);
+      ctx.restore();
+      if (comboDisplayTimer > 0) comboDisplayTimer--;
     }
 
     ctx.restore();
@@ -757,6 +810,158 @@
     }
   }
 
+  // ── Terrain hills/valleys ────────────────────
+  function initHills() {
+    hills = [];
+    var castlePositions = [];
+    for (var ci = 0; ci < castles.length; ci++) {
+      castlePositions.push(castles[ci].x);
+    }
+    var count = 8 + Math.floor(Math.random() * 5);
+    for (var i = 0; i < count; i++) {
+      var dist = 50 + Math.random() * 950;
+      var worldX = TREBUCHET_X + dist * PIXELS_PER_METER;
+      // Avoid castle positions (±30px buffer) and trebuchet hill
+      var tooClose = false;
+      for (var j = 0; j < castlePositions.length; j++) {
+        if (Math.abs(worldX - castlePositions[j]) < 30) { tooClose = true; break; }
+      }
+      if (Math.abs(worldX - TREBUCHET_X) < 80) tooClose = true;
+      if (tooClose) continue;
+      var isValley = Math.random() < 0.35;
+      hills.push({
+        x: worldX,
+        width: 40 + Math.random() * 60,
+        height: isValley ? -(5 + Math.random() * 7) : (8 + Math.random() * 12)
+      });
+    }
+  }
+
+  function getGroundY(worldX) {
+    for (var i = 0; i < hills.length; i++) {
+      var h = hills[i];
+      var left = h.x - h.width / 2;
+      var right = h.x + h.width / 2;
+      if (worldX >= left && worldX <= right) {
+        // Parabolic interpolation: peak at center
+        var t = (worldX - left) / (right - left); // 0..1
+        var peak = 4 * t * (1 - t); // 0 at edges, 1 at center
+        return GROUND_Y - h.height * peak;
+      }
+    }
+    return GROUND_Y;
+  }
+
+  function drawHills(colors) {
+    for (var i = 0; i < hills.length; i++) {
+      var h = hills[i];
+      var cx = h.x - cameraX;
+      if (cx < -h.width && cx > CANVAS_W + h.width) continue;
+      if (h.height > 0) {
+        // Hill: raised bump
+        ctx.fillStyle = colorMix(colors.fg, 0.18, colors.bg);
+        ctx.beginPath();
+        ctx.moveTo(cx - h.width / 2, GROUND_Y);
+        ctx.quadraticCurveTo(cx, GROUND_Y - h.height * 2, cx + h.width / 2, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Valley: dip below ground
+        ctx.fillStyle = colors.bg;
+        ctx.beginPath();
+        ctx.moveTo(cx - h.width / 2, GROUND_Y);
+        ctx.quadraticCurveTo(cx, GROUND_Y - h.height * 2, cx + h.width / 2, GROUND_Y);
+        ctx.closePath();
+        ctx.fill();
+        // Redraw ground line segments around valley
+        ctx.strokeStyle = colorMix(colors.fg, 0.3, colors.bg);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - h.width / 2, GROUND_Y);
+        ctx.quadraticCurveTo(cx, GROUND_Y - h.height * 2, cx + h.width / 2, GROUND_Y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ── Wind particles ──────────────────────────
+  function spawnWindParticles() {
+    if (windParticles.length >= 40) return;
+    var count = wind.speed > 15 ? 3 : wind.speed > 8 ? 2 : 1;
+    for (var i = 0; i < count; i++) {
+      if (windParticles.length >= 40) break;
+      windParticles.push({
+        x: wind.direction > 0 ? cameraX - 10 : cameraX + CANVAS_W + 10,
+        y: Math.random() * GROUND_Y,
+        alpha: 0.1 + Math.random() * 0.2,
+        size: 4 + Math.random() * 4 * (wind.speed / 25),
+        life: 30 + Math.floor(Math.random() * 20)
+      });
+    }
+  }
+
+  function drawWindParticles(colors) {
+    for (var i = windParticles.length - 1; i >= 0; i--) {
+      var wp = windParticles[i];
+      wp.x += wind.direction * wind.speed * 0.3;
+      wp.y += (Math.random() - 0.5) * 0.5;
+      wp.life--;
+      wp.alpha -= 0.005;
+      if (wp.life <= 0 || wp.alpha <= 0) {
+        windParticles.splice(i, 1);
+        continue;
+      }
+      var sx = wp.x - cameraX;
+      if (sx < -20 || sx > CANVAS_W + 20) continue;
+      var angle = wind.direction > 0 ? Math.PI * 0.1 : Math.PI * 0.9;
+      ctx.globalAlpha = wp.alpha;
+      ctx.strokeStyle = colorMix(colors.fg, wp.alpha, colors.bg);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(sx, wp.y);
+      ctx.lineTo(sx + Math.cos(angle) * wp.size, wp.y + Math.sin(angle) * wp.size);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Best distance flag ───────────────────────
+  function drawBestFlag(colors) {
+    if (stats.bestDistance <= 0) return;
+    var bfx = TREBUCHET_X + stats.bestDistance * PIXELS_PER_METER - cameraX;
+    if (bfx < -20 || bfx > CANVAS_W + 20) return;
+
+    var alpha = bestFlagFlash > 0 ? 0.7 : 0.3;
+    var flagColor = colorMix(colors.accent, alpha, colors.bg);
+
+    // Dashed vertical line
+    ctx.strokeStyle = flagColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(bfx, GROUND_Y);
+    ctx.lineTo(bfx, GROUND_Y - 24);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Tiny pennant triangle
+    ctx.fillStyle = flagColor;
+    ctx.beginPath();
+    ctx.moveTo(bfx, GROUND_Y - 24);
+    ctx.lineTo(bfx + 8, GROUND_Y - 20);
+    ctx.lineTo(bfx, GROUND_Y - 16);
+    ctx.closePath();
+    ctx.fill();
+
+    // "BEST" label
+    ctx.fillStyle = flagColor;
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('BEST', bfx, GROUND_Y - 28);
+
+    if (bestFlagFlash > 0) bestFlagFlash--;
+  }
+
   // ── Castles ──────────────────────────────────
   function initCastles() {
     var distances = [100, 200, 350, 500, 700, 900];
@@ -784,6 +989,26 @@
       var c = castles[i];
       var cx = c.x - cameraX;
       if (cx < -60 || cx > CANVAS_W + 60) continue;
+
+      // Burning castle (inferno)
+      if (c.burning && c.burning > 0) {
+        c.burning--;
+        // Fire particles while burning
+        if (Math.random() < 0.6) {
+          particles.push({
+            x: c.x + (Math.random() - 0.5) * c.width,
+            y: GROUND_Y - Math.random() * c.height,
+            vx: (Math.random() - 0.5) * 2,
+            vy: -1 - Math.random() * 3,
+            life: 15 + Math.floor(Math.random() * 10),
+            maxLife: 25,
+            color: ['#ff4400', '#ff6622', '#ff8844'][Math.floor(Math.random() * 3)]
+          });
+        }
+        if (c.burning <= 0) {
+          c.destroyed = true;
+        }
+      }
 
       if (c.destroyed) {
         // Rubble — small rectangles on ground
@@ -873,19 +1098,40 @@
       if (projectilePos.x + pr > left && projectilePos.x - pr < right &&
           projectilePos.y + pr > top && projectilePos.y - pr < GROUND_Y) {
         // Hit!
-        c.destroyed = true;
         castlesDestroyed++;
-        castleBonus += c.bonus;
+        comboCount++;
+        if (comboCount >= 3) comboMultiplier = 3;
+        else if (comboCount >= 2) comboMultiplier = 2;
+        else if (comboCount >= 1) comboMultiplier = 1.5;
+        comboDisplayTimer = 30;
+        if (comboCount > bestCombo) bestCombo = comboCount;
+        var adjustedBonus = Math.floor(c.bonus * comboMultiplier);
+        castleBonus += adjustedBonus;
 
-        // Speed boost — keep flying through
-        projectileVel.x *= 1.3;
-        projectileVel.y = -Math.abs(projectileVel.y) * 0.4 - 2;
+        // Pierce: no velocity change; otherwise speed boost
+        if (proj && proj.special === 'pierce') {
+          // pass through without speed penalty, castle still destroyed
+          c.destroyed = true;
+        } else if (proj && proj.special === 'inferno') {
+          // Inferno: delay destruction, fire particles
+          c.burning = 20;
+          c.destroyed = false; // burns first, then destroyed
+        } else {
+          c.destroyed = true;
+          // Speed boost — keep flying through
+          projectileVel.x *= 1.3;
+          projectileVel.y = -Math.abs(projectileVel.y) * 0.4 - 2;
+        }
 
         // Crumble particles (rectangular, browns/greys)
         var crumbleColors = ['#8B7355', '#A0926B', '#6B5B45', '#999999', '#777777'];
-        for (var pi = 0; pi < 20; pi++) {
+        var particleCount = (proj && proj.special === 'inferno') ? 10 : 20;
+        for (var pi = 0; pi < particleCount; pi++) {
           var angle = Math.random() * Math.PI * 2;
           var speed = 1.5 + Math.random() * 3.5;
+          var pColor = (proj && proj.special === 'inferno')
+            ? (['#ff4400', '#ff6622', '#ff8844', '#ffaa44'][Math.floor(Math.random() * 4)])
+            : crumbleColors[Math.floor(Math.random() * crumbleColors.length)];
           particles.push({
             x: c.x + (Math.random() - 0.5) * c.width,
             y: GROUND_Y - Math.random() * c.height,
@@ -893,24 +1139,213 @@
             vy: Math.sin(angle) * speed - 3,
             life: 25 + Math.floor(Math.random() * 20),
             maxLife: 45,
-            color: crumbleColors[Math.floor(Math.random() * crumbleColors.length)]
+            color: pColor
           });
         }
+
+        // Sound
+        playCastleHitSound();
+        if (comboCount > 1) playComboSound(comboCount);
 
         // Screen shake
         shakeFrames = 10;
         shakeIntensity = 8;
 
         // Bonus text
+        var comboStr = comboCount > 1 ? ' x' + comboMultiplier + ' COMBO!' : ' BONUS';
         bonusTexts.push({
           x: c.x,
           y: GROUND_Y - c.height - 15,
-          text: '+' + c.bonus + ' BONUS',
+          text: '+' + adjustedBonus + comboStr,
           life: 60,
           maxLife: 60
         });
 
         break; // one castle per frame
+      }
+    }
+  }
+
+  // ── Peasant Crowds ──────────────────────────
+  function initCrowds() {
+    crowds = [];
+    crowdBonus = 0;
+    crowdsScattered = 0;
+    var castleXs = [];
+    for (var ci = 0; ci < castles.length; ci++) {
+      castleXs.push(castles[ci].x);
+    }
+    var count = 4 + Math.floor(Math.random() * 3);
+    for (var i = 0; i < count; i++) {
+      var dist = 60 + Math.random() * 880;
+      var worldX = TREBUCHET_X + dist * PIXELS_PER_METER;
+      // Avoid castle positions and trebuchet
+      var tooClose = false;
+      for (var j = 0; j < castleXs.length; j++) {
+        if (Math.abs(worldX - castleXs[j]) < 50) { tooClose = true; break; }
+      }
+      if (Math.abs(worldX - TREBUCHET_X) < 100) tooClose = true;
+      if (tooClose) { i--; count--; if (count < 4) break; continue; }
+
+      var peasantCount = 3 + Math.floor(Math.random() * 6);
+      var peasants = [];
+      for (var p = 0; p < peasantCount; p++) {
+        peasants.push({
+          x: (Math.random() - 0.5) * 30,
+          y: 0,
+          vx: 0, vy: 0,
+          scattered: false,
+          scatterTimer: 0,
+          speechTimer: 0,
+          speechText: ''
+        });
+      }
+      crowds.push({
+        x: worldX,
+        peasants: peasants,
+        scattered: false,
+        bonusAwarded: false
+      });
+    }
+  }
+
+  function drawCrowds(colors) {
+    var peasantColor = colorMix(colors.fg, 0.6, colors.bg);
+    for (var ci = 0; ci < crowds.length; ci++) {
+      var crowd = crowds[ci];
+      var cx = crowd.x - cameraX;
+      if (cx < -60 || cx > CANVAS_W + 60) continue;
+
+      for (var pi = 0; pi < crowd.peasants.length; pi++) {
+        var p = crowd.peasants[pi];
+        var px = cx + p.x;
+        var py = GROUND_Y + p.y;
+
+        if (p.scattered) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.1;
+          p.scatterTimer--;
+          if (p.scatterTimer <= 0) continue;
+          ctx.globalAlpha = Math.max(0, p.scatterTimer / 40);
+        } else {
+          // Idle bob
+          var bob = Math.sin(Date.now() * 0.003 + pi * 1.2) * 1.5;
+          py += bob;
+        }
+
+        // Stick figure
+        ctx.strokeStyle = peasantColor;
+        ctx.fillStyle = peasantColor;
+        ctx.lineWidth = 1;
+        // Head
+        ctx.beginPath();
+        ctx.arc(px, py - 14, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Body
+        ctx.beginPath();
+        ctx.moveTo(px, py - 11);
+        ctx.lineTo(px, py - 3);
+        ctx.stroke();
+        // Legs
+        ctx.beginPath();
+        ctx.moveTo(px, py - 3);
+        ctx.lineTo(px - 3, py);
+        ctx.moveTo(px, py - 3);
+        ctx.lineTo(px + 3, py);
+        ctx.stroke();
+        // Arms
+        if (p.scattered) {
+          // Arms up
+          ctx.beginPath();
+          ctx.moveTo(px, py - 9);
+          ctx.lineTo(px - 4, py - 14);
+          ctx.moveTo(px, py - 9);
+          ctx.lineTo(px + 4, py - 14);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(px, py - 9);
+          ctx.lineTo(px - 4, py - 6);
+          ctx.moveTo(px, py - 9);
+          ctx.lineTo(px + 4, py - 6);
+          ctx.stroke();
+        }
+
+        // Speech bubble
+        if (p.speechTimer > 0) {
+          p.speechTimer--;
+          ctx.globalAlpha = Math.min(1, p.speechTimer / 10);
+          ctx.fillStyle = colors.fg;
+          ctx.font = '8px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(p.speechText, px, py - 20);
+        }
+
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function checkCrowdCollision() {
+    for (var ci = 0; ci < crowds.length; ci++) {
+      var crowd = crowds[ci];
+      if (crowd.scattered) continue;
+      for (var pi = 0; pi < crowd.peasants.length; pi++) {
+        var p = crowd.peasants[pi];
+        if (p.scattered) continue;
+        var peasantWorldX = crowd.x + p.x;
+        var dx = projectilePos.x - peasantWorldX;
+        var dy = projectilePos.y - GROUND_Y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Speech trigger when projectile gets close
+        if (dist < 150 && p.speechTimer === 0 && !crowd.scattered && Math.random() < 0.05) {
+          p.speechTimer = 30;
+          p.speechText = Math.random() < 0.5 ? '!' : 'RUN!';
+        }
+
+        if (dist < 40) {
+          // Scatter the whole crowd
+          crowd.scattered = true;
+          var bonus = 5 + Math.floor(Math.random() * 6);
+
+          // Combo integration
+          comboCount++;
+          if (comboCount >= 3) comboMultiplier = 3;
+          else if (comboCount >= 2) comboMultiplier = 2;
+          else if (comboCount >= 1) comboMultiplier = 1.5;
+          comboDisplayTimer = 30;
+          if (comboCount > bestCombo) bestCombo = comboCount;
+          var adjustedBonus = Math.floor(bonus * comboMultiplier);
+
+          crowdBonus += adjustedBonus;
+          crowdsScattered++;
+
+          playCrowdScatterSound();
+          if (comboCount > 1) playComboSound(comboCount);
+
+          // Scatter all peasants in this crowd
+          for (var si = 0; si < crowd.peasants.length; si++) {
+            var sp = crowd.peasants[si];
+            sp.scattered = true;
+            sp.scatterTimer = 40;
+            var sa = Math.random() * Math.PI * 2;
+            sp.vx = Math.cos(sa) * (1 + Math.random() * 2);
+            sp.vy = -Math.random() * 3;
+          }
+
+          var comboStr = comboCount > 1 ? ' x' + comboMultiplier + ' COMBO!' : '';
+          bonusTexts.push({
+            x: crowd.x,
+            y: GROUND_Y - 20,
+            text: '+' + adjustedBonus + comboStr,
+            life: 60,
+            maxLife: 60
+          });
+
+          break;
+        }
       }
     }
   }
@@ -1053,6 +1488,146 @@
     return 'color-mix(in srgb, ' + c1 + ' ' + Math.round(amount * 100) + '%, ' + c2 + ')';
   }
 
+  // ── Sound Effects (Web Audio API) ────────────
+  var audioCtx = null;
+  var isMuted = false;
+  var whooshNode = null;
+  var whooshGain = null;
+
+  try { isMuted = localStorage.getItem('trebuchet-muted') === 'true'; } catch (e) {}
+
+  function initAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {}
+  }
+
+  function playTone(freq, duration, type, volume) {
+    if (!audioCtx || isMuted) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(volume || 0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function playNoise(duration, volume) {
+    if (!audioCtx || isMuted) return;
+    try {
+      var bufferSize = audioCtx.sampleRate * duration;
+      var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      var src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      var gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(volume || 0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start();
+    } catch (e) {}
+  }
+
+  function playSweep(startFreq, endFreq, duration, type) {
+    if (!audioCtx || isMuted) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  function playLaunchSound() { playSweep(200, 600, 0.3, 'sine'); }
+
+  function startWhoosh() {
+    if (!audioCtx || isMuted) return;
+    try {
+      var bufferSize = audioCtx.sampleRate * 2;
+      var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      var data = buffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      whooshNode = audioCtx.createBufferSource();
+      whooshNode.buffer = buffer;
+      whooshNode.loop = true;
+      whooshGain = audioCtx.createGain();
+      whooshGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+      whooshNode.connect(whooshGain);
+      whooshGain.connect(audioCtx.destination);
+      whooshNode.start();
+    } catch (e) {}
+  }
+
+  function updateWhoosh(speed) {
+    if (whooshGain) {
+      var vol = Math.min(0.08, speed * 0.003);
+      try { whooshGain.gain.setValueAtTime(vol, audioCtx.currentTime); } catch (e) {}
+    }
+  }
+
+  function stopWhoosh() {
+    try {
+      if (whooshNode) { whooshNode.stop(); whooshNode = null; }
+      whooshGain = null;
+    } catch (e) {}
+  }
+
+  function playCastleHitSound() {
+    playTone(80, 0.2, 'square', 0.15);
+    playNoise(0.1, 0.12);
+  }
+
+  function playCrowdScatterSound() {
+    if (!audioCtx || isMuted) return;
+    for (var i = 0; i < 3; i++) {
+      setTimeout(function () { playTone(800, 0.05, 'sine', 0.1); }, i * 40);
+    }
+  }
+
+  function playBounceSound() { playTone(120, 0.1, 'triangle', 0.12); }
+
+  function playLandingSound() {
+    playTone(60, 0.3, 'sine', 0.15);
+    playNoise(0.15, 0.1);
+  }
+
+  function playComboSound(level) {
+    if (!audioCtx || isMuted) return;
+    var notes = [262, 330, 392, 523]; // C4, E4, G4, C5
+    var max = Math.min(level, notes.length);
+    for (var i = 0; i < max; i++) {
+      (function (idx) {
+        setTimeout(function () { playTone(notes[idx], 0.12, 'sine', 0.12); }, idx * 80);
+      })(i);
+    }
+  }
+
+  function playRecordSound() {
+    if (!audioCtx || isMuted) return;
+    var notes = [523, 659, 784]; // C5, E5, G5
+    for (var i = 0; i < notes.length; i++) {
+      (function (idx) {
+        setTimeout(function () { playTone(notes[idx], 0.15, 'sine', 0.15); }, idx * 120);
+      })(i);
+    }
+  }
+
   // ── Game flow ─────────────────────────────────
   function startGame() {
     startOverlay.classList.add('tb-hidden');
@@ -1069,6 +1644,7 @@
     swingAngle = 0.3; // slight rest angle
     trail = [];
     particles = [];
+    windParticles = [];
     flagX = 0;
     launchDistance = 0;
     bounceCount = 0;
@@ -1080,6 +1656,8 @@
     lockedAngle = 45;
 
     initCastles();
+    initCrowds();
+    initHills();
     generateWind();
     dealHand();
     renderCards();
@@ -1156,6 +1734,7 @@
     animFrame = 0;
     swingAngle = 0.3;
     calculateLaunch();
+    playLaunchSound();
     requestAnimationFrame(tickLaunch);
   }
 
@@ -1173,6 +1752,7 @@
     if (animFrame >= SWING_FRAMES) {
       gamePhase = 'flight';
       animFrame = 0;
+      startWhoosh();
       requestAnimationFrame(tickFlight);
       return;
     }
@@ -1185,7 +1765,19 @@
     animFrame++;
 
     stepProjectile();
+    var flightSpeed = Math.sqrt(projectileVel.x * projectileVel.x + projectileVel.y * projectileVel.y);
+    updateWhoosh(flightSpeed);
     checkCastleCollision();
+    checkCrowdCollision();
+    spawnWindParticles();
+
+    // Best flag flash detection
+    if (stats.bestDistance > 0 && bestFlagFlash === 0) {
+      var bestWorldX = TREBUCHET_X + stats.bestDistance * PIXELS_PER_METER;
+      if (projectilePos.x >= bestWorldX && projectilePos.x < bestWorldX + Math.abs(projectileVel.x) + 5) {
+        bestFlagFlash = 20;
+      }
+    }
 
     // Camera follows projectile
     targetCameraX = projectilePos.x - CANVAS_W * 0.3;
@@ -1193,21 +1785,35 @@
     cameraX += (targetCameraX - cameraX) * CAM_EASE;
 
     // Check if landed or bouncing
-    if (projectilePos.y >= GROUND_Y && animFrame > 5) {
-      projectilePos.y = GROUND_Y;
+    var groundAtX = getGroundY(projectilePos.x);
+    if (projectilePos.y >= groundAtX && animFrame > 5) {
+      projectilePos.y = groundAtX;
       var impactSpeed = Math.sqrt(projectileVel.x * projectileVel.x + projectileVel.y * projectileVel.y);
       var proj = selectedParts.projectile;
       var cor = 0.15 + (100 - proj.weight) / 250;
 
-      if (impactSpeed > 3 && bounceCount < 3) {
-        // Bounce
+      // Hill slope deflection
+      var slopeLeft = getGroundY(projectilePos.x - 2);
+      var slopeRight = getGroundY(projectilePos.x + 2);
+      var slopeAngle = Math.atan2(slopeLeft - slopeRight, 4);
+
+      var maxBounces = (proj.special === 'shockwave') ? 4 : 3;
+      if (impactSpeed > 3 && bounceCount < maxBounces) {
+        // Bounce — adjust velocity based on hill slope
         projectileVel.y = -Math.abs(projectileVel.y) * cor;
         projectileVel.x *= 0.8;
+        // Slope deflection: redirect some vertical energy into horizontal
+        if (Math.abs(slopeAngle) > 0.05) {
+          projectileVel.x += Math.sin(slopeAngle) * impactSpeed * 0.3;
+          projectileVel.y -= Math.abs(Math.sin(slopeAngle)) * impactSpeed * 0.15;
+        }
         bounceCount++;
+        playBounceSound();
         var colors = getThemeColors();
-        spawnImpactParticles(projectilePos.x, GROUND_Y, colors.accent, 8);
-        shakeFrames = 4;
-        shakeIntensity = 2 + impactSpeed * 0.1;
+        spawnImpactParticles(projectilePos.x, groundAtX, colors.accent, 8);
+        var shockMult = (proj.special === 'shockwave') ? 2 : 1;
+        shakeFrames = 4 * shockMult;
+        shakeIntensity = (2 + impactSpeed * 0.1) * shockMult;
       } else {
         // Final landing
         launchDistance = Math.max(0, (projectilePos.x - TREBUCHET_X) / PIXELS_PER_METER);
@@ -1232,6 +1838,8 @@
 
   function onLanded() {
     gamePhase = 'landed';
+    stopWhoosh();
+    playLandingSound();
     var colors = getThemeColors();
 
     // Screen shake
@@ -1241,6 +1849,24 @@
 
     // Impact particles
     spawnImpactParticles(projectilePos.x, GROUND_Y, colors.accent);
+
+    // Explode special: ring of particles + distance bonus
+    var proj = selectedParts.projectile;
+    if (proj && proj.special === 'explode') {
+      for (var ei = 0; ei < 16; ei++) {
+        var ea = (ei / 16) * Math.PI * 2;
+        particles.push({
+          x: projectilePos.x,
+          y: GROUND_Y,
+          vx: Math.cos(ea) * 5,
+          vy: Math.sin(ea) * 5 - 2,
+          life: 30,
+          maxLife: 30,
+          color: '#ff8844'
+        });
+      }
+      launchDistance *= 1.2;
+    }
 
     // Zoom out to show distance
     var showCamX = Math.max(0, flagX - CANVAS_W * 0.8);
@@ -1291,11 +1917,15 @@
     // Castle bonus
     coinReward += castleBonus;
 
+    // Crowd bonus
+    coinReward += crowdBonus;
+
     // Record bonus
     if (isRecord) {
       recordBonus = 50;
       coinReward += recordBonus;
       stats.bestDistance = dist;
+      playRecordSound();
     }
 
     // Milestone unlocks
@@ -1352,6 +1982,28 @@
       }
     }
 
+    // Crowd results
+    var crowdRow = document.getElementById('tb-result-crowds-row');
+    if (crowdRow) {
+      if (crowdsScattered > 0) {
+        crowdRow.textContent = 'Crowds scattered: ' + crowdsScattered + ' (+' + crowdBonus + ' coins)';
+        crowdRow.classList.remove('tb-hidden');
+      } else {
+        crowdRow.classList.add('tb-hidden');
+      }
+    }
+
+    // Combo results
+    var comboRow = document.getElementById('tb-result-combo-row');
+    if (comboRow) {
+      if (bestCombo > 1) {
+        comboRow.textContent = 'Best combo: x' + comboMultiplier;
+        comboRow.classList.remove('tb-hidden');
+      } else {
+        comboRow.classList.add('tb-hidden');
+      }
+    }
+
     if (isRecord) {
       resultRecord.classList.remove('tb-hidden');
     } else {
@@ -1371,7 +2023,21 @@
   }
 
   // ── Event listeners ───────────────────────────
-  playBtn.addEventListener('click', startGame);
+  var muteBtn = document.getElementById('tb-mute-btn');
+  function updateMuteBtn() {
+    if (muteBtn) muteBtn.textContent = isMuted ? '[x]' : '[\u266A]';
+  }
+  updateMuteBtn();
+  if (muteBtn) {
+    muteBtn.addEventListener('click', function () {
+      initAudio();
+      isMuted = !isMuted;
+      try { localStorage.setItem('trebuchet-muted', isMuted ? 'true' : 'false'); } catch (e) {}
+      updateMuteBtn();
+    });
+  }
+
+  playBtn.addEventListener('click', function () { initAudio(); startGame(); });
 
   nextBtn.addEventListener('click', function () {
     resultsOverlay.classList.add('tb-hidden');
@@ -1425,6 +2091,8 @@
 
   // ── Init ──────────────────────────────────────
   initCastles();
+  initCrowds();
+  initHills();
   updateHUD();
   updateStatsPanel();
   partsContainer.style.display = 'none';
