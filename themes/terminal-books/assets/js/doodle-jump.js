@@ -358,7 +358,8 @@
       type: type,
       alive: true,
       vanishTimer: 0,
-      moveDir: type === PLAT_MOVING ? (Math.random() < 0.5 ? 1 : -1) : 0
+      moveDir: type === PLAT_MOVING ? (Math.random() < 0.5 ? 1 : -1) : 0,
+      hits: 0
     };
     platforms.push(p);
 
@@ -683,21 +684,28 @@
 
           if (!hitSpring) {
             if (p.type === PLAT_BREAKABLE) {
-              p.alive = false;
-              // Spawn break animation pieces
-              for (var b = 0; b < 4; b++) {
-                breakAnimations.push({
-                  x: p.x + (b % 2) * (PLAT_W / 2),
-                  y: p.y,
-                  w: PLAT_W / 2,
-                  h: PLAT_H / 2,
-                  vx: (b % 2 === 0 ? -1 : 1) * (1 + Math.random()),
-                  vy: -2 + Math.random() * 2,
-                  life: 30,
-                  maxLife: 30
-                });
+              p.hits++;
+              if (p.hits >= 2) {
+                p.alive = false;
+                // Spawn break animation pieces
+                for (var b = 0; b < 4; b++) {
+                  breakAnimations.push({
+                    x: p.x + (b % 2) * (PLAT_W / 2),
+                    y: p.y,
+                    w: PLAT_W / 2,
+                    h: PLAT_H / 2,
+                    vx: (b % 2 === 0 ? -1 : 1) * (1 + Math.random()),
+                    vy: -2 + Math.random() * 2,
+                    life: 30,
+                    maxLife: 30
+                  });
+                }
+                // Don't bounce — player falls through
+              } else {
+                // First hit: bounce but crack
+                playerVelY = BOUNCE_VEL;
+                playerY = p.y - PLAYER_H;
               }
-              // Don't bounce — player falls through
             } else if (p.type === PLAT_VANISHING) {
               playerVelY = BOUNCE_VEL;
               playerY = p.y - PLAYER_H;
@@ -1106,7 +1114,7 @@
     ctx.fillStyle = platColor;
     if (p.type === PLAT_NORMAL) ctx.fillText('========', sx + p.w / 2, sy + PLAT_H - 2);
     else if (p.type === PLAT_MOVING) ctx.fillText('<======>', sx + p.w / 2, sy + PLAT_H - 2);
-    else if (p.type === PLAT_BREAKABLE) ctx.fillText('=#=##=#=', sx + p.w / 2, sy + PLAT_H - 2);
+    else if (p.type === PLAT_BREAKABLE) ctx.fillText(p.hits > 0 ? '=X=#X=#X' : '=#=##=#=', sx + p.w / 2, sy + PLAT_H - 2);
     else if (p.type === PLAT_VANISHING) ctx.fillText('........', sx + p.w / 2, sy + PLAT_H - 2);
 
     ctx.restore();
