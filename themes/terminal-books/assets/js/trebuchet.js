@@ -7,7 +7,7 @@
   var CANVAS_H = 340;
   var GROUND_Y = 280; // y position of ground line on canvas
   var GRAVITY = 9.8;
-  var BASE_POWER = 28;
+  var BASE_POWER = 35;
   var DT = 0.05;
   var PIXELS_PER_METER = 4; // for camera / distance rendering
   var TREBUCHET_X = 80; // world x position of trebuchet base
@@ -133,6 +133,18 @@
   var shakeFrames = 0;
   var shakeIntensity = 0;
   var flagX = 0;
+  var bounceCount = 0;
+
+  // Power meter state
+  var powerMeterValue = 0;
+  var powerMeterDir = 1;
+  var powerMeterSpeed = 0.025;
+  var lockedPower = 0;
+
+  // Angle aimer state
+  var angleSweepValue = 45;
+  var angleSweepDir = 1;
+  var lockedAngle = 45;
 
   // Parallax clouds
   var clouds = [];
@@ -328,13 +340,18 @@
     var sl = selectedParts.sling;
     var proj = selectedParts.projectile;
 
-    var launchSpeed = BASE_POWER * (cw.power / 100) * (arm.leverage / 100) * 1.8;
+    var baseLaunchSpeed = BASE_POWER * (cw.power / 100) * (arm.leverage / 100) * 1.8;
 
     // Elastic band bonus
-    if (sl.angleMod === 5) launchSpeed *= 1.08;
+    if (sl.angleMod === 5) baseLaunchSpeed *= 1.08;
 
-    var variance = (100 - sl.accuracy) / 5;
-    var releaseAngle = 45 + sl.angleMod + (Math.random() * 2 - 1) * variance;
+    // Apply power meter result (0.5x to 1.25x)
+    var powerMultiplier = 0.5 + lockedPower * 0.75;
+    var launchSpeed = baseLaunchSpeed * powerMultiplier;
+
+    // Use locked angle with small accuracy-based jitter
+    var jitter = (100 - sl.accuracy) / 20;
+    var releaseAngle = lockedAngle + (Math.random() * 2 - 1) * jitter;
     var rad = releaseAngle * Math.PI / 180;
 
     projectilePos.x = TREBUCHET_X + 30;
@@ -343,21 +360,23 @@
     projectileVel.y = -Math.sin(rad) * launchSpeed;
 
     trail = [];
+    bounceCount = 0;
   }
 
   function stepProjectile() {
     var proj = selectedParts.projectile;
-    var windForce = wind.direction * wind.speed * 0.04 * (1 - proj.weight / 100);
+    var windForce = wind.direction * wind.speed * 0.15 * (1 - proj.weight / 100);
 
     projectileVel.x += windForce * DT;
     projectileVel.x *= (1 - proj.drag * DT * 0.5);
-    projectileVel.y += GRAVITY * DT * 8;
+    projectileVel.y *= (1 - proj.drag * DT * 0.12);
+    projectileVel.y += GRAVITY * DT * 3.5;
 
     projectilePos.x += projectileVel.x;
     projectilePos.y += projectileVel.y;
 
     trail.push({ x: projectilePos.x, y: projectilePos.y });
-    if (trail.length > 200) trail.shift();
+    if (trail.length > 300) trail.shift();
   }
 
   // ── Drawing ───────────────────────────────────
@@ -484,15 +503,25 @@
     // Countdown
     if (gamePhase === 'countdown') {
       ctx.fillStyle = colors.accent;
-      ctx.font = 'bold 64px monospace';
+      ctx.font = 'bold 48px monospace';
       ctx.textAlign = 'center';
       ctx.globalAlpha = 0.8;
-      ctx.fillText(String(countdownNum), CANVAS_W / 2, CANVAS_H / 2);
+      ctx.fillText('FIRE!', CANVAS_W / 2, CANVAS_H / 2);
       ctx.globalAlpha = 1;
     }
 
+    // Power meter
+    if (gamePhase === 'power-charge') {
+      drawPowerMeter(colors);
+    }
+
+    // Angle aimer
+    if (gamePhase === 'angle-aim') {
+      drawAngleAimer(colors);
+    }
+
     // Wind indicator on canvas
-    if (gamePhase === 'build' || gamePhase === 'countdown') {
+    if (gamePhase === 'build' || gamePhase === 'power-charge' || gamePhase === 'angle-aim' || gamePhase === 'countdown') {
       var windStr = wind.direction > 0 ? '>>>' : '<<<';
       if (wind.speed <= 8) windStr = wind.direction > 0 ? '>' : '<';
       else if (wind.speed <= 16) windStr = wind.direction > 0 ? '>>' : '<<';
@@ -666,8 +695,9 @@
     ctx.globalAlpha = 1;
   }
 
-  function spawnImpactParticles(x, y, color) {
-    for (var i = 0; i < 20; i++) {
+  function spawnImpactParticles(x, y, color, count) {
+    var n = count || 20;
+    for (var i = 0; i < n; i++) {
       var angle = Math.random() * Math.PI * 2;
       var speed = 1 + Math.random() * 4;
       particles.push({
@@ -680,6 +710,138 @@
         color: color
       });
     }
+  }
+
+  // ── Power meter & angle aimer ─────────────────
+  function drawPowerMeter(colors) {
+    var barX = CANVAS_W - 50;
+    var barY = 50;
+    var barW = 24;
+    var barH = 180;
+
+    // Background
+    ctx.fillStyle = colorMix(colors.fg, 0.08, colors.bg);
+    ctx.fillRect(barX, barY, barW, barH);
+
+    // Border
+    ctx.strokeStyle = colorMix(colors.fg, 0.3, colors.bg);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(barX, barY, barW, barH);
+
+    // Sweet spot zone (top 20%)
+    ctx.fillStyle = colorMix(colors.accent, 0.15, colors.bg);
+    ctx.fillRect(barX + 2, barY + 2, barW - 4, barH * 0.2);
+
+    // Fill (from bottom up)
+    var fillH = barH * powerMeterValue;
+    ctx.fillStyle = colorMix(colors.accent, 0.5, colors.bg);
+    ctx.fillRect(barX + 2, barY + barH - fillH, barW - 4, fillH);
+
+    // Indicator line
+    var indicatorY = barY + barH - barH * powerMeterValue;
+    ctx.strokeStyle = colors.fg;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(barX - 6, indicatorY);
+    ctx.lineTo(barX + barW + 6, indicatorY);
+    ctx.stroke();
+
+    // Arrow indicators
+    ctx.fillStyle = colors.fg;
+    ctx.beginPath();
+    ctx.moveTo(barX - 6, indicatorY);
+    ctx.lineTo(barX - 12, indicatorY - 4);
+    ctx.lineTo(barX - 12, indicatorY + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(barX + barW + 6, indicatorY);
+    ctx.lineTo(barX + barW + 12, indicatorY - 4);
+    ctx.lineTo(barX + barW + 12, indicatorY + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Label
+    ctx.fillStyle = colors.fg;
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('POWER', barX + barW / 2, barY - 12);
+
+    // Percentage
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(Math.round(powerMeterValue * 100) + '%', barX + barW / 2, barY + barH + 18);
+
+    // Instruction
+    ctx.fillStyle = colorMix(colors.fg, 0.5, colors.bg);
+    ctx.font = '10px monospace';
+    ctx.fillText('TAP / CLICK', barX + barW / 2, barY + barH + 32);
+  }
+
+  function drawAngleAimer(colors) {
+    var bx = TREBUCHET_X - cameraX;
+    var by = GROUND_Y - HILL_HEIGHT - 30;
+    var arcRadius = 100;
+
+    // Arc background (dotted)
+    ctx.strokeStyle = colorMix(colors.fg, 0.2, colors.bg);
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.arc(bx, by, arcRadius, -75 * Math.PI / 180, -15 * Math.PI / 180);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Guide marks at 30, 45, 60
+    var guides = [30, 45, 60];
+    for (var gi = 0; gi < guides.length; gi++) {
+      var ga = guides[gi] * Math.PI / 180;
+      var gxS = bx + Math.cos(ga) * (arcRadius - 8);
+      var gyS = by - Math.sin(ga) * (arcRadius - 8);
+      var gxE = bx + Math.cos(ga) * (arcRadius + 8);
+      var gyE = by - Math.sin(ga) * (arcRadius + 8);
+
+      ctx.strokeStyle = colorMix(colors.fg, 0.3, colors.bg);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(gxS, gyS);
+      ctx.lineTo(gxE, gyE);
+      ctx.stroke();
+
+      ctx.fillStyle = colorMix(colors.fg, 0.4, colors.bg);
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      var lx = bx + Math.cos(ga) * (arcRadius + 20);
+      var ly = by - Math.sin(ga) * (arcRadius + 20);
+      ctx.fillText(guides[gi] + '\u00B0', lx, ly + 3);
+    }
+
+    // Sweep line
+    var sweepRad = angleSweepValue * Math.PI / 180;
+    var lineEndX = bx + Math.cos(sweepRad) * arcRadius;
+    var lineEndY = by - Math.sin(sweepRad) * arcRadius;
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(lineEndX, lineEndY);
+    ctx.stroke();
+
+    // Dot at end
+    ctx.fillStyle = colors.accent;
+    ctx.beginPath();
+    ctx.arc(lineEndX, lineEndY, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Angle text
+    ctx.fillStyle = colors.fg;
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('ANGLE: ' + Math.round(angleSweepValue) + '\u00B0', CANVAS_W / 2, 30);
+
+    // Instruction
+    ctx.fillStyle = colorMix(colors.fg, 0.5, colors.bg);
+    ctx.font = '10px monospace';
+    ctx.fillText('TAP / CLICK TO SET ANGLE', CANVAS_W / 2, 48);
   }
 
   // ── Color mix helper ──────────────────────────
@@ -706,6 +868,13 @@
     particles = [];
     flagX = 0;
     launchDistance = 0;
+    bounceCount = 0;
+    powerMeterValue = 0;
+    powerMeterDir = 1;
+    lockedPower = 0;
+    angleSweepValue = 45;
+    angleSweepDir = 1;
+    lockedAngle = 45;
 
     generateWind();
     dealHand();
@@ -715,28 +884,67 @@
     drawScene();
   }
 
+  function startPowerCharge() {
+    gamePhase = 'power-charge';
+    powerMeterValue = 0;
+    powerMeterDir = 1;
+    partsContainer.style.display = 'none';
+    actionsContainer.style.display = 'none';
+    canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    requestAnimationFrame(tickPowerCharge);
+  }
+
+  function tickPowerCharge() {
+    if (gamePhase !== 'power-charge') return;
+    powerMeterValue += powerMeterDir * powerMeterSpeed;
+    if (powerMeterValue >= 1) {
+      powerMeterValue = 1;
+      powerMeterDir = -1;
+    } else if (powerMeterValue <= 0) {
+      powerMeterValue = 0;
+      powerMeterDir = 1;
+    }
+    drawScene();
+    requestAnimationFrame(tickPowerCharge);
+  }
+
+  function startAngleAim() {
+    gamePhase = 'angle-aim';
+    angleSweepValue = 45;
+    angleSweepDir = 1;
+    requestAnimationFrame(tickAngleAim);
+  }
+
+  function tickAngleAim() {
+    if (gamePhase !== 'angle-aim') return;
+    var sl = selectedParts.sling;
+    var sweepSpeed = 2.0 - (sl.accuracy / 100) * 1.2;
+    angleSweepValue += angleSweepDir * sweepSpeed;
+    if (angleSweepValue >= 75) {
+      angleSweepValue = 75;
+      angleSweepDir = -1;
+    } else if (angleSweepValue <= 15) {
+      angleSweepValue = 15;
+      angleSweepDir = 1;
+    }
+    drawScene();
+    requestAnimationFrame(tickAngleAim);
+  }
+
   function startCountdown() {
     gamePhase = 'countdown';
     animFrame = 0;
-    countdownNum = 3;
-    partsContainer.style.display = 'none';
-    actionsContainer.style.display = 'none';
-    // Scroll canvas into view so the player can watch the launch
-    canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
     requestAnimationFrame(tickCountdown);
   }
 
   function tickCountdown() {
     if (gamePhase !== 'countdown') return;
     animFrame++;
-
-    countdownNum = 3 - Math.floor(animFrame / 40);
-    if (countdownNum <= 0) {
+    drawScene();
+    if (animFrame >= 25) {
       startLaunch();
       return;
     }
-
-    drawScene();
     requestAnimationFrame(tickCountdown);
   }
 
@@ -780,13 +988,29 @@
     if (targetCameraX < 0) targetCameraX = 0;
     cameraX += (targetCameraX - cameraX) * CAM_EASE;
 
-    // Check if landed
+    // Check if landed or bouncing
     if (projectilePos.y >= GROUND_Y && animFrame > 5) {
       projectilePos.y = GROUND_Y;
-      launchDistance = Math.max(0, (projectilePos.x - TREBUCHET_X) / PIXELS_PER_METER);
-      flagX = projectilePos.x;
-      onLanded();
-      return;
+      var impactSpeed = Math.sqrt(projectileVel.x * projectileVel.x + projectileVel.y * projectileVel.y);
+      var proj = selectedParts.projectile;
+      var cor = 0.15 + (100 - proj.weight) / 250;
+
+      if (impactSpeed > 3 && bounceCount < 3) {
+        // Bounce
+        projectileVel.y = -Math.abs(projectileVel.y) * cor;
+        projectileVel.x *= 0.8;
+        bounceCount++;
+        var colors = getThemeColors();
+        spawnImpactParticles(projectilePos.x, GROUND_Y, colors.accent, 8);
+        shakeFrames = 4;
+        shakeIntensity = 2 + impactSpeed * 0.1;
+      } else {
+        // Final landing
+        launchDistance = Math.max(0, (projectilePos.x - TREBUCHET_X) / PIXELS_PER_METER);
+        flagX = projectilePos.x;
+        onLanded();
+        return;
+      }
     }
 
     // Safety: if projectile goes way off screen or too many frames
@@ -822,9 +1046,9 @@
     var landFrames = 0;
     function tickLand() {
       landFrames++;
-      cameraX += (targetCameraX - cameraX) * 0.05;
+      cameraX += (targetCameraX - cameraX) * 0.1;
       drawScene();
-      if (landFrames < 60) {
+      if (landFrames < 40) {
         requestAnimationFrame(tickLand);
       } else {
         showResults();
@@ -941,7 +1165,7 @@
     if (gamePhase !== 'build') return;
     if (!selectedParts.counterweight || !selectedParts.arm ||
         !selectedParts.sling || !selectedParts.projectile) return;
-    startCountdown();
+    startPowerCharge();
   });
 
   rerollBtn.addEventListener('click', function () {
@@ -961,6 +1185,29 @@
         dealHand();
         renderCards();
       }
+    }
+  });
+
+  // Canvas click/touch for power and angle phases
+  canvas.addEventListener('click', function () {
+    if (gamePhase === 'power-charge') {
+      lockedPower = powerMeterValue;
+      startAngleAim();
+    } else if (gamePhase === 'angle-aim') {
+      lockedAngle = angleSweepValue;
+      startCountdown();
+    }
+  });
+
+  canvas.addEventListener('touchend', function (e) {
+    if (gamePhase === 'power-charge') {
+      e.preventDefault();
+      lockedPower = powerMeterValue;
+      startAngleAim();
+    } else if (gamePhase === 'angle-aim') {
+      e.preventDefault();
+      lockedAngle = angleSweepValue;
+      startCountdown();
     }
   });
 
