@@ -84,7 +84,7 @@
   var playBtn = document.getElementById('tb-play-btn');
   var nextBtn = document.getElementById('tb-next-btn');
   var launchBtn = document.getElementById('tb-launch-btn');
-  var rerollBtn = document.getElementById('tb-reroll-btn');
+  // reroll removed — all parts shown in scrollable list
 
   var partsContainer = document.getElementById('tb-parts');
   var actionsContainer = document.getElementById('tb-actions');
@@ -159,6 +159,12 @@
 
   // Impact particles
   var particles = [];
+
+  // Castles
+  var castles = [];
+  var castleBonus = 0;
+  var castlesDestroyed = 0;
+  var bonusTexts = []; // floating "+BONUS" texts
 
   // ── Canvas sizing ─────────────────────────────
   function sizeCanvas() {
@@ -267,21 +273,23 @@
     return available;
   }
 
+  function getPartStat(cat, part) {
+    if (cat === 'counterweight') return part.power;
+    if (cat === 'arm') return part.leverage;
+    if (cat === 'sling') return part.accuracy;
+    return part.weight;
+  }
+
   function dealHand() {
     var categories = ['counterweight', 'arm', 'sling', 'projectile'];
     for (var c = 0; c < categories.length; c++) {
       var cat = categories[c];
-      var available = getAvailableParts(cat);
-      var handSize = Math.min(available.length, available.length <= 2 ? 2 : 3);
-      // Shuffle and pick
-      var shuffled = available.slice();
-      for (var i = shuffled.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = shuffled[i];
-        shuffled[i] = shuffled[j];
-        shuffled[j] = tmp;
-      }
-      currentHand[cat] = shuffled.slice(0, handSize);
+      // Show ALL parts, sorted best (highest stat) to worst
+      var all = PARTS[cat].slice();
+      all.sort(function (a, b) {
+        return getPartStat(cat, b) - getPartStat(cat, a);
+      });
+      currentHand[cat] = all;
     }
     selectedParts = { counterweight: null, arm: null, sling: null, projectile: null };
   }
@@ -292,12 +300,15 @@
     for (var c = 0; c < categories.length; c++) {
       var cat = categories[c];
       var container = cardContainers[cat];
+      var maxTier = stats.unlockedTiers[cat] || 1;
       container.innerHTML = '';
       for (var i = 0; i < currentHand[cat].length; i++) {
         var part = currentHand[cat][i];
+        var locked = part.tier > maxTier;
         var card = document.createElement('div');
         card.className = 'tb-card';
         if (selectedParts[cat] === part) card.className += ' tb-selected';
+        if (locked) card.className += ' tb-locked';
 
         var statText = '';
         if (cat === 'counterweight') statText = 'PWR ' + part.power;
@@ -305,13 +316,16 @@
         else if (cat === 'sling') statText = 'ACC ' + part.accuracy;
         else statText = 'WGT ' + part.weight;
 
+        var lockIcon = locked ? '<span class="tb-card-lock">LOCKED</span>' : '';
         card.innerHTML = '<span class="tb-card-tier tb-tier-' + part.tier + '">T' + part.tier + '</span>' +
           '<span class="tb-card-name">' + part.name + '</span>' +
-          '<span class="tb-card-stat">' + statText + '</span>';
+          '<span class="tb-card-stat">' + statText + '</span>' + lockIcon;
 
-        card.setAttribute('data-cat', cat);
-        card.setAttribute('data-idx', String(i));
-        card.addEventListener('click', onCardClick);
+        if (!locked) {
+          card.setAttribute('data-cat', cat);
+          card.setAttribute('data-idx', String(i));
+          card.addEventListener('click', onCardClick);
+        }
         container.appendChild(card);
       }
     }
@@ -354,7 +368,7 @@
     var releaseAngle = lockedAngle + (Math.random() * 2 - 1) * jitter;
     var rad = releaseAngle * Math.PI / 180;
 
-    projectilePos.x = TREBUCHET_X + 30;
+    projectilePos.x = TREBUCHET_X - 10;
     projectilePos.y = GROUND_Y - HILL_HEIGHT - 50;
     projectileVel.x = Math.cos(rad) * launchSpeed;
     projectileVel.y = -Math.sin(rad) * launchSpeed;
@@ -448,6 +462,9 @@
     ctx.quadraticCurveTo(hillCenterX, GROUND_Y - HILL_HEIGHT * 2, hillCenterX + 60, GROUND_Y);
     ctx.closePath();
     ctx.fill();
+
+    // Castles
+    drawCastles(colors);
 
     // Trebuchet
     drawTrebuchet(colors);
@@ -583,9 +600,9 @@
     }
 
     var angle = swingAngle; // radians, 0 = horizontal, positive = counterweight down
-    var longX = bx + Math.cos(angle) * armLen;
+    var longX = bx - Math.cos(angle) * armLen;
     var longY = (by - 30) - Math.sin(angle) * armLen;
-    var shortX = bx - Math.cos(angle) * shortEnd;
+    var shortX = bx + Math.cos(angle) * shortEnd;
     var shortY = (by - 30) + Math.sin(angle) * shortEnd;
 
     // Arm color changes with tier
@@ -661,18 +678,46 @@
     ctx.arc(px, py, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Fire trail for flaming boulder
-    if (proj && proj.name === 'Flaming Boulder' && gamePhase === 'flight') {
-      for (var fi = 0; fi < 3; fi++) {
-        var fr = radius * (0.4 + Math.random() * 0.5);
-        var fx = px - projectileVel.x * 0.3 * (fi + 1) + (Math.random() - 0.5) * 6;
-        var fy = py - projectileVel.y * 0.3 * (fi + 1) + (Math.random() - 0.5) * 6;
-        ctx.globalAlpha = 0.3 - fi * 0.08;
-        ctx.fillStyle = fi === 0 ? '#ff8844' : '#ffaa22';
+    // Universal flame & smoke trail during flight
+    if (gamePhase === 'flight') {
+      var speed = Math.sqrt(projectileVel.x * projectileVel.x + projectileVel.y * projectileVel.y);
+      var isFlaming = proj && proj.name === 'Flaming Boulder';
+      var flameCount = isFlaming ? 5 : 3;
+      var smokeCount = isFlaming ? 3 : 2;
+      var intensity = Math.min(speed / 15, 1);
+
+      // Normalize velocity for positioning behind projectile
+      var vnx = speed > 0 ? -projectileVel.x / speed : 0;
+      var vny = speed > 0 ? -projectileVel.y / speed : 0;
+
+      // Flames (orange/red behind projectile)
+      for (var fi = 0; fi < flameCount; fi++) {
+        var fDist = (fi + 1) * (4 + intensity * 4);
+        var fr = radius * (0.3 + intensity * 0.4) * (1 - fi / (flameCount + 1));
+        var fx = px + vnx * fDist + (Math.random() - 0.5) * 5;
+        var fy = py + vny * fDist + (Math.random() - 0.5) * 5;
+        ctx.globalAlpha = (0.35 - fi * 0.06) * intensity;
+        ctx.fillStyle = isFlaming
+          ? (fi < 2 ? '#ff4400' : '#ff8844')
+          : (fi === 0 ? '#ff8844' : '#ffaa44');
         ctx.beginPath();
         ctx.arc(fx, fy, fr, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Smoke (grey, drifts upward)
+      for (var si = 0; si < smokeCount; si++) {
+        var sDist = (flameCount + si + 1) * (4 + intensity * 3);
+        var sr = radius * (0.25 + intensity * 0.3);
+        var smx = px + vnx * sDist + (Math.random() - 0.5) * 6;
+        var smy = py + vny * sDist - (si + 1) * 3 + (Math.random() - 0.5) * 4;
+        ctx.globalAlpha = (0.15 - si * 0.04) * intensity;
+        ctx.fillStyle = '#888888';
+        ctx.beginPath();
+        ctx.arc(smx, smy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.globalAlpha = 1;
     }
   }
@@ -709,6 +754,164 @@
         maxLife: 40,
         color: color
       });
+    }
+  }
+
+  // ── Castles ──────────────────────────────────
+  function initCastles() {
+    var distances = [100, 200, 350, 500, 700, 900];
+    castles = [];
+    for (var i = 0; i < distances.length; i++) {
+      var d = distances[i];
+      var scale = 0.6 + (i / (distances.length - 1)) * 0.6;
+      castles.push({
+        x: TREBUCHET_X + d * PIXELS_PER_METER,
+        width: 28 + Math.floor(scale * 20),
+        height: 30 + Math.floor(scale * 30),
+        hp: 1,
+        destroyed: false,
+        dist: d,
+        bonus: 10 + i * 8
+      });
+    }
+    castleBonus = 0;
+    castlesDestroyed = 0;
+    bonusTexts = [];
+  }
+
+  function drawCastles(colors) {
+    for (var i = 0; i < castles.length; i++) {
+      var c = castles[i];
+      var cx = c.x - cameraX;
+      if (cx < -60 || cx > CANVAS_W + 60) continue;
+
+      if (c.destroyed) {
+        // Rubble — small rectangles on ground
+        ctx.fillStyle = colorMix(colors.fg, 0.25, colors.bg);
+        for (var r = 0; r < 5; r++) {
+          var rx = cx - c.width / 2 + r * (c.width / 5);
+          var rh = 3 + (r % 3) * 2;
+          ctx.fillRect(rx, GROUND_Y - rh, c.width / 6, rh);
+        }
+        continue;
+      }
+
+      var bodyColor = colorMix(colors.fg, 0.5, colors.bg);
+      var bx = cx - c.width / 2;
+      var by = GROUND_Y - c.height;
+
+      // Castle body
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(bx, by, c.width, c.height);
+
+      // Crenellations (3 on top)
+      var crenW = c.width / 5;
+      var crenH = 6;
+      for (var ci = 0; ci < 3; ci++) {
+        var cxPos = bx + ci * (c.width / 3) + (c.width / 3 - crenW) / 2;
+        ctx.fillRect(cxPos, by - crenH, crenW, crenH);
+      }
+
+      // Door arch
+      var doorW = c.width * 0.3;
+      var doorH = c.height * 0.35;
+      ctx.fillStyle = colorMix(colors.fg, 0.15, colors.bg);
+      ctx.beginPath();
+      ctx.moveTo(cx - doorW / 2, GROUND_Y);
+      ctx.lineTo(cx - doorW / 2, GROUND_Y - doorH + doorW / 2);
+      ctx.arc(cx, GROUND_Y - doorH + doorW / 2, doorW / 2, Math.PI, 0);
+      ctx.lineTo(cx + doorW / 2, GROUND_Y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Flag on top
+      var flagPoleX = cx;
+      var flagPoleTop = by - crenH - 12;
+      ctx.strokeStyle = colors.fg;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(flagPoleX, by - crenH);
+      ctx.lineTo(flagPoleX, flagPoleTop);
+      ctx.stroke();
+      ctx.fillStyle = colors.accent;
+      ctx.beginPath();
+      ctx.moveTo(flagPoleX, flagPoleTop);
+      ctx.lineTo(flagPoleX + 8, flagPoleTop + 3);
+      ctx.lineTo(flagPoleX, flagPoleTop + 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Floating bonus texts
+    for (var bi = bonusTexts.length - 1; bi >= 0; bi--) {
+      var bt = bonusTexts[bi];
+      bt.y -= 1;
+      bt.life--;
+      if (bt.life <= 0) {
+        bonusTexts.splice(bi, 1);
+        continue;
+      }
+      ctx.globalAlpha = bt.life / bt.maxLife;
+      ctx.fillStyle = colors.accent;
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(bt.text, bt.x - cameraX, bt.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function checkCastleCollision() {
+    var proj = selectedParts.projectile;
+    var pr = proj ? 3 + proj.weight * 0.04 : 5;
+    for (var i = 0; i < castles.length; i++) {
+      var c = castles[i];
+      if (c.destroyed) continue;
+      var left = c.x - c.width / 2;
+      var right = c.x + c.width / 2;
+      var top = GROUND_Y - c.height - 6; // include crenellations
+      // AABB overlap
+      if (projectilePos.x + pr > left && projectilePos.x - pr < right &&
+          projectilePos.y + pr > top && projectilePos.y - pr < GROUND_Y) {
+        // Hit!
+        c.destroyed = true;
+        castlesDestroyed++;
+        castleBonus += c.bonus;
+
+        // Speed boost — keep flying through
+        projectileVel.x *= 1.3;
+        projectileVel.y = -Math.abs(projectileVel.y) * 0.4 - 2;
+
+        // Crumble particles (rectangular, browns/greys)
+        var crumbleColors = ['#8B7355', '#A0926B', '#6B5B45', '#999999', '#777777'];
+        for (var pi = 0; pi < 20; pi++) {
+          var angle = Math.random() * Math.PI * 2;
+          var speed = 1.5 + Math.random() * 3.5;
+          particles.push({
+            x: c.x + (Math.random() - 0.5) * c.width,
+            y: GROUND_Y - Math.random() * c.height,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 3,
+            life: 25 + Math.floor(Math.random() * 20),
+            maxLife: 45,
+            color: crumbleColors[Math.floor(Math.random() * crumbleColors.length)]
+          });
+        }
+
+        // Screen shake
+        shakeFrames = 10;
+        shakeIntensity = 8;
+
+        // Bonus text
+        bonusTexts.push({
+          x: c.x,
+          y: GROUND_Y - c.height - 15,
+          text: '+' + c.bonus + ' BONUS',
+          life: 60,
+          maxLife: 60
+        });
+
+        break; // one castle per frame
+      }
     }
   }
 
@@ -782,7 +985,7 @@
     var by = GROUND_Y - HILL_HEIGHT - 30;
     var arcRadius = 100;
 
-    // Arc background (dotted)
+    // Arc background (dotted) — right side (launch direction)
     ctx.strokeStyle = colorMix(colors.fg, 0.2, colors.bg);
     ctx.lineWidth = 2;
     ctx.setLineDash([4, 6]);
@@ -815,7 +1018,7 @@
       ctx.fillText(guides[gi] + '\u00B0', lx, ly + 3);
     }
 
-    // Sweep line
+    // Sweep line — right side (launch direction)
     var sweepRad = angleSweepValue * Math.PI / 180;
     var lineEndX = bx + Math.cos(sweepRad) * arcRadius;
     var lineEndY = by - Math.sin(sweepRad) * arcRadius;
@@ -876,11 +1079,11 @@
     angleSweepDir = 1;
     lockedAngle = 45;
 
+    initCastles();
     generateWind();
     dealHand();
     renderCards();
     launchBtn.disabled = true;
-    rerollBtn.disabled = false;
     drawScene();
   }
 
@@ -982,6 +1185,7 @@
     animFrame++;
 
     stepProjectile();
+    checkCastleCollision();
 
     // Camera follows projectile
     targetCameraX = projectilePos.x - CANVAS_W * 0.3;
@@ -1084,6 +1288,9 @@
       }
     }
 
+    // Castle bonus
+    coinReward += castleBonus;
+
     // Record bonus
     if (isRecord) {
       recordBonus = 50;
@@ -1133,6 +1340,18 @@
     resultCoins.textContent = '+' + coinReward;
     resultJB.textContent = '+' + jbReward;
 
+    // Castle results
+    var castleRow = document.getElementById('tb-result-castles-row');
+    var castleSpan = document.getElementById('tb-result-castles');
+    if (castleRow && castleSpan) {
+      if (castlesDestroyed > 0) {
+        castleSpan.textContent = castlesDestroyed + ' (+' + castleBonus + ' coins)';
+        castleRow.classList.remove('tb-hidden');
+      } else {
+        castleRow.classList.add('tb-hidden');
+      }
+    }
+
     if (isRecord) {
       resultRecord.classList.remove('tb-hidden');
     } else {
@@ -1166,13 +1385,6 @@
     if (!selectedParts.counterweight || !selectedParts.arm ||
         !selectedParts.sling || !selectedParts.projectile) return;
     startPowerCharge();
-  });
-
-  rerollBtn.addEventListener('click', function () {
-    if (gamePhase !== 'build') return;
-    dealHand();
-    renderCards();
-    drawScene();
   });
 
   resetBtn.addEventListener('click', function () {
@@ -1212,6 +1424,7 @@
   });
 
   // ── Init ──────────────────────────────────────
+  initCastles();
   updateHUD();
   updateStatsPanel();
   partsContainer.style.display = 'none';

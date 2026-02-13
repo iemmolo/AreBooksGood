@@ -58,6 +58,8 @@
   justify-content: center;
   background: color-mix(in srgb, var(--background) 85%, transparent);
   z-index: 10;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tb-hidden {
@@ -130,12 +132,6 @@
   opacity: 0.5;
 }
 
-.tb-btn-reroll {
-  padding: 10px 24px;
-  font-size: 1.1em;
-  font-weight: 600;
-}
-
 .tb-btn-small {
   padding: 3px 10px;
   font-size: 0.85em;
@@ -186,11 +182,13 @@
 .tb-part-cards {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
 }
 
 .tb-card {
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 90px;
   padding: 8px 10px;
   border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
@@ -199,6 +197,12 @@
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
   text-align: center;
+}
+
+.tb-card.tb-locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .tb-card:hover {
@@ -250,6 +254,18 @@
   color: color-mix(in srgb, var(--foreground) 55%, transparent);
 }
 
+.tb-card-lock {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.65em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-top: 3px;
+}
+
 /* -- Action buttons row ----------------------- */
 .tb-actions {
   display: flex;
@@ -277,6 +293,13 @@
   text-align: right;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.tb-result-castles-row {
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  font-weight: 600;
   color: var(--accent);
 }
 
@@ -387,7 +410,12 @@
   }
 
   .tb-overlay-inner {
-    padding: 10px 14px;
+    padding: 8px 14px;
+  }
+
+  .tb-overlay {
+    align-items: flex-start;
+    padding: 4px 0;
   }
 
   .tb-overlay-title {
