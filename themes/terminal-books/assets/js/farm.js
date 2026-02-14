@@ -1941,6 +1941,7 @@
       saveState();
       applyFarmhouseBonuses();
       if (key === 'sprinkler') startSprinklerTimer();
+      createUpgradeDecorations();
       updatePlots();
     },
 
