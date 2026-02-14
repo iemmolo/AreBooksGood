@@ -508,6 +508,67 @@
     [6,15,'#5A2D0C'],[7,15,'#6B3410'],[8,15,'#6B3410'],[9,15,'#5A2D0C']
   ];
 
+  // ── Upgrade sprites (rendered with renderSprite like tree/house) ──
+  var UPGRADE_PIXEL = 3;
+
+  // 8×16 sprinkler: grey base, blue pipe, water drops
+  var SPRINKLER_SPRITE = [
+    // Base plate
+    [2,15,'#6B6B6B'],[3,15,'#808080'],[4,15,'#808080'],[5,15,'#6B6B6B'],
+    [3,14,'#808080'],[4,14,'#808080'],
+    // Vertical pipe
+    [3,13,'#5A5A5A'],[4,13,'#7A7A7A'],
+    [3,12,'#5A5A5A'],[4,12,'#7A7A7A'],
+    [3,11,'#5A5A5A'],[4,11,'#7A7A7A'],
+    [3,10,'#5A5A5A'],[4,10,'#7A7A7A'],
+    [3,9,'#5A5A5A'],[4,9,'#7A7A7A'],
+    [3,8,'#5A5A5A'],[4,8,'#7A7A7A'],
+    // Sprinkler head / nozzle
+    [2,7,'#4A4A4A'],[3,7,'#5A5A5A'],[4,7,'#7A7A7A'],[5,7,'#4A4A4A'],
+    [1,6,'#4A4A4A'],[2,6,'#5A5A5A'],[3,6,'#6A6A6A'],[4,6,'#6A6A6A'],[5,6,'#5A5A5A'],[6,6,'#4A4A4A'],
+    // Water spray — left arc
+    [0,5,'#4A9EFF'],[1,4,'#6DB3FF'],[0,3,'#8AD4FF'],
+    // Water spray — right arc
+    [7,5,'#4A9EFF'],[6,4,'#6DB3FF'],[7,3,'#8AD4FF'],
+    // Water drops — centre
+    [3,4,'#4A9EFF'],[4,4,'#4A9EFF'],
+    [2,3,'#6DB3FF'],[5,3,'#6DB3FF'],
+    [3,2,'#8AD4FF'],[4,2,'#8AD4FF'],
+    [1,1,'#B0E0FF'],[6,1,'#B0E0FF'],
+    [3,0,'#B0E0FF'],[4,0,'#B0E0FF']
+  ];
+
+  // 12×16 scarecrow: post, crossbar with shirt, head with hat
+  var SCARECROW_SPRITE = [
+    // Ground / base
+    [5,15,'#5A2D0C'],[6,15,'#6B3410'],[7,15,'#5A2D0C'],
+    // Vertical post
+    [6,14,'#8B4513'],[6,13,'#8B4513'],[6,12,'#A0522D'],
+    [6,11,'#8B4513'],[6,10,'#A0522D'],[6,9,'#8B4513'],
+    // Crossbar (arms)
+    [2,8,'#8B4513'],[3,8,'#A0522D'],[4,8,'#8B4513'],[5,8,'#A0522D'],
+    [6,8,'#8B4513'],
+    [7,8,'#A0522D'],[8,8,'#8B4513'],[9,8,'#A0522D'],[10,8,'#8B4513'],
+    // Shirt / fabric on crossbar
+    [3,9,'#8B2252'],[4,9,'#8B2252'],[5,9,'#A0294F'],
+    [7,9,'#A0294F'],[8,9,'#8B2252'],[9,9,'#8B2252'],
+    [4,10,'#8B2252'],[5,10,'#A0294F'],
+    [7,10,'#A0294F'],[8,10,'#8B2252'],
+    // Hands
+    [1,8,'#DAA520'],[11,8,'#DAA520'],
+    // Head
+    [5,7,'#DAA520'],[6,7,'#F0C040'],[7,7,'#DAA520'],
+    [5,6,'#F0C040'],[6,6,'#DAA520'],[7,6,'#F0C040'],
+    [5,5,'#DAA520'],[6,5,'#F0C040'],[7,5,'#DAA520'],
+    // Eyes
+    [5,6,'#2C2C2C'],[7,6,'#2C2C2C'],
+    // Hat brim
+    [3,4,'#5A2D0C'],[4,4,'#6B3410'],[5,4,'#6B3410'],[6,4,'#6B3410'],[7,4,'#6B3410'],[8,4,'#6B3410'],[9,4,'#5A2D0C'],
+    // Hat top
+    [4,3,'#5A2D0C'],[5,3,'#6B3410'],[6,3,'#8B4513'],[7,3,'#6B3410'],[8,3,'#5A2D0C'],
+    [5,2,'#5A2D0C'],[6,2,'#6B3410'],[7,2,'#5A2D0C']
+  ];
+
   // ── Farm upgrade definitions ─────────────────────────────
   var FARM_UPGRADES = {
     sprinkler: {
@@ -1995,6 +2056,9 @@
     if (farmState.upgrades.sprinkler > 0) {
       var sprinklerIcon = document.createElement('div');
       sprinklerIcon.className = 'farm-upgrade-icon farm-sprinkler-icon';
+      sprinklerIcon.style.width = (8 * UPGRADE_PIXEL) + 'px';
+      sprinklerIcon.style.height = (16 * UPGRADE_PIXEL) + 'px';
+      renderSprite(sprinklerIcon, SPRINKLER_SPRITE, UPGRADE_PIXEL);
       sprinklerIcon.addEventListener('click', function (e) {
         e.stopPropagation();
         openUpgradeInfo('sprinkler', sprinklerIcon);
@@ -2006,13 +2070,15 @@
     if (farmState.upgrades.scarecrow > 0) {
       var scarecrowIcon = document.createElement('div');
       scarecrowIcon.className = 'farm-upgrade-icon farm-scarecrow-icon';
+      scarecrowIcon.style.width = (12 * UPGRADE_PIXEL) + 'px';
+      scarecrowIcon.style.height = (16 * UPGRADE_PIXEL) + 'px';
+      renderSprite(scarecrowIcon, SCARECROW_SPRITE, UPGRADE_PIXEL);
       scarecrowIcon.addEventListener('click', function (e) {
         e.stopPropagation();
         openUpgradeInfo('scarecrow', scarecrowIcon);
       });
       farmBarEl.appendChild(scarecrowIcon);
     }
-
   }
 
   // ── Harvest moon cosmetic ─────────────────────────────
