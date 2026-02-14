@@ -350,6 +350,11 @@
 
         if (def.type === 'leveled') {
           var currentLevel = upgrades[key] || 0;
+
+          if (currentLevel > 0) {
+            card.classList.add('sr-card-owned-tool');
+          }
+
           var info = document.createElement('div');
           info.className = 'sr-card-info';
           if (currentLevel > 0) {
@@ -384,7 +389,7 @@
             card.appendChild(btn);
           } else {
             var maxed = document.createElement('div');
-            maxed.className = 'sr-card-price';
+            maxed.className = 'sr-card-price sr-tool-maxed-badge';
             maxed.textContent = 'MAX LEVEL';
             card.appendChild(maxed);
           }

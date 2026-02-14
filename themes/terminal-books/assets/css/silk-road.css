@@ -212,6 +212,17 @@
   text-align: center;
 }
 
+/* ── Owned tool card ──────────────────────────── */
+.sr-card-owned-tool {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.sr-tool-maxed-badge {
+  color: var(--accent);
+  font-weight: bold;
+  text-align: center;
+}
+
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
   .sr-grid {
