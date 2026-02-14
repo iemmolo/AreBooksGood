@@ -43,3 +43,14 @@
   --accent: #60a5fa;
   --pet-accessory: #fbbf24;
 }
+
+/* ============================================
+   OVERGROWN
+   Earthy greens — exclusive farm cosmetic
+   ============================================ */
+[data-theme="overgrown"] {
+  --background: #1a2614;
+  --foreground: #c8d6a0;
+  --accent: #6b8e23;
+  --pet-accessory: #d4a017;
+}

@@ -200,6 +200,18 @@
   100% { border-color: color-mix(in srgb, var(--foreground) 25%, transparent); background: transparent; }
 }
 
+/* ── Owned cosmetic card ────────────────────── */
+.sr-card-owned-cosmetic {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.75;
+}
+
+.sr-cosmetic-owned-badge {
+  color: var(--accent);
+  font-weight: bold;
+  text-align: center;
+}
+
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 768px) {
   .sr-grid {

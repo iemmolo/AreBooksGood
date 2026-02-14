@@ -508,6 +508,62 @@
     [6,15,'#5A2D0C'],[7,15,'#6B3410'],[8,15,'#6B3410'],[9,15,'#5A2D0C']
   ];
 
+  // ── Farm upgrade definitions ─────────────────────────────
+  var FARM_UPGRADES = {
+    sprinkler: {
+      name: 'Sprinkler',
+      type: 'leveled',
+      maxLevel: 3,
+      costs: [100, 250, 500],
+      effects: [
+        { interval: 120000, desc: 'Auto-water every 2min' },
+        { interval: 60000,  desc: 'Auto-water every 1min' },
+        { interval: 30000,  desc: 'Auto-water every 30s' }
+      ]
+    },
+    fertilizer: {
+      name: 'Fertilizer',
+      type: 'consumable',
+      cost: 25,
+      bulkAmount: 5,
+      bulkCost: 125,
+      desc: 'Halves remaining grow time on target plot'
+    },
+    scarecrow: {
+      name: 'Scarecrow',
+      type: 'leveled',
+      maxLevel: 3,
+      costs: [75, 200, 400],
+      effects: [
+        { bonus: 0.05, desc: '+5% bonus JB on harvest' },
+        { bonus: 0.10, desc: '+10% bonus JB on harvest' },
+        { bonus: 0.15, desc: '+15% bonus JB on harvest' }
+      ]
+    },
+    goldenTrowel: {
+      name: 'Golden Trowel',
+      type: 'leveled',
+      maxLevel: 3,
+      costs: [200, 500, 1000],
+      effects: [
+        { bonus: 1.25, desc: '+25% sell price' },
+        { bonus: 1.40, desc: '+40% sell price' },
+        { bonus: 1.60, desc: '+60% sell price' }
+      ]
+    },
+    seedBag: {
+      name: 'Seed Bag',
+      type: 'leveled',
+      maxLevel: 3,
+      costs: [150, 350, 700],
+      effects: [
+        { chance: 0.15, desc: '15% free seed on harvest' },
+        { chance: 0.25, desc: '25% free seed on harvest' },
+        { chance: 0.35, desc: '35% free seed on harvest' }
+      ]
+    }
+  };
+
   // ── Farmhouse level definitions ──────────────────────────
   var FARMHOUSE_LEVELS = {
     1: { name: 'Dirt Shack',       cost: 0,    sellBonus: 1.0,  growBonus: 1.0,  autoWater: false },
@@ -526,13 +582,17 @@
   var updateTimer;
   var farmhouseEl;
   var farmhousePanelEl;
+  var sprinklerTimer = null;
+  var plotInfoEl = null;
 
   function defaultState() {
     return {
       plots: [{ crop: null }, { crop: null }],
       unlockedPlots: 2,
       inventory: {},
-      farmhouse: { level: 1 }
+      farmhouse: { level: 1 },
+      upgrades: { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 },
+      cosmetics: { farmerHat: false, dirtTrail: false, overgrownTheme: false, harvestMoon: false }
     };
   }
 
@@ -546,6 +606,8 @@
           if (!saved.inventory) saved.inventory = {};
           if (!saved.farmhouse) saved.farmhouse = { level: 1 };
           if (!saved.unlockedPlots) saved.unlockedPlots = saved.plots.length;
+          if (!saved.upgrades) saved.upgrades = { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 };
+          if (!saved.cosmetics) saved.cosmetics = { farmerHat: false, dirtTrail: false, overgrownTheme: false, harvestMoon: false };
           return saved;
         }
       }
@@ -563,8 +625,13 @@
   function applyFarmhouseBonuses() {
     var level = farmState.farmhouse ? farmState.farmhouse.level : 1;
     var def = FARMHOUSE_LEVELS[level] || FARMHOUSE_LEVELS[1];
-    sellMultiplier = def.sellBonus;
+    var farmhouseSellBonus = def.sellBonus;
     farmhouseGrowMultiplier = def.growBonus;
+
+    // Golden trowel multiplier (stacks multiplicatively)
+    var trowelLevel = farmState.upgrades ? farmState.upgrades.goldenTrowel : 0;
+    var trowelBonus = trowelLevel > 0 ? FARM_UPGRADES.goldenTrowel.effects[trowelLevel - 1].bonus : 1;
+    sellMultiplier = farmhouseSellBonus * trowelBonus;
 
     // Auto-water at level 4+
     if (def.autoWater) {
@@ -743,7 +810,108 @@
     var stage = getPlotStage(plot);
     if (stage === 'ready') {
       harvest(index, e);
+    } else {
+      // Growing — open plot info popup
+      openPlotInfo(index, e);
     }
+  }
+
+  // ── Plot info popup ───────────────────────────────────
+  function openPlotInfo(plotIndex, e) {
+    closePlotInfo();
+    var plot = farmState.plots[plotIndex];
+    if (!plot || !plot.crop) return;
+
+    var crop = CROPS[plot.crop];
+    if (!crop) return;
+
+    var stage = getPlotStage(plot);
+    var pct = getGrowthPct(plot);
+    var pctDisplay = Math.round(pct * 100);
+    var remaining = formatTimeRemaining(plot);
+
+    var stageNames = { planted: 'Planted', sprouting: 'Sprouting', growing: 'Growing', flowering: 'Flowering', ready: 'Ready' };
+
+    plotInfoEl = document.createElement('div');
+    plotInfoEl.className = 'farm-plot-info';
+
+    // Crop name + rarity
+    var nameRow = document.createElement('div');
+    nameRow.className = 'farm-plot-info-name';
+    nameRow.textContent = crop.name;
+    if (crop.rarity === 'rare') nameRow.classList.add('farm-plot-info-rare');
+    plotInfoEl.appendChild(nameRow);
+
+    // Stage
+    var stageRow = document.createElement('div');
+    stageRow.className = 'farm-plot-info-stage';
+    stageRow.textContent = stageNames[stage] || stage;
+    plotInfoEl.appendChild(stageRow);
+
+    // Progress bar
+    var barOuter = document.createElement('div');
+    barOuter.className = 'farm-plot-info-bar';
+    var barInner = document.createElement('div');
+    barInner.className = 'farm-plot-info-bar-fill';
+    barInner.style.width = pctDisplay + '%';
+    barOuter.appendChild(barInner);
+    plotInfoEl.appendChild(barOuter);
+
+    // Pct + time
+    var pctRow = document.createElement('div');
+    pctRow.className = 'farm-plot-info-pct';
+    pctRow.textContent = pctDisplay + '% grown \u00B7 ' + remaining;
+    plotInfoEl.appendChild(pctRow);
+
+    // Watered status
+    if (plot.wateredAt) {
+      var wateredRow = document.createElement('div');
+      wateredRow.className = 'farm-plot-info-watered';
+      wateredRow.textContent = '\uD83D\uDCA7 Watered';
+      plotInfoEl.appendChild(wateredRow);
+    }
+
+    // Fertilizer button
+    if (farmState.upgrades && farmState.upgrades.fertilizer > 0) {
+      var fertBtn = document.createElement('button');
+      fertBtn.className = 'farm-plot-info-fert-btn';
+      fertBtn.type = 'button';
+      fertBtn.textContent = 'Use Fertilizer (' + farmState.upgrades.fertilizer + ')';
+      fertBtn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var used = useFertilizer(plotIndex);
+        if (used) {
+          closePlotInfo();
+        }
+      });
+      plotInfoEl.appendChild(fertBtn);
+    }
+
+    // Position above clicked plot
+    var plotEl = farmBarEl.querySelectorAll('.farm-plot')[plotIndex];
+    var rect = plotEl.getBoundingClientRect();
+    plotInfoEl.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - 150)) + 'px';
+    plotInfoEl.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+
+    document.body.appendChild(plotInfoEl);
+
+    setTimeout(function () {
+      document.addEventListener('click', outsidePlotInfoClick);
+    }, 0);
+  }
+
+  function outsidePlotInfoClick(e) {
+    if (plotInfoEl && !plotInfoEl.contains(e.target)) {
+      closePlotInfo();
+    }
+  }
+
+  function closePlotInfo() {
+    if (plotInfoEl && plotInfoEl.parentNode) {
+      plotInfoEl.parentNode.removeChild(plotInfoEl);
+    }
+    plotInfoEl = null;
+    document.removeEventListener('click', outsidePlotInfoClick);
   }
 
   // ── Seed picker ─────────────────────────────────────────
@@ -851,11 +1019,29 @@
     var crop = CROPS[plot.crop];
     if (!crop) return;
 
+    var cropKey = plot.crop;
     var sellValue = Math.round(crop.sell * sellMultiplier);
+
+    // Scarecrow bonus
+    var scarecrowLevel = farmState.upgrades ? farmState.upgrades.scarecrow : 0;
+    if (scarecrowLevel > 0) {
+      var scarecrowBonus = FARM_UPGRADES.scarecrow.effects[scarecrowLevel - 1].bonus;
+      sellValue = Math.round(sellValue * (1 + scarecrowBonus));
+    }
 
     // Add JB
     if (window.JackBucks) {
       window.JackBucks.add(sellValue);
+    }
+
+    // Seed bag chance
+    var seedBagLevel = farmState.upgrades ? farmState.upgrades.seedBag : 0;
+    if (seedBagLevel > 0) {
+      var seedDropChance = FARM_UPGRADES.seedBag.effects[seedBagLevel - 1].chance;
+      if (Math.random() < seedDropChance) {
+        farmState.inventory[cropKey] = (farmState.inventory[cropKey] || 0) + 1;
+        showSeedFloat(plotIndex, cropKey);
+      }
     }
 
     // Clear plot
@@ -888,6 +1074,63 @@
     setTimeout(function () {
       if (float.parentNode) float.parentNode.removeChild(float);
     }, 1000);
+  }
+
+  // ── Seed drop float particle ───────────────────────────
+  function showSeedFloat(plotIndex, cropKey) {
+    var plotEl = farmBarEl.querySelectorAll('.farm-plot')[plotIndex];
+    if (!plotEl) return;
+    var crop = CROPS[cropKey];
+    if (!crop) return;
+
+    var rect = plotEl.getBoundingClientRect();
+    var float = document.createElement('div');
+    float.className = 'farm-seed-float';
+    float.textContent = '+1 ' + crop.name + ' seed';
+    float.style.left = (rect.left + rect.width / 2 - 30) + 'px';
+    float.style.top = (rect.top - 25) + 'px';
+    document.body.appendChild(float);
+
+    setTimeout(function () {
+      if (float.parentNode) float.parentNode.removeChild(float);
+    }, 1200);
+  }
+
+  // ── Sprinkler timer ────────────────────────────────────
+  function startSprinklerTimer() {
+    if (sprinklerTimer) clearInterval(sprinklerTimer);
+    var level = farmState.upgrades ? farmState.upgrades.sprinkler : 0;
+    if (level <= 0) return;
+
+    var interval = FARM_UPGRADES.sprinkler.effects[level - 1].interval;
+    sprinklerTimer = setInterval(function () {
+      autoWaterAllPlots();
+      updatePlots();
+    }, interval);
+  }
+
+  // ── Fertilizer ─────────────────────────────────────────
+  function useFertilizer(plotIndex) {
+    if (!farmState.upgrades || farmState.upgrades.fertilizer <= 0) return false;
+    var plot = farmState.plots[plotIndex];
+    if (!plot || !plot.crop) return false;
+    var stage = getPlotStage(plot);
+    if (stage === 'ready') return false;
+
+    var crop = CROPS[plot.crop];
+    if (!crop) return false;
+
+    var effectiveTime = getEffectiveGrowTime(crop);
+    var elapsed = Date.now() - plot.plantedAt;
+    var remaining = effectiveTime - elapsed;
+    if (remaining <= 0) return false;
+
+    // Shift plantedAt backward by half the remaining time
+    plot.plantedAt -= Math.floor(remaining / 2);
+    farmState.upgrades.fertilizer--;
+    saveState();
+    updatePlots();
+    return true;
   }
 
   // ── Time formatting ─────────────────────────────────────
@@ -951,6 +1194,8 @@
     farmSceneEl.appendChild(farmhouseEl);
   }
 
+  var farmhousePetEl = null;
+
   function renderFarmhouseSprite() {
     if (!farmhouseEl) return;
     var level = farmState.farmhouse ? farmState.farmhouse.level : 1;
@@ -960,6 +1205,79 @@
     spriteContainer.className = 'farm-house-sprite';
     renderSprite(spriteContainer, pixels, HOUSE_PIXEL);
     farmhouseEl.appendChild(spriteContainer);
+
+    // Render pet at farmhouse
+    renderFarmhousePet();
+  }
+
+  function renderFarmhousePet() {
+    // Remove existing
+    if (farmhousePetEl && farmhousePetEl.parentNode) farmhousePetEl.parentNode.removeChild(farmhousePetEl);
+    farmhousePetEl = null;
+
+    if (!window.PetSystem || !window.PetSystem.renderMiniSprite) return;
+    var ps = window.PetSystem.getState && window.PetSystem.getState();
+    if (!ps) return;
+
+    farmhousePetEl = document.createElement('div');
+    farmhousePetEl.className = 'farm-house-pet';
+    window.PetSystem.renderMiniSprite(farmhousePetEl, 2);
+    // renderMiniSprite sets position:relative — override back to absolute
+    farmhousePetEl.style.position = 'absolute';
+    farmhouseEl.appendChild(farmhousePetEl);
+
+    // Click to beam pet back to page
+    farmhousePetEl.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (window.PetSystem && window.PetSystem.beamToPage) {
+        window.PetSystem.beamToPage();
+      }
+    });
+
+    // Only show if pet is beamed to farm
+    if (window.PetSystem.isBeamed && window.PetSystem.isBeamed()) {
+      farmhousePetEl.style.display = 'block';
+    }
+  }
+
+  // ── Beam arrived (pet.js calls this after beam-up) ────
+  function beamArrived() {
+    if (!farmhousePetEl) renderFarmhousePet();
+    if (farmhousePetEl) {
+      farmhousePetEl.style.display = 'block';
+      farmhousePetEl.classList.add('farm-pet-beaming-down');
+      setTimeout(function () {
+        if (farmhousePetEl) farmhousePetEl.classList.remove('farm-pet-beaming-down');
+      }, 800);
+    }
+
+    // Pet speaks a farm arrival line
+    if (window.PetSystem && window.PetSystem.speak) {
+      var lines = {
+        cat: '*teleports* ...where are the treats?',
+        dragon: '*materializes* my farm!',
+        robot: 'LOCATION: FARM. STATUS: OPERATIONAL'
+      };
+      var ps = window.PetSystem.getState && window.PetSystem.getState();
+      var petId = ps ? ps.petId : 'cat';
+      window.PetSystem.speak(lines[petId] || 'arrived!');
+    }
+  }
+
+  // ── Beam departing (pet.js calls this before beam-down) ──
+  function beamDeparting(callback) {
+    if (!farmhousePetEl) {
+      if (callback) callback();
+      return;
+    }
+    farmhousePetEl.classList.add('farm-pet-beaming-up');
+    setTimeout(function () {
+      if (farmhousePetEl) {
+        farmhousePetEl.style.display = 'none';
+        farmhousePetEl.classList.remove('farm-pet-beaming-up');
+      }
+      if (callback) callback();
+    }, 800);
   }
 
   function toggleFarmhousePanel() {
@@ -1174,8 +1492,25 @@
       var cropKey = plot.crop;
       var sellValue = Math.round(crop.sell * sellMultiplier);
 
+      // Scarecrow bonus
+      var scarecrowLevel = farmState.upgrades ? farmState.upgrades.scarecrow : 0;
+      if (scarecrowLevel > 0) {
+        var scarecrowBonus = FARM_UPGRADES.scarecrow.effects[scarecrowLevel - 1].bonus;
+        sellValue = Math.round(sellValue * (1 + scarecrowBonus));
+      }
+
       if (window.JackBucks) {
         window.JackBucks.add(sellValue);
+      }
+
+      // Seed bag chance
+      var seedBagLevel = farmState.upgrades ? farmState.upgrades.seedBag : 0;
+      if (seedBagLevel > 0) {
+        var seedDropChance = FARM_UPGRADES.seedBag.effects[seedBagLevel - 1].chance;
+        if (Math.random() < seedDropChance) {
+          farmState.inventory[cropKey] = (farmState.inventory[cropKey] || 0) + 1;
+          showSeedFloat(plotIndex, cropKey);
+        }
       }
 
       farmState.plots[plotIndex] = { crop: null };
@@ -1338,7 +1673,54 @@
         };
       }
       return defs;
-    }
+    },
+
+    // ── Upgrade API ──────────────────────────────────────────
+    getUpgrades: function () {
+      if (!farmState || !farmState.upgrades) return { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 };
+      return JSON.parse(JSON.stringify(farmState.upgrades));
+    },
+
+    setUpgradeLevel: function (key, level) {
+      if (!farmState || !farmState.upgrades) return;
+      if (!FARM_UPGRADES[key] || FARM_UPGRADES[key].type !== 'leveled') return;
+      if (level < 0 || level > FARM_UPGRADES[key].maxLevel) return;
+      farmState.upgrades[key] = level;
+      saveState();
+      applyFarmhouseBonuses();
+      if (key === 'sprinkler') startSprinklerTimer();
+      updatePlots();
+    },
+
+    addFertilizer: function (n) {
+      if (!farmState || !farmState.upgrades || n <= 0) return;
+      farmState.upgrades.fertilizer += n;
+      saveState();
+    },
+
+    useFertilizer: function (plotIndex) {
+      return useFertilizer(plotIndex);
+    },
+
+    getUpgradeDefs: function () {
+      return FARM_UPGRADES;
+    },
+
+    // ── Cosmetics API ────────────────────────────────────────
+    getCosmetics: function () {
+      if (!farmState || !farmState.cosmetics) return { farmerHat: false, dirtTrail: false, overgrownTheme: false, harvestMoon: false };
+      return JSON.parse(JSON.stringify(farmState.cosmetics));
+    },
+
+    setCosmetic: function (key, bool) {
+      if (!farmState || !farmState.cosmetics) return;
+      if (!(key in farmState.cosmetics)) return;
+      farmState.cosmetics[key] = !!bool;
+      saveState();
+    },
+
+    beamArrived: beamArrived,
+    beamDeparting: beamDeparting
   };
 
   // ── Decorations (trees, path, grass) ────────────────────
@@ -1408,6 +1790,40 @@
   }
 
   // ── Init ────────────────────────────────────────────────
+  // ── Upgrade decorations in farm scene ───────────────────
+  function createUpgradeDecorations() {
+    if (!farmBarEl || !farmState.upgrades) return;
+
+    // Sprinkler icon near farm bar
+    if (farmState.upgrades.sprinkler > 0) {
+      var sprinklerIcon = document.createElement('div');
+      sprinklerIcon.className = 'farm-upgrade-icon farm-sprinkler-icon';
+      farmBarEl.appendChild(sprinklerIcon);
+    }
+
+    // Scarecrow icon at end of farm bar
+    if (farmState.upgrades.scarecrow > 0) {
+      var scarecrowIcon = document.createElement('div');
+      scarecrowIcon.className = 'farm-upgrade-icon farm-scarecrow-icon';
+      farmBarEl.appendChild(scarecrowIcon);
+    }
+  }
+
+  // ── Harvest moon cosmetic ─────────────────────────────
+  function applyHarvestMoon() {
+    if (farmState.cosmetics && farmState.cosmetics.harvestMoon) {
+      document.body.classList.add('harvest-moon-active');
+    }
+  }
+
+  // ── Overgrown theme cosmetic ──────────────────────────
+  function applyOvergrownTheme() {
+    if (farmState.cosmetics && farmState.cosmetics.overgrownTheme) {
+      var opt = document.querySelector('#theme-select option[value="overgrown"]');
+      if (opt) opt.style.display = '';
+    }
+  }
+
   function init() {
     farmState = loadState();
     applyFarmhouseBonuses();
@@ -1415,10 +1831,33 @@
     createFarmhouseWidget();
     createFarmBar();
     createDecorations();
+    createUpgradeDecorations();
     updatePlots(); // Immediate catch-up for offline growth
     updateTimer = setInterval(updatePlots, UPDATE_INTERVAL);
     watchPetToggle();
     syncVisibility();
+    startSprinklerTimer();
+    applyHarvestMoon();
+    applyOvergrownTheme();
+
+    // Retry farmhouse pet render after PetSystem loads sprites
+    var petRetries = 0;
+    function retryPetRender() {
+      petRetries++;
+      if (window.PetSystem && window.PetSystem.renderMiniSprite && window.PetSystem.getState) {
+        var ps = window.PetSystem.getState();
+        if (ps) {
+          renderFarmhousePet();
+          // If pet was already beamed (page reload), show farmhouse pet
+          if (window.PetSystem.isBeamed && window.PetSystem.isBeamed()) {
+            if (farmhousePetEl) farmhousePetEl.style.display = 'block';
+          }
+          return;
+        }
+      }
+      if (petRetries < 20) setTimeout(retryPetRender, 500);
+    }
+    setTimeout(retryPetRender, 500);
 
     createDimToggle();
   }

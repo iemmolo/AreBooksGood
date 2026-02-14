@@ -3,7 +3,6 @@ AreBooksGood - Improvement TODO
 
 ## Critical
 
-- [ ] Complete "The First Fifteen Lives of Harry August" review (ends mid-sentence)
 - [ ] Add missing front matter to that review: summary, narrator
 - [ ] Clean stale build artifacts (public/reviews/sapiens/, public/reviews/the-road/)
 - [x] Add ARIA labels to rating partial for screen reader accessibility
@@ -73,13 +72,14 @@ AreBooksGood - Improvement TODO
 - [x] Add farmhouse bonuses (sell price, grow speed, auto-water, rare seed drops)
 - [x] Add pet AI level 5 seed drop bonus
 - [x] Add rare crops (golden apple, crystal herb, dragon fruit) + pixel art, golden styling, merchant lines
-- [ ] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
-- [ ] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
+- [x] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
+- [x] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
 
 ## Pet Teleporter & Farm Rework
 
-- [ ] Replace dock with teleporter — beam animation that transports pet to the farm
-- [ ] Farm scene: pet walks up and down grass, tends crops autonomously
+- [x] Replace dock with teleporter — beam animation that transports pet to the farm
+- [x] Farm scene: pet walks up and down grass, tends crops autonomously
+- [x] Beam teleporter: Star Trek beam-up/down animation, pet materializes at farmhouse
 - [ ] Add idle furniture (chair/bench/hammock) for pet to rest on between farming cycles
 - [ ] Scope out full design (animation style, farm layout, idle behaviors, transitions)
 
@@ -87,7 +87,7 @@ AreBooksGood - Improvement TODO
 
 - [x] Fix Silk Road page styling
 - [x] Make farmhouse pixel art bigger
-- [ ] Show pet inside or in front of farmhouse (visible but connected to house)
+- [x] Show pet inside or in front of farmhouse (visible but connected to house)
 
 ## New Casino Games
 

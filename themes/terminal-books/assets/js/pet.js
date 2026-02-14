@@ -37,7 +37,8 @@
   var isVisible = true;
   var celebrateTimeout = null;
   var sadTimeout = null;
-  var isDocked = false;
+  var isBeamed = false;
+  var isBeaming = false;
   var dockEl = null;
   var tapWalkTimer = null;
 
@@ -97,7 +98,7 @@
       activePet: null,
       pets: {},
       accessories: { owned: [], equipped: { head: null, body: null } },
-      position: { x: null, y: null, docked: false },
+      position: { x: null, y: null, docked: false, beamed: false },
       visible: true,
       milestones: {
         totalGamesPlayed: 0, biggestSingleWin: 0,
@@ -125,6 +126,12 @@
         if (saved.position) {
           state.position = saved.position;
           if (typeof state.position.docked === 'undefined') state.position.docked = false;
+          if (typeof state.position.beamed === 'undefined') state.position.beamed = false;
+          // Migrate: old docked state → beamed
+          if (state.position.docked) {
+            state.position.beamed = false;
+            state.position.docked = false;
+          }
         }
         if (typeof saved.visible === 'boolean') state.visible = saved.visible;
         if (saved.milestones) {
@@ -327,6 +334,15 @@
 
   function moveTo(x, y) {
     if (!container) return;
+
+    // Dirt trail cosmetic: spawn particles at previous position
+    if (window.FarmAPI && window.FarmAPI.getCosmetics) {
+      var cos = window.FarmAPI.getCosmetics();
+      if (cos.dirtTrail && Math.abs(x - currentX) + Math.abs(y - currentY) > 5) {
+        spawnDirtParticle(currentX, currentY);
+      }
+    }
+
     var size = getSpriteSize();
     var maxX = window.innerWidth - size;
     var maxY = window.innerHeight - size;
@@ -338,8 +354,23 @@
     container.style.top = y + 'px';
   }
 
+  function spawnDirtParticle(px, py) {
+    for (var i = 0; i < 2; i++) {
+      var dot = document.createElement('div');
+      dot.className = 'pet-dirt-particle';
+      dot.style.left = (px + 20 + Math.random() * 10) + 'px';
+      dot.style.top = (py + 40 + Math.random() * 6) + 'px';
+      document.body.appendChild(dot);
+      (function (el) {
+        setTimeout(function () {
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, 800);
+      })(dot);
+    }
+  }
+
   function followCursor() {
-    if (isDragging || isFlung || isMobile || isDocked) return;
+    if (isDragging || isFlung || isMobile || isBeamed) return;
     targetX = mouseX + FOLLOW_OFFSET_X;
     targetY = mouseY + FOLLOW_OFFSET_Y;
 
@@ -387,7 +418,8 @@
       farmingCancelCb = null;
     }
 
-    if (isDocked) undockPet();
+    // If beamed to farm, ignore clicks (pet is hidden)
+    if (isBeamed) return;
 
     isDragging = true;
     isFlung = false;
@@ -439,8 +471,8 @@
     var dt = now - lastDragTime;
     if (dt < 1) dt = 1;
 
-    // Check dock collision (padded hitbox for easier docking)
-    if (dockEl) {
+    // Check teleporter collision (padded hitbox)
+    if (dockEl && !isBeamed && !isBeaming) {
       var size = getSpriteSize();
       var petCenterX = currentX + size / 2;
       var petCenterY = currentY + size / 2;
@@ -448,7 +480,7 @@
       var dockPad = 20;
       if (petCenterX >= dockRect.left - dockPad && petCenterX <= dockRect.right + dockPad &&
           petCenterY >= dockRect.top - dockPad && petCenterY <= dockRect.bottom + dockPad) {
-        dockPet();
+        beamIn();
         return;
       }
     }
@@ -469,7 +501,7 @@
 
   // ── Tap-to-walk (mobile) ────────────────────────
   function onDocumentTap(e) {
-    if (isDragging || isFlung || isDocked) return;
+    if (isDragging || isFlung || isBeamed) return;
 
     var target = e.target;
     if (container && container.contains(target)) return;
@@ -498,59 +530,197 @@
     }, 500);
   }
 
-  // ── Dock ───────────────────────────────────────
-  function createDock() {
+  // ── Teleporter ─────────────────────────────────────────
+  function createTeleporter() {
     if (dockEl) dockEl.remove();
 
     dockEl = document.createElement('div');
-    dockEl.className = 'pet-dock';
-    dockEl.addEventListener('click', onDockClick);
+    dockEl.className = 'pet-teleporter';
+    var pad = document.createElement('div');
+    pad.className = 'pet-teleporter-pad';
+    dockEl.appendChild(pad);
+    dockEl.addEventListener('click', onTeleporterClick);
     document.body.appendChild(dockEl);
   }
 
-  function onDockClick(e) {
+  function onTeleporterClick(e) {
     e.stopPropagation();
-    if (isDocked) undockPet();
-    else dockPet();
+    if (isBeaming) return;
+    if (isBeamed) {
+      beamOut();
+    } else if (!isDragging) {
+      beamIn();
+    }
   }
 
-  function dockPet(silent) {
-    if (!dockEl || !container) return;
-    isDocked = true;
-    petState.position.docked = true;
+  // ── Beam In (page → farm) ──────────────────────────────
+  function beamIn() {
+    if (isBeaming || isBeamed || !container || !dockEl) return;
+    isBeaming = true;
 
-    // Anchor pet with bottom/right to stay locked with dock on viewport resize
+    // Cancel all interactions
+    if (isFarming && farmingCancelCb) {
+      farmingCancelCb();
+      isFarming = false;
+      farmingCancelCb = null;
+    }
+    isDragging = false;
+    isFlung = false;
+    if (flingTimer) cancelAnimationFrame(flingTimer);
+    if (celebrateTimeout) { clearTimeout(celebrateTimeout); celebrateTimeout = null; }
+    if (sadTimeout) { clearTimeout(sadTimeout); sadTimeout = null; }
+    if (tapWalkTimer) { clearTimeout(tapWalkTimer); tapWalkTimer = null; }
+    container.classList.remove('pet-dragging', 'pet-following', 'pet-farming-walk');
+    setAnimState('idle');
+
+    playBeamUp(currentX, currentY, function () {
+      container.style.display = 'none';
+      isBeamed = true;
+      petState.position.beamed = true;
+      savePetState();
+
+      dockEl.classList.add('pet-teleporter-away');
+
+      // Notify farm after short delay
+      setTimeout(function () {
+        if (window.FarmAPI && window.FarmAPI.beamArrived) {
+          window.FarmAPI.beamArrived();
+        }
+        isBeaming = false;
+      }, 200);
+    });
+  }
+
+  // ── Beam Out (farm → page) ─────────────────────────────
+  function beamOut() {
+    if (isBeaming || !isBeamed || !container || !dockEl) return;
+    isBeaming = true;
+
+    var farmDeparting = window.FarmAPI && window.FarmAPI.beamDeparting;
+    if (farmDeparting) {
+      farmDeparting(function () {
+        setTimeout(finishBeamOut, 200);
+      });
+    } else {
+      finishBeamOut();
+    }
+  }
+
+  function finishBeamOut() {
+    // Calculate teleporter center for landing position
     var dockRect = dockEl.getBoundingClientRect();
     var size = getSpriteSize();
-    var rightOffset = window.innerWidth - dockRect.right + Math.round((dockRect.width - size) / 2);
-    var bottomOffset = window.innerHeight - dockRect.bottom + Math.round((dockRect.height - size) / 2);
+    var landX = Math.round(dockRect.left + (dockRect.width - size) / 2);
+    var landY = Math.round(dockRect.top + (dockRect.height - size) / 2);
 
-    container.style.left = 'auto';
-    container.style.top = 'auto';
-    container.style.right = rightOffset + 'px';
-    container.style.bottom = bottomOffset + 'px';
+    playBeamDown(landX, landY, function () {
+      moveTo(landX, landY);
+      setAnimState('idle');
+      isBeamed = false;
+      petState.position.beamed = false;
+      dockEl.classList.remove('pet-teleporter-away');
 
-    currentX = Math.round(dockRect.left + (dockRect.width - size) / 2);
-    currentY = Math.round(dockRect.top + (dockRect.height - size) / 2);
-
-    dockEl.classList.add('pet-dock-occupied');
-    if (!silent) speak('*settles in*');
-    setAnimState('idle');
-    savePetState();
+      petState.position.x = currentX;
+      petState.position.y = currentY;
+      savePetState();
+      resetIdleTimer();
+      isBeaming = false;
+    });
   }
 
-  function undockPet() {
-    isDocked = false;
-    petState.position.docked = false;
-    if (dockEl) dockEl.classList.remove('pet-dock-occupied');
+  // ── Beam-up effect ─────────────────────────────────────
+  function playBeamUp(x, y, callback) {
+    var size = getSpriteSize();
+    var centerX = x + size / 2;
 
-    // Restore left/top positioning
+    // Create beam column
+    var col = document.createElement('div');
+    col.className = 'pet-beam-column';
+    col.style.left = (centerX - 20) + 'px';
+    col.style.top = (y - 80) + 'px';
+    col.style.height = '120px';
+    document.body.appendChild(col);
+
+    // Beam-up animation on container
+    container.classList.add('pet-beaming-up');
+
+    // Spawn sparkles streaming upward
+    for (var i = 0; i < 8; i++) {
+      (function (delay) {
+        setTimeout(function () {
+          spawnBeamSparkle(centerX + (Math.random() - 0.5) * 20, y + size / 2, 'up');
+        }, delay);
+      })(i * 80);
+    }
+
+    setTimeout(function () {
+      if (col.parentNode) col.parentNode.removeChild(col);
+      container.classList.remove('pet-beaming-up');
+      if (callback) callback();
+    }, 1000);
+  }
+
+  // ── Beam-down effect ───────────────────────────────────
+  function playBeamDown(x, y, callback) {
+    var size = getSpriteSize();
+    var centerX = x + size / 2;
+
+    // Position container (still hidden)
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
     container.style.right = 'auto';
     container.style.bottom = 'auto';
-    container.style.left = currentX + 'px';
-    container.style.top = currentY + 'px';
+    currentX = x;
+    currentY = y;
 
-    savePetState();
+    // Show and animate
+    container.style.display = '';
+    container.classList.add('pet-beaming-down');
+
+    // Create beam column
+    var col = document.createElement('div');
+    col.className = 'pet-beam-column';
+    col.style.left = (centerX - 20) + 'px';
+    col.style.top = (y - 80) + 'px';
+    col.style.height = '120px';
+    document.body.appendChild(col);
+
+    // Burst sparkles radially at 400ms
+    setTimeout(function () {
+      for (var i = 0; i < 12; i++) {
+        spawnBeamSparkle(centerX, y + size / 2, 'burst', i, 12);
+      }
+    }, 400);
+
+    setTimeout(function () {
+      if (col.parentNode) col.parentNode.removeChild(col);
+      container.classList.remove('pet-beaming-down');
+      if (callback) callback();
+    }, 1000);
+  }
+
+  // ── Sparkle helper ─────────────────────────────────────
+  function spawnBeamSparkle(x, y, type, index, total) {
+    var sparkle = document.createElement('div');
+    sparkle.className = 'pet-beam-sparkle';
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+
+    if (type === 'up') {
+      sparkle.style.setProperty('--beam-dx', Math.round((Math.random() - 0.5) * 20) + 'px');
+      sparkle.style.setProperty('--beam-dy', Math.round(-40 - Math.random() * 20) + 'px');
+    } else {
+      // burst: radial
+      var angle = ((index || 0) / (total || 12)) * Math.PI * 2;
+      var dist = 25 + Math.random() * 20;
+      sparkle.style.setProperty('--beam-dx', Math.round(Math.cos(angle) * dist) + 'px');
+      sparkle.style.setProperty('--beam-dy', Math.round(Math.sin(angle) * dist) + 'px');
+    }
+
+    document.body.appendChild(sparkle);
+    setTimeout(function () {
+      if (sparkle.parentNode) sparkle.parentNode.removeChild(sparkle);
+    }, 800);
   }
 
   // ── Fling Physics ───────────────────────────────────
@@ -897,8 +1067,8 @@
 
     document.body.appendChild(container);
 
-    // Create dock
-    createDock();
+    // Create teleporter
+    createTeleporter();
 
     // Position
     isMobile = window.innerWidth <= MOBILE_BREAK;
@@ -911,9 +1081,11 @@
       moveTo(window.innerWidth / 2, window.innerHeight - getSpriteSize() - 20);
     }
 
-    // Restore docked state
-    if (petState.position.docked) {
-      dockPet(true);
+    // Restore beamed state
+    if (petState.position.beamed) {
+      container.style.display = 'none';
+      isBeamed = true;
+      dockEl.classList.add('pet-teleporter-away');
     }
 
     // Events
@@ -948,7 +1120,7 @@
     savePetState();
 
     if (container) {
-      container.style.display = isVisible ? '' : 'none';
+      container.style.display = isVisible && !isBeamed ? '' : 'none';
     }
     if (dockEl) {
       dockEl.style.display = isVisible ? '' : 'none';
@@ -999,7 +1171,8 @@
           container.remove();
           container = null;
           if (dockEl) { dockEl.remove(); dockEl = null; }
-          isDocked = false;
+          isBeamed = false;
+          isBeaming = false;
         }
       },
       spawnNew: function () {
@@ -1010,6 +1183,7 @@
         petState.position.x = null;
         petState.position.y = null;
         petState.position.docked = false;
+        petState.position.beamed = false;
 
         loadSpriteData(function () {
           createPetDOM();
@@ -1080,7 +1254,7 @@
           petId: petState.activePet,
           level: pet.level,
           anim: currentAnim,
-          isDocked: isDocked,
+          isBeamed: isBeamed,
           isDragging: isDragging,
           isFlung: isFlung,
           isVisible: isVisible,
@@ -1090,11 +1264,8 @@
       },
 
       walkTo: function (x, y, callback) {
-        if (!container || isDragging || isFlung || !isVisible) return false;
+        if (!container || isDragging || isFlung || !isVisible || isBeamed) return false;
         if (currentAnim === 'celebrating' || currentAnim === 'sad') return false;
-
-        var wasDocked = isDocked;
-        if (isDocked) undockPet();
 
         setAnimState('walk');
         container.classList.add('pet-farming-walk');
@@ -1103,38 +1274,21 @@
         setTimeout(function () {
           container.classList.remove('pet-farming-walk');
           setAnimState('idle');
-          if (callback) callback(wasDocked);
+          if (callback) callback(false);
         }, 850);
 
         return true;
       },
 
-      returnToPosition: function (wasDocked) {
+      returnToPosition: function () {
         if (!container) return;
-        container.classList.add('pet-farming-walk');
-
-        if (wasDocked && dockEl) {
-          // Walk back visually, then snap into dock anchoring
-          var dockRect = dockEl.getBoundingClientRect();
-          var size = getSpriteSize();
-          var dockX = Math.round(dockRect.left + (dockRect.width - size) / 2);
-          var dockY = Math.round(dockRect.top + (dockRect.height - size) / 2);
-          setAnimState('walk');
-          moveTo(dockX, dockY);
-
-          setTimeout(function () {
-            container.classList.remove('pet-farming-walk');
-            dockPet(true);
-          }, 850);
-        } else {
-          setAnimState('idle');
-          container.classList.remove('pet-farming-walk');
-        }
+        setAnimState('idle');
+        container.classList.remove('pet-farming-walk');
         resetIdleTimer();
       },
 
       isBusy: function () {
-        return isDragging || isFlung || !isVisible ||
+        return isDragging || isFlung || !isVisible || isBeamed ||
                currentAnim === 'celebrating' || currentAnim === 'sad';
       },
 
@@ -1143,7 +1297,48 @@
         farmingCancelCb = active ? cancelCb : null;
       },
 
-      resetIdleTimer: resetIdleTimer
+      resetIdleTimer: resetIdleTimer,
+
+      beamToFarm: function () { if (!isBeamed && !isBeaming) beamIn(); },
+      beamToPage: function () { if (isBeamed && !isBeaming) beamOut(); },
+      isBeamed: function () { return isBeamed; },
+
+      renderMiniSprite: function (containerEl, scale) {
+        if (!containerEl || !spriteData || !petState || !petState.activePet) return;
+        var pet = petState.pets[petState.activePet];
+        if (!pet) return;
+
+        var frames = resolveFrames(petState.activePet, pet.level, 'idle');
+        if (!frames || frames.length === 0) return;
+
+        var pixelGrid = frames[0];
+        if (!pixelGrid) return;
+
+        containerEl.innerHTML = '';
+        var sc = scale || 2;
+        var canvas = document.createElement('div');
+        canvas.className = 'pet-pixel-canvas';
+        canvas.style.width = sc + 'px';
+        canvas.style.height = sc + 'px';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+
+        var shadows = [];
+        for (var i = 0; i < pixelGrid.length; i++) {
+          if (pixelGrid[i] === 0) continue;
+          var px = i % SPRITE_SIZE;
+          var py = Math.floor(i / SPRITE_SIZE);
+          var color = pixelGrid[i] === 1 ? 'var(--foreground)' : pixelGrid[i] === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
+          shadows.push((px * sc) + 'px ' + (py * sc) + 'px 0 0.5px ' + color);
+        }
+        canvas.style.boxShadow = shadows.join(',');
+        containerEl.style.width = (SPRITE_SIZE * sc) + 'px';
+        containerEl.style.height = (SPRITE_SIZE * sc) + 'px';
+        containerEl.style.position = 'relative';
+        containerEl.style.imageRendering = 'pixelated';
+        containerEl.appendChild(canvas);
+      }
     };
   }
 

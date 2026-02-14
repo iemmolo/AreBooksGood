@@ -30,11 +30,21 @@
   var PLOT_COST = 50;
   var MAX_PLOTS = 6;
 
+  // ── Cosmetic definitions ─────────────────────────────────
+  var COSMETICS = {
+    farmerHat:      { name: 'Farmer Hat',      cost: 300,  desc: 'Pet head accessory \u2014 straw hat pixel overlay' },
+    dirtTrail:      { name: 'Dirt Trail',      cost: 500,  desc: 'Brown particle dots trail behind pet when walking' },
+    overgrownTheme: { name: 'Overgrown Theme', cost: 1000, desc: '5th site color theme \u2014 earthy green palette' },
+    harvestMoon:    { name: 'Harvest Moon',    cost: 800,  desc: 'Ambient warm glow in top-right, slow pulse animation' }
+  };
+
   var balanceEl;
   var dialogueEl;
   var seedsGrid;
   var upgradesGrid;
   var farmhouseSection;
+  var toolsGrid;
+  var cosmeticsGrid;
 
   // ── Helpers ───────────────────────────────────────────
   function getFarmAPI() { return window.FarmAPI || null; }
@@ -313,6 +323,219 @@
     renderSeeds(); // Sell prices may change
   }
 
+  // ── Farm Tools ───────────────────────────────────────
+  function renderTools() {
+    var farm = getFarmAPI();
+    if (!farm || !toolsGrid) return;
+
+    toolsGrid.innerHTML = '';
+    var jb = getJB();
+    var balance = jb ? jb.getBalance() : 0;
+    var upgrades = farm.getUpgrades();
+    var defs = farm.getUpgradeDefs();
+
+    var toolKeys = ['sprinkler', 'scarecrow', 'goldenTrowel', 'seedBag', 'fertilizer'];
+    for (var i = 0; i < toolKeys.length; i++) {
+      (function (key) {
+        var def = defs[key];
+        if (!def) return;
+
+        var card = document.createElement('div');
+        card.className = 'sr-card';
+
+        var name = document.createElement('div');
+        name.className = 'sr-card-name';
+        name.textContent = def.name;
+        card.appendChild(name);
+
+        if (def.type === 'leveled') {
+          var currentLevel = upgrades[key] || 0;
+          var info = document.createElement('div');
+          info.className = 'sr-card-info';
+          if (currentLevel > 0) {
+            info.textContent = 'Lv.' + currentLevel + ': ' + def.effects[currentLevel - 1].desc;
+          } else {
+            info.textContent = 'Not owned';
+          }
+          card.appendChild(info);
+
+          if (currentLevel < def.maxLevel) {
+            var nextCost = def.costs[currentLevel];
+            var nextEffect = def.effects[currentLevel];
+
+            var price = document.createElement('div');
+            price.className = 'sr-card-price';
+            price.textContent = nextCost + ' JB \u2192 Lv.' + (currentLevel + 1);
+            card.appendChild(price);
+
+            var nextDesc = document.createElement('div');
+            nextDesc.className = 'sr-card-owned';
+            nextDesc.textContent = nextEffect.desc;
+            card.appendChild(nextDesc);
+
+            var btn = document.createElement('button');
+            btn.className = 'sr-card-btn';
+            btn.type = 'button';
+            btn.textContent = currentLevel === 0 ? 'BUY' : 'UPGRADE';
+            btn.disabled = balance < nextCost;
+            btn.addEventListener('click', function () {
+              buyTool(key, currentLevel + 1, nextCost, card);
+            });
+            card.appendChild(btn);
+          } else {
+            var maxed = document.createElement('div');
+            maxed.className = 'sr-card-price';
+            maxed.textContent = 'MAX LEVEL';
+            card.appendChild(maxed);
+          }
+        } else if (def.type === 'consumable') {
+          // Fertilizer
+          var count = upgrades[key] || 0;
+          var info = document.createElement('div');
+          info.className = 'sr-card-info';
+          info.textContent = def.desc;
+          card.appendChild(info);
+
+          var owned = document.createElement('div');
+          owned.className = 'sr-card-owned';
+          owned.textContent = 'Owned: x' + count;
+          card.appendChild(owned);
+
+          var price = document.createElement('div');
+          price.className = 'sr-card-price';
+          price.textContent = def.bulkCost + ' JB / x' + def.bulkAmount;
+          card.appendChild(price);
+
+          var btn = document.createElement('button');
+          btn.className = 'sr-card-btn';
+          btn.type = 'button';
+          btn.textContent = 'BUY x' + def.bulkAmount;
+          btn.disabled = balance < def.bulkCost;
+          btn.addEventListener('click', function () {
+            buyFertilizer(card);
+          });
+          card.appendChild(btn);
+        }
+
+        toolsGrid.appendChild(card);
+      })(toolKeys[i]);
+    }
+  }
+
+  function buyTool(key, newLevel, cost, cardEl) {
+    var jb = getJB();
+    var farm = getFarmAPI();
+    if (!jb || !farm) return;
+
+    if (jb.getBalance() < cost) return;
+    jb.deduct(cost);
+    farm.setUpgradeLevel(key, newLevel);
+
+    rotateMerchant();
+    updateBalance();
+    flashCard(cardEl);
+    renderTools();
+  }
+
+  function buyFertilizer(cardEl) {
+    var jb = getJB();
+    var farm = getFarmAPI();
+    if (!jb || !farm) return;
+
+    var defs = farm.getUpgradeDefs();
+    var def = defs.fertilizer;
+    if (jb.getBalance() < def.bulkCost) return;
+    jb.deduct(def.bulkCost);
+    farm.addFertilizer(def.bulkAmount);
+
+    rotateMerchant();
+    updateBalance();
+    flashCard(cardEl);
+    renderTools();
+  }
+
+  // ── Exclusive Cosmetics ─────────────────────────────
+  function renderCosmetics() {
+    var farm = getFarmAPI();
+    if (!farm || !cosmeticsGrid) return;
+
+    cosmeticsGrid.innerHTML = '';
+    var jb = getJB();
+    var balance = jb ? jb.getBalance() : 0;
+    var owned = farm.getCosmetics();
+
+    var keys = Object.keys(COSMETICS);
+    for (var i = 0; i < keys.length; i++) {
+      (function (key) {
+        var cosmetic = COSMETICS[key];
+        var isOwned = owned[key];
+
+        var card = document.createElement('div');
+        card.className = 'sr-card';
+        if (isOwned) card.classList.add('sr-card-owned-cosmetic');
+
+        var name = document.createElement('div');
+        name.className = 'sr-card-name';
+        name.textContent = cosmetic.name;
+        card.appendChild(name);
+
+        var desc = document.createElement('div');
+        desc.className = 'sr-card-info';
+        desc.textContent = cosmetic.desc;
+        card.appendChild(desc);
+
+        if (isOwned) {
+          var badge = document.createElement('div');
+          badge.className = 'sr-card-price sr-cosmetic-owned-badge';
+          badge.textContent = 'OWNED';
+          card.appendChild(badge);
+        } else {
+          var price = document.createElement('div');
+          price.className = 'sr-card-price';
+          price.textContent = cosmetic.cost + ' JB';
+          card.appendChild(price);
+
+          var btn = document.createElement('button');
+          btn.className = 'sr-card-btn';
+          btn.type = 'button';
+          btn.textContent = 'BUY';
+          btn.disabled = balance < cosmetic.cost;
+          btn.addEventListener('click', function () {
+            buyCosmetic(key, cosmetic.cost, card);
+          });
+          card.appendChild(btn);
+        }
+
+        cosmeticsGrid.appendChild(card);
+      })(keys[i]);
+    }
+  }
+
+  function buyCosmetic(key, cost, cardEl) {
+    var jb = getJB();
+    var farm = getFarmAPI();
+    if (!jb || !farm) return;
+
+    if (jb.getBalance() < cost) return;
+    jb.deduct(cost);
+    farm.setCosmetic(key, true);
+
+    // Apply cosmetic effects immediately
+    if (key === 'harvestMoon') document.body.classList.add('harvest-moon-active');
+    if (key === 'overgrownTheme') {
+      var opt = document.querySelector('#theme-select option[value="overgrown"]');
+      if (opt) opt.style.display = '';
+    }
+    if (key === 'farmerHat' && window.PetSystem && window.PetSystem.reload) {
+      window.PetSystem.reload();
+    }
+
+    rotateMerchant();
+    updateBalance();
+    flashCard(cardEl);
+    renderCosmetics();
+  }
+
   // ── Init ──────────────────────────────────────────────
   function init() {
     balanceEl = document.getElementById('sr-balance');
@@ -320,6 +543,8 @@
     seedsGrid = document.getElementById('sr-seeds-grid');
     upgradesGrid = document.getElementById('sr-upgrades-grid');
     farmhouseSection = document.getElementById('sr-farmhouse');
+    toolsGrid = document.getElementById('sr-tools-grid');
+    cosmeticsGrid = document.getElementById('sr-cosmetics-grid');
 
     if (!seedsGrid) return; // Not on silk road page
 
@@ -328,6 +553,8 @@
     renderSeeds();
     renderUpgrades();
     renderFarmhouse();
+    renderTools();
+    renderCosmetics();
 
     // Live balance updates
     var jb = getJB();

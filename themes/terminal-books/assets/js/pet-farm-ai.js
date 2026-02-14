@@ -57,10 +57,10 @@
       dragon: ['needs seeds', '*pokes dirt*', 'barren land', 'plant fire flowers!'],
       robot:  ['PLOT: vacant', 'soil: idle', 'suggestion: plant crop', 'utilization: 0%']
     },
-    dock: {
-      cat:    ['*sniffs bed*', 'nap later', 'comfy spot', '*circles bed*'],
-      dragon: ['my nest!', '*fluffs bedding*', 'guard post', 'home base'],
-      robot:  ['DOCK: operational', 'recharge station', 'home coordinates', 'standby mode: later']
+    teleporter: {
+      cat:    ['*sniffs pad*', 'beam me up?', 'ooh glowy', '*paws at light*'],
+      dragon: ['*sniffs portal*', 'farm awaits!', 'warp pad!', 'beam energy!'],
+      robot:  ['TELEPORTER: online', 'coordinates locked', 'quantum link: stable', 'transport ready']
     }
   };
 
@@ -297,8 +297,8 @@
       }
     }
 
-    var dock = document.querySelector('.pet-dock');
-    if (dock && isInViewport(dock)) targets.push({ el: dock, key: 'dock' });
+    var teleporter = document.querySelector('.pet-teleporter');
+    if (teleporter && isInViewport(teleporter)) targets.push({ el: teleporter, key: 'teleporter' });
 
     if (targets.length === 0) { busy = false; return; }
 
@@ -436,8 +436,11 @@
     if (!ps || busy) { scheduleTick(); return; }
 
     var state = ps.getState();
-    if (!state || ps.isBusy()) { scheduleTick(); return; }
+    if (!state) { scheduleTick(); return; }
 
+    if (ps.isBusy()) { scheduleTick(); return; }
+    // Skip when pet is beamed to farm
+    if (ps.isBeamed && ps.isBeamed()) { scheduleTick(); return; }
     // Only act when idle or sleeping
     if (state.anim !== 'idle' && state.anim !== 'sleeping') {
       scheduleTick();

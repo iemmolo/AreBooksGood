@@ -38,7 +38,8 @@
       monocle:  { name: 'Monocle',    slot: 'head', cost: 300 },
       bowtie:   { name: 'Bow Tie',    slot: 'body', cost: 150 },
       cape:     { name: 'Cape',       slot: 'body', cost: 400 },
-      partyhat: { name: 'Party Hat',  slot: 'head', cost: 100 }
+      partyhat:  { name: 'Party Hat',  slot: 'head', cost: 100 },
+      farmerhat: { name: 'Farmer Hat', slot: 'head', cost: 0, silkRoadOnly: true }
     },
     evolution: {
       2: { cost: 2000, gamesRequired: 50 },
@@ -459,7 +460,7 @@
     dom.accessoriesSection.style.display = '';
     dom.accessories.innerHTML = '';
 
-    var ids = ['partyhat', 'bowtie', 'tophat', 'monocle', 'cape', 'crown'];
+    var ids = ['partyhat', 'bowtie', 'tophat', 'monocle', 'cape', 'crown', 'farmerhat'];
     for (var i = 0; i < ids.length; i++) {
       var id = ids[i];
       var info = CATALOG.accessories[id];
@@ -493,19 +494,45 @@
         })(id));
         card.appendChild(equipBtn);
       } else {
-        var costEl = document.createElement('div');
-        costEl.className = 'shop-card-cost';
-        costEl.textContent = info.cost + ' coins';
-        card.appendChild(costEl);
+        if (info.silkRoadOnly) {
+          // Farmer hat: check if cosmetic is owned via FarmAPI
+          var farmOwned = window.FarmAPI && window.FarmAPI.getCosmetics && window.FarmAPI.getCosmetics().farmerHat;
+          if (farmOwned) {
+            // Auto-grant to pet accessories
+            if (petState.accessories.owned.indexOf(id) === -1) {
+              petState.accessories.owned.push(id);
+              savePetState();
+            }
+            var equipBtn2 = document.createElement('button');
+            equipBtn2.className = 'shop-btn shop-btn-equip';
+            equipBtn2.textContent = 'Equip';
+            equipBtn2.addEventListener('click', (function (aid) {
+              return function () { equipAccessory(aid); };
+            })(id));
+            card.appendChild(equipBtn2);
+          } else {
+            var srNote = document.createElement('div');
+            srNote.className = 'shop-card-cost';
+            srNote.textContent = 'Available at Silk Road';
+            srNote.style.opacity = '0.6';
+            srNote.style.fontStyle = 'italic';
+            card.appendChild(srNote);
+          }
+        } else {
+          var costEl = document.createElement('div');
+          costEl.className = 'shop-card-cost';
+          costEl.textContent = info.cost + ' coins';
+          card.appendChild(costEl);
 
-        var buyBtn = document.createElement('button');
-        buyBtn.className = 'shop-btn';
-        buyBtn.textContent = 'Buy';
-        buyBtn.disabled = Wallet.getBalance() < info.cost;
-        buyBtn.addEventListener('click', (function (aid) {
-          return function () { buyAccessory(aid); };
-        })(id));
-        card.appendChild(buyBtn);
+          var buyBtn = document.createElement('button');
+          buyBtn.className = 'shop-btn';
+          buyBtn.textContent = 'Buy';
+          buyBtn.disabled = Wallet.getBalance() < info.cost;
+          buyBtn.addEventListener('click', (function (aid) {
+            return function () { buyAccessory(aid); };
+          })(id));
+          card.appendChild(buyBtn);
+        }
       }
 
       dom.accessories.appendChild(card);
