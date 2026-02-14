@@ -1710,6 +1710,9 @@
     for (var i = 0; i < farmState.plots.length; i++) {
       farmBarEl.appendChild(createPlotEl(i));
     }
+    // Re-create upgrade icons (they live in farm-scene, not farm-bar,
+    // but re-render to stay visually consistent after layout changes)
+    createUpgradeDecorations();
   }
 
   // ── FarmAPI — exposed for pet-farm-ai.js & silk-road.js ──
@@ -2050,9 +2053,15 @@
   // ── Init ────────────────────────────────────────────────
   // ── Upgrade decorations in farm scene ───────────────────
   function createUpgradeDecorations() {
-    if (!farmBarEl || !farmState.upgrades) return;
+    if (!farmSceneEl || !farmState.upgrades) return;
 
-    // Sprinkler icon near farm bar
+    // Remove any existing upgrade icons
+    var existing = farmSceneEl.querySelectorAll('.farm-upgrade-icon');
+    for (var i = 0; i < existing.length; i++) {
+      existing[i].parentNode.removeChild(existing[i]);
+    }
+
+    // Sprinkler icon — appended to farm-scene (not farm-bar)
     if (farmState.upgrades.sprinkler > 0) {
       var sprinklerIcon = document.createElement('div');
       sprinklerIcon.className = 'farm-upgrade-icon farm-sprinkler-icon';
@@ -2063,10 +2072,10 @@
         e.stopPropagation();
         openUpgradeInfo('sprinkler', sprinklerIcon);
       });
-      farmBarEl.appendChild(sprinklerIcon);
+      farmSceneEl.appendChild(sprinklerIcon);
     }
 
-    // Scarecrow icon at end of farm bar
+    // Scarecrow icon — appended to farm-scene (not farm-bar)
     if (farmState.upgrades.scarecrow > 0) {
       var scarecrowIcon = document.createElement('div');
       scarecrowIcon.className = 'farm-upgrade-icon farm-scarecrow-icon';
@@ -2077,7 +2086,7 @@
         e.stopPropagation();
         openUpgradeInfo('scarecrow', scarecrowIcon);
       });
-      farmBarEl.appendChild(scarecrowIcon);
+      farmSceneEl.appendChild(scarecrowIcon);
     }
   }
 

@@ -420,7 +420,8 @@
 }
 
 .farm-scene.farm-dimmed .farm-bar,
-.farm-scene.farm-dimmed .farm-house-widget {
+.farm-scene.farm-dimmed .farm-house-widget,
+.farm-scene.farm-dimmed .farm-upgrade-icon {
   pointer-events: none;
 }
 
@@ -551,13 +552,12 @@ body:not(.farm-dimmed-mode) .pet-teleporter {
 
 /* ── Upgrade decoration icons ────────────────── */
 .farm-upgrade-icon {
-  width: 12px;
-  height: 12px;
   position: relative;
   flex-shrink: 0;
   align-self: flex-end;
   margin-bottom: 0;
   image-rendering: pixelated;
+  pointer-events: auto;
 }
 
 .farm-sprinkler-icon {
