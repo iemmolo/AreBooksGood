@@ -344,6 +344,12 @@
   margin-bottom: 8px;
 }
 
+.farm-house-panel-bonus-line {
+  font-size: 10px;
+  padding: 2px 0 2px 8px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
 .farm-house-panel-timers {
   margin-bottom: 8px;
 }
@@ -530,6 +536,19 @@ body:not(.farm-dimmed-mode) .pet-teleporter {
   background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
+/* ── Upgrade info popup ─────────────────────── */
+.farm-upgrade-info {
+  position: fixed;
+  z-index: 10001;
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  padding: 8px 10px;
+  min-width: 140px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--foreground);
+}
+
 /* ── Upgrade decoration icons ────────────────── */
 .farm-upgrade-icon {
   width: 12px;
@@ -537,42 +556,33 @@ body:not(.farm-dimmed-mode) .pet-teleporter {
   position: relative;
   flex-shrink: 0;
   align-self: flex-end;
-  margin-bottom: 4px;
+  margin-bottom: 0;
   image-rendering: pixelated;
 }
 
 .farm-sprinkler-icon {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  background: #4a9eff;
-  box-shadow: 0 0 4px rgba(74, 158, 255, 0.5);
-  animation: sprinkler-pulse 2s ease-in-out infinite;
-}
-
-@keyframes sprinkler-pulse {
-  0%, 100% { box-shadow: 0 0 4px rgba(74, 158, 255, 0.3); }
-  50% { box-shadow: 0 0 8px rgba(74, 158, 255, 0.7); }
-}
-
-.farm-scarecrow-icon {
-  width: 18px;
-  height: 24px;
+  width: 10px;
+  height: 20px;
   position: relative;
+  background: transparent;
+  cursor: pointer;
 }
 
-.farm-scarecrow-icon::before {
+/* Sprinkler post */
+.farm-sprinkler-icon::before {
   content: '';
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 2px;
-  height: 16px;
-  background: #8B4513;
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(to bottom, #6db3f2, #4a9eff);
+  border-radius: 1px;
 }
 
-.farm-scarecrow-icon::after {
+/* Water drop on top */
+.farm-sprinkler-icon::after {
   content: '';
   position: absolute;
   top: 0;
@@ -580,10 +590,60 @@ body:not(.farm-dimmed-mode) .pet-teleporter {
   transform: translateX(-50%);
   width: 8px;
   height: 8px;
+  background: radial-gradient(circle at 40% 35%, #8ad4ff, #4a9eff);
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  box-shadow: 0 0 4px rgba(74, 158, 255, 0.5);
+  animation: sprinkler-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sprinkler-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(74, 158, 255, 0.3); transform: translateX(-50%) scale(1); }
+  50% { box-shadow: 0 0 10px rgba(74, 158, 255, 0.8); transform: translateX(-50%) scale(1.15); }
+}
+
+.farm-scarecrow-icon {
+  width: 18px;
+  height: 26px;
+  position: relative;
+  cursor: pointer;
+  animation: scarecrow-sway 4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes scarecrow-sway {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  75% { transform: rotate(-2deg); }
+}
+
+/* Vertical post + horizontal crossbar */
+.farm-scarecrow-icon::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 20px;
+  background: #8B4513;
+  box-shadow: -6px -12px 0 0 #8B4513, 6px -12px 0 0 #8B4513,
+              -5px -12px 0 0 #8B4513, 5px -12px 0 0 #8B4513;
+}
+
+/* Head */
+.farm-scarecrow-icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #DAA520;
+  background: radial-gradient(circle at 40% 35%, #f0c040, #DAA520);
   border: 1px solid #8B4513;
 }
+
 
 /* ── Harvest moon cosmetic ───────────────────── */
 body.harvest-moon-active::before {

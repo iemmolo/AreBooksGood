@@ -584,6 +584,7 @@
   var farmhousePanelEl;
   var sprinklerTimer = null;
   var plotInfoEl = null;
+  var upgradeInfoEl = null;
 
   function defaultState() {
     return {
@@ -912,6 +913,54 @@
     }
     plotInfoEl = null;
     document.removeEventListener('click', outsidePlotInfoClick);
+  }
+
+  // ── Upgrade info popup ────────────────────────────────────
+  function openUpgradeInfo(key, targetEl) {
+    closeUpgradeInfo();
+    var upgrades = farmState.upgrades || {};
+    var level = upgrades[key] || 0;
+    if (level <= 0 || !FARM_UPGRADES[key]) return;
+
+    var upgrade = FARM_UPGRADES[key];
+    var effect = upgrade.effects[level - 1];
+
+    upgradeInfoEl = document.createElement('div');
+    upgradeInfoEl.className = 'farm-upgrade-info';
+
+    var nameRow = document.createElement('div');
+    nameRow.className = 'farm-plot-info-name';
+    nameRow.textContent = upgrade.name + ' Lv.' + level;
+    upgradeInfoEl.appendChild(nameRow);
+
+    var descRow = document.createElement('div');
+    descRow.className = 'farm-plot-info-stage';
+    descRow.textContent = effect.desc;
+    upgradeInfoEl.appendChild(descRow);
+
+    var rect = targetEl.getBoundingClientRect();
+    upgradeInfoEl.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - 150)) + 'px';
+    upgradeInfoEl.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+
+    document.body.appendChild(upgradeInfoEl);
+
+    setTimeout(function () {
+      document.addEventListener('click', outsideUpgradeInfoClick);
+    }, 0);
+  }
+
+  function outsideUpgradeInfoClick(e) {
+    if (upgradeInfoEl && !upgradeInfoEl.contains(e.target)) {
+      closeUpgradeInfo();
+    }
+  }
+
+  function closeUpgradeInfo() {
+    if (upgradeInfoEl && upgradeInfoEl.parentNode) {
+      upgradeInfoEl.parentNode.removeChild(upgradeInfoEl);
+    }
+    upgradeInfoEl = null;
+    document.removeEventListener('click', outsideUpgradeInfoClick);
   }
 
   // ── Seed picker ─────────────────────────────────────────
@@ -1445,7 +1494,38 @@
     var petBonus = getPetBonusText();
     if (petBonus) bonusLines.push(petBonus);
 
-    bonuses.textContent = bonusLines.length > 0 ? bonusLines.join(' | ') : 'No bonuses yet';
+    // Tool bonuses
+    var upgrades = farmState.upgrades || {};
+    if (upgrades.sprinkler > 0) {
+      var sprInterval = FARM_UPGRADES.sprinkler.effects[upgrades.sprinkler - 1].interval;
+      bonusLines.push('Sprinkler Lv.' + upgrades.sprinkler + ' (' + (sprInterval / 1000) + 's)');
+    }
+    if (upgrades.scarecrow > 0) {
+      var scBonus = FARM_UPGRADES.scarecrow.effects[upgrades.scarecrow - 1].bonus;
+      bonusLines.push('+' + Math.round(scBonus * 100) + '% harvest bonus');
+    }
+    if (upgrades.goldenTrowel > 0) {
+      var gtBonus = FARM_UPGRADES.goldenTrowel.effects[upgrades.goldenTrowel - 1].bonus;
+      bonusLines.push(gtBonus.toFixed(2) + 'x sell multiplier');
+    }
+    if (upgrades.seedBag > 0) {
+      var sbChance = FARM_UPGRADES.seedBag.effects[upgrades.seedBag - 1].chance;
+      bonusLines.push(Math.round(sbChance * 100) + '% free seed chance');
+    }
+    if (upgrades.fertilizer > 0) {
+      bonusLines.push('Fertilizer x' + upgrades.fertilizer);
+    }
+
+    if (bonusLines.length > 0) {
+      for (var b = 0; b < bonusLines.length; b++) {
+        var bonusLine = document.createElement('div');
+        bonusLine.className = 'farm-house-panel-bonus-line';
+        bonusLine.textContent = bonusLines[b];
+        bonuses.appendChild(bonusLine);
+      }
+    } else {
+      bonuses.textContent = 'No bonuses yet';
+    }
     farmhousePanelEl.appendChild(bonuses);
 
     // Crop timers
@@ -1915,6 +1995,10 @@
     if (farmState.upgrades.sprinkler > 0) {
       var sprinklerIcon = document.createElement('div');
       sprinklerIcon.className = 'farm-upgrade-icon farm-sprinkler-icon';
+      sprinklerIcon.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openUpgradeInfo('sprinkler', sprinklerIcon);
+      });
       farmBarEl.appendChild(sprinklerIcon);
     }
 
@@ -1922,8 +2006,13 @@
     if (farmState.upgrades.scarecrow > 0) {
       var scarecrowIcon = document.createElement('div');
       scarecrowIcon.className = 'farm-upgrade-icon farm-scarecrow-icon';
+      scarecrowIcon.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openUpgradeInfo('scarecrow', scarecrowIcon);
+      });
       farmBarEl.appendChild(scarecrowIcon);
     }
+
   }
 
   // ── Harvest moon cosmetic ─────────────────────────────
