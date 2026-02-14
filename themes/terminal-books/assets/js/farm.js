@@ -1162,6 +1162,14 @@
     // Float particle
     showJBFloat(plotIndex, sellValue);
 
+    // Cat "Green Paw": 15% chance to auto-replant after manual harvest
+    if (window.PetSystem && window.PetSystem.getState) {
+      var ps = window.PetSystem.getState();
+      if (ps && ps.petId === 'cat' && Math.random() < 0.15) {
+        plantSeed(plotIndex, cropKey);
+      }
+    }
+
     // Pet celebrates
     if (window.PetSystem && window.PetSystem.celebrate) {
       window.PetSystem.celebrate();
@@ -1513,8 +1521,7 @@
     var id = ps.petId;
     var lv = ps.level;
     if (id === 'cat') {
-      var pct = lv === 1 ? 25 : lv === 2 ? 40 : 50;
-      return 'Cat: ' + pct + '% loss refund';
+      return 'Cat: Green Paw (15% auto-replant)';
     }
     if (id === 'dragon') {
       var pct = lv === 1 ? 10 : lv === 2 ? 15 : 20;
