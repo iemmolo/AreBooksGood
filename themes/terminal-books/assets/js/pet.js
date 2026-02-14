@@ -846,6 +846,11 @@
   };
 
   function speak(message) {
+    // Delegate to mini pet when beamed to farm
+    if (isBeamed && window.FarmAPI && window.FarmAPI.miniPetSpeak) {
+      window.FarmAPI.miniPetSpeak(message);
+      return;
+    }
     if (!speechEl || !container || !isVisible) return;
 
     // Cancel any in-progress typewriter animation
@@ -958,6 +963,11 @@
   }
 
   function celebrate() {
+    // Delegate to mini pet when beamed to farm
+    if (isBeamed && window.FarmAPI && window.FarmAPI.miniPetCelebrate) {
+      window.FarmAPI.miniPetCelebrate();
+      return;
+    }
     setAnimState('celebrating');
     if (celebrateTimeout) clearTimeout(celebrateTimeout);
     celebrateTimeout = setTimeout(function () {
@@ -966,6 +976,11 @@
   }
 
   function showSad() {
+    // Delegate to mini pet when beamed to farm
+    if (isBeamed && window.FarmAPI && window.FarmAPI.miniPetSad) {
+      window.FarmAPI.miniPetSad();
+      return;
+    }
     setAnimState('sad');
     if (sadTimeout) clearTimeout(sadTimeout);
     sadTimeout = setTimeout(function () {
@@ -1338,6 +1353,42 @@
         containerEl.style.position = 'relative';
         containerEl.style.imageRendering = 'pixelated';
         containerEl.appendChild(canvas);
+
+        // Render accessory overlay on mini sprite
+        if (spriteData.accessories && petState.accessories) {
+          var equipped = petState.accessories.equipped;
+          var overlayPixels = [];
+          var slots = ['head', 'body'];
+          for (var s = 0; s < slots.length; s++) {
+            var accId = equipped[slots[s]];
+            if (!accId || !spriteData.accessories[accId]) continue;
+            var accData = spriteData.accessories[accId];
+            for (var j = 0; j < accData.length; j++) {
+              if (accData[j] !== 0) {
+                overlayPixels.push({ index: j, value: accData[j] });
+              }
+            }
+          }
+          if (overlayPixels.length > 0) {
+            var accShadows = [];
+            for (var p = 0; p < overlayPixels.length; p++) {
+              var ax = overlayPixels[p].index % SPRITE_SIZE;
+              var ay = Math.floor(overlayPixels[p].index / SPRITE_SIZE);
+              var ac = overlayPixels[p].value === 1 ? 'var(--foreground)' : overlayPixels[p].value === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
+              accShadows.push((ax * sc) + 'px ' + (ay * sc) + 'px 0 0.5px ' + ac);
+            }
+            var overlay = document.createElement('div');
+            overlay.className = 'pet-pixel-canvas pet-accessory-canvas';
+            overlay.style.width = sc + 'px';
+            overlay.style.height = sc + 'px';
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.zIndex = '1';
+            overlay.style.boxShadow = accShadows.join(',');
+            containerEl.appendChild(overlay);
+          }
+        }
       }
     };
   }

@@ -64,6 +64,13 @@
     }
   };
 
+  // ── Beamed idle speech (mini pet at farm) ───────────
+  var BEAMED_IDLE_SPEECH = {
+    cat:    ['*stretches on grass*', 'nice farm~', '*rolls in dirt*', 'comfy here', '*purrs at farmhouse*'],
+    dragon: ['*basks in sun*', 'good land', '*sniffs crops*', 'my domain', '*curls up by house*'],
+    robot:  ['PERIMETER: secure', 'farm status: good', 'idle mode: active', 'all systems nominal', 'scanning crops...']
+  };
+
   // ── State ───────────────────────────────────────────
   var aiTimer = null;
   var busy = false;
@@ -264,6 +271,127 @@
     }
   }
 
+  // ── Beamed farm sequence (mini pet walks to plot) ──
+  function beamedFarmSequence(plot) {
+    var ps = getPetSystem();
+    var farm = getFarmAPI();
+    if (!ps || !farm) { busy = false; return; }
+
+    var state = ps.getState();
+    if (!state) { busy = false; return; }
+
+    busy = true;
+    farm.setMiniPetBusy(true);
+
+    var petId = state.petId;
+    var lines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
+    farm.miniPetSpeak(randomMessage(lines));
+
+    // Walk to plot
+    farm.walkMiniPetToPlot(plot.index, function () {
+      // Add tending indicator
+      var plotEl = farm.getPlotElement(plot.index);
+      if (plotEl) plotEl.classList.add('farm-plot-pet-tending');
+
+      setTimeout(function () {
+        if (plotEl) plotEl.classList.remove('farm-plot-pet-tending');
+
+        // Harvest
+        var result = farm.harvest(plot.index);
+        if (result) {
+          farm.showHarvestParticle(plot.index, result.crop);
+          farm.miniPetCelebrate();
+          applyBonuses(petId, state.level, plot.index, result);
+        }
+
+        // Return home after delay
+        setTimeout(function () {
+          farm.returnMiniPetHome(function () {
+            busy = false;
+            farm.setMiniPetBusy(false);
+          });
+        }, RETURN_DELAY);
+
+      }, INTERACT_DELAY);
+    });
+  }
+
+  // ── Beamed water sequence (mini pet walks to plot) ─
+  function beamedWaterSequence(plot) {
+    var ps = getPetSystem();
+    var farm = getFarmAPI();
+    if (!ps || !farm) { busy = false; return; }
+
+    var state = ps.getState();
+    if (!state) { busy = false; return; }
+
+    busy = true;
+    farm.setMiniPetBusy(true);
+
+    var petId = state.petId;
+    var lines = WATER_SPEECH[petId] || WATER_SPEECH.cat;
+    farm.miniPetSpeak(randomMessage(lines));
+
+    farm.walkMiniPetToPlot(plot.index, function () {
+      var plotEl = farm.getPlotElement(plot.index);
+      if (plotEl) plotEl.classList.add('farm-plot-watering');
+
+      setTimeout(function () {
+        if (plotEl) plotEl.classList.remove('farm-plot-watering');
+
+        var watered = farm.water(plot.index);
+        if (watered) {
+          farm.showWaterParticle(plot.index);
+        }
+
+        setTimeout(function () {
+          farm.returnMiniPetHome(function () {
+            busy = false;
+            farm.setMiniPetBusy(false);
+          });
+        }, RETURN_DELAY);
+
+      }, WATER_DELAY);
+    });
+  }
+
+  // ── Beamed idle interaction ───────────────────────
+  function beamedIdleInteraction(petId) {
+    var farm = getFarmAPI();
+    if (!farm) { busy = false; return; }
+
+    var plots = farm.getPlots();
+
+    // 50% chance: walk to a random empty plot and comment
+    var emptyPlots = [];
+    for (var i = 0; i < plots.length; i++) {
+      if (!plots[i].crop) emptyPlots.push(plots[i]);
+    }
+
+    if (emptyPlots.length > 0 && Math.random() < 0.5) {
+      var pick = emptyPlots[Math.floor(Math.random() * emptyPlots.length)];
+      busy = true;
+      farm.setMiniPetBusy(true);
+
+      farm.walkMiniPetToPlot(pick.index, function () {
+        var lines = IDLE_SPEECH.emptyPlot[petId] || IDLE_SPEECH.emptyPlot.cat;
+        farm.miniPetSpeak(randomMessage(lines));
+
+        setTimeout(function () {
+          farm.returnMiniPetHome(function () {
+            busy = false;
+            farm.setMiniPetBusy(false);
+          });
+        }, IDLE_LOOK_DELAY);
+      });
+      return;
+    }
+
+    // Otherwise speak an idle line at home
+    var idleLines = BEAMED_IDLE_SPEECH[petId] || BEAMED_IDLE_SPEECH.cat;
+    farm.miniPetSpeak(randomMessage(idleLines));
+  }
+
   // ── Idle interaction with page elements ─────────────
   function idleInteraction(petId) {
     var ps = getPetSystem();
@@ -433,21 +561,59 @@
   // ── AI tick ─────────────────────────────────────────
   function aiTick() {
     var ps = getPetSystem();
+    var farm = getFarmAPI();
     if (!ps || busy) { scheduleTick(); return; }
 
     var state = ps.getState();
     if (!state) { scheduleTick(); return; }
 
+    var petId = state.petId;
+    var beamed = ps.isBeamed && ps.isBeamed();
+
+    // ── Beamed mode: use mini pet on farm ──────────
+    if (beamed) {
+      if (!farm || farm.isMiniPetBusy()) { scheduleTick(); return; }
+
+      // Priority 1: Harvest ready crops
+      var readyPlotB = findReadyPlot();
+      if (readyPlotB) {
+        beamedFarmSequence(readyPlotB);
+        scheduleTick();
+        return;
+      }
+
+      // Priority 2: Water growing crops
+      var waterPlotB = findWaterablePlot();
+      if (waterPlotB) {
+        beamedWaterSequence(waterPlotB);
+        scheduleTick();
+        return;
+      }
+
+      // Priority 3: 15% chance beamed idle interaction
+      if (Math.random() < 0.15) {
+        beamedIdleInteraction(petId);
+        scheduleTick();
+        return;
+      }
+
+      // Priority 4: 10% chance random farm speech
+      if (Math.random() < 0.10) {
+        var bLines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
+        farm.miniPetSpeak(randomMessage(bLines));
+      }
+
+      scheduleTick();
+      return;
+    }
+
+    // ── Normal mode (pet on page) ─────────────────
     if (ps.isBusy()) { scheduleTick(); return; }
-    // Skip when pet is beamed to farm
-    if (ps.isBeamed && ps.isBeamed()) { scheduleTick(); return; }
     // Only act when idle or sleeping
     if (state.anim !== 'idle' && state.anim !== 'sleeping') {
       scheduleTick();
       return;
     }
-
-    var petId = state.petId;
 
     // Priority 1: Harvest ready crops
     var readyPlot = findReadyPlot();

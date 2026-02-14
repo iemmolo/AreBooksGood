@@ -605,21 +605,62 @@ body.harvest-moon-active::before {
   50% { opacity: 1; transform: scale(1.1); }
 }
 
-/* ── Farm house pet (Phase 4) ────────────────── */
+/* ── Farm house pet (scene-level for walking) ── */
 .farm-house-pet {
   display: none;
   position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 12px;
   z-index: 2;
+  pointer-events: auto;
+  cursor: pointer;
   image-rendering: pixelated;
   animation: pet-bob 2s ease-in-out infinite;
-  cursor: pointer;
+  transition: left 0.8s ease-in-out;
 }
 
 .farm-house-pet:hover {
   filter: brightness(1.3);
+}
+
+/* ── Farm pet speech bubble ────────────────── */
+.farm-pet-speech {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--foreground);
+  padding: 2px 6px;
+  font-size: 9px;
+  font-family: inherit;
+  white-space: nowrap;
+  pointer-events: none;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: none;
+  z-index: 3;
+}
+
+/* ── Farm pet celebrate (jump) ─────────────── */
+.farm-pet-celebrating {
+  animation: farm-pet-jump 0.4s ease-in-out 3 !important;
+}
+
+@keyframes farm-pet-jump {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+}
+
+/* ── Farm pet sad (droop) ──────────────────── */
+.farm-pet-sad {
+  animation: farm-pet-droop 1.5s ease-in-out infinite !important;
+}
+
+@keyframes farm-pet-droop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
 }
 
 /* ── Farm pet beam-up (dissolve out) ─────────── */
@@ -628,9 +669,9 @@ body.harvest-moon-active::before {
 }
 
 @keyframes farm-pet-beam-up {
-  0% { filter: brightness(1); transform: translateX(-50%) scale(1); opacity: 1; }
-  50% { filter: brightness(3); transform: translateX(-50%) scale(1.3); opacity: 0.6; }
-  100% { filter: brightness(4); transform: translateX(-50%) scale(0.3); opacity: 0; }
+  0% { filter: brightness(1); opacity: 1; }
+  50% { filter: brightness(3); opacity: 0.6; }
+  100% { filter: brightness(4); opacity: 0; }
 }
 
 /* ── Farm pet beam-down (materialize in) ─────── */
@@ -639,9 +680,9 @@ body.harvest-moon-active::before {
 }
 
 @keyframes farm-pet-beam-down {
-  0% { filter: brightness(4); transform: translateX(-50%) scale(0.3); opacity: 0; }
-  50% { filter: brightness(2); transform: translateX(-50%) scale(1.2); opacity: 0.8; }
-  100% { filter: brightness(1); transform: translateX(-50%) scale(1); opacity: 1; }
+  0% { filter: brightness(4); opacity: 0; }
+  50% { filter: brightness(2); opacity: 0.8; }
+  100% { filter: brightness(1); opacity: 1; }
 }
 
 /* ── Mobile ──────────────────────────────────── */

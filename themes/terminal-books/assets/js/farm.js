@@ -1195,6 +1195,13 @@
   }
 
   var farmhousePetEl = null;
+  var farmPetSpeechEl = null;
+  var miniPetBusy = false;
+  var miniPetHomeLeft = 0;
+  var miniSpeechTimer = null;
+  var miniTypewriterTimer = null;
+  var miniCelebrateTimeout = null;
+  var miniSadTimeout = null;
 
   function renderFarmhouseSprite() {
     if (!farmhouseEl) return;
@@ -1214,8 +1221,10 @@
     // Remove existing
     if (farmhousePetEl && farmhousePetEl.parentNode) farmhousePetEl.parentNode.removeChild(farmhousePetEl);
     farmhousePetEl = null;
+    farmPetSpeechEl = null;
 
     if (!window.PetSystem || !window.PetSystem.renderMiniSprite) return;
+    if (!farmSceneEl) return;
     var ps = window.PetSystem.getState && window.PetSystem.getState();
     if (!ps) return;
 
@@ -1224,7 +1233,17 @@
     window.PetSystem.renderMiniSprite(farmhousePetEl, 2);
     // renderMiniSprite sets position:relative — override back to absolute
     farmhousePetEl.style.position = 'absolute';
-    farmhouseEl.appendChild(farmhousePetEl);
+
+    // Create speech bubble
+    farmPetSpeechEl = document.createElement('div');
+    farmPetSpeechEl.className = 'farm-pet-speech';
+    farmhousePetEl.appendChild(farmPetSpeechEl);
+
+    // Append to farm scene (not farmhouse) for scene-level walking
+    farmSceneEl.appendChild(farmhousePetEl);
+
+    // Set home position at farmhouse center
+    updateMiniPetHomePos();
 
     // Click to beam pet back to page
     farmhousePetEl.addEventListener('click', function (e) {
@@ -1240,10 +1259,96 @@
     }
   }
 
+  function updateMiniPetHomePos() {
+    if (!farmhousePetEl || !farmhouseEl) return;
+    var houseRect = farmhouseEl.getBoundingClientRect();
+    var petWidth = farmhousePetEl.offsetWidth || 32;
+    miniPetHomeLeft = houseRect.left + houseRect.width / 2 - petWidth / 2;
+    farmhousePetEl.style.left = miniPetHomeLeft + 'px';
+  }
+
+  // ── Mini pet walking ──────────────────────────────────
+  function walkMiniPetToPlot(plotIndex, callback) {
+    if (!farmhousePetEl) { if (callback) callback(); return; }
+    var plotEl = window.FarmAPI.getPlotElement(plotIndex);
+    if (!plotEl) { if (callback) callback(); return; }
+
+    var plotRect = plotEl.getBoundingClientRect();
+    var petWidth = farmhousePetEl.offsetWidth || 32;
+    var targetLeft = plotRect.left + plotRect.width / 2 - petWidth / 2;
+
+    farmhousePetEl.style.left = targetLeft + 'px';
+
+    setTimeout(function () {
+      if (callback) callback();
+    }, 850);
+  }
+
+  function returnMiniPetHome(callback) {
+    if (!farmhousePetEl) { if (callback) callback(); return; }
+    updateMiniPetHomePos();
+    // Home pos already set by updateMiniPetHomePos, just animate there
+    // (left is already set, transition handles it)
+
+    setTimeout(function () {
+      if (callback) callback();
+    }, 850);
+  }
+
+  // ── Mini pet speech ───────────────────────────────────
+  function miniPetSpeak(message) {
+    if (!farmPetSpeechEl || !farmhousePetEl) return;
+    if (farmhousePetEl.style.display === 'none') return;
+
+    if (miniTypewriterTimer) clearTimeout(miniTypewriterTimer);
+    if (miniSpeechTimer) clearTimeout(miniSpeechTimer);
+
+    farmPetSpeechEl.textContent = '';
+    farmPetSpeechEl.style.display = 'block';
+
+    var i = 0;
+    function typeNext() {
+      if (i < message.length) {
+        farmPetSpeechEl.textContent += message[i];
+        i++;
+        miniTypewriterTimer = setTimeout(typeNext, 30);
+      } else {
+        miniTypewriterTimer = null;
+        miniSpeechTimer = setTimeout(function () {
+          farmPetSpeechEl.style.display = 'none';
+        }, 2500);
+      }
+    }
+    typeNext();
+  }
+
+  // ── Mini pet celebrate ────────────────────────────────
+  function miniPetCelebrate() {
+    if (!farmhousePetEl) return;
+    if (miniCelebrateTimeout) clearTimeout(miniCelebrateTimeout);
+    farmhousePetEl.classList.remove('farm-pet-sad');
+    farmhousePetEl.classList.add('farm-pet-celebrating');
+    miniCelebrateTimeout = setTimeout(function () {
+      if (farmhousePetEl) farmhousePetEl.classList.remove('farm-pet-celebrating');
+    }, 2000);
+  }
+
+  // ── Mini pet sad ──────────────────────────────────────
+  function miniPetSad() {
+    if (!farmhousePetEl) return;
+    if (miniSadTimeout) clearTimeout(miniSadTimeout);
+    farmhousePetEl.classList.remove('farm-pet-celebrating');
+    farmhousePetEl.classList.add('farm-pet-sad');
+    miniSadTimeout = setTimeout(function () {
+      if (farmhousePetEl) farmhousePetEl.classList.remove('farm-pet-sad');
+    }, 3000);
+  }
+
   // ── Beam arrived (pet.js calls this after beam-up) ────
   function beamArrived() {
     if (!farmhousePetEl) renderFarmhousePet();
     if (farmhousePetEl) {
+      updateMiniPetHomePos();
       farmhousePetEl.style.display = 'block';
       farmhousePetEl.classList.add('farm-pet-beaming-down');
       setTimeout(function () {
@@ -1251,25 +1356,28 @@
       }, 800);
     }
 
-    // Pet speaks a farm arrival line
-    if (window.PetSystem && window.PetSystem.speak) {
-      var lines = {
-        cat: '*teleports* ...where are the treats?',
-        dragon: '*materializes* my farm!',
-        robot: 'LOCATION: FARM. STATUS: OPERATIONAL'
-      };
-      var ps = window.PetSystem.getState && window.PetSystem.getState();
-      var petId = ps ? ps.petId : 'cat';
-      window.PetSystem.speak(lines[petId] || 'arrived!');
-    }
+    // Pet speaks a farm arrival line via mini pet speech
+    var lines = {
+      cat: '*teleports* ...where are the treats?',
+      dragon: '*materializes* my farm!',
+      robot: 'LOCATION: FARM. STATUS: OPERATIONAL'
+    };
+    var ps = window.PetSystem && window.PetSystem.getState && window.PetSystem.getState();
+    var petId = ps ? ps.petId : 'cat';
+    setTimeout(function () {
+      miniPetSpeak(lines[petId] || 'arrived!');
+    }, 850);
   }
 
   // ── Beam departing (pet.js calls this before beam-down) ──
   function beamDeparting(callback) {
+    miniPetBusy = false;
     if (!farmhousePetEl) {
       if (callback) callback();
       return;
     }
+    // Return home first if walking
+    updateMiniPetHomePos();
     farmhousePetEl.classList.add('farm-pet-beaming-up');
     setTimeout(function () {
       if (farmhousePetEl) {
@@ -1720,7 +1828,16 @@
     },
 
     beamArrived: beamArrived,
-    beamDeparting: beamDeparting
+    beamDeparting: beamDeparting,
+
+    // ── Mini pet methods (for pet-farm-ai.js when beamed) ──
+    walkMiniPetToPlot: walkMiniPetToPlot,
+    returnMiniPetHome: returnMiniPetHome,
+    miniPetSpeak: miniPetSpeak,
+    miniPetCelebrate: miniPetCelebrate,
+    miniPetSad: miniPetSad,
+    isMiniPetBusy: function () { return miniPetBusy; },
+    setMiniPetBusy: function (b) { miniPetBusy = b; }
   };
 
   // ── Decorations (trees, path, grass) ────────────────────
@@ -1860,6 +1977,13 @@
     setTimeout(retryPetRender, 500);
 
     createDimToggle();
+
+    // Keep mini pet home position synced on resize
+    window.addEventListener('resize', function () {
+      if (farmhousePetEl && farmhousePetEl.style.display !== 'none' && !miniPetBusy) {
+        updateMiniPetHomePos();
+      }
+    });
   }
 
   if (document.readyState === 'loading') {
