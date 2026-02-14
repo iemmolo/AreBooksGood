@@ -1346,7 +1346,7 @@
 
   // ── Beam arrived (pet.js calls this after beam-up) ────
   function beamArrived() {
-    if (!farmhousePetEl) renderFarmhousePet();
+    renderFarmhousePet();
     if (farmhousePetEl) {
       updateMiniPetHomePos();
       farmhousePetEl.style.display = 'block';

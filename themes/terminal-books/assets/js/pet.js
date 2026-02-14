@@ -1182,6 +1182,10 @@
             currentFrame = 0;
             updateSprite();
           }
+          // Re-render farm mini pet if beamed so accessories update there too
+          if (isBeamed && window.FarmAPI && window.FarmAPI.beamArrived) {
+            window.FarmAPI.beamArrived();
+          }
         } else if (container) {
           container.remove();
           container = null;
@@ -1193,6 +1197,15 @@
       spawnNew: function () {
         petState = loadPetState();
         if (!petState.activePet || !petState.pets[petState.activePet]) return;
+
+        // If old pet was beamed to farm, remove it from there
+        if (isBeamed || petState.position.beamed) {
+          isBeamed = false;
+          isBeaming = false;
+          if (window.FarmAPI && window.FarmAPI.beamDeparting) {
+            window.FarmAPI.beamDeparting();
+          }
+        }
 
         // Force center-screen position for dramatic entrance
         petState.position.x = null;
