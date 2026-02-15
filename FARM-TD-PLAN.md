@@ -272,10 +272,10 @@ Pet sprite rendered on canvas using `fillRect` per pixel (same approach as flapp
 1. ~~Create `farm-resources.js` (global module): resource state, idle accumulation, `window.FarmResources` API~~ **DONE (1a)**
 2. ~~Create farm page layout: fixed 12x8 grid, farmhouse, crop plots (reading FarmAPI), Lumber Yard, Quarry~~ **DONE (1a)**
 3. ~~Resource panel sidebar~~ **DONE (1a)**
-4. Collection interactions: click station → popup → collect **(1b)**
-5. Visual feedback: pulse animations, collection particles, counter ticks **(1b)**
-6. Pet walks on farm grid (reuse mini-pet from farm.js) **(1b)**
-7. Transform existing farm strip into notification dashboard (mini tile row) **(1b)**
+4. ~~Collection interactions: click station → popup → collect~~ **DONE (1b)**
+5. ~~Visual feedback: pulse animations, collection particles, counter ticks~~ **DONE (1b)**
+6. ~~Pet walks on farm grid (reuse mini-pet from farm.js)~~ **DONE (1b)**
+7. Transform existing farm strip into notification dashboard (mini tile row) **(1c)**
 8. ~~Add farm page to games section hub + nav~~ **DONE (1a)**
 
 ### Phase 2: Expanded Farm
@@ -452,3 +452,17 @@ This section is updated at the end of each implementation session to track what'
 - Visual polish: pulse animations, collection particles, counter ticks
 - Pet walks on farm grid
 - Dashboard strip rework (existing strip elements — farmhouse widget, tree decoration, beaming pet — remain; crop plot tiles become summary resource tiles)
+
+### Session 2 — Phase 1b: Farm Page Interactions & Polish (2026-02-15)
+
+**Completed:**
+- Station click popups: gathering (stored count, rate, next timer), crop (name, stage, progress bar), processing (coming soon/locked), farmhouse (level)
+- Visual polish: pulse glow on cells with pending resources, float particles on resource accumulation (+1 icon), counter tick animation on sidebar updates
+- Pet walks on farm grid: mini pet rendered at farmhouse, idle-walks to random built stations every 20-35s, typewriter speech bubbles, per-pet-type speech lines
+
+**Files modified:**
+- `themes/terminal-books/assets/js/farm-page.js` — added `data-key` attributes, `prevCounts` tracking, popup system, visual polish functions, farm grid pet system
+- `themes/terminal-books/assets/css/farm-page.css` — added popup styles, pulse/float/tick animations, grid pet and speech bubble styles
+
+**What's next (Phase 1c):**
+- Dashboard strip rework: transform existing farm strip crop tiles into resource summary tiles

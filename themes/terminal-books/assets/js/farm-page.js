@@ -10,6 +10,8 @@
   var toggleBtn = document.getElementById('fp-toggle');
   var UPDATE_INTERVAL = 10000; // 10s
   var COLLAPSE_KEY = 'arebooksgood-farm-page-collapsed';
+  var prevCounts = {};
+  var stationPopupEl = null;
 
   // ── Grid layout constant ─────────────────────────────────
   var GRID_LAYOUT = [
@@ -160,6 +162,7 @@
 
       var cell = document.createElement('div');
       cell.className = 'fp-cell';
+      cell.setAttribute('data-key', item.key);
 
       // Grid positioning
       cell.style.gridRow = (item.row + 1) + ' / span ' + (item.rowSpan || 1);
@@ -235,6 +238,17 @@
         cell.appendChild(countFH);
       }
 
+      // Click handler for built cells
+      if (built) {
+        (function (itm, cel) {
+          cel.style.cursor = 'pointer';
+          cel.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openStationPopup(itm, cel);
+          });
+        })(item, cell);
+      }
+
       gridEl.appendChild(cell);
     }
 
@@ -291,6 +305,31 @@
     }
   }
 
+  // ── Float particle on resource accumulation ─────────────
+  function showResourceFloat(key, icon, amount) {
+    var cellEl = gridEl.querySelector('[data-key="' + key + '"]');
+    if (!cellEl) return;
+    var rect = cellEl.getBoundingClientRect();
+
+    var floatEl = document.createElement('div');
+    floatEl.className = 'fp-resource-float';
+    floatEl.textContent = '+' + amount + ' ' + icon;
+    floatEl.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+    floatEl.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(floatEl);
+
+    setTimeout(function () {
+      if (floatEl.parentNode) floatEl.parentNode.removeChild(floatEl);
+    }, 1000);
+  }
+
+  // ── Trigger counter tick animation ─────────────────────
+  function triggerCountTick(el) {
+    el.classList.remove('fp-count-tick');
+    void el.offsetWidth;
+    el.classList.add('fp-count-tick');
+  }
+
   // ── Update counts without full re-render ──────────────────
   function updateCounts() {
     if (!window.FarmResources) return;
@@ -301,17 +340,47 @@
     var all = window.FarmResources.getAll();
     var stations = window.FarmResources.getStations();
 
-    // Update station counts on grid
+    // Update station counts on grid + pulse + particles
     var keys = Object.keys(stations);
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i];
+      var station = stations[k];
+      var newVal = all.raw[station.resource] || 0;
+
       var el = document.getElementById('fp-count-' + k);
       if (el) {
-        el.textContent = all.raw[stations[k].resource] || 0;
+        el.textContent = newVal;
       }
+
+      // Pulse class for cells with resources
+      var cellEl = gridEl.querySelector('[data-key="' + k + '"]');
+      if (cellEl && station.built) {
+        if (newVal > 0) {
+          cellEl.classList.add('fp-cell-has-resources');
+        } else {
+          cellEl.classList.remove('fp-cell-has-resources');
+        }
+      }
+
+      // Float particle when resource increases (skip initial load)
+      var prevVal = prevCounts[k];
+      if (typeof prevVal === 'number' && prevVal > 0 && newVal > prevVal) {
+        var diff = newVal - prevVal;
+        var icon = '';
+        for (var gi = 0; gi < RESOURCE_GROUPS.length; gi++) {
+          for (var ri = 0; ri < RESOURCE_GROUPS[gi].items.length; ri++) {
+            if (RESOURCE_GROUPS[gi].items[ri].key === station.resource) {
+              icon = RESOURCE_GROUPS[gi].items[ri].icon;
+            }
+          }
+        }
+        showResourceFloat(k, icon, diff);
+        if (el) triggerCountTick(el);
+      }
+      prevCounts[k] = newVal;
     }
 
-    // Update sidebar counts
+    // Update sidebar counts with tick animation
     for (var g = 0; g < RESOURCE_GROUPS.length; g++) {
       var group = RESOURCE_GROUPS[g];
       for (var j = 0; j < group.items.length; j++) {
@@ -321,7 +390,11 @@
           var val = group.label === 'Processed'
             ? (all.processed[item.key] || 0)
             : (all.raw[item.key] || 0);
-          resEl.textContent = val;
+          var oldVal = parseInt(resEl.textContent, 10) || 0;
+          if (val !== oldVal) {
+            resEl.textContent = val;
+            triggerCountTick(resEl);
+          }
         }
       }
     }
@@ -394,6 +467,186 @@
     }
   }
 
+  // ── Station click popups ────────────────────────────────
+
+  function formatMsToMinSec(ms) {
+    if (ms <= 0) return '0s';
+    var totalSec = Math.ceil(ms / 1000);
+    var m = Math.floor(totalSec / 60);
+    var s = totalSec % 60;
+    if (m > 0) return m + 'm ' + s + 's';
+    return s + 's';
+  }
+
+  function closeStationPopup() {
+    if (stationPopupEl && stationPopupEl.parentNode) {
+      stationPopupEl.parentNode.removeChild(stationPopupEl);
+    }
+    stationPopupEl = null;
+    document.removeEventListener('click', outsideStationPopupClick);
+  }
+
+  function outsideStationPopupClick(e) {
+    if (stationPopupEl && !stationPopupEl.contains(e.target)) {
+      closeStationPopup();
+    }
+  }
+
+  function openStationPopup(item, cellEl) {
+    closeStationPopup();
+
+    stationPopupEl = document.createElement('div');
+    stationPopupEl.className = 'fp-station-popup';
+
+    if (item.type === 'gathering') {
+      renderGatheringPopup(item, stationPopupEl);
+    } else if (item.type === 'crop') {
+      renderCropPopup(item, stationPopupEl);
+    } else if (item.type === 'processing') {
+      renderProcessingPopup(item, stationPopupEl);
+    } else if (item.type === 'special') {
+      renderFarmhousePopup(item, stationPopupEl);
+    }
+
+    // Position via getBoundingClientRect
+    var rect = cellEl.getBoundingClientRect();
+    var popupWidth = 170;
+    var popupLeft = Math.max(8, Math.min(rect.left + rect.width / 2 - popupWidth / 2, window.innerWidth - popupWidth - 8));
+    stationPopupEl.style.left = popupLeft + 'px';
+
+    // Try placing above the cell; if too close to top, place below
+    if (rect.top > 140) {
+      stationPopupEl.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+    } else {
+      stationPopupEl.style.top = (rect.bottom + 6) + 'px';
+    }
+
+    document.body.appendChild(stationPopupEl);
+
+    setTimeout(function () {
+      document.addEventListener('click', outsideStationPopupClick);
+    }, 0);
+  }
+
+  function renderGatheringPopup(item, popup) {
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
+    popup.appendChild(header);
+
+    if (!window.FarmResources) return;
+    var stations = window.FarmResources.getStations();
+    var station = stations[item.key];
+    if (!station) return;
+
+    var count = window.FarmResources.getRaw(station.resource);
+    var row1 = document.createElement('div');
+    row1.className = 'fp-popup-row';
+    row1.innerHTML = 'Stored: <span class="fp-popup-count">' + count + '</span>';
+    popup.appendChild(row1);
+
+    var rateMin = Math.round(station.rate / 60000);
+    var row2 = document.createElement('div');
+    row2.className = 'fp-popup-row fp-popup-rate';
+    row2.textContent = '+1 every ' + rateMin + 'min';
+    popup.appendChild(row2);
+
+    var now = Date.now();
+    var elapsed = now - station.lastCollect;
+    var remaining = station.rate - elapsed;
+    if (remaining < 0) remaining = 0;
+    var row3 = document.createElement('div');
+    row3.className = 'fp-popup-row fp-popup-next';
+    row3.textContent = 'Next in: ' + formatMsToMinSec(remaining);
+    popup.appendChild(row3);
+  }
+
+  function renderCropPopup(item, popup) {
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
+    popup.appendChild(header);
+
+    var plotIdx = parseInt(item.key.replace('crop', ''), 10);
+    var cropInfo = getCropInfo(plotIdx);
+
+    if (!cropInfo || !cropInfo.crop) {
+      var empty = document.createElement('div');
+      empty.className = 'fp-popup-row';
+      empty.textContent = 'Empty plot';
+      popup.appendChild(empty);
+      return;
+    }
+
+    // Get crop name from defs
+    var cropName = cropInfo.crop;
+    if (window.FarmAPI && window.FarmAPI.getCropDefs) {
+      var defs = window.FarmAPI.getCropDefs();
+      if (defs[cropInfo.crop]) {
+        cropName = defs[cropInfo.crop].name;
+      }
+    }
+
+    var nameRow = document.createElement('div');
+    nameRow.className = 'fp-popup-row';
+    nameRow.innerHTML = 'Crop: <span class="fp-popup-count">' + cropName + '</span>';
+    popup.appendChild(nameRow);
+
+    var stageNames = { planted: 'Planted', sprouting: 'Sprouting', growing: 'Growing', flowering: 'Flowering', ready: 'Ready' };
+    var stageRow = document.createElement('div');
+    stageRow.className = 'fp-popup-row';
+    stageRow.textContent = 'Stage: ' + (stageNames[cropInfo.stage] || cropInfo.stage);
+    popup.appendChild(stageRow);
+
+    // Progress bar
+    var pct = Math.min(100, Math.round(cropInfo.growthPct * 100));
+    var barOuter = document.createElement('div');
+    barOuter.className = 'fp-popup-bar';
+    var barInner = document.createElement('div');
+    barInner.className = 'fp-popup-bar-fill';
+    barInner.style.width = pct + '%';
+    barOuter.appendChild(barInner);
+    popup.appendChild(barOuter);
+
+    var pctRow = document.createElement('div');
+    pctRow.className = 'fp-popup-row fp-popup-rate';
+    pctRow.textContent = pct + '% grown';
+    popup.appendChild(pctRow);
+  }
+
+  function renderProcessingPopup(item, popup) {
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
+    popup.appendChild(header);
+
+    var row = document.createElement('div');
+    row.className = 'fp-popup-row fp-popup-rate';
+    if (item.tier === 'basic') {
+      row.textContent = 'Coming soon';
+    } else {
+      row.textContent = 'Locked';
+    }
+    popup.appendChild(row);
+  }
+
+  function renderFarmhousePopup(item, popup) {
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '') + ' Farmhouse';
+    popup.appendChild(header);
+
+    var level = 1;
+    if (window.FarmAPI && window.FarmAPI.getFarmhouseLevel) {
+      level = window.FarmAPI.getFarmhouseLevel();
+    }
+
+    var row = document.createElement('div');
+    row.className = 'fp-popup-row';
+    row.innerHTML = 'Level: <span class="fp-popup-count">' + level + '</span>';
+    popup.appendChild(row);
+  }
+
   // ── Toggle collapsed/expanded ───────────────────────────
   var collapsed = false;
   try { collapsed = localStorage.getItem(COLLAPSE_KEY) === '1'; } catch (e) {}
@@ -435,5 +688,181 @@
   setInterval(function () {
     updateCounts();
   }, UPDATE_INTERVAL);
+
+  // ── Farm grid pet ──────────────────────────────────────
+
+  var fpPetEl = null;
+  var fpPetSpeechEl = null;
+  var fpPetBusy = false;
+  var fpPetTimer = null;
+  var fpPetTypewriterTimer = null;
+  var fpPetSpeechTimer = null;
+
+  var FP_PET_LINES = {
+    cat: [
+      'Nice farm~', 'Meow!', '*stretches*', 'Any fish?',
+      'So many crops...', '*purrs*', 'I like it here', 'Cozy spot'
+    ],
+    dragon: [
+      'Need fire?', '*snorts*', 'Big farm!', 'More gold!',
+      'I guard this', '*flaps wings*', 'Impressive', 'Warm here'
+    ],
+    robot: [
+      'Scanning...', 'Optimal!', 'Efficiency++', 'Processing...',
+      'All systems go', 'Data logged', 'Calibrating', 'Farm online'
+    ]
+  };
+
+  function getRandomFarmPetLine() {
+    var petType = 'cat';
+    if (window.PetSystem && window.PetSystem.getState) {
+      var ps = window.PetSystem.getState();
+      if (ps && ps.activePet) petType = ps.activePet;
+    }
+    var lines = FP_PET_LINES[petType] || FP_PET_LINES.cat;
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+
+  function fpPetSpeak(msg) {
+    if (!fpPetSpeechEl || !fpPetEl) return;
+
+    if (fpPetTypewriterTimer) clearTimeout(fpPetTypewriterTimer);
+    if (fpPetSpeechTimer) clearTimeout(fpPetSpeechTimer);
+
+    fpPetSpeechEl.textContent = '';
+    fpPetSpeechEl.style.display = 'block';
+
+    var i = 0;
+    function typeNext() {
+      if (i < msg.length) {
+        fpPetSpeechEl.textContent += msg[i];
+        i++;
+        fpPetTypewriterTimer = setTimeout(typeNext, 30);
+      } else {
+        fpPetTypewriterTimer = null;
+        fpPetSpeechTimer = setTimeout(function () {
+          fpPetSpeechEl.style.display = 'none';
+        }, 2500);
+      }
+    }
+    typeNext();
+  }
+
+  function movePetToCell(key, instant) {
+    if (!fpPetEl) return;
+    var cellEl = gridEl.querySelector('[data-key="' + key + '"]');
+    if (!cellEl) return;
+
+    var gridRect = gridEl.getBoundingClientRect();
+    var cellRect = cellEl.getBoundingClientRect();
+
+    var targetLeft = cellRect.left - gridRect.left + cellRect.width / 2 - (fpPetEl.offsetWidth || 32) / 2;
+    var targetTop = cellRect.top - gridRect.top + cellRect.height / 2 - (fpPetEl.offsetHeight || 32) / 2;
+
+    if (instant) {
+      fpPetEl.style.transition = 'none';
+    } else {
+      fpPetEl.style.transition = 'left 0.8s ease-in-out, top 0.8s ease-in-out';
+    }
+
+    fpPetEl.style.left = targetLeft + 'px';
+    fpPetEl.style.top = targetTop + 'px';
+
+    if (instant) {
+      void fpPetEl.offsetWidth;
+      fpPetEl.style.transition = 'left 0.8s ease-in-out, top 0.8s ease-in-out';
+    }
+  }
+
+  function schedulePetWalk() {
+    if (fpPetTimer) clearTimeout(fpPetTimer);
+    var delay = 20000 + Math.floor(Math.random() * 15000); // 20-35s
+    fpPetTimer = setTimeout(doPetWalk, delay);
+  }
+
+  function doPetWalk() {
+    if (fpPetBusy || !fpPetEl) {
+      schedulePetWalk();
+      return;
+    }
+
+    // Pick a random built station
+    var builtCells = [];
+    for (var i = 0; i < GRID_LAYOUT.length; i++) {
+      var item = GRID_LAYOUT[i];
+      if (item.key !== 'farmhouse' && isCellBuilt(item)) {
+        builtCells.push(item.key);
+      }
+    }
+    if (builtCells.length === 0) {
+      schedulePetWalk();
+      return;
+    }
+
+    var target = builtCells[Math.floor(Math.random() * builtCells.length)];
+    fpPetBusy = true;
+
+    // Walk to target
+    movePetToCell(target, false);
+
+    // Speak after arriving
+    setTimeout(function () {
+      fpPetSpeak(getRandomFarmPetLine());
+
+      // Wait then walk home
+      setTimeout(function () {
+        movePetToCell('farmhouse', false);
+
+        setTimeout(function () {
+          fpPetBusy = false;
+          schedulePetWalk();
+        }, 900);
+      }, 2500);
+    }, 900);
+  }
+
+  function initFarmPet() {
+    if (!window.PetSystem || !window.PetSystem.renderMiniSprite) return;
+    var ps = window.PetSystem.getState && window.PetSystem.getState();
+    if (!ps) return;
+
+    // Set grid area as positioning context
+    gridEl.style.position = 'relative';
+
+    fpPetEl = document.createElement('div');
+    fpPetEl.className = 'fp-grid-pet';
+    window.PetSystem.renderMiniSprite(fpPetEl, 2);
+    fpPetEl.style.position = 'absolute';
+
+    // Speech bubble
+    fpPetSpeechEl = document.createElement('div');
+    fpPetSpeechEl.className = 'fp-pet-speech';
+    fpPetEl.appendChild(fpPetSpeechEl);
+
+    gridEl.appendChild(fpPetEl);
+
+    // Start at farmhouse
+    movePetToCell('farmhouse', true);
+
+    // Begin idle walk cycle
+    schedulePetWalk();
+  }
+
+  // Retry loop waiting for PetSystem
+  var fpPetRetries = 0;
+  function retryFarmPetInit() {
+    fpPetRetries++;
+    if (window.PetSystem && window.PetSystem.renderMiniSprite && window.PetSystem.getState) {
+      var ps = window.PetSystem.getState();
+      if (ps) {
+        initFarmPet();
+        return;
+      }
+    }
+    if (fpPetRetries < 20) {
+      setTimeout(retryFarmPetInit, 500);
+    }
+  }
+  retryFarmPetInit();
 
 })();
