@@ -87,11 +87,30 @@
       ]
     },
     {
+      label: 'Crops',
+      items: [
+        { key: 'wheat', name: 'Wheat', icon: '\uD83C\uDF3E' },
+        { key: 'carrot', name: 'Carrot', icon: '\uD83E\uDD55' },
+        { key: 'potato', name: 'Potato', icon: '\uD83E\uDD54' },
+        { key: 'tomato', name: 'Tomato', icon: '\uD83C\uDF45' },
+        { key: 'corn', name: 'Corn', icon: '\uD83C\uDF3D' },
+        { key: 'pumpkin', name: 'Pumpkin', icon: '\uD83C\uDF83' },
+        { key: 'golden_apple', name: 'Golden Apple', icon: '\uD83C\uDF4E' },
+        { key: 'crystal_herb', name: 'Crystal Herb', icon: '\uD83D\uDD2E' },
+        { key: 'dragon_fruit', name: 'Dragon Fruit', icon: '\uD83D\uDC09' }
+      ]
+    },
+    {
       label: 'Processed',
       items: [
         { key: 'flour', name: 'Flour', icon: '\uD83C\uDF5E' },
         { key: 'planks', name: 'Planks', icon: '\uD83E\uDE93' },
-        { key: 'stoneBricks', name: 'Stone Bricks', icon: '\uD83E\uDDF1' }
+        { key: 'stoneBricks', name: 'Stone Bricks', icon: '\uD83E\uDDF1' },
+        { key: 'bread', name: 'Bread', icon: '\uD83E\uDD56' },
+        { key: 'ironBars', name: 'Iron Bars', icon: '\u2699' },
+        { key: 'rope', name: 'Rope', icon: '\uD83E\uDDF5' },
+        { key: 'smokedFish', name: 'Smoked Fish', icon: '\uD83C\uDF56' },
+        { key: 'crystalLens', name: 'Crystal Lens', icon: '\uD83D\uDD2E' }
       ]
     }
   ];
@@ -119,10 +138,9 @@
     if (item.type === 'special') return true; // farmhouse always built
     if (item.type === 'crop') return true;    // crop plots always available
 
-    // Processing stations: basic tier always built, advanced/elite locked
+    // Processing stations: all unlocked for testing
     if (item.type === 'processing') {
-      if (item.tier === 'basic') return true;
-      return false; // advanced/elite need TD blueprints
+      return true;
     }
 
     // Gathering stations: check FarmResources
@@ -214,6 +232,19 @@
         countEl.id = 'fp-count-' + item.key;
         countEl.textContent = getStationCount(item);
         cell.appendChild(countEl);
+      }
+
+      // Processing indicator
+      if (built && item.type === 'processing' && window.FarmResources) {
+        var pQueue = window.FarmResources.getQueue(item.key);
+        if (pQueue.length > 0 && !pQueue[0].waiting) {
+          cell.classList.add('fp-cell-processing-active');
+          var indEl = document.createElement('div');
+          indEl.className = 'fp-cell-processing-indicator';
+          indEl.id = 'fp-proc-' + item.key;
+          indEl.textContent = formatMsToMinSec(pQueue[0].remaining || 0);
+          cell.appendChild(indEl);
+        }
       }
 
       // Crop progress
@@ -412,6 +443,35 @@
     // Update compact view
     updateCompact();
 
+    // Update processing indicators on grid cells
+    if (window.FarmResources) {
+      for (var pi = 0; pi < GRID_LAYOUT.length; pi++) {
+        var pItem = GRID_LAYOUT[pi];
+        if (pItem.type !== 'processing') continue;
+        var procEl = document.getElementById('fp-proc-' + pItem.key);
+        var pCellEl = gridEl.querySelector('[data-key="' + pItem.key + '"]');
+        var pq = window.FarmResources.getQueue(pItem.key);
+        var hasActive = pq.length > 0 && !pq[0].waiting;
+
+        if (hasActive) {
+          if (pCellEl) pCellEl.classList.add('fp-cell-processing-active');
+          if (procEl) {
+            procEl.textContent = formatMsToMinSec(pq[0].remaining || 0);
+          } else if (pCellEl) {
+            // Job started since last render — need to add indicator
+            var newInd = document.createElement('div');
+            newInd.className = 'fp-cell-processing-indicator';
+            newInd.id = 'fp-proc-' + pItem.key;
+            newInd.textContent = formatMsToMinSec(pq[0].remaining || 0);
+            pCellEl.appendChild(newInd);
+          }
+        } else {
+          if (pCellEl) pCellEl.classList.remove('fp-cell-processing-active');
+          if (procEl && procEl.parentNode) procEl.parentNode.removeChild(procEl);
+        }
+      }
+    }
+
     // Update crop progress bars — reconcile DOM with state
     if (window.FarmAPI) {
       var plots = window.FarmAPI.getPlots();
@@ -532,20 +592,44 @@
       renderFarmhousePopup(item, stationPopupEl);
     }
 
+    // Processing popups need more width for recipe text
+    if (item.type === 'processing') {
+      stationPopupEl.classList.add('fp-popup-wide');
+    }
+
     // Position via getBoundingClientRect
     var rect = cellEl.getBoundingClientRect();
-    var popupWidth = 170;
+    var popupWidth = item.type === 'processing' ? 240 : 170;
     var popupLeft = Math.max(8, Math.min(rect.left + rect.width / 2 - popupWidth / 2, window.innerWidth - popupWidth - 8));
     stationPopupEl.style.left = popupLeft + 'px';
 
-    // Try placing above the cell; if too close to top, place below
-    if (rect.top > 140) {
+    // Append off-screen first to measure height
+    stationPopupEl.style.visibility = 'hidden';
+    stationPopupEl.style.top = '0';
+    document.body.appendChild(stationPopupEl);
+    var popupHeight = stationPopupEl.offsetHeight;
+
+    // Place above if it fits, otherwise below
+    var spaceAbove = rect.top - 6;
+    var spaceBelow = window.innerHeight - rect.bottom - 6;
+
+    stationPopupEl.style.top = '';
+    stationPopupEl.style.bottom = '';
+
+    if (spaceAbove >= popupHeight) {
       stationPopupEl.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
-    } else {
+    } else if (spaceBelow >= popupHeight) {
       stationPopupEl.style.top = (rect.bottom + 6) + 'px';
+    } else {
+      // Neither side fits perfectly — pick whichever has more room
+      if (spaceAbove > spaceBelow) {
+        stationPopupEl.style.top = '8px';
+      } else {
+        stationPopupEl.style.top = (rect.bottom + 6) + 'px';
+      }
     }
 
-    document.body.appendChild(stationPopupEl);
+    stationPopupEl.style.visibility = '';
 
     setTimeout(function () {
       document.addEventListener('click', outsideStationPopupClick);
@@ -770,19 +854,114 @@
   }
 
   function renderProcessingPopup(item, popup) {
+    if (!window.FarmResources) return;
+
     var header = document.createElement('div');
     header.className = 'fp-popup-header';
     header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
     popup.appendChild(header);
 
-    var row = document.createElement('div');
-    row.className = 'fp-popup-row fp-popup-rate';
-    if (item.tier === 'basic') {
-      row.textContent = 'Coming soon';
-    } else {
-      row.textContent = 'Locked';
+    var queue = window.FarmResources.getQueue(item.key);
+
+    // Active job with progress bar
+    if (queue.length > 0 && !queue[0].waiting) {
+      var active = queue[0];
+      var activeRow = document.createElement('div');
+      activeRow.className = 'fp-queue-item';
+
+      var activeName = document.createElement('span');
+      activeName.className = 'fp-queue-name';
+      activeName.textContent = '\u2699 ' + active.name;
+      activeRow.appendChild(activeName);
+
+      var barOuter = document.createElement('div');
+      barOuter.className = 'fp-popup-bar';
+      var barInner = document.createElement('div');
+      barInner.className = 'fp-popup-bar-fill';
+      barInner.style.width = Math.round((active.progress || 0) * 100) + '%';
+      barOuter.appendChild(barInner);
+      activeRow.appendChild(barOuter);
+
+      var timeRow = document.createElement('div');
+      timeRow.className = 'fp-popup-row fp-popup-rate';
+      timeRow.textContent = formatMsToMinSec(active.remaining || 0) + ' remaining';
+      activeRow.appendChild(timeRow);
+
+      popup.appendChild(activeRow);
     }
-    popup.appendChild(row);
+
+    // Waiting queue items
+    for (var q = 0; q < queue.length; q++) {
+      if (q === 0 && !queue[q].waiting) continue; // skip active (already shown)
+      var waitRow = document.createElement('div');
+      waitRow.className = 'fp-queue-item fp-queue-waiting';
+      waitRow.textContent = (q + 1) + '. ' + queue[q].name + ' (waiting)';
+      popup.appendChild(waitRow);
+    }
+
+    // Queue status
+    var statusRow = document.createElement('div');
+    statusRow.className = 'fp-popup-row fp-popup-rate';
+    statusRow.textContent = 'Queue: ' + queue.length + '/5';
+    popup.appendChild(statusRow);
+
+    // Separator
+    var sep = document.createElement('div');
+    sep.className = 'fp-popup-separator';
+    popup.appendChild(sep);
+
+    // Recipe buttons
+    var recipes = window.FarmResources.getRecipes(item.key);
+    for (var r = 0; r < recipes.length; r++) {
+      (function (recipe) {
+        var affordable = window.FarmResources.canAfford(item.key, recipe.id);
+        var queueFull = queue.length >= 5;
+        var disabled = !affordable || queueFull;
+
+        var btn = document.createElement('button');
+        btn.className = 'fp-recipe-btn' + (disabled ? ' fp-recipe-disabled' : '');
+        btn.type = 'button';
+
+        // Input list
+        var inputParts = [];
+        if (recipe.inputs.raw) {
+          var rk = Object.keys(recipe.inputs.raw);
+          for (var i = 0; i < rk.length; i++) {
+            var have = window.FarmResources.getRaw(rk[i]);
+            var need = recipe.inputs.raw[rk[i]];
+            var cls = have >= need ? 'fp-has-enough' : 'fp-not-enough';
+            inputParts.push('<span class="' + cls + '">' + need + ' ' + rk[i] + '</span>');
+          }
+        }
+        if (recipe.inputs.processed) {
+          var pk = Object.keys(recipe.inputs.processed);
+          for (var j = 0; j < pk.length; j++) {
+            var haveP = window.FarmResources.getProcessed(pk[j]);
+            var needP = recipe.inputs.processed[pk[j]];
+            var clsP = haveP >= needP ? 'fp-has-enough' : 'fp-not-enough';
+            inputParts.push('<span class="' + clsP + '">' + needP + ' ' + pk[j] + '</span>');
+          }
+        }
+
+        var inputStr = inputParts.join(' + ');
+        var durMin = Math.round(recipe.duration / 60000);
+
+        btn.innerHTML = inputStr + ' \u2192 ' + recipe.output.qty + ' ' + recipe.name +
+          ' <span class="fp-recipe-time">(' + durMin + 'm)</span>';
+
+        if (!disabled) {
+          btn.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            window.FarmResources.queueRecipe(item.key, recipe.id);
+            // Re-render popup
+            popup.innerHTML = '';
+            renderProcessingPopup(item, popup);
+          });
+        }
+
+        popup.appendChild(btn);
+      })(recipes[r]);
+    }
   }
 
   function renderFarmhousePopup(item, popup) {

@@ -701,23 +701,33 @@ body.harvest-moon-active::before {
   }
 
   .farm-bar {
-    gap: 6px;
+    gap: 4px;
     flex-wrap: wrap;
-    max-height: 96px;
     align-content: flex-end;
   }
 
   .farm-dash-tile {
-    width: 42px;
-    height: 42px;
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Hide zero-count resource tiles on mobile — only show active ones */
+  .farm-dash-tile:not(.farm-dash-has-count):not(.farm-dash-link):not(.farm-dash-always) {
+    display: none;
   }
 
   .farm-dash-icon {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .farm-dash-count {
-    font-size: 9px;
+    font-size: 8px;
+    bottom: 1px;
+    right: 2px;
+  }
+
+  .farm-dash-label {
+    display: none;
   }
 
   .farm-house-widget {

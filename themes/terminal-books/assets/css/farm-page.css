@@ -510,22 +510,134 @@
   z-index: 6;
 }
 
+/* ── Processing popup ─────────────────────────────────── */
+
+.fp-popup-wide {
+  max-width: 240px;
+}
+
+.fp-queue-item {
+  padding: 0.2rem 0;
+}
+
+.fp-queue-name {
+  font-weight: bold;
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+
+.fp-queue-waiting {
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  padding: 0.1rem 0;
+}
+
+.fp-popup-separator {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin: 0.35rem 0;
+}
+
+.fp-recipe-btn {
+  display: block;
+  width: 100%;
+  padding: 4px 6px;
+  margin-top: 3px;
+  font-family: inherit;
+  font-size: 0.6rem;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.fp-recipe-btn:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: var(--accent);
+}
+
+.fp-has-enough {
+  color: #4caf50;
+}
+
+.fp-not-enough {
+  color: #e57373;
+}
+
+.fp-recipe-time {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  font-size: 0.55rem;
+}
+
+.fp-recipe-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fp-recipe-disabled:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ── Processing indicators on grid cells ─────────────── */
+
+.fp-cell-processing-indicator {
+  font-size: 0.45rem;
+  color: var(--accent);
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.fp-cell-processing-active {
+  animation: fp-proc-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fp-proc-pulse {
+  0%, 100% { box-shadow: 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+  50% { box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent); }
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 600px) {
   .fp-grid {
-    aspect-ratio: 2 / 1.5;
+    aspect-ratio: 1 / 1;
+    gap: 1px;
+    padding: 1px;
+  }
+
+  .fp-cell {
+    overflow: visible;
+    padding: 1px 0;
   }
 
   .fp-cell-label {
-    font-size: 0.45rem;
+    display: none;
   }
 
   .fp-cell-icon {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .fp-cell-count {
+    font-size: 0.4rem;
+  }
+
+  .fp-cell-processing-indicator {
+    font-size: 0.35rem;
   }
 
   .fp-resource-row {
     min-width: 80px;
+  }
+
+  .fp-station-popup {
+    max-width: calc(100vw - 16px);
+  }
+
+  .fp-popup-wide {
+    max-width: calc(100vw - 16px);
   }
 }

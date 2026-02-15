@@ -489,3 +489,37 @@ This section is updated at the end of each implementation session to track what'
 - Fishing pond (idle + interactive mini-game)
 - Basic processing stations (mill, sawmill, mason, kitchen)
 - Processing queue UI
+
+### Session 4 — Bug Fixes + Phase 2: Processing System (2026-02-15)
+
+**Bug fixes (prior commit):**
+- Fixed crop timers not displaying correctly on farm page
+- Fixed pet disappearing from farm grid on re-render
+- Fixed seed list UX (collapsible unavailable seeds)
+
+**Phase 2 — Processing System:**
+- All 9 gathering stations unlocked for testing (removed blueprint requirement)
+- All 8 processing stations unlocked for testing (removed tier-based locking)
+- Added crop resources to raw pool: carrot, potato, wheat, tomato, corn, pumpkin, golden_apple, crystal_herb, dragon_fruit
+- Added new processed resources: bread, ironBars, rope, smokedFish, crystalLens
+- Processing system: per-station queues (max 5 per station), timestamp-based (works offline)
+- 8 recipes across all processing stations (mill→flour, sawmill→planks, mason→stoneBricks, kitchen→bread, forge→ironBars, loom→rope, smokehouse→smokedFish, enchanter→crystalLens)
+- Inputs deducted on queue (not on completion) to prevent over-queuing
+- `processQueues()` runs inside `collectPending()` for offline processing
+- Full processing popup UI: active job + progress bar, waiting queue list, queue status, recipe buttons with green/red input affordability
+- Processing indicators on grid cells (timer text + pulse animation)
+- Crop harvest now adds 1 raw crop resource via `FarmResources.add()`
+- Dashboard strip shows processing tile with active recipe name + time remaining
+- New resource groups in sidebar: "Crops" and expanded "Processed"
+
+**Files modified:**
+- `farm-resources.js` — RECIPES, queue engine (findRecipe, canAffordRecipe, deductInputs, processQueues), per-station processing state, new API (getRecipes, canAfford, queueRecipe, getQueue, getActiveProcessing, getAllRecipes), unlocked all stations
+- `farm-page.js` — processing popup, resource groups (crops + expanded processed), grid processing indicators, unlocked all processing tiers
+- `farm.js` — harvest adds raw crop item, dashboard processing tile
+- `farm-page.css` — processing popup styles, recipe buttons, cell processing indicators
+
+**What's next (Phase 3: Tower Defense MVP):**
+- Canvas game: grid, path rendering, game loop
+- 3 starter towers (arrow, cannon, frost) - JB cost only
+- 3 starter enemies (slime, skeleton, goblin)
+- Wave system, HUD, overlays, stats persistence

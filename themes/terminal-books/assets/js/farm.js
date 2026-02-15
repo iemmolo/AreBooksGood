@@ -22,6 +22,7 @@
     { key: 'mine', icon: '\u2699\uFE0F', resource: 'iron' },
     { key: 'deepMine', icon: '\uD83D\uDC8E', resource: 'gold' },
     { key: 'oldGrowth', icon: '\uD83C\uDF33', resource: 'hardwood' },
+    { key: 'processing', icon: '\u2699', label: 'Processing' },
     { key: 'farmLink', icon: '\u2192', label: 'Farm' }
   ];
 
@@ -829,6 +830,11 @@
       tile.classList.add('farm-dash-link');
     }
 
+    // Always visible on mobile (not hidden when count=0)
+    if (conf.key === 'crops' || conf.key === 'farmLink') {
+      tile.classList.add('farm-dash-always');
+    }
+
     // Icon
     var icon = document.createElement('div');
     icon.className = 'farm-dash-icon';
@@ -869,10 +875,22 @@
       }
       return readyCount;
     }
+    if (conf.key === 'processing' && window.FarmResources && window.FarmResources.getActiveProcessing) {
+      return window.FarmResources.getActiveProcessing().length;
+    }
     if (conf.resource && window.FarmResources) {
       return window.FarmResources.getRaw(conf.resource);
     }
     return 0;
+  }
+
+  function formatDashMs(ms) {
+    if (ms <= 0) return '0s';
+    var sec = Math.ceil(ms / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    if (m > 0) return m + 'm';
+    return s + 's';
   }
 
   function updateDashTile(tile, conf) {
@@ -881,7 +899,18 @@
     var countEl = tile.querySelector('.farm-dash-count');
     var count = getDashTileCount(conf);
 
-    if (countEl) {
+    if (conf.key === 'processing' && countEl) {
+      if (count > 0 && window.FarmResources && window.FarmResources.getActiveProcessing) {
+        var active = window.FarmResources.getActiveProcessing();
+        if (active.length > 0) {
+          countEl.textContent = active[0].name + ' ' + formatDashMs(active[0].remaining);
+        } else {
+          countEl.textContent = '';
+        }
+      } else {
+        countEl.textContent = '';
+      }
+    } else if (countEl) {
       countEl.textContent = count > 0 ? count : '';
     }
 
@@ -1555,6 +1584,9 @@
       if (window.JackBucks) {
         window.JackBucks.add(sellValue);
       }
+
+      // Add raw crop resource for processing recipes
+      if (window.FarmResources) window.FarmResources.add('raw', cropKey, 1);
 
       // Seed bag chance
       var seedBagLevel = farmState.upgrades ? farmState.upgrades.seedBag : 0;
