@@ -518,6 +518,12 @@ This section is updated at the end of each implementation session to track what'
 - `farm.js` — harvest adds raw crop item, dashboard processing tile
 - `farm-page.css` — processing popup styles, recipe buttons, cell processing indicators
 
+**Mobile polish:**
+- Farm grid: aspect-ratio 1/1 (was 2/1.5), hidden labels, visible overflow for emoji icons, tighter gaps
+- Farm bar: tiles 32px (was 42px), hidden labels, zero-count tiles hidden via CSS, crops + farm link always visible
+- Popup positioning: measure actual height before placement, flip above/below if clipped by viewport
+- Processing popups capped at `100vw - 16px` on mobile
+
 **What's next (Phase 3: Tower Defense MVP):**
 - Canvas game: grid, path rendering, game loop
 - 3 starter towers (arrow, cannon, frost) - JB cost only
