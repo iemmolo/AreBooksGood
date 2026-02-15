@@ -78,6 +78,12 @@
   <link rel="stylesheet" href="{{ $tb.RelPermalink }}">
 {{- end }}
 
+{{/* Farm Page CSS */}}
+{{ if eq .Type "farm-page" -}}
+  {{- $fpcss := resources.Get "css/farm-page.css" | minify -}}
+  <link rel="stylesheet" href="{{ $fpcss.RelPermalink }}">
+{{- end }}
+
 {{/* Pet CSS (global) */}}
 {{- $petcss := resources.Get "css/pet.css" | minify -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">

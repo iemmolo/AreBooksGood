@@ -65,6 +65,8 @@
   <script src="{{ $jb.RelPermalink }}"></script>
   {{- $farm := resources.Get "js/farm.js" | minify -}}
   <script src="{{ $farm.RelPermalink }}"></script>
+  {{- $farmRes := resources.Get "js/farm-resources.js" | minify -}}
+  <script src="{{ $farmRes.RelPermalink }}"></script>
   {{- $petFarmAI := resources.Get "js/pet-farm-ai.js" | minify -}}
   <script src="{{ $petFarmAI.RelPermalink }}"></script>
   {{ if eq .Type "silk-road" -}}
@@ -94,6 +96,10 @@
   {{ if eq .Type "trebuchet" -}}
     {{- $tb := resources.Get "js/trebuchet.js" | minify -}}
     <script src="{{ $tb.RelPermalink }}"></script>
+  {{- end }}
+  {{ if eq .Type "farm-page" -}}
+    {{- $fp := resources.Get "js/farm-page.js" | minify -}}
+    <script src="{{ $fp.RelPermalink }}"></script>
   {{- end }}
 </body>
 </html>

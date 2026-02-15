@@ -1,0 +1,17 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="fp-intro">{{ .Content }}</div>
+  <div id="farm-page-app" class="fp-app">
+    <div id="fp-sidebar" class="fp-sidebar">
+      <div class="fp-sidebar-header">
+        <h3 class="fp-sidebar-title">Resources</h3>
+        <button id="fp-toggle" class="fp-toggle" aria-label="Toggle resources panel">&#9660;</button>
+      </div>
+      <div id="fp-resources-compact" class="fp-resources-compact"></div>
+      <div id="fp-resources" class="fp-resources"></div>
+    </div>
+    <div class="fp-grid-area">
+      <div id="fp-grid" class="fp-grid"></div>
+    </div>
+  </div>
+{{ end }}
