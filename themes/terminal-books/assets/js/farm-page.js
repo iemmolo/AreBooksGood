@@ -151,6 +151,10 @@
 
   // ── Render the grid ───────────────────────────────────────
   function renderGrid() {
+    // Detach farm pet before clearing grid so it survives re-render
+    if (fpPetEl && fpPetEl.parentNode === gridEl) {
+      gridEl.removeChild(fpPetEl);
+    }
     gridEl.innerHTML = '';
     var rendered = {};
 
@@ -263,6 +267,12 @@
         empty.style.gridColumn = (c + 1) + '';
         gridEl.appendChild(empty);
       }
+    }
+
+    // Re-append farm pet after grid rebuild
+    if (fpPetEl) {
+      gridEl.appendChild(fpPetEl);
+      movePetToCell('farmhouse', true);
     }
   }
 
@@ -402,14 +412,23 @@
     // Update compact view
     updateCompact();
 
-    // Update crop progress bars
+    // Update crop progress bars — reconcile DOM with state
     if (window.FarmAPI) {
       var plots = window.FarmAPI.getPlots();
+      var cropsDirty = false;
       for (var p = 0; p < 6; p++) {
         var bar = document.getElementById('fp-bar-crop' + p);
-        if (bar && plots[p] && plots[p].crop) {
+        var hasCrop = plots[p] && plots[p].crop;
+        if ((bar && !hasCrop) || (!bar && hasCrop)) {
+          cropsDirty = true;
+          break;
+        }
+        if (bar && hasCrop) {
           bar.style.width = Math.min(100, Math.round(plots[p].growthPct * 100)) + '%';
         }
+      }
+      if (cropsDirty) {
+        renderGrid();
       }
     }
   }
@@ -484,6 +503,11 @@
     }
     stationPopupEl = null;
     document.removeEventListener('click', outsideStationPopupClick);
+    window.removeEventListener('scroll', onScrollClosePopup, true);
+  }
+
+  function onScrollClosePopup() {
+    closeStationPopup();
   }
 
   function outsideStationPopupClick(e) {
@@ -525,6 +549,7 @@
 
     setTimeout(function () {
       document.addEventListener('click', outsideStationPopupClick);
+      window.addEventListener('scroll', onScrollClosePopup, true);
     }, 0);
   }
 
@@ -575,15 +600,107 @@
       empty.className = 'fp-popup-row';
       empty.textContent = 'Empty plot';
       popup.appendChild(empty);
+
+      // Seed buttons — split into plantable vs unavailable
+      if (window.FarmAPI && window.FarmAPI.getCropDefs && window.FarmAPI.getInventory) {
+        var defs = window.FarmAPI.getCropDefs();
+        var inv = window.FarmAPI.getInventory();
+        var seedContainer = document.createElement('div');
+        seedContainer.className = 'fp-popup-seeds';
+
+        var cropKeys = Object.keys(defs);
+        var unavailable = [];
+
+        for (var s = 0; s < cropKeys.length; s++) {
+          (function (key) {
+            var crop = defs[key];
+            var isFree = crop.free;
+            var count = isFree ? -1 : (inv[key] || 0);
+            var disabled = !isFree && count <= 0;
+
+            if (disabled) {
+              unavailable.push({ key: key, crop: crop });
+              return;
+            }
+
+            var btn = document.createElement('button');
+            btn.className = 'fp-popup-seed-btn';
+            btn.type = 'button';
+            if (crop.rarity === 'rare') btn.classList.add('fp-popup-seed-rare');
+
+            var nameSpan = document.createElement('span');
+            nameSpan.className = 'fp-popup-seed-name';
+            nameSpan.textContent = crop.name;
+            btn.appendChild(nameSpan);
+
+            var infoSpan = document.createElement('span');
+            infoSpan.className = 'fp-popup-seed-info';
+            infoSpan.textContent = isFree ? 'free' : ('x' + count);
+            btn.appendChild(infoSpan);
+
+            btn.addEventListener('click', function (ev) {
+              ev.stopPropagation();
+              window.FarmAPI.plant(plotIdx, key);
+              closeStationPopup();
+              renderGrid();
+            });
+
+            seedContainer.appendChild(btn);
+          })(cropKeys[s]);
+        }
+
+        // Collapsible section for unavailable seeds
+        if (unavailable.length > 0) {
+          var toggle = document.createElement('button');
+          toggle.className = 'fp-popup-seed-toggle';
+          toggle.type = 'button';
+          toggle.textContent = unavailable.length + ' more (no seeds)';
+
+          var moreList = document.createElement('div');
+          moreList.className = 'fp-popup-seeds-hidden';
+
+          for (var u = 0; u < unavailable.length; u++) {
+            var entry = unavailable[u];
+            var btn = document.createElement('div');
+            btn.className = 'fp-popup-seed-btn fp-popup-seed-disabled';
+            if (entry.crop.rarity === 'rare') btn.classList.add('fp-popup-seed-rare');
+
+            var nameSpan = document.createElement('span');
+            nameSpan.className = 'fp-popup-seed-name';
+            nameSpan.textContent = entry.crop.name;
+            btn.appendChild(nameSpan);
+
+            var infoSpan = document.createElement('span');
+            infoSpan.className = 'fp-popup-seed-info';
+            infoSpan.textContent = 'x0';
+            btn.appendChild(infoSpan);
+
+            moreList.appendChild(btn);
+          }
+
+          toggle.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            var open = moreList.classList.toggle('fp-popup-seeds-show');
+            toggle.textContent = open
+              ? 'hide unavailable'
+              : unavailable.length + ' more (no seeds)';
+          });
+
+          seedContainer.appendChild(toggle);
+          seedContainer.appendChild(moreList);
+        }
+
+        popup.appendChild(seedContainer);
+      }
       return;
     }
 
     // Get crop name from defs
     var cropName = cropInfo.crop;
     if (window.FarmAPI && window.FarmAPI.getCropDefs) {
-      var defs = window.FarmAPI.getCropDefs();
-      if (defs[cropInfo.crop]) {
-        cropName = defs[cropInfo.crop].name;
+      var defs2 = window.FarmAPI.getCropDefs();
+      if (defs2[cropInfo.crop]) {
+        cropName = defs2[cropInfo.crop].name;
       }
     }
 
@@ -610,8 +727,46 @@
 
     var pctRow = document.createElement('div');
     pctRow.className = 'fp-popup-row fp-popup-rate';
-    pctRow.textContent = pct + '% grown';
+    var pctText = pct + '% grown';
+    if (cropInfo.timeRemaining && cropInfo.stage !== 'ready') {
+      pctText += ' \u00B7 ' + cropInfo.timeRemaining;
+    }
+    pctRow.textContent = pctText;
     popup.appendChild(pctRow);
+
+    // Harvest button when ready
+    if (cropInfo.stage === 'ready' && window.FarmAPI && window.FarmAPI.harvest) {
+      var harvestBtn = document.createElement('button');
+      harvestBtn.className = 'fp-popup-btn';
+      harvestBtn.type = 'button';
+      harvestBtn.textContent = 'Harvest';
+      harvestBtn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var cellEl = gridEl.querySelector('[data-key="' + item.key + '"]');
+        var result = window.FarmAPI.harvest(plotIdx);
+        if (result) {
+          showFpJBFloat(cellEl, result.amount);
+        }
+        closeStationPopup();
+        renderGrid();
+      });
+      popup.appendChild(harvestBtn);
+    }
+  }
+
+  // ── JB float particle for farm page ─────────────────
+  function showFpJBFloat(cellEl, amount) {
+    if (!cellEl) return;
+    var rect = cellEl.getBoundingClientRect();
+    var floatEl = document.createElement('div');
+    floatEl.className = 'fp-jb-float';
+    floatEl.textContent = '+' + amount + ' JB';
+    floatEl.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+    floatEl.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(floatEl);
+    setTimeout(function () {
+      if (floatEl.parentNode) floatEl.parentNode.removeChild(floatEl);
+    }, 1000);
   }
 
   function renderProcessingPopup(item, popup) {

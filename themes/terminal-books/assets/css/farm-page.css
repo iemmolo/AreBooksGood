@@ -320,6 +320,127 @@
   transition: width 0.3s ease;
 }
 
+/* ── Popup action buttons ───────────────────────────── */
+
+.fp-popup-btn {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  margin-top: 0.4rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.fp-popup-btn:hover {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  border-color: var(--accent);
+}
+
+.fp-popup-seeds {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 0.35rem;
+}
+
+.fp-popup-seed-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: 0.65rem;
+  color: var(--foreground);
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.fp-popup-seed-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.fp-popup-seed-name {
+  flex: 1;
+}
+
+.fp-popup-seed-info {
+  font-size: 0.55rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.fp-popup-seed-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.fp-popup-seed-disabled:hover {
+  border-color: color-mix(in srgb, var(--foreground) 20%, transparent);
+  color: var(--foreground);
+  background: none;
+}
+
+.fp-popup-seed-rare .fp-popup-seed-name {
+  color: #FFD700;
+}
+
+.fp-popup-seed-rare:hover .fp-popup-seed-name {
+  color: #FFED4A;
+}
+
+.fp-popup-seed-toggle {
+  width: 100%;
+  padding: 2px 6px;
+  font-family: inherit;
+  font-size: 0.55rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  background: none;
+  border: 1px dashed color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.fp-popup-seed-toggle:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.fp-popup-seeds-hidden {
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.fp-popup-seeds-show {
+  display: flex;
+}
+
+/* ── JB float particle (farm page harvest) ──────────── */
+
+.fp-jb-float {
+  position: fixed;
+  z-index: 10002;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--accent);
+  pointer-events: none;
+  animation: fp-resource-fly 1s ease-out forwards;
+}
+
 /* ── Visual polish — pulse on cells with resources ───── */
 
 .fp-cell-has-resources {

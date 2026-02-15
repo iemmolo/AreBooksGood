@@ -146,71 +146,66 @@
   left: 0;
 }
 
-/* ── Seed picker ─────────────────────────────── */
-.farm-seed-picker {
-  position: fixed;
-  z-index: 10001;
-  background: var(--background);
-  border: 1px solid color-mix(in srgb, var(--foreground) 40%, transparent);
-  padding: 6px;
+/* ── Dashboard tiles (replaces plot tiles) ──── */
+.farm-dash-tile {
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 120px;
-}
-
-.farm-seed-option {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 12px;
-  color: var(--foreground);
-  background: none;
-  border: 1px solid transparent;
+  justify-content: center;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
 }
 
-.farm-seed-option:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+.farm-dash-tile:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
-.farm-seed-name {
-  flex: 1;
+.farm-dash-icon {
+  font-size: 18px;
+  line-height: 1;
 }
 
-.farm-seed-time {
-  color: color-mix(in srgb, var(--foreground) 50%, transparent);
-  font-size: 11px;
-}
-
-.farm-seed-count {
+.farm-dash-count {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
   font-size: 10px;
-  color: color-mix(in srgb, var(--accent) 80%, transparent);
-  min-width: 28px;
-  text-align: center;
+  font-weight: bold;
+  color: var(--accent);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
 }
 
-.farm-seed-rare .farm-seed-name {
-  color: #FFD700;
-}
-
-.farm-seed-rare:hover .farm-seed-name {
-  color: #FFED4A;
-}
-
-.farm-seed-disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.farm-seed-disabled:hover {
-  border-color: transparent;
+.farm-dash-label {
+  font-size: 9px;
+  font-family: inherit;
   color: var(--foreground);
-  background: none;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.farm-dash-link {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.farm-dash-link:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.farm-dash-link .farm-dash-icon {
+  color: var(--accent);
+}
+
+.farm-dash-tile.farm-dash-has-count {
+  animation: farm-plot-pulse 2s ease-in-out infinite;
 }
 
 /* ── JB float particle ───────────────────────── */
@@ -712,13 +707,17 @@ body.harvest-moon-active::before {
     align-content: flex-end;
   }
 
-  .farm-plot {
+  .farm-dash-tile {
     width: 42px;
     height: 42px;
   }
 
-  .farm-seed-picker {
-    min-width: 110px;
+  .farm-dash-icon {
+    font-size: 15px;
+  }
+
+  .farm-dash-count {
+    font-size: 9px;
   }
 
   .farm-house-widget {

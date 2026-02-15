@@ -275,7 +275,7 @@ Pet sprite rendered on canvas using `fillRect` per pixel (same approach as flapp
 4. ~~Collection interactions: click station → popup → collect~~ **DONE (1b)**
 5. ~~Visual feedback: pulse animations, collection particles, counter ticks~~ **DONE (1b)**
 6. ~~Pet walks on farm grid (reuse mini-pet from farm.js)~~ **DONE (1b)**
-7. Transform existing farm strip into notification dashboard (mini tile row) **(1c)**
+7. ~~Transform existing farm strip into notification dashboard (mini tile row)~~ **DONE (1c)**
 8. ~~Add farm page to games section hub + nav~~ **DONE (1a)**
 
 ### Phase 2: Expanded Farm
@@ -466,3 +466,26 @@ This section is updated at the end of each implementation session to track what'
 
 **What's next (Phase 1c):**
 - Dashboard strip rework: transform existing farm strip crop tiles into resource summary tiles
+
+### Session 3 — Phase 1c: Dashboard Strip Rework (2026-02-15)
+
+**Completed:**
+- Farm page crop interactions: harvest button on ready crops, seed picker on empty plots (reads FarmAPI.getCropDefs + getInventory)
+- JB float particle on farm page harvest
+- Dashboard strip rework: replaced plot tiles with resource summary tiles (crops, wood, stone, fish, eggs, milk, wool, iron, gold, hardwood + "→ Farm" link)
+- Dashboard tiles show resource counts, pulse when count > 0, click navigates to `/games/farm/`
+- Updated mini pet walk to target crops dashboard tile instead of individual plot elements
+- Updated JB/seed float particles to anchor at crops tile
+- Removed strip seed picker, plot info popup, plot click handler (all moved to farm page)
+
+**Files modified:**
+- `themes/terminal-books/assets/js/farm-page.js` — added harvest/plant buttons to crop popup, JB float function
+- `themes/terminal-books/assets/css/farm-page.css` — added popup button styles, seed button styles, JB float particle
+- `themes/terminal-books/assets/js/farm.js` — replaced plot tiles with dashboard tiles, removed strip interactions, updated pet walk/float targets
+- `themes/terminal-books/assets/css/farm.css` — added dashboard tile styles, removed seed picker CSS, added mobile tile sizes
+
+**Phase 1 complete. Phase 2 (Expanded Farm) is next:**
+- Livestock stations (chicken, cow, sheep) - locked until blueprint
+- Fishing pond (idle + interactive mini-game)
+- Basic processing stations (mill, sawmill, mason, kitchen)
+- Processing queue UI

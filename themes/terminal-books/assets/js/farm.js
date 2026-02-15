@@ -10,6 +10,21 @@
   // ── Free crops (infinite seeds) ───────────────────────
   var FREE_CROPS = { carrot: true, potato: true, wheat: true };
 
+  // ── Dashboard tiles (strip resource summary) ─────────
+  var DASHBOARD_TILES = [
+    { key: 'crops', icon: '\uD83C\uDF3E', label: 'Crops' },
+    { key: 'lumberYard', icon: '\uD83E\uDEB5', resource: 'wood' },
+    { key: 'quarry', icon: '\u26CF\uFE0F', resource: 'stone' },
+    { key: 'fishingPond', icon: '\uD83D\uDC1F', resource: 'fish' },
+    { key: 'chickenCoop', icon: '\uD83E\uDD5A', resource: 'eggs' },
+    { key: 'cowPasture', icon: '\uD83E\uDD5B', resource: 'milk' },
+    { key: 'sheepPen', icon: '\uD83E\uDDF6', resource: 'wool' },
+    { key: 'mine', icon: '\u2699\uFE0F', resource: 'iron' },
+    { key: 'deepMine', icon: '\uD83D\uDC8E', resource: 'gold' },
+    { key: 'oldGrowth', icon: '\uD83C\uDF33', resource: 'hardwood' },
+    { key: 'farmLink', icon: '\u2192', label: 'Farm' }
+  ];
+
   // ── Crop definitions ────────────────────────────────────
   var CROPS = {
     carrot:       { name: 'Carrot',       growTime: 5 * 60 * 1000,    sell: 2,   seedCost: 0,  icon: 'C', rarity: 'common' },
@@ -635,16 +650,13 @@
   };
 
   // ── State ───────────────────────────────────────────────
-  var farmState;
+  var farmState = loadState();
   var farmBarEl;
   var farmSceneEl;
-  var pickerEl;
-  var activePlotIndex = -1;
   var updateTimer;
   var farmhouseEl;
   var farmhousePanelEl;
   var sprinklerTimer = null;
-  var plotInfoEl = null;
   var upgradeInfoEl = null;
 
   function defaultState() {
@@ -784,9 +796,7 @@
     farmBarEl.className = 'farm-bar';
     farmBarEl.id = 'farm-bar';
 
-    for (var i = 0; i < farmState.plots.length; i++) {
-      farmBarEl.appendChild(createPlotEl(i));
-    }
+    createDashboardTiles();
 
     farmSceneEl.appendChild(farmBarEl);
 
@@ -794,187 +804,110 @@
     syncVisibility();
   }
 
-  function createPlotEl(index) {
-    var el = document.createElement('div');
-    el.className = 'farm-plot';
-    el.setAttribute('data-plot', index);
-    el.addEventListener('click', function (e) {
-      onPlotClick(index, e);
+  // ── Dashboard tile creation ──────────────────────────
+  function createDashboardTiles() {
+    while (farmBarEl.firstChild) farmBarEl.removeChild(farmBarEl.firstChild);
+
+    for (var i = 0; i < DASHBOARD_TILES.length; i++) {
+      var conf = DASHBOARD_TILES[i];
+
+      // Skip unbuilt resource stations
+      if (conf.resource && window.FarmResources && !window.FarmResources.isStationBuilt(conf.key)) {
+        continue;
+      }
+
+      farmBarEl.appendChild(createDashTile(conf));
+    }
+  }
+
+  function createDashTile(conf) {
+    var tile = document.createElement('div');
+    tile.className = 'farm-dash-tile';
+    tile.setAttribute('data-tile', conf.key);
+
+    if (conf.key === 'farmLink') {
+      tile.classList.add('farm-dash-link');
+    }
+
+    // Icon
+    var icon = document.createElement('div');
+    icon.className = 'farm-dash-icon';
+    icon.textContent = conf.icon;
+    tile.appendChild(icon);
+
+    // Count badge
+    var count = document.createElement('div');
+    count.className = 'farm-dash-count';
+    count.id = 'farm-dash-count-' + conf.key;
+    tile.appendChild(count);
+
+    // Label for farm link tile
+    if (conf.label) {
+      var label = document.createElement('div');
+      label.className = 'farm-dash-label';
+      label.textContent = conf.label;
+      tile.appendChild(label);
+    }
+
+    // Click → navigate to farm page
+    tile.addEventListener('click', function () {
+      window.location.href = '/games/farm/';
     });
-    updatePlotEl(el, index);
-    return el;
+
+    updateDashTile(tile, conf);
+    return tile;
   }
 
-  function updatePlotEl(el, index) {
-    var plot = farmState.plots[index];
+  function getDashTileCount(conf) {
+    if (conf.key === 'crops') {
+      var readyCount = 0;
+      for (var i = 0; i < farmState.plots.length; i++) {
+        var plot = farmState.plots[i];
+        if (plot && plot.crop && getPlotStage(plot) === 'ready') {
+          readyCount++;
+        }
+      }
+      return readyCount;
+    }
+    if (conf.resource && window.FarmResources) {
+      return window.FarmResources.getRaw(conf.resource);
+    }
+    return 0;
+  }
 
-    // Clear existing content except progress bar
-    while (el.firstChild) el.removeChild(el.firstChild);
+  function updateDashTile(tile, conf) {
+    if (conf.key === 'farmLink') return;
 
-    // Remove state classes
-    el.className = 'farm-plot';
+    var countEl = tile.querySelector('.farm-dash-count');
+    var count = getDashTileCount(conf);
 
-    if (!plot || !plot.crop) {
-      // Empty plot
-      el.classList.add('farm-plot-empty');
-      return;
+    if (countEl) {
+      countEl.textContent = count > 0 ? count : '';
     }
 
-    var stage = getPlotStage(plot);
-
-    if (stage === 'ready') {
-      el.classList.add('farm-plot-ready');
+    // Pulse animation when count > 0
+    if (count > 0) {
+      tile.classList.add('farm-dash-has-count');
     } else {
-      el.classList.add('farm-plot-growing');
-
-      // Progress bar — watered plots get blue tint
-      var progress = document.createElement('div');
-      progress.className = 'farm-plot-progress';
-      if (plot.wateredAt) progress.classList.add('farm-plot-progress-watered');
-      progress.style.width = (getGrowthPct(plot) * 100) + '%';
-      el.appendChild(progress);
+      tile.classList.remove('farm-dash-has-count');
     }
-
-    // Watered badge
-    if (plot.wateredAt && stage !== 'ready') {
-      el.classList.add('farm-plot-watered');
-    }
-
-    // Crop sprite
-    var spriteContainer = document.createElement('div');
-    spriteContainer.className = 'farm-crop-sprite';
-    var spriteData = SPRITES[plot.crop] && SPRITES[plot.crop][stage];
-    if (spriteData) {
-      renderSprite(spriteContainer, spriteData);
-    }
-    el.appendChild(spriteContainer);
   }
 
-  // ── Update all plots ────────────────────────────────────
+  // ── Update all dashboard tiles ──────────────────────────
   function updatePlots() {
     if (!farmBarEl) return;
-    var plotEls = farmBarEl.querySelectorAll('.farm-plot');
-    for (var i = 0; i < plotEls.length; i++) {
-      updatePlotEl(plotEls[i], i);
-    }
-  }
-
-  // ── Plot click handler ──────────────────────────────────
-  function onPlotClick(index, e) {
-    var plot = farmState.plots[index];
-
-    if (!plot || !plot.crop) {
-      // Empty — open seed picker
-      openSeedPicker(index, e);
-      return;
-    }
-
-    var stage = getPlotStage(plot);
-    if (stage === 'ready') {
-      harvest(index, e);
-    } else {
-      // Growing — open plot info popup
-      openPlotInfo(index, e);
-    }
-  }
-
-  // ── Plot info popup ───────────────────────────────────
-  function openPlotInfo(plotIndex, e) {
-    closePlotInfo();
-    var plot = farmState.plots[plotIndex];
-    if (!plot || !plot.crop) return;
-
-    var crop = CROPS[plot.crop];
-    if (!crop) return;
-
-    var stage = getPlotStage(plot);
-    var pct = getGrowthPct(plot);
-    var pctDisplay = Math.round(pct * 100);
-    var remaining = formatTimeRemaining(plot);
-
-    var stageNames = { planted: 'Planted', sprouting: 'Sprouting', growing: 'Growing', flowering: 'Flowering', ready: 'Ready' };
-
-    plotInfoEl = document.createElement('div');
-    plotInfoEl.className = 'farm-plot-info';
-
-    // Crop name + rarity
-    var nameRow = document.createElement('div');
-    nameRow.className = 'farm-plot-info-name';
-    nameRow.textContent = crop.name;
-    if (crop.rarity === 'rare') nameRow.classList.add('farm-plot-info-rare');
-    plotInfoEl.appendChild(nameRow);
-
-    // Stage
-    var stageRow = document.createElement('div');
-    stageRow.className = 'farm-plot-info-stage';
-    stageRow.textContent = stageNames[stage] || stage;
-    plotInfoEl.appendChild(stageRow);
-
-    // Progress bar
-    var barOuter = document.createElement('div');
-    barOuter.className = 'farm-plot-info-bar';
-    var barInner = document.createElement('div');
-    barInner.className = 'farm-plot-info-bar-fill';
-    barInner.style.width = pctDisplay + '%';
-    barOuter.appendChild(barInner);
-    plotInfoEl.appendChild(barOuter);
-
-    // Pct + time
-    var pctRow = document.createElement('div');
-    pctRow.className = 'farm-plot-info-pct';
-    pctRow.textContent = pctDisplay + '% grown \u00B7 ' + remaining;
-    plotInfoEl.appendChild(pctRow);
-
-    // Watered status
-    if (plot.wateredAt) {
-      var wateredRow = document.createElement('div');
-      wateredRow.className = 'farm-plot-info-watered';
-      wateredRow.textContent = '\uD83D\uDCA7 Watered';
-      plotInfoEl.appendChild(wateredRow);
-    }
-
-    // Fertilizer button
-    if (farmState.upgrades && farmState.upgrades.fertilizer > 0) {
-      var fertBtn = document.createElement('button');
-      fertBtn.className = 'farm-plot-info-fert-btn';
-      fertBtn.type = 'button';
-      fertBtn.textContent = 'Use Fertilizer (' + farmState.upgrades.fertilizer + ')';
-      fertBtn.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        var used = useFertilizer(plotIndex);
-        if (used) {
-          closePlotInfo();
+    var tiles = farmBarEl.querySelectorAll('.farm-dash-tile');
+    for (var i = 0; i < tiles.length; i++) {
+      var key = tiles[i].getAttribute('data-tile');
+      for (var j = 0; j < DASHBOARD_TILES.length; j++) {
+        if (DASHBOARD_TILES[j].key === key) {
+          updateDashTile(tiles[i], DASHBOARD_TILES[j]);
+          break;
         }
-      });
-      plotInfoEl.appendChild(fertBtn);
-    }
-
-    // Position above clicked plot
-    var plotEl = farmBarEl.querySelectorAll('.farm-plot')[plotIndex];
-    var rect = plotEl.getBoundingClientRect();
-    plotInfoEl.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - 150)) + 'px';
-    plotInfoEl.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-
-    document.body.appendChild(plotInfoEl);
-
-    setTimeout(function () {
-      document.addEventListener('click', outsidePlotInfoClick);
-    }, 0);
-  }
-
-  function outsidePlotInfoClick(e) {
-    if (plotInfoEl && !plotInfoEl.contains(e.target)) {
-      closePlotInfo();
+      }
     }
   }
 
-  function closePlotInfo() {
-    if (plotInfoEl && plotInfoEl.parentNode) {
-      plotInfoEl.parentNode.removeChild(plotInfoEl);
-    }
-    plotInfoEl = null;
-    document.removeEventListener('click', outsidePlotInfoClick);
-  }
 
   // ── Upgrade info popup ────────────────────────────────────
   function openUpgradeInfo(key, targetEl) {
@@ -1024,85 +957,6 @@
     document.removeEventListener('click', outsideUpgradeInfoClick);
   }
 
-  // ── Seed picker ─────────────────────────────────────────
-  function openSeedPicker(plotIndex, e) {
-    closeSeedPicker();
-    activePlotIndex = plotIndex;
-
-    pickerEl = document.createElement('div');
-    pickerEl.className = 'farm-seed-picker';
-
-    var cropKeys = Object.keys(CROPS);
-    for (var i = 0; i < cropKeys.length; i++) {
-      (function (key) {
-        var crop = CROPS[key];
-        var isFree = FREE_CROPS[key];
-        var count = isFree ? -1 : (farmState.inventory[key] || 0);
-        var disabled = !isFree && count <= 0;
-
-        var btn = document.createElement('button');
-        btn.className = 'farm-seed-option';
-        if (disabled) btn.classList.add('farm-seed-disabled');
-        if (crop.rarity === 'rare') btn.classList.add('farm-seed-rare');
-        btn.type = 'button';
-        if (disabled) btn.disabled = true;
-
-        var nameSpan = document.createElement('span');
-        nameSpan.className = 'farm-seed-name';
-        nameSpan.textContent = crop.name;
-
-        var countSpan = document.createElement('span');
-        countSpan.className = 'farm-seed-count';
-        countSpan.textContent = isFree ? 'free' : ('x' + count);
-
-        var timeSpan = document.createElement('span');
-        timeSpan.className = 'farm-seed-time';
-        timeSpan.textContent = formatTime(crop.growTime);
-
-        btn.appendChild(nameSpan);
-        btn.appendChild(countSpan);
-        btn.appendChild(timeSpan);
-
-        if (!disabled) {
-          btn.addEventListener('click', function (ev) {
-            ev.stopPropagation();
-            plantSeed(activePlotIndex, key);
-            closeSeedPicker();
-          });
-        }
-
-        pickerEl.appendChild(btn);
-      })(cropKeys[i]);
-    }
-
-    // Position above the clicked plot
-    var plotEl = farmBarEl.querySelectorAll('.farm-plot')[plotIndex];
-    var rect = plotEl.getBoundingClientRect();
-    pickerEl.style.left = rect.left + 'px';
-    pickerEl.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
-
-    document.body.appendChild(pickerEl);
-
-    // Close on outside click (delayed to avoid immediate close)
-    setTimeout(function () {
-      document.addEventListener('click', outsidePickerClick);
-    }, 0);
-  }
-
-  function outsidePickerClick(e) {
-    if (pickerEl && !pickerEl.contains(e.target)) {
-      closeSeedPicker();
-    }
-  }
-
-  function closeSeedPicker() {
-    if (pickerEl && pickerEl.parentNode) {
-      pickerEl.parentNode.removeChild(pickerEl);
-    }
-    pickerEl = null;
-    activePlotIndex = -1;
-    document.removeEventListener('click', outsidePickerClick);
-  }
 
   // ── Plant seed ──────────────────────────────────────────
   function plantSeed(plotIndex, cropKey) {
@@ -1121,67 +975,12 @@
     updatePlots();
   }
 
-  // ── Harvest ─────────────────────────────────────────────
-  function harvest(plotIndex, e) {
-    var plot = farmState.plots[plotIndex];
-    if (!plot || !plot.crop) return;
-
-    var crop = CROPS[plot.crop];
-    if (!crop) return;
-
-    var cropKey = plot.crop;
-    var sellValue = Math.round(crop.sell * sellMultiplier);
-
-    // Scarecrow bonus
-    var scarecrowLevel = farmState.upgrades ? farmState.upgrades.scarecrow : 0;
-    if (scarecrowLevel > 0) {
-      var scarecrowBonus = FARM_UPGRADES.scarecrow.effects[scarecrowLevel - 1].bonus;
-      sellValue = Math.round(sellValue * (1 + scarecrowBonus));
-    }
-
-    // Add JB
-    if (window.JackBucks) {
-      window.JackBucks.add(sellValue);
-    }
-
-    // Seed bag chance
-    var seedBagLevel = farmState.upgrades ? farmState.upgrades.seedBag : 0;
-    if (seedBagLevel > 0) {
-      var seedDropChance = FARM_UPGRADES.seedBag.effects[seedBagLevel - 1].chance;
-      if (Math.random() < seedDropChance) {
-        farmState.inventory[cropKey] = (farmState.inventory[cropKey] || 0) + 1;
-        showSeedFloat(plotIndex, cropKey);
-      }
-    }
-
-    // Clear plot
-    farmState.plots[plotIndex] = { crop: null };
-    saveState();
-    updatePlots();
-
-    // Float particle
-    showJBFloat(plotIndex, sellValue);
-
-    // Cat "Green Paw": 15% chance to auto-replant after manual harvest
-    if (window.PetSystem && window.PetSystem.getState) {
-      var ps = window.PetSystem.getState();
-      if (ps && ps.petId === 'cat' && Math.random() < 0.15) {
-        plantSeed(plotIndex, cropKey);
-      }
-    }
-
-    // Pet celebrates
-    if (window.PetSystem && window.PetSystem.celebrate) {
-      window.PetSystem.celebrate();
-    }
-  }
-
   // ── JB float particle ──────────────────────────────────
   function showJBFloat(plotIndex, amount) {
-    var plotEl = farmBarEl.querySelectorAll('.farm-plot')[plotIndex];
-    if (!plotEl) return;
+    var el = farmBarEl ? farmBarEl.querySelector('[data-tile="crops"]') : null;
+    if (!el) return;
 
-    var rect = plotEl.getBoundingClientRect();
+    var rect = el.getBoundingClientRect();
     var float = document.createElement('div');
     float.className = 'farm-jb-float';
     float.textContent = '+' + amount + ' JB';
@@ -1196,12 +995,12 @@
 
   // ── Seed drop float particle ───────────────────────────
   function showSeedFloat(plotIndex, cropKey) {
-    var plotEl = farmBarEl.querySelectorAll('.farm-plot')[plotIndex];
-    if (!plotEl) return;
+    var el = farmBarEl ? farmBarEl.querySelector('[data-tile="crops"]') : null;
+    if (!el) return;
     var crop = CROPS[cropKey];
     if (!crop) return;
 
-    var rect = plotEl.getBoundingClientRect();
+    var rect = el.getBoundingClientRect();
     var float = document.createElement('div');
     float.className = 'farm-seed-float';
     float.textContent = '+1 ' + crop.name + ' seed';
@@ -1388,12 +1187,13 @@
   // ── Mini pet walking ──────────────────────────────────
   function walkMiniPetToPlot(plotIndex, callback) {
     if (!farmhousePetEl) { if (callback) callback(); return; }
-    var plotEl = window.FarmAPI.getPlotElement(plotIndex);
-    if (!plotEl) { if (callback) callback(); return; }
+    // Walk to crops dashboard tile
+    var tileEl = farmBarEl ? farmBarEl.querySelector('[data-tile="crops"]') : null;
+    if (!tileEl) { if (callback) callback(); return; }
 
-    var plotRect = plotEl.getBoundingClientRect();
+    var tileRect = tileEl.getBoundingClientRect();
     var petWidth = farmhousePetEl.offsetWidth || 32;
-    var targetLeft = plotRect.left + plotRect.width / 2 - petWidth / 2;
+    var targetLeft = tileRect.left + tileRect.width / 2 - petWidth / 2;
 
     farmhousePetEl.style.left = targetLeft + 'px';
 
@@ -1711,14 +1511,7 @@
   // ── Rebuild farm bar when plots change ────────────────────
   function rebuildFarmBar() {
     if (!farmBarEl) return;
-    // Remove all plot elements
-    while (farmBarEl.firstChild) farmBarEl.removeChild(farmBarEl.firstChild);
-    // Recreate
-    for (var i = 0; i < farmState.plots.length; i++) {
-      farmBarEl.appendChild(createPlotEl(i));
-    }
-    // Re-create upgrade icons (they live in farm-scene, not farm-bar,
-    // but re-render to stay visually consistent after layout changes)
+    createDashboardTiles();
     createUpgradeDecorations();
   }
 
@@ -1734,7 +1527,8 @@
           crop: plot.crop || null,
           stage: getPlotStage(plot),
           growthPct: getGrowthPct(plot),
-          wateredAt: plot.wateredAt || null
+          wateredAt: plot.wateredAt || null,
+          timeRemaining: formatTimeRemaining(plot)
         });
       }
       return result;
@@ -1792,8 +1586,8 @@
 
     getPlotElement: function (plotIndex) {
       if (!farmBarEl) return null;
-      var els = farmBarEl.querySelectorAll('.farm-plot');
-      return els[plotIndex] || null;
+      // Return crops dashboard tile (pet walks here for farming)
+      return farmBarEl.querySelector('[data-tile="crops"]') || null;
     },
 
     setGrowTimeMultiplier: function (m) {
@@ -2114,7 +1908,6 @@
   }
 
   function init() {
-    farmState = loadState();
     applyFarmhouseBonuses();
     createFarmScene();
     createFarmhouseWidget();
