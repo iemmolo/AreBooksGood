@@ -11,41 +11,105 @@
   var UPDATE_INTERVAL = 10000; // 10s
   var COLLAPSE_KEY = 'arebooksgood-farm-page-collapsed';
   var prevCounts = {};
+  var prevStages = {};
   var stationPopupEl = null;
 
-  // ── Grid layout constant ─────────────────────────────────
+  // ── Grid layout constant (6 cols × 15 rows, portrait) ────
   var GRID_LAYOUT = [
-    { key: 'farmhouse', name: 'Farmhouse', row: 0, col: 0, rowSpan: 2, colSpan: 2, type: 'special' },
-    { key: 'crop0', name: 'Crops', row: 0, col: 2, rowSpan: 1, colSpan: 1, type: 'crop' },
-    { key: 'crop1', name: 'Crops', row: 0, col: 3, rowSpan: 1, colSpan: 1, type: 'crop' },
-    { key: 'crop2', name: 'Crops', row: 0, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
-    { key: 'crop3', name: 'Crops', row: 1, col: 2, rowSpan: 1, colSpan: 1, type: 'crop' },
-    { key: 'crop4', name: 'Crops', row: 1, col: 3, rowSpan: 1, colSpan: 1, type: 'crop' },
-    { key: 'crop5', name: 'Crops', row: 1, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
-    { key: 'mill', name: 'Mill', row: 0, col: 6, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'sawmill', name: 'Sawmill', row: 0, col: 7, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'mason', name: 'Mason', row: 1, col: 6, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'kitchen', name: 'Kitchen', row: 1, col: 7, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'forge', name: 'Forge', row: 2, col: 6, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'loom', name: 'Loom', row: 2, col: 7, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'smokehouse', name: 'Smokehouse', row: 2, col: 8, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'enchanter', name: 'Enchanter', row: 2, col: 9, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
-    { key: 'chickenCoop', name: 'Chicken Coop', row: 3, col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'cowPasture', name: 'Cow Pasture', row: 3, col: 1, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'sheepPen', name: 'Sheep Pen', row: 3, col: 2, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'lumberYard', name: 'Lumber Yard', row: 4, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'quarry', name: 'Quarry', row: 4, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'mine', name: 'Mine', row: 4, col: 6, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'deepMine', name: 'Deep Mine', row: 4, col: 7, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'oldGrowth', name: 'Old Growth', row: 4, col: 8, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'fishingPond', name: 'Fishing Pond', row: 6, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
+    { key: 'farmhouse',   name: 'Farmhouse',    row: 0, col: 0, rowSpan: 2, colSpan: 4, type: 'special' },
+    { key: 'crop8',       name: 'Crops',         row: 0, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop9',       name: 'Crops',         row: 0, col: 5, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop10',      name: 'Crops',         row: 1, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop11',      name: 'Crops',         row: 1, col: 5, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop0',       name: 'Crops',         row: 2, col: 3, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop1',       name: 'Crops',         row: 2, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop2',       name: 'Crops',         row: 2, col: 5, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop12',      name: 'Crops',         row: 3, col: 2, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop13',      name: 'Crops',         row: 3, col: 3, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop4',       name: 'Crops',         row: 4, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop5',       name: 'Crops',         row: 4, col: 5, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop14',      name: 'Crops',         row: 4, col: 2, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop15',      name: 'Crops',         row: 4, col: 3, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop6',       name: 'Crops',         row: 3, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
+    { key: 'crop7',       name: 'Crops',         row: 3, col: 5, rowSpan: 1, colSpan: 1, type: 'crop' },
+    // Row 4: empty gap
+    { key: 'chickenCoop', name: 'Chicken Coop',  row: 5, col: 0, rowSpan: 2, colSpan: 2, type: 'gathering' },
+    { key: 'cowPasture',  name: 'Cow Pasture',   row: 5, col: 2, rowSpan: 2, colSpan: 2, type: 'gathering' },
+    { key: 'sheepPen',    name: 'Sheep Pen',     row: 5, col: 4, rowSpan: 2, colSpan: 2, type: 'gathering' },
+    // Row 7: empty gap
+    { key: 'lumberYard',  name: 'Lumber Yard',   row: 8,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'quarry',      name: 'Quarry',        row: 8,  col: 1, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'mine',        name: 'Mine',          row: 8,  col: 2, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'deepMine',    name: 'Deep Mine',     row: 8,  col: 3, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'oldGrowth',   name: 'Old Growth',    row: 8,  col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    // Row 9: empty gap
+    { key: 'mill',        name: 'Mill',          row: 10, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'sawmill',     name: 'Sawmill',       row: 10, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'mason',       name: 'Mason',         row: 10, col: 2, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'kitchen',     name: 'Kitchen',       row: 10, col: 3, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'forge',       name: 'Forge',         row: 10, col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'loom',        name: 'Loom',          row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'smokehouse',  name: 'Smokehouse',    row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
+    // Row 12: empty gap
+    { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' },
+    { key: 'forest0',     name: 'Forest',        row: 13, col: 4, rowSpan: 1, colSpan: 1, type: 'special' },
+    { key: 'forest1',     name: 'Forest',        row: 13, col: 5, rowSpan: 1, colSpan: 1, type: 'special' },
+    { key: 'forest2',     name: 'Forest',        row: 14, col: 4, rowSpan: 1, colSpan: 1, type: 'special' },
+    { key: 'forest3',     name: 'Forest',        row: 14, col: 5, rowSpan: 1, colSpan: 1, type: 'special' }
   ];
+
+  // ── Layout helpers ──────────────────────────────────────────
+  function getActiveLayout() {
+    return GRID_LAYOUT;
+  }
+
+  // ── PNG sprite paths (farm page grid only) ──────────────────
+  var FARM_IMG = '/images/farm';
+  var STATION_IMG = {
+    mill: FARM_IMG + '/stations/mill.png',
+    sawmill: FARM_IMG + '/stations/sawmill.png',
+    mason: FARM_IMG + '/stations/mason.png',
+    kitchen: FARM_IMG + '/stations/kitchen.png',
+    forge: FARM_IMG + '/stations/forge.png',
+    loom: FARM_IMG + '/stations/loom.png',
+    smokehouse: FARM_IMG + '/stations/smokehouse.png',
+    enchanter: FARM_IMG + '/stations/enchanter.png',
+    chickenCoop: FARM_IMG + '/stations/chickenCoop.png',
+    cowPasture: FARM_IMG + '/stations/cowPasture.png',
+    sheepPen: FARM_IMG + '/stations/sheepPen.png',
+    lumberYard: FARM_IMG + '/stations/lumberYard.png',
+    quarry: FARM_IMG + '/stations/quarry.png',
+    mine: FARM_IMG + '/stations/mine.png',
+    deepMine: FARM_IMG + '/stations/deepMine.png',
+    oldGrowth: FARM_IMG + '/stations/oldGrowth.png',
+    fishingPond: FARM_IMG + '/stations/fishingPond.png',
+    forest0: FARM_IMG + '/stations/oldGrowth.png',
+    forest1: FARM_IMG + '/stations/oldGrowth.png',
+    forest2: FARM_IMG + '/stations/oldGrowth.png',
+    forest3: FARM_IMG + '/stations/oldGrowth.png'
+  };
+  var STAGE_NUM = { planted: 1, sprouting: 2, growing: 3, flowering: 4, ready: 5 };
+
+  function createFarmImg(src, alt) {
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = alt || '';
+    img.className = 'fp-sprite-img';
+    img.draggable = false;
+    return img;
+  }
 
   // ── Icons for each cell type ──────────────────────────────
   var ICONS = {
     farmhouse: '\uD83C\uDFE0', // house
     crop0: '\uD83C\uDF3E', crop1: '\uD83C\uDF3E', crop2: '\uD83C\uDF3E',
-    crop3: '\uD83C\uDF3E', crop4: '\uD83C\uDF3E', crop5: '\uD83C\uDF3E',
+    crop4: '\uD83C\uDF3E', crop5: '\uD83C\uDF3E',
+    crop6: '\uD83C\uDF3E', crop7: '\uD83C\uDF3E',
+    crop8: '\uD83C\uDF3E', crop9: '\uD83C\uDF3E',
+    crop10: '\uD83C\uDF3E', crop11: '\uD83C\uDF3E',
+    crop12: '\uD83C\uDF3E', crop13: '\uD83C\uDF3E',
+    crop14: '\uD83C\uDF3E', crop15: '\uD83C\uDF3E',
     mill: '\u2699',        // gear
     sawmill: '\uD83E\uDE93',   // axe
     mason: '\u26CF',       // pick
@@ -62,7 +126,9 @@
     mine: '\u26CF',        // pick
     deepMine: '\uD83D\uDC8E',   // gem
     oldGrowth: '\uD83C\uDF33',  // tree
-    fishingPond: '\uD83C\uDFA3' // fishing
+    fishingPond: '\uD83C\uDFA3', // fishing
+    forest0: '\uD83C\uDF33', forest1: '\uD83C\uDF33',
+    forest2: '\uD83C\uDF33', forest3: '\uD83C\uDF33'
   };
 
   // ── Resource display config ───────────────────────────────
@@ -116,10 +182,10 @@
   ];
 
   // ── Track which cells are occupied by multi-span buildings ─
-  function buildOccupiedMap() {
+  function buildOccupiedMap(layout) {
     var map = {};
-    for (var i = 0; i < GRID_LAYOUT.length; i++) {
-      var item = GRID_LAYOUT[i];
+    for (var i = 0; i < layout.length; i++) {
+      var item = layout[i];
       var rs = item.rowSpan || 1;
       var cs = item.colSpan || 1;
       for (var r = item.row; r < item.row + rs; r++) {
@@ -131,19 +197,18 @@
     return map;
   }
 
-  var occupiedMap = buildOccupiedMap();
+  var occupiedMap = buildOccupiedMap(getActiveLayout());
 
   // ── Determine if a station/building is built ──────────────
   function isCellBuilt(item) {
     if (item.type === 'special') return true; // farmhouse always built
     if (item.type === 'crop') return true;    // crop plots always available
 
-    // Processing stations: all unlocked for testing
-    if (item.type === 'processing') {
-      return true;
-    }
+    // All stations unlocked for testing
+    if (item.type === 'processing') return true;
+    if (item.type === 'gathering') return true;
 
-    // Gathering stations: check FarmResources
+    // Fallback: check FarmResources
     if (window.FarmResources && window.FarmResources.isStationBuilt) {
       return window.FarmResources.isStationBuilt(item.key);
     }
@@ -174,11 +239,23 @@
       gridEl.removeChild(fpPetEl);
     }
     gridEl.innerHTML = '';
+
+    // Background as <img> so image-rendering: pixelated works reliably
+    var bgImg = document.createElement('img');
+    bgImg.src = '/images/farm/ground/grass.png';
+    bgImg.className = 'fp-grid-bg';
+    bgImg.alt = '';
+    bgImg.draggable = false;
+    gridEl.appendChild(bgImg);
+
     var rendered = {};
 
+    var activeLayout = getActiveLayout();
+    occupiedMap = buildOccupiedMap(activeLayout);
+
     // Render defined layout items
-    for (var i = 0; i < GRID_LAYOUT.length; i++) {
-      var item = GRID_LAYOUT[i];
+    for (var i = 0; i < activeLayout.length; i++) {
+      var item = activeLayout[i];
       if (rendered[item.key]) continue;
       rendered[item.key] = true;
 
@@ -201,11 +278,13 @@
         cell.classList.add('fp-cell-crop');
       } else if (item.type === 'processing') {
         cell.classList.add('fp-cell-processing');
+      } else if (item.type === 'gathering') {
+        cell.classList.add('fp-cell-gathering');
       }
 
-      if (built) {
+      if (built && item.type !== 'crop') {
         cell.classList.add('fp-cell-built');
-      } else {
+      } else if (!built) {
         cell.classList.add('fp-cell-locked');
       }
 
@@ -216,6 +295,16 @@
         iconEl.textContent = '\uD83D\uDD12'; // lock
       } else {
         iconEl.textContent = ICONS[item.key] || '';
+
+        // Render PNG sprites for built stations/farmhouse
+        if (item.key === 'farmhouse') {
+          var fhLevel = (window.FarmAPI && window.FarmAPI.getFarmhouseLevel) ? window.FarmAPI.getFarmhouseLevel() : 1;
+          iconEl.textContent = '';
+          cell.appendChild(createFarmImg(FARM_IMG + '/houses/farmhouse-' + fhLevel + '.png', 'Farmhouse'));
+        } else if (item.type !== 'crop' && STATION_IMG[item.key]) {
+          iconEl.textContent = '';
+          cell.appendChild(createFarmImg(STATION_IMG[item.key], item.name));
+        }
       }
       cell.appendChild(iconEl);
 
@@ -247,17 +336,34 @@
         }
       }
 
-      // Crop progress
+      // Crop progress + pixel art sprites
       if (item.type === 'crop') {
         var plotIdx = parseInt(item.key.replace('crop', ''), 10);
         var cropInfo = getCropInfo(plotIdx);
         if (cropInfo && cropInfo.crop) {
-          iconEl.textContent = ICONS[item.key];
+          cell.classList.add('fp-cell-built');
+          // Render PNG crop sprite
+          var stageNum = STAGE_NUM[cropInfo.stage] || 1;
+          iconEl.textContent = '';
+          cell.appendChild(createFarmImg(FARM_IMG + '/crops/' + cropInfo.crop + '-' + stageNum + '.png', cropInfo.crop));
+          // Track stage for dirty checking
+          prevStages[plotIdx] = cropInfo.stage;
+          // Harvest-ready glow
+          if (cropInfo.stage === 'ready') {
+            cell.classList.add('fp-cell-crop-ready');
+          } else {
+            cell.classList.add('fp-cell-crop-growing');
+          }
           var bar = document.createElement('div');
           bar.className = 'fp-crop-bar';
           bar.id = 'fp-bar-' + item.key;
           bar.style.width = Math.min(100, Math.round(cropInfo.growthPct * 100)) + '%';
           cell.appendChild(bar);
+        } else {
+          // Empty plot styling
+          cell.classList.add('fp-cell-crop-empty');
+          iconEl.textContent = '+';
+          prevStages[plotIdx] = null;
         }
       }
 
@@ -288,8 +394,10 @@
     }
 
     // Fill empty cells
-    for (var r = 0; r < 8; r++) {
-      for (var c = 0; c < 12; c++) {
+    var gridRows = 15;
+    var gridCols = 6;
+    for (var r = 0; r < gridRows; r++) {
+      for (var c = 0; c < gridCols; c++) {
         var posKey = r + ',' + c;
         if (occupiedMap[posKey]) continue;
         var empty = document.createElement('div');
@@ -445,8 +553,9 @@
 
     // Update processing indicators on grid cells
     if (window.FarmResources) {
-      for (var pi = 0; pi < GRID_LAYOUT.length; pi++) {
-        var pItem = GRID_LAYOUT[pi];
+      var curLayout = getActiveLayout();
+      for (var pi = 0; pi < curLayout.length; pi++) {
+        var pItem = curLayout[pi];
         if (pItem.type !== 'processing') continue;
         var procEl = document.getElementById('fp-proc-' + pItem.key);
         var pCellEl = gridEl.querySelector('[data-key="' + pItem.key + '"]');
@@ -472,22 +581,48 @@
       }
     }
 
-    // Update crop progress bars — reconcile DOM with state
+    // Update crop progress bars — reconcile DOM with state (in-place)
     if (window.FarmAPI) {
       var plots = window.FarmAPI.getPlots();
-      var cropsDirty = false;
-      for (var p = 0; p < 6; p++) {
+      var needFullRender = false;
+      for (var p = 0; p < 16; p++) {
         var bar = document.getElementById('fp-bar-crop' + p);
         var hasCrop = plots[p] && plots[p].crop;
+        var cellKey = 'crop' + p;
+        var cellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
+
+        // Structural change (planted/harvested) — needs full rebuild
         if ((bar && !hasCrop) || (!bar && hasCrop)) {
-          cropsDirty = true;
+          needFullRender = true;
           break;
         }
+
+        // Stage changed — update sprite in-place
+        if (hasCrop && prevStages[p] !== plots[p].stage) {
+          var newStageNum = STAGE_NUM[plots[p].stage] || 1;
+          var newSrc = FARM_IMG + '/crops/' + plots[p].crop + '-' + newStageNum + '.png';
+          if (cellEl) {
+            var img = cellEl.querySelector('.fp-sprite-img');
+            if (img) {
+              img.src = newSrc;
+            }
+            // Update ready/growing class
+            cellEl.classList.remove('fp-cell-crop-ready', 'fp-cell-crop-growing');
+            if (plots[p].stage === 'ready') {
+              cellEl.classList.add('fp-cell-crop-ready');
+            } else {
+              cellEl.classList.add('fp-cell-crop-growing');
+            }
+          }
+          prevStages[p] = plots[p].stage;
+        }
+
+        // Update progress bar width
         if (bar && hasCrop) {
           bar.style.width = Math.min(100, Math.round(plots[p].growthPct * 100)) + '%';
         }
       }
-      if (cropsDirty) {
+      if (needFullRender) {
         renderGrid();
       }
     }
@@ -1122,8 +1257,9 @@
 
     // Pick a random built station
     var builtCells = [];
-    for (var i = 0; i < GRID_LAYOUT.length; i++) {
-      var item = GRID_LAYOUT[i];
+    var walkLayout = getActiveLayout();
+    for (var i = 0; i < walkLayout.length; i++) {
+      var item = walkLayout[i];
       if (item.key !== 'farmhouse' && isCellBuilt(item)) {
         builtCells.push(item.key);
       }
