@@ -524,7 +524,40 @@ This section is updated at the end of each implementation session to track what'
 - Popup positioning: measure actual height before placement, flip above/below if clipped by viewport
 - Processing popups capped at `100vw - 16px` on mobile
 
-**What's next (Phase 3: Tower Defense MVP):**
+### Session 5 — Phase 2.5: Farm Sprite Polish (2026-02-16)
+
+**Completed:**
+- Fixed crop stage indices in `extract-farm-sprites.py` — all 9 crops now skip blank/transparent frames
+  - carrot, potato, golden_apple: `[0,2,4,6,7]` → `[0,1,3,5,7]` (frame 6 blank)
+  - pumpkin: `[0,2,4,6,7]` → `[0,2,3,5,7]` (frames 1,6 blank)
+  - tomato: `[0,2,5,7,9]` → `[0,2,4,6,9]` (frames 7,8 blank)
+  - wheat, crystal_herb: `[0,2,5,7,9]` → `[0,2,4,5,9]` (frames 6,7,8 blank)
+  - dragon_fruit: `[0,1,2,3,4]` → `[0,1,2,4,4]` (frame 3 blank)
+  - corn: unchanged (no blank frames)
+- Improved station sprites:
+  - lumberYard: full 64x16 wood pile (was 16x16 single plank)
+  - quarry: 32x32 stone boulders with minerals (was tiny 32x16 nugget)
+  - deepMine: 32x32 mine props from Props Mine.png (was 16x16 nugget)
+  - oldGrowth: 32x48 deep forest tree (was 16x32 mossy stump)
+- Fishing pond: CSS-only water gradient (sprite hidden) — asset pack water tiles use RPG Maker autotile format not suitable for simple extraction
+- Added decorative maple tree: 32x64 from Common/No Shadow/Maple Tree.png → `stations/tree.png`
+- Grid ground: CSS green tint only (grass sprite tiles created visible repeating artifacts; removed)
+- Crop soil: 16x16 tilled soil tile from `Tilled Soil and wet soil.png` on crop cells
+- All 45 crop PNGs verified non-blank (file sizes > 100 bytes, all have visible content)
+
+**Files modified:**
+- `scripts/extract-farm-sprites.py` — fixed crop indices, updated station crop boxes, added TREE_DIR/TILESET_DIR paths, added `extract_ground_tiles()`, `extract_pond_composite()`, `extract_tree_decoration()` functions
+- `themes/terminal-books/assets/css/farm-page.css` — soil background on crop cells, CSS gradient pond, removed grass sprite background
+
+**New files:**
+- `static/images/farm/ground/soil.png` — 16x16 tilled soil tile
+- `static/images/farm/stations/tree.png` — 32x64 decorative maple tree
+
+**Re-extracted:**
+- `static/images/farm/crops/*.png` — 45 PNGs with corrected frame indices
+- `static/images/farm/stations/{lumberYard,quarry,deepMine,oldGrowth}.png` — improved sprites
+
+**What's next — Phase 3: Tower Defense MVP:**
 - Canvas game: grid, path rendering, game loop
 - 3 starter towers (arrow, cannon, frost) - JB cost only
 - 3 starter enemies (slime, skeleton, goblin)
