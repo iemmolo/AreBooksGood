@@ -562,3 +562,15 @@ This section is updated at the end of each implementation session to track what'
 - 3 starter towers (arrow, cannon, frost) - JB cost only
 - 3 starter enemies (slime, skeleton, goblin)
 - Wave system, HUD, overlays, stats persistence
+
+
+
+  What's set up:                                                                                                                                                            
+  - static/images/farm/animations/waterfall.png — 4-frame horizontal spritesheet (640×112)                                                                                  
+  - CSS animation in farm-page.css — .fp-anim-waterfall with steps(4) at 1.2s loop                                                                                          
+  - JS creates the overlay in addFarmAnimations() — always visible, layered over the static background                                                                      
+
+  Your workflow going forward:                                                                                                                                              
+  1. Edit your background in Tiled as usual
+  2. Copy the new PNG to static/images/farm/ground/grass.png
+  3. Ask me to regenerate the waterfall spritesheet (I've saved the whole process in my memory)

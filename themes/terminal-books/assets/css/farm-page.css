@@ -817,6 +817,16 @@
   to { background-position: -400% 0; }
 }
 
+/* ── Water stones — static decoration at waterfall edge ── */
+.fp-anim-water-stones {
+  width: 64px;
+  height: 64px;
+  background: url('/images/farm/stations/waterStones.png') center no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 600px) {

@@ -52,11 +52,7 @@
     { key: 'smokehouse',  name: 'Smokehouse',    row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
     // Row 12: empty gap
-    { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' },
-    { key: 'forest0',     name: 'Forest',        row: 13, col: 4, rowSpan: 1, colSpan: 1, type: 'special' },
-    { key: 'forest1',     name: 'Forest',        row: 13, col: 5, rowSpan: 1, colSpan: 1, type: 'special' },
-    { key: 'forest2',     name: 'Forest',        row: 14, col: 4, rowSpan: 1, colSpan: 1, type: 'special' },
-    { key: 'forest3',     name: 'Forest',        row: 14, col: 5, rowSpan: 1, colSpan: 1, type: 'special' }
+    { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
   ];
 
   // ── Layout helpers ──────────────────────────────────────────
@@ -83,11 +79,11 @@
     mine: FARM_IMG + '/stations/mine.png',
     deepMine: FARM_IMG + '/stations/deepMine.png',
     oldGrowth: FARM_IMG + '/stations/oldGrowth.png',
-    fishingPond: FARM_IMG + '/stations/fishingPond.png',
-    forest0: FARM_IMG + '/stations/oldGrowth.png',
-    forest1: FARM_IMG + '/stations/oldGrowth.png',
-    forest2: FARM_IMG + '/stations/oldGrowth.png',
-    forest3: FARM_IMG + '/stations/oldGrowth.png'
+    fishingPond: null,  // background-painted
+    forest0: null,      // background-painted
+    forest1: null,
+    forest2: null,
+    forest3: null
   };
   var STAGE_NUM = { planted: 1, sprouting: 2, growing: 3, flowering: 4, ready: 5 };
 
@@ -209,7 +205,7 @@
 
   // ── Determine if a station/building is built ──────────────
   function isCellBuilt(item) {
-    if (item.type === 'special') return true; // farmhouse always built
+    if (item.key === 'farmhouse' || item.key.indexOf('forest') === 0) return true; // farmhouse + forest always built
     if (item.type === 'crop') return true;    // crop plots always available
 
     // All stations unlocked for testing
@@ -278,8 +274,10 @@
       var built = isCellBuilt(item);
 
       // Type-specific classes
-      if (item.type === 'special') {
+      if (item.key === 'farmhouse') {
         cell.classList.add('fp-cell-farmhouse');
+      } else if (item.key.indexOf('forest') === 0) {
+        cell.classList.add('fp-cell-forest');
       } else if (item.key === 'fishingPond') {
         cell.classList.add('fp-cell-pond');
       } else if (item.type === 'crop') {
@@ -303,6 +301,11 @@
         iconEl.textContent = '\uD83D\uDD12'; // lock
       } else {
         iconEl.textContent = ICONS[item.key] || '';
+
+        // Background-painted cells — no sprite or icon
+        if (item.key === 'fishingPond' || item.key.indexOf('forest') === 0) {
+          iconEl.textContent = '';
+        }
 
         // Render PNG sprites for built stations/farmhouse
         if (item.key === 'farmhouse') {
@@ -367,7 +370,7 @@
       }
 
       // Farmhouse level
-      if (item.type === 'special' && window.FarmAPI) {
+      if (item.key === 'farmhouse' && window.FarmAPI) {
         var countFH = document.createElement('div');
         countFH.className = 'fp-cell-count';
         var fhState = null;
@@ -487,6 +490,14 @@
       return div;
     }
 
+    // Waterfall — always active (not tied to farmhouse level)
+    var waterfallEl = document.createElement('div');
+    waterfallEl.className = 'fp-anim-waterfall';
+    gridEl.appendChild(waterfallEl);
+
+    // Water stones at waterfall edge — always active
+    addAnim('fp-anim-water-stones', 11, 2, 1, 1, 64, 64);
+
     // Lv2: Bonfire + smoke rising above it
     if (fhLevel >= 2) {
       addAnim('fp-anim-bonfire', 2, 0, 1, 1, 48, 96);
@@ -496,8 +507,8 @@
 
     // Lv3: Bubbles in the fishing pond
     if (fhLevel >= 3) {
-      addAnim('fp-anim-bubbles', 13, 1, 1, 1, 32, 32);
-      addAnim('fp-anim-bubbles', 14, 2, 1, 1, 32, 32, { animationDelay: '0.3s' });
+      addAnim('fp-anim-bubbles', 14, 2, 1, 1, 32, 32);
+      addAnim('fp-anim-bubbles', 14, 3, 1, 1, 32, 32, { animationDelay: '0.3s' });
     }
 
     // Lv4: Occasional butterflies drifting across the farm
@@ -814,7 +825,7 @@
       renderCropPopup(item, stationPopupEl);
     } else if (item.type === 'processing') {
       renderProcessingPopup(item, stationPopupEl);
-    } else if (item.type === 'special') {
+    } else if (item.key === 'farmhouse') {
       renderFarmhousePopup(item, stationPopupEl);
     }
 
