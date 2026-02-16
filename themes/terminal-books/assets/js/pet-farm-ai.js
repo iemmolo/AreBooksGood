@@ -574,23 +574,7 @@
     if (beamed) {
       if (!farm || farm.isMiniPetBusy()) { scheduleTick(); return; }
 
-      // Priority 1: Harvest ready crops
-      var readyPlotB = findReadyPlot();
-      if (readyPlotB) {
-        beamedFarmSequence(readyPlotB);
-        scheduleTick();
-        return;
-      }
-
-      // Priority 2: Water growing crops
-      var waterPlotB = findWaterablePlot();
-      if (waterPlotB) {
-        beamedWaterSequence(waterPlotB);
-        scheduleTick();
-        return;
-      }
-
-      // Priority 3: 15% chance beamed idle interaction
+      // Priority 1: 15% chance beamed idle interaction
       if (Math.random() < 0.15) {
         beamedIdleInteraction(petId);
         scheduleTick();
@@ -615,23 +599,7 @@
       return;
     }
 
-    // Priority 1: Harvest ready crops
-    var readyPlot = findReadyPlot();
-    if (readyPlot) {
-      farmSequence(readyPlot);
-      scheduleTick();
-      return;
-    }
-
-    // Priority 2: Water growing crops
-    var waterPlot = findWaterablePlot();
-    if (waterPlot) {
-      waterSequence(waterPlot);
-      scheduleTick();
-      return;
-    }
-
-    // Priority 3: 15% chance idle interaction
+    // Priority 1: 15% chance idle interaction
     if (Math.random() < 0.15) {
       idleInteraction(petId);
       scheduleTick();
@@ -685,8 +653,8 @@
     // Apply dragon bonus on load
     applyDragonBonus();
 
-    // Robot auto-harvest on load
-    robotAutoHarvest();
+    // Robot auto-harvest disabled (crops managed via farm page)
+    // robotAutoHarvest();
 
     // Wrap reload for pet switches
     wrapReload();

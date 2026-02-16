@@ -197,6 +197,14 @@
     return map;
   }
 
+  // Build set of valid crop plot indices from the grid layout
+  var CROP_INDICES = [];
+  for (var ci = 0; ci < GRID_LAYOUT.length; ci++) {
+    if (GRID_LAYOUT[ci].type === 'crop') {
+      CROP_INDICES.push(parseInt(GRID_LAYOUT[ci].key.replace('crop', ''), 10));
+    }
+  }
+
   var occupiedMap = buildOccupiedMap(getActiveLayout());
 
   // ── Determine if a station/building is built ──────────────
@@ -348,17 +356,8 @@
           cell.appendChild(createFarmImg(FARM_IMG + '/crops/' + cropInfo.crop + '-' + stageNum + '.png', cropInfo.crop));
           // Track stage for dirty checking
           prevStages[plotIdx] = cropInfo.stage;
-          // Harvest-ready glow
-          if (cropInfo.stage === 'ready') {
-            cell.classList.add('fp-cell-crop-ready');
-          } else {
-            cell.classList.add('fp-cell-crop-growing');
-          }
-          var bar = document.createElement('div');
-          bar.className = 'fp-crop-bar';
-          bar.id = 'fp-bar-' + item.key;
-          bar.style.width = Math.min(100, Math.round(cropInfo.growthPct * 100)) + '%';
-          cell.appendChild(bar);
+          // Glow ramp class for current stage
+          cell.classList.add('fp-cell-crop-' + cropInfo.stage);
         } else {
           // Empty plot styling
           cell.classList.add('fp-cell-crop-empty');
@@ -581,23 +580,25 @@
       }
     }
 
-    // Update crop progress bars — reconcile DOM with state (in-place)
+    // Update crop glow ramp — reconcile DOM with state (in-place)
     if (window.FarmAPI) {
       var plots = window.FarmAPI.getPlots();
       var needFullRender = false;
-      for (var p = 0; p < 16; p++) {
-        var bar = document.getElementById('fp-bar-crop' + p);
+      var stages = ['planted', 'sprouting', 'growing', 'flowering', 'ready'];
+      for (var ci = 0; ci < CROP_INDICES.length; ci++) {
+        var p = CROP_INDICES[ci];
         var hasCrop = plots[p] && plots[p].crop;
         var cellKey = 'crop' + p;
         var cellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
 
         // Structural change (planted/harvested) — needs full rebuild
-        if ((bar && !hasCrop) || (!bar && hasCrop)) {
+        var isEmpty = cellEl && cellEl.classList.contains('fp-cell-crop-empty');
+        if ((isEmpty && hasCrop) || (!isEmpty && !hasCrop)) {
           needFullRender = true;
           break;
         }
 
-        // Stage changed — update sprite in-place
+        // Stage changed — update sprite and glow class in-place
         if (hasCrop && prevStages[p] !== plots[p].stage) {
           var newStageNum = STAGE_NUM[plots[p].stage] || 1;
           var newSrc = FARM_IMG + '/crops/' + plots[p].crop + '-' + newStageNum + '.png';
@@ -606,20 +607,13 @@
             if (img) {
               img.src = newSrc;
             }
-            // Update ready/growing class
-            cellEl.classList.remove('fp-cell-crop-ready', 'fp-cell-crop-growing');
-            if (plots[p].stage === 'ready') {
-              cellEl.classList.add('fp-cell-crop-ready');
-            } else {
-              cellEl.classList.add('fp-cell-crop-growing');
+            // Swap stage class
+            for (var si = 0; si < stages.length; si++) {
+              cellEl.classList.remove('fp-cell-crop-' + stages[si]);
             }
+            cellEl.classList.add('fp-cell-crop-' + plots[p].stage);
           }
           prevStages[p] = plots[p].stage;
-        }
-
-        // Update progress bar width
-        if (bar && hasCrop) {
-          bar.style.width = Math.min(100, Math.round(plots[p].growthPct * 100)) + '%';
         }
       }
       if (needFullRender) {
@@ -1167,29 +1161,142 @@
   var fpPetTypewriterTimer = null;
   var fpPetSpeechTimer = null;
 
-  var FP_PET_LINES = {
-    cat: [
-      'Nice farm~', 'Meow!', '*stretches*', 'Any fish?',
-      'So many crops...', '*purrs*', 'I like it here', 'Cozy spot'
-    ],
-    dragon: [
-      'Need fire?', '*snorts*', 'Big farm!', 'More gold!',
-      'I guard this', '*flaps wings*', 'Impressive', 'Warm here'
-    ],
-    robot: [
-      'Scanning...', 'Optimal!', 'Efficiency++', 'Processing...',
-      'All systems go', 'Data logged', 'Calibrating', 'Farm online'
-    ]
+  var FP_PET_SPEECH = {
+    cropEmpty: {
+      cat: ['*digs in dirt*', 'plant something!', '*buries toy*', 'empty plot~'],
+      dragon: ['needs seeds!', '*pokes dirt*', 'plant fire flowers!', 'barren land'],
+      robot: ['PLOT: vacant', 'soil: idle', 'suggestion: plant', 'utilization: 0%']
+    },
+    cropGrowing: {
+      cat: ['*watches sprout*', 'growing nicely~', '*pats soil*', 'patience...'],
+      dragon: ['*warms soil*', 'grow faster!', '*breathes warmth*', 'almost there'],
+      robot: ['GROWTH: in progress', 'monitoring crop', 'nutrients: adequate', 'ETA: calculating']
+    },
+    cropReady: {
+      cat: ['harvest time!', '*excited purr*', 'pick it pick it!', 'ripe and ready~'],
+      dragon: ['FIRE HARVEST!', '*snorts eagerly*', 'the bounty!', 'time to reap!'],
+      robot: ['CROP: ready', 'harvesting...', 'yield: optimal', 'initiating harvest']
+    },
+    chickenCoop: {
+      cat: ['*eyes chickens*', 'so many birds...', '*tail twitches*', 'cluck cluck~'],
+      dragon: ['*scares chickens*', 'roasted eggs?', '*sniffs feathers*', 'tiny dragons!'],
+      robot: ['POULTRY: counted', 'egg output: nominal', 'coop: inspected', 'chickens: 12']
+    },
+    cowPasture: {
+      cat: ['*naps near cow*', 'warm milk please', '*rubs on cow*', 'big kitties!'],
+      dragon: ['*intimidates cows*', 'mooo?', '*lands on fence*', 'leather armor?'],
+      robot: ['BOVINE: scanned', 'milk output: stable', 'pasture: grade A', 'cows: content']
+    },
+    sheepPen: {
+      cat: ['*kneads wool*', 'so fluffy!', '*purrs in wool*', 'cloud animals~'],
+      dragon: ['*singes wool*', 'warm fuzz', '*nests in fleece*', 'fire-proof wool?'],
+      robot: ['WOOL: quality check', 'sheep: accounted', 'fleece: optimal', 'shearing: due']
+    },
+    lumberYard: {
+      cat: ['*scratches log*', 'good scratching post!', '*sharpens claws*', 'timber!'],
+      dragon: ['*chars a log*', 'firewood!', '*stacks lumber*', 'need bigger trees'],
+      robot: ['WOOD: catalogued', 'lumber: stacked', 'board feet: noted', 'efficiency: 94%']
+    },
+    quarry: {
+      cat: ['*bats pebble*', 'shiny rocks!', '*digs around*', 'rocky nap spot'],
+      dragon: ['*cracks boulder*', 'gem hunting!', '*hoards stones*', 'my rock pile!'],
+      robot: ['QUARRY: surveyed', 'stone: grade B+', 'extraction: on track', 'mineral scan done']
+    },
+    mine: {
+      cat: ['*peers into dark*', 'spooky tunnel!', '*cautious sniff*', 'echo echo~'],
+      dragon: ['*lights up mine*', 'deep treasures!', '*fire torch*', 'gold below!'],
+      robot: ['MINE: operational', 'depth: 40m', 'iron detected', 'structural: sound']
+    },
+    deepMine: {
+      cat: ['*shivers*', 'too deep for me!', '*wide eyes*', 'hear something?'],
+      dragon: ['*dives in*', 'GEMS! GOLD!', '*hoards crystals*', 'the deep calls!'],
+      robot: ['DEEP SCAN: active', 'rare minerals found', 'depth: 200m', 'caution: advised']
+    },
+    oldGrowth: {
+      cat: ['*climbs tree*', 'ancient forest~', '*naps on branch*', 'birds up here!'],
+      dragon: ['*perches high*', 'old magic here', '*respectful bow*', 'sacred grove'],
+      robot: ['FLORA: ancient', 'age: 500+ years', 'ecosystem: thriving', 'hardwood: premium']
+    },
+    fishingPond: {
+      cat: ['*stares at fish*', 'FISH!', '*paw in water*', 'sushi time~'],
+      dragon: ['*steam-cooks fish*', 'easy fishing!', '*dips tail in*', 'pond too small'],
+      robot: ['FISH: counted', 'pond pH: 7.2', 'stock: healthy', 'fishing: permitted']
+    },
+    mill: {
+      cat: ['*watches wheel*', 'spinny thing!', '*chases grain*', 'flour dust!'],
+      dragon: ['*blows the wheel*', 'grind faster!', '*sneezes flour*', 'ACHOO'],
+      robot: ['MILL: grinding', 'flour output: steady', 'gears: lubricated', 'RPM: optimal']
+    },
+    sawmill: {
+      cat: ['*covers ears*', 'too loud!', '*watches blade*', 'scary spinny!'],
+      dragon: ['*fire-cuts logs*', 'I do it better', '*sparks fly*', 'timber!'],
+      robot: ['SAWMILL: active', 'cut precision: 99%', 'blade: sharp', 'planks: queued']
+    },
+    mason: {
+      cat: ['*bats chisel*', 'clinkity clink', '*naps on stone*', 'cold but nice'],
+      dragon: ['*melts stone*', 'fire masonry!', '*shapes with heat*', 'brick by brick'],
+      robot: ['MASON: chiseling', 'brick quality: A', 'mortar: mixed', 'wall: straight']
+    },
+    kitchen: {
+      cat: ['*sniffs food*', 'something yummy!', '*begs for scraps*', 'chef cat!'],
+      dragon: ['*flame grills*', 'I AM the oven', '*seasons with ash*', 'extra crispy!'],
+      robot: ['KITCHEN: active', 'recipe: loaded', 'temp: 180C', 'timer: set']
+    },
+    forge: {
+      cat: ['*backs away*', 'too hot!', '*singed whiskers*', 'fire bad!'],
+      dragon: ['MY element!', '*breathes into forge*', 'hotter! MORE!', '*happy rumble*'],
+      robot: ['FORGE: 1200C', 'metal: malleable', 'hammering: precise', 'alloy: forming']
+    },
+    loom: {
+      cat: ['*tangles in yarn*', 'YARN!', '*bats shuttle*', 'string heaven~'],
+      dragon: ['*carefully threads*', 'delicate work...', '*tiny flame dries*', 'silk scarves!'],
+      robot: ['LOOM: weaving', 'thread count: 400', 'pattern: loaded', 'fabric: forming']
+    },
+    smokehouse: {
+      cat: ['*follows smoke*', 'smoky fish?', '*sniffs deeply*', 'mmm bacon~'],
+      dragon: ['amateur smoke', '*shows real smoke*', 'I smoke better', '*jealous puff*'],
+      robot: ['SMOKEHOUSE: curing', 'temp: 85C', 'smoke: hickory', 'hours left: 4']
+    },
+    enchanter: {
+      cat: ['*chases sparkles*', 'magic tingles!', '*paws at runes*', 'ooh shiny~'],
+      dragon: ['ancient magic!', '*channels power*', 'feels familiar', '*eyes glow*'],
+      robot: ['ENCHANT: calibrating', 'mana flow: stable', 'runes: aligned', 'magic: illogical']
+    },
+    farmhouse: {
+      cat: ['home sweet home~', '*curls up*', 'nap time!', '*purrs softly*'],
+      dragon: ['*guards the door*', 'my castle!', '*rests by hearth*', 'cozy lair'],
+      robot: ['HOME BASE: secure', 'systems: standby', 'patrol: complete', 'status: nominal']
+    },
+    forest: {
+      cat: ['*explores woods*', 'rustling leaves~', '*chases butterfly*', 'adventure!'],
+      dragon: ['*flies between trees*', 'wild territory', '*marks tree*', 'my forest now'],
+      robot: ['FOREST: mapped', 'trees: 847', 'wildlife: detected', 'path: plotted']
+    },
+    water: {
+      cat: ['*splashes water*', 'wet paws!', '*shakes off*', 'drink up plant!'],
+      dragon: ['*breathes mist*', 'gentle rain~', '*steam watering*', 'grow, little one'],
+      robot: ['H2O: dispensed', 'irrigation: active', 'moisture: +15%', 'watering protocol']
+    }
   };
 
-  function getRandomFarmPetLine() {
-    var petType = 'cat';
+  function getFpPetType() {
     if (window.PetSystem && window.PetSystem.getState) {
       var ps = window.PetSystem.getState();
-      if (ps && ps.activePet) petType = ps.activePet;
+      if (ps) return ps.activePet || ps.petId || 'cat';
     }
-    var lines = FP_PET_LINES[petType] || FP_PET_LINES.cat;
-    return lines[Math.floor(Math.random() * lines.length)];
+    return 'cat';
+  }
+
+  function getFpPetLevel() {
+    if (window.PetSystem && window.PetSystem.getState) {
+      var ps = window.PetSystem.getState();
+      if (ps) return ps.level || 1;
+    }
+    return 1;
+  }
+
+  function randomLine(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
 
   function fpPetSpeak(msg) {
@@ -1243,52 +1350,267 @@
     }
   }
 
-  function schedulePetWalk() {
-    if (fpPetTimer) clearTimeout(fpPetTimer);
-    var delay = 20000 + Math.floor(Math.random() * 15000); // 20-35s
-    fpPetTimer = setTimeout(doPetWalk, delay);
+  // ── Crop scan functions ────────────────────────────────
+
+  function findFpReadyPlot() {
+    if (!window.FarmAPI) return null;
+    var plots = window.FarmAPI.getPlots();
+    for (var i = 0; i < CROP_INDICES.length; i++) {
+      var p = CROP_INDICES[i];
+      if (plots[p] && plots[p].stage === 'ready') {
+        return { cellKey: 'crop' + p, plotIndex: p };
+      }
+    }
+    return null;
   }
 
-  function doPetWalk() {
+  function findFpWaterablePlot() {
+    if (!window.FarmAPI) return null;
+    var plots = window.FarmAPI.getPlots();
+    var best = null;
+    for (var i = 0; i < CROP_INDICES.length; i++) {
+      var p = CROP_INDICES[i];
+      var plot = plots[p];
+      if (!plot || !plot.crop) continue;
+      if (plot.wateredAt) continue;
+      if (plot.growthPct < 0.25 || plot.growthPct > 0.90) continue;
+      if (plot.stage === 'ready') continue;
+      if (!best || plot.growthPct > best.growthPct) {
+        best = { cellKey: 'crop' + p, plotIndex: p };
+      }
+    }
+    return best;
+  }
+
+  // ── Speech key mapping ─────────────────────────────────
+
+  function getSpeechKey(item) {
+    if (item.type === 'crop') {
+      var plotIdx = parseInt(item.key.replace('crop', ''), 10);
+      var cropInfo = getCropInfo(plotIdx);
+      if (!cropInfo || !cropInfo.crop) return 'cropEmpty';
+      if (cropInfo.stage === 'ready') return 'cropReady';
+      return 'cropGrowing';
+    }
+    if (item.key.indexOf('forest') === 0) return 'forest';
+    if (FP_PET_SPEECH[item.key]) return item.key;
+    return 'farmhouse';
+  }
+
+  // ── AI tick scheduling ─────────────────────────────────
+
+  function scheduleFpAiTick() {
+    if (fpPetTimer) clearTimeout(fpPetTimer);
+    var delay = 15000 + Math.floor(Math.random() * 10000); // 15-25s
+    fpPetTimer = setTimeout(fpAiTick, delay);
+  }
+
+  function fpAiTick() {
     if (fpPetBusy || !fpPetEl) {
-      schedulePetWalk();
+      scheduleFpAiTick();
       return;
     }
 
-    // Pick a random built station
+    var petType = getFpPetType();
+    var petLevel = getFpPetLevel();
+
+    // Priority 1: Harvest ready crops
+    var ready = findFpReadyPlot();
+    if (ready) {
+      fpHarvestSequence(ready.cellKey, ready.plotIndex, petType, petLevel);
+      return;
+    }
+
+    // Priority 2: Water growing crops
+    var waterable = findFpWaterablePlot();
+    if (waterable) {
+      fpWaterSequence(waterable.cellKey, waterable.plotIndex, petType);
+      return;
+    }
+
+    // Priority 3: Idle visit (60% chance)
+    if (Math.random() < 0.60) {
+      fpIdleVisit(petType);
+      return;
+    }
+
+    // Priority 4: Farmhouse speech (30% of remaining)
+    if (Math.random() < 0.30) {
+      var lines = FP_PET_SPEECH.farmhouse[petType] || FP_PET_SPEECH.farmhouse.cat;
+      fpPetSpeak(randomLine(lines));
+    }
+
+    scheduleFpAiTick();
+  }
+
+  // ── Harvest sequence ───────────────────────────────────
+
+  function fpHarvestSequence(cellKey, plotIndex, petType, petLevel) {
+    fpPetBusy = true;
+
+    var lines = FP_PET_SPEECH.cropReady[petType] || FP_PET_SPEECH.cropReady.cat;
+    fpPetSpeak(randomLine(lines));
+
+    movePetToCell(cellKey, false);
+
+    setTimeout(function () {
+      var cellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
+      if (cellEl) cellEl.classList.add('fp-cell-pet-tending');
+
+      setTimeout(function () {
+        if (cellEl) cellEl.classList.remove('fp-cell-pet-tending');
+
+        var result = null;
+        if (window.FarmAPI && window.FarmAPI.harvest) {
+          result = window.FarmAPI.harvest(plotIndex);
+        }
+
+        if (result) {
+          showFpJBFloat(cellEl, result.amount);
+          fpApplyBonuses(petType, petLevel, plotIndex, result);
+        }
+
+        renderGrid();
+
+        setTimeout(function () {
+          movePetToCell('farmhouse', false);
+          setTimeout(function () {
+            fpPetBusy = false;
+            scheduleFpAiTick();
+          }, 900);
+        }, 500);
+      }, 1500);
+    }, 800);
+  }
+
+  // ── Water sequence ─────────────────────────────────────
+
+  function fpWaterSequence(cellKey, plotIndex, petType) {
+    fpPetBusy = true;
+
+    var lines = FP_PET_SPEECH.water[petType] || FP_PET_SPEECH.water.cat;
+    fpPetSpeak(randomLine(lines));
+
+    movePetToCell(cellKey, false);
+
+    setTimeout(function () {
+      var cellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
+      if (cellEl) cellEl.classList.add('fp-cell-pet-watering');
+
+      setTimeout(function () {
+        if (cellEl) cellEl.classList.remove('fp-cell-pet-watering');
+
+        if (window.FarmAPI && window.FarmAPI.water) {
+          window.FarmAPI.water(plotIndex);
+        }
+
+        showFpWaterFloat(cellEl);
+
+        setTimeout(function () {
+          movePetToCell('farmhouse', false);
+          setTimeout(function () {
+            fpPetBusy = false;
+            scheduleFpAiTick();
+          }, 900);
+        }, 500);
+      }, 1200);
+    }, 800);
+  }
+
+  // ── Idle visit ─────────────────────────────────────────
+
+  function fpIdleVisit(petType) {
     var builtCells = [];
     var walkLayout = getActiveLayout();
     for (var i = 0; i < walkLayout.length; i++) {
       var item = walkLayout[i];
       if (item.key !== 'farmhouse' && isCellBuilt(item)) {
-        builtCells.push(item.key);
+        builtCells.push(item);
       }
     }
+
     if (builtCells.length === 0) {
-      schedulePetWalk();
+      scheduleFpAiTick();
       return;
     }
 
     var target = builtCells[Math.floor(Math.random() * builtCells.length)];
+    var speechKey = getSpeechKey(target);
+    var speechSet = FP_PET_SPEECH[speechKey];
+    var lines = (speechSet && speechSet[petType]) || FP_PET_SPEECH.farmhouse[petType] || FP_PET_SPEECH.farmhouse.cat;
+
     fpPetBusy = true;
 
-    // Walk to target
-    movePetToCell(target, false);
+    movePetToCell(target.key, false);
 
-    // Speak after arriving
     setTimeout(function () {
-      fpPetSpeak(getRandomFarmPetLine());
+      fpPetSpeak(randomLine(lines));
 
-      // Wait then walk home
       setTimeout(function () {
         movePetToCell('farmhouse', false);
-
         setTimeout(function () {
           fpPetBusy = false;
-          schedulePetWalk();
+          scheduleFpAiTick();
         }, 900);
       }, 2500);
     }, 900);
+  }
+
+  // ── Pet bonuses ────────────────────────────────────────
+
+  function fpApplyBonuses(petType, petLevel, plotIndex, harvestResult) {
+    // Level 3+: 8% double harvest
+    if (petLevel >= 3 && Math.random() < 0.08) {
+      var extra = harvestResult.amount;
+      if (window.JackBucks) {
+        window.JackBucks.add(extra);
+      }
+      var dblSpeech = { cat: 'double harvest! *purrs*', dragon: 'DOUBLE FIRE HARVEST!', robot: 'BONUS YIELD DETECTED' };
+      setTimeout(function () {
+        fpPetSpeak(dblSpeech[petType] || 'double harvest!');
+      }, 600);
+    }
+
+    // Cat: 15% auto-replant
+    if (petType === 'cat' && Math.random() < 0.15) {
+      setTimeout(function () {
+        if (window.FarmAPI && window.FarmAPI.plant) {
+          var planted = window.FarmAPI.plant(plotIndex, harvestResult.crop);
+          if (planted) {
+            fpPetSpeak('*plants another*');
+            renderGrid();
+          }
+        }
+      }, 400);
+    }
+
+    // Farmhouse level 5: 5% random seed drop
+    if (window.FarmAPI && window.FarmAPI.getFarmhouseLevel && window.FarmAPI.getFarmhouseLevel() >= 5 && Math.random() < 0.05) {
+      var seedOptions = ['tomato', 'corn', 'pumpkin', 'golden_apple', 'crystal_herb', 'dragon_fruit'];
+      var dropped = seedOptions[Math.floor(Math.random() * seedOptions.length)];
+      if (window.FarmAPI.addSeeds) {
+        window.FarmAPI.addSeeds(dropped, 1);
+        setTimeout(function () {
+          fpPetSpeak('found a ' + dropped + ' seed!');
+        }, 800);
+      }
+    }
+  }
+
+  // ── Water float particle ───────────────────────────────
+
+  function showFpWaterFloat(cellEl) {
+    if (!cellEl) return;
+    var rect = cellEl.getBoundingClientRect();
+    var floatEl = document.createElement('div');
+    floatEl.className = 'fp-resource-float';
+    floatEl.textContent = '\uD83D\uDCA7';
+    floatEl.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+    floatEl.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(floatEl);
+    setTimeout(function () {
+      if (floatEl.parentNode) floatEl.parentNode.removeChild(floatEl);
+    }, 1000);
   }
 
   function initFarmPet() {
@@ -1314,8 +1636,8 @@
     // Start at farmhouse
     movePetToCell('farmhouse', true);
 
-    // Begin idle walk cycle
-    schedulePetWalk();
+    // Begin AI tick cycle
+    scheduleFpAiTick();
   }
 
   // Retry loop waiting for PetSystem

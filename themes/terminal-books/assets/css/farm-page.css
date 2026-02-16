@@ -229,17 +229,50 @@
   border-color: color-mix(in srgb, #4a7c3f 12%, transparent);
 }
 
-/* ── Crop progress bar ──────────────────────────────── */
+/* ── Crop sway ──────────────────────────────────────── */
 
-.fp-crop-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: var(--accent);
-  z-index: 2;
-  transition: width 1s linear;
-  border-radius: 0 0 2px 2px;
+.fp-cell-crop.fp-cell-built .fp-sprite-img {
+  transform-origin: center bottom;
+  animation: fp-crop-sway 3s ease-in-out infinite;
+}
+
+@keyframes fp-crop-sway {
+  0%, 100% { transform: rotate(calc(var(--sway, 0deg) * -1)); }
+  50%      { transform: rotate(var(--sway, 0deg)); }
+}
+
+.fp-cell-crop-planted   { --sway: 0.5deg; }
+.fp-cell-crop-sprouting { --sway: 1deg; }
+.fp-cell-crop-growing   { --sway: 1.5deg; }
+.fp-cell-crop-flowering { --sway: 2deg; }
+.fp-cell-crop-ready     { --sway: 2.5deg; }
+
+/* ── Pet tending/watering indicators ──────────────────── */
+
+.fp-cell-pet-tending {
+  outline: 2px solid var(--accent) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent),
+              inset 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
+  animation: fp-pet-tend-pulse 0.5s ease-in-out 3;
+  z-index: 3;
+}
+
+@keyframes fp-pet-tend-pulse {
+  0%, 100% { outline-color: var(--accent); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent); }
+  50% { outline-color: color-mix(in srgb, var(--accent) 40%, transparent); box-shadow: 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent); }
+}
+
+.fp-cell-pet-watering {
+  outline: 2px solid #4a90d9 !important;
+  box-shadow: 0 0 8px color-mix(in srgb, #4a90d9 60%, transparent),
+              inset 0 0 6px color-mix(in srgb, #4a90d9 30%, transparent);
+  animation: fp-pet-water-pulse 0.4s ease-in-out 3;
+  z-index: 3;
+}
+
+@keyframes fp-pet-water-pulse {
+  0%, 100% { outline-color: #4a90d9; box-shadow: 0 0 8px color-mix(in srgb, #4a90d9 60%, transparent); }
+  50% { outline-color: color-mix(in srgb, #4a90d9 40%, transparent); box-shadow: 0 0 4px color-mix(in srgb, #4a90d9 30%, transparent); }
 }
 
 /* ── Resources panel ──────────────────────────────────── */

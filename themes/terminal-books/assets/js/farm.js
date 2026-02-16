@@ -954,8 +954,8 @@
 
   function defaultState() {
     return {
-      plots: [{ crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }],
-      unlockedPlots: 8,
+      plots: [{ crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }],
+      unlockedPlots: 16,
       inventory: {},
       farmhouse: { level: 1 },
       upgrades: { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 },
@@ -973,9 +973,11 @@
           if (!saved.inventory) saved.inventory = {};
           if (!saved.farmhouse) saved.farmhouse = { level: 1 };
           if (!saved.unlockedPlots) saved.unlockedPlots = saved.plots.length;
-          // Migrate to 8 plots
-          while (saved.plots.length < 8) saved.plots.push({ crop: null });
-          if (saved.unlockedPlots < 8) saved.unlockedPlots = 8;
+          // Migrate to 16 plots
+          while (saved.plots.length < 16) saved.plots.push({ crop: null });
+          // crop3 was removed from the grid — clear any stale data
+          if (saved.plots[3] && saved.plots[3].crop) saved.plots[3] = { crop: null };
+          if (saved.unlockedPlots < 16) saved.unlockedPlots = 16;
           if (!saved.upgrades) saved.upgrades = { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 };
           if (!saved.cosmetics) saved.cosmetics = { farmerHat: false, dirtTrail: false, overgrownTheme: false, harvestMoon: false };
           return saved;
@@ -1860,6 +1862,10 @@
     createDashboardTiles();
     createUpgradeDecorations();
   }
+
+  // Apply farmhouse multipliers early so FarmAPI.getPlots() returns
+  // correct stages before init() runs on DOMContentLoaded.
+  applyFarmhouseBonuses();
 
   // ── FarmAPI — exposed for pet-farm-ai.js & silk-road.js ──
   window.FarmAPI = {
