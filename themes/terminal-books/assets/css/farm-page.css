@@ -714,6 +714,102 @@
   text-shadow: 0 0 3px var(--background), 0 0 6px var(--background);
 }
 
+/* ── Farm Decorations (animated sprites by farmhouse level) ─── */
+
+.fp-anim {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 2;
+}
+
+/* Smoke — Lv1, 9 frames of 32×64, 2× scale — JS triggers random puffs */
+.fp-anim-smoke {
+  width: 64px;
+  height: 128px;
+  background: url('/images/farm/animations/smoke.png') 0 0 no-repeat;
+  background-size: 576px 128px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.fp-anim-smoke.fp-anim-puff {
+  opacity: 0.7;
+  animation: fp-anim-smoke 2.4s steps(9);
+}
+
+@keyframes fp-anim-smoke {
+  to { background-position: -576px 0; }
+}
+
+/* Bonfire — Lv2, 6 frames of 16×32, 3× scale */
+.fp-anim-bonfire {
+  width: 48px;
+  height: 96px;
+  background: url('/images/farm/animations/bonfire.png') 0 0 no-repeat;
+  background-size: 288px 96px;
+  animation: fp-anim-bonfire 1s steps(6) infinite;
+}
+
+@keyframes fp-anim-bonfire {
+  to { background-position: -288px 0; }
+}
+
+/* Bubbles — Lv3, 7 frames of 16×16, 3× scale */
+.fp-anim-bubbles {
+  width: 48px;
+  height: 48px;
+  background: url('/images/farm/animations/bubbles.png') 0 0 no-repeat;
+  background-size: 336px 48px;
+  animation: fp-anim-bubbles 1.6s steps(7) infinite,
+             fp-anim-bubble-rise 5s ease-in-out infinite;
+}
+
+@keyframes fp-anim-bubbles {
+  to { background-position: -336px 0; }
+}
+
+@keyframes fp-anim-bubble-rise {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* Butterfly — Lv4, 4 frames of 16×16, 3× scale */
+.fp-anim-butterfly {
+  width: 48px;
+  height: 48px;
+  background: url('/images/farm/animations/butterfly.png') 0 0 no-repeat;
+  background-size: 192px 48px;
+  animation: fp-anim-butterfly-flap 0.8s steps(4) infinite,
+             fp-anim-butterfly-path 18s ease-in-out infinite alternate;
+}
+
+@keyframes fp-anim-butterfly-flap {
+  to { background-position: -192px 0; }
+}
+
+@keyframes fp-anim-butterfly-path {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(60px, -15px); }
+  50%  { transform: translate(120px, 10px); }
+  75%  { transform: translate(60px, -20px); }
+  100% { transform: translate(-20px, 15px); }
+}
+
+/* Fountain — Lv5, 4 frames of 48×64, top row only, 2× scale */
+.fp-anim-fountain {
+  width: 96px;
+  height: 128px;
+  background: url('/images/farm/animations/fountain.png') 0 0 no-repeat;
+  background-size: 384px 256px;
+  animation: fp-anim-fountain 1.5s steps(4) infinite;
+}
+
+@keyframes fp-anim-fountain {
+  to { background-position: -384px 0; }
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 600px) {

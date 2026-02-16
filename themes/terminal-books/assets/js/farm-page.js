@@ -407,10 +407,77 @@
       }
     }
 
+    // Add animated decorations based on farmhouse level
+    addFarmAnimations();
+
     // Re-append farm pet after grid rebuild
     if (fpPetEl) {
       gridEl.appendChild(fpPetEl);
       movePetToCell('farmhouse', true);
+    }
+  }
+
+  // ── Animated farm decorations (unlocked by farmhouse level) ──
+
+  function scheduleSmokeLoop(el) {
+    var delay = 3000 + Math.floor(Math.random() * 5000); // 3-8s between puffs
+    setTimeout(function () {
+      if (!el.parentNode) return; // element removed by re-render
+      el.classList.add('fp-anim-puff');
+      setTimeout(function () {
+        el.classList.remove('fp-anim-puff');
+        void el.offsetWidth; // reflow so next puff re-triggers animation
+        scheduleSmokeLoop(el);
+      }, 2400); // matches animation duration
+    }, delay);
+  }
+
+  function addFarmAnimations() {
+    var fhLevel = (window.FarmAPI && window.FarmAPI.getFarmhouseLevel)
+      ? window.FarmAPI.getFarmhouseLevel() : 1;
+
+    var cellW = 100 / 6;   // ~16.67% per column
+    var cellH = 100 / 15;  // ~6.67% per row
+
+    function addAnim(className, row, col, rowSpan, colSpan, w, h, extra) {
+      var div = document.createElement('div');
+      div.className = 'fp-anim ' + className;
+      var cx = col * cellW + (colSpan || 1) * cellW / 2;
+      var cy = row * cellH + (rowSpan || 1) * cellH / 2;
+      div.style.left = cx + '%';
+      div.style.top = cy + '%';
+      div.style.marginLeft = (-w / 2) + 'px';
+      div.style.marginTop = (-h / 2) + 'px';
+      if (extra) {
+        for (var k in extra) {
+          if (extra.hasOwnProperty(k)) div.style[k] = extra[k];
+        }
+      }
+      gridEl.appendChild(div);
+      return div;
+    }
+
+    // Lv2: Bonfire + smoke rising above it
+    if (fhLevel >= 2) {
+      addAnim('fp-anim-bonfire', 2, 0, 1, 1, 48, 96);
+      var smokeEl = addAnim('fp-anim-smoke', 1, 0, 1, 1, 64, 128);
+      scheduleSmokeLoop(smokeEl);
+    }
+
+    // Lv3: Bubbles in the fishing pond
+    if (fhLevel >= 3) {
+      addAnim('fp-anim-bubbles', 13, 1, 1, 1, 48, 48);
+      addAnim('fp-anim-bubbles', 14, 2, 1, 1, 48, 48, { animationDelay: '0.3s' });
+    }
+
+    // Lv4: Butterfly floating over crop area
+    if (fhLevel >= 4) {
+      addAnim('fp-anim-butterfly', 3, 3, 1, 1, 48, 48);
+    }
+
+    // Lv5: Water fountain in gap row
+    if (fhLevel >= 5) {
+      addAnim('fp-anim-fountain', 7, 2, 1, 2, 96, 128);
     }
   }
 
