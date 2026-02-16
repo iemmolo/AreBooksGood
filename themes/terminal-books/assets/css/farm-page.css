@@ -126,6 +126,16 @@
 
 .fp-cell-pond.fp-cell-built {
   border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fp-cell-pond.fp-cell-built .fp-sprite-img {
+  position: static;
+  inset: auto;
+  width: 192px;
+  height: 96px;
 }
 
 .fp-cell-gathering:not(.fp-cell-built) {
@@ -756,18 +766,18 @@
   to { background-position: -288px 0; }
 }
 
-/* Bubbles — Lv3, 7 frames of 16×16, 3× scale */
+/* Bubbles — Lv3, 7 frames of 16×16, 2× scale */
 .fp-anim-bubbles {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   background: url('/images/farm/animations/bubbles.png') 0 0 no-repeat;
-  background-size: 336px 48px;
+  background-size: 224px 32px;
   animation: fp-anim-bubbles 1.6s steps(7) infinite,
              fp-anim-bubble-rise 5s ease-in-out infinite;
 }
 
 @keyframes fp-anim-bubbles {
-  to { background-position: -336px 0; }
+  to { background-position: -224px 0; }
 }
 
 @keyframes fp-anim-bubble-rise {
@@ -775,26 +785,18 @@
   50%      { transform: translateY(-8px); }
 }
 
-/* Butterfly — Lv4, 4 frames of 16×16, 3× scale */
+/* Butterfly — Lv4, 4 frames of 16×16, 1.5× scale, JS drifts position */
 .fp-anim-butterfly {
-  width: 48px;
-  height: 48px;
+  width: 24px;
+  height: 24px;
   background: url('/images/farm/animations/butterfly.png') 0 0 no-repeat;
-  background-size: 192px 48px;
-  animation: fp-anim-butterfly-flap 0.8s steps(4) infinite,
-             fp-anim-butterfly-path 18s ease-in-out infinite alternate;
+  background-size: 96px 24px;
+  animation: fp-anim-butterfly-flap 0.8s steps(4) infinite;
+  transition: left 4s ease-in-out, top 4s ease-in-out, opacity 0.6s;
 }
 
 @keyframes fp-anim-butterfly-flap {
-  to { background-position: -192px 0; }
-}
-
-@keyframes fp-anim-butterfly-path {
-  0%   { transform: translate(0, 0); }
-  25%  { transform: translate(60px, -15px); }
-  50%  { transform: translate(120px, 10px); }
-  75%  { transform: translate(60px, -20px); }
-  100% { transform: translate(-20px, 15px); }
+  to { background-position: -96px 0; }
 }
 
 /* Fountain — Lv5, 4 frames of 48×64, top row only, 2× scale */

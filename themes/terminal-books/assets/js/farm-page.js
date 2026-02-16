@@ -432,6 +432,36 @@
     }, delay);
   }
 
+  function spawnButterflies(count) {
+    for (var i = 0; i < count; i++) {
+      var div = document.createElement('div');
+      div.className = 'fp-anim fp-anim-butterfly';
+      div.style.left = (5 + Math.random() * 90) + '%';
+      div.style.top = (2 + Math.random() * 40) + '%';
+      div.style.opacity = '0';
+      gridEl.appendChild(div);
+      // Stagger first appearance over a wide window
+      driftButterfly(div, 2000 + Math.floor(Math.random() * 8000));
+    }
+  }
+
+  function driftButterfly(el, initialDelay) {
+    setTimeout(function step() {
+      if (!el.parentNode) return;
+      // Fade in, drift to new spot
+      el.style.opacity = '1';
+      el.style.left = (5 + Math.random() * 90) + '%';
+      el.style.top = (2 + Math.random() * 40) + '%';
+      // After drifting, fade out and rest for a while
+      setTimeout(function () {
+        if (!el.parentNode) return;
+        el.style.opacity = '0';
+        var rest = 8000 + Math.floor(Math.random() * 12000); // 8-20s hidden
+        setTimeout(step, rest);
+      }, 5000 + Math.floor(Math.random() * 3000)); // visible for 5-8s
+    }, initialDelay);
+  }
+
   function addFarmAnimations() {
     var fhLevel = (window.FarmAPI && window.FarmAPI.getFarmhouseLevel)
       ? window.FarmAPI.getFarmhouseLevel() : 1;
@@ -466,13 +496,13 @@
 
     // Lv3: Bubbles in the fishing pond
     if (fhLevel >= 3) {
-      addAnim('fp-anim-bubbles', 13, 1, 1, 1, 48, 48);
-      addAnim('fp-anim-bubbles', 14, 2, 1, 1, 48, 48, { animationDelay: '0.3s' });
+      addAnim('fp-anim-bubbles', 13, 1, 1, 1, 32, 32);
+      addAnim('fp-anim-bubbles', 14, 2, 1, 1, 32, 32, { animationDelay: '0.3s' });
     }
 
-    // Lv4: Butterfly floating over crop area
+    // Lv4: Occasional butterflies drifting across the farm
     if (fhLevel >= 4) {
-      addAnim('fp-anim-butterfly', 3, 3, 1, 1, 48, 48);
+      spawnButterflies(3);
     }
 
     // Lv5: Water fountain in gap row
