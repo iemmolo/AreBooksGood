@@ -332,6 +332,25 @@ def extract_waterfall():
                     tile = tileset.crop((src_col * TILE, ts_row * TILE,
                                         src_col * TILE + TILE,
                                         ts_row * TILE + TILE))
+                    # Edge tiles (sub 0/2) have land pixels that shift
+                    # between frames causing bobbing. Fix: build a mask
+                    # from the source tile — only pixels that are clearly
+                    # water (blue dominant AND blue > 80) get animated;
+                    # everything else stays as the grass.png source.
+                    if sub_col != 1:
+                        src_tile = grass.crop((gc * TILE, gr * TILE,
+                                              gc * TILE + TILE,
+                                              gr * TILE + TILE))
+                        sp = list(src_tile.getdata())
+                        tp = list(tile.getdata())
+                        merged = []
+                        for s, t in zip(sp, tp):
+                            is_water = (s[2] > 80
+                                        and s[2] > s[0]
+                                        and s[2] > s[1])
+                            merged.append(t if is_water else s)
+                        tile = Image.new('RGBA', (TILE, TILE))
+                        tile.putdata(merged)
                     sheet.paste(tile, (dx, dy), tile)
                 elif (gc, gr) in water_tiles:
                     # Static water — same in all frames

@@ -72,7 +72,7 @@
   justify-content: flex-start;
   padding: 2px 2px 1px;
   font-size: 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border: 0;
 }
 
 .fp-cell-label {
@@ -763,17 +763,11 @@
   height: 32px;
   background: url('/images/farm/animations/bubbles.png') 0 0 no-repeat;
   background-size: 224px 32px;
-  animation: fp-anim-bubbles 1.6s steps(7) infinite,
-             fp-anim-bubble-rise 5s ease-in-out infinite;
+  animation: fp-anim-bubbles 1.6s steps(7) infinite;
 }
 
 @keyframes fp-anim-bubbles {
   to { background-position: -224px 0; }
-}
-
-@keyframes fp-anim-bubble-rise {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-8px); }
 }
 
 /* Butterfly — Lv4, 4 frames of 16×16, 1.5× scale, JS drifts position */
