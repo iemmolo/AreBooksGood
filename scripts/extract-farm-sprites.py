@@ -169,7 +169,8 @@ def extract_ground_tiles():
                     t = t.transpose(tr)
             composite.paste(t, (col * 16, row * 16))
 
-    composite.save(os.path.join(out_dir, 'grass.png'))
+    grass_out = os.path.join(out_dir, 'grass-grid.png')
+    composite.save(grass_out)
 
     # Tilled soil tile: 16x16 from Tilled Soil and wet soil.png at (0,0)
     soil_src = os.path.join(TILESET_DIR, 'Tilled Soil and wet soil.png')
@@ -242,6 +243,119 @@ def extract_pond_composite():
     print('Pond: 1 PNG (96x48 tileset composite)')
 
 
+def extract_waterfall():
+    """Generate 4-frame waterfall animation spritesheet.
+
+    Hash-matches grass.png tiles against tileset rows 6-9 to find animated
+    waterfall tiles, then cycles through odd groups (1,3,5,7) for 4 frames.
+    Static water/cliff tiles are copied unchanged into all frames.
+    Output: static/images/farm/animations/waterfall.png (640x112)
+    """
+    import hashlib
+
+    TILE = 16
+    grass_path = os.path.join(OUT, 'ground', 'grass.png')
+    tileset_path = os.path.join(TILESET_DIR,
+                                'Tileset Grass Cliff Tileset Summer.png')
+
+    grass = Image.open(grass_path)
+    tileset = Image.open(tileset_path)
+
+    G_COLS = grass.width // TILE   # 12
+    G_ROWS = grass.height // TILE  # 30
+
+    # Build hash map of tileset tiles at rows 6-9 (waterfall body/splash)
+    ts_hash_map = {}  # md5 -> (col, row)
+    for tr in range(6, 10):
+        for tc in range(24):
+            tile = tileset.crop((tc * TILE, tr * TILE,
+                                 tc * TILE + TILE, tr * TILE + TILE))
+            h = hashlib.md5(tile.tobytes()).hexdigest()
+            ts_hash_map[h] = (tc, tr)
+
+    # Scan grass.png for matches
+    match_info = {}  # grass (col, row) -> (sub_col, tileset_row)
+    water_tiles = set()  # grass (col, row) of blue-dominant static tiles
+
+    for gr in range(G_ROWS):
+        for gc in range(G_COLS):
+            tile = grass.crop((gc * TILE, gr * TILE,
+                               gc * TILE + TILE, gr * TILE + TILE))
+            h = hashlib.md5(tile.tobytes()).hexdigest()
+            if h in ts_hash_map:
+                tc, tr = ts_hash_map[h]
+                match_info[(gc, gr)] = (tc % 3, tr)
+            else:
+                # Check if blue-dominant (static water)
+                # Require avg blue > 80 to exclude dark shadow tiles
+                pixels = list(tile.getdata())
+                if pixels:
+                    n = len(pixels)
+                    avg_b = sum(p[2] for p in pixels) // n
+                    avg_r = sum(p[0] for p in pixels) // n
+                    avg_g = sum(p[1] for p in pixels) // n
+                    if avg_b > 80 and avg_b > avg_r and avg_b > avg_g:
+                        water_tiles.add((gc, gr))
+
+    # Calculate bounding box from matched + water tiles
+    all_tiles = set(match_info.keys()) | water_tiles
+    if not all_tiles:
+        print('Waterfall: no tiles found, skipping')
+        return
+
+    min_c = min(t[0] for t in all_tiles)
+    max_c = max(t[0] for t in all_tiles)
+    min_r = min(t[1] for t in all_tiles)
+    max_r = max(t[1] for t in all_tiles)
+
+    box_w = (max_c - min_c + 1) * TILE
+    box_h = (max_r - min_r + 1) * TILE
+    num_frames = 4
+
+    # Odd group animation cycle: groups 1, 3, 5, 7
+    frame_groups = [1, 3, 5, 7]
+
+    # Build 4-frame horizontal spritesheet
+    sheet = Image.new('RGBA', (box_w * num_frames, box_h), (0, 0, 0, 0))
+
+    for frame_idx in range(num_frames):
+        for gr in range(min_r, max_r + 1):
+            for gc in range(min_c, max_c + 1):
+                dx = (gc - min_c) * TILE + frame_idx * box_w
+                dy = (gr - min_r) * TILE
+
+                if (gc, gr) in match_info:
+                    sub_col, ts_row = match_info[(gc, gr)]
+                    # Cycle through odd groups for this frame
+                    group = frame_groups[frame_idx]
+                    src_col = group * 3 + sub_col
+                    tile = tileset.crop((src_col * TILE, ts_row * TILE,
+                                        src_col * TILE + TILE,
+                                        ts_row * TILE + TILE))
+                    sheet.paste(tile, (dx, dy), tile)
+                elif (gc, gr) in water_tiles:
+                    # Static water — same in all frames
+                    tile = grass.crop((gc * TILE, gr * TILE,
+                                      gc * TILE + TILE, gr * TILE + TILE))
+                    sheet.paste(tile, (dx, dy), tile)
+                # else: transparent (grass/empty)
+
+    anim_dir = os.path.join(OUT, 'animations')
+    ensure_dir(anim_dir)
+    out_path = os.path.join(anim_dir, 'waterfall.png')
+    sheet.save(out_path)
+
+    print('Waterfall: 1 PNG ({}x{}, {} frames)'.format(
+        sheet.width, sheet.height, num_frames))
+    print('  Bounding box: cols {}-{}, rows {}-{} ({}x{}px)'.format(
+        min_c, max_c, min_r, max_r, box_w, box_h))
+    print('  Animated tiles: {}, static water: {}'.format(
+        len(match_info), len(water_tiles)))
+    print('  CSS: top: {:.2f}%; left: {:.2f}%; width: {:.2f}%; height: {:.2f}%'.format(
+        min_r / G_ROWS * 100, min_c / G_COLS * 100,
+        box_w / grass.width * 100, box_h / grass.height * 100))
+
+
 def extract_tree_decoration():
     """Extract decorative maple tree sprite."""
     out_dir = os.path.join(OUT, 'stations')
@@ -268,5 +382,6 @@ if __name__ == '__main__':
     extract_ground_tiles()
     extract_pond_composite()
     extract_tree_decoration()
+    extract_waterfall()
     print()
     print('Done!')

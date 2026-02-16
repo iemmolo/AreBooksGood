@@ -125,17 +125,8 @@
 }
 
 .fp-cell-pond.fp-cell-built {
-  border-radius: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fp-cell-pond.fp-cell-built .fp-sprite-img {
-  position: static;
-  inset: auto;
-  width: 192px;
-  height: 96px;
+  border: 0;
+  background: none;
 }
 
 .fp-cell-gathering:not(.fp-cell-built) {
@@ -810,6 +801,26 @@
 
 @keyframes fp-anim-fountain {
   to { background-position: -384px 0; }
+}
+
+/* ── Waterfall animation — 4 frames, percentage-positioned overlay ── */
+.fp-anim-waterfall {
+  position: absolute;
+  left: 0;
+  top: 76.67%;
+  width: 83.33%;
+  height: 23.33%;
+  background: url('/images/farm/animations/waterfall.png') 0 0 no-repeat;
+  background-size: 400% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 1;
+  pointer-events: none;
+  animation: fp-anim-waterfall 0.8s steps(4) infinite;
+}
+
+@keyframes fp-anim-waterfall {
+  to { background-position: -400% 0; }
 }
 
 /* ── Responsive ───────────────────────────────────────── */
