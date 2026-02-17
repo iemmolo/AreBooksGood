@@ -346,6 +346,11 @@
         cell.classList.add('fp-cell-built');
       } else if (!built) {
         cell.classList.add('fp-cell-locked');
+        // Mark cells that meet the farmhouse level gate as unlockable
+        var bReq = BUILDING_REQS[item.key];
+        if (bReq && getCurrentFHLevel() >= bReq.minFH) {
+          cell.classList.add('fp-cell-unlockable');
+        }
       }
 
       // Icon

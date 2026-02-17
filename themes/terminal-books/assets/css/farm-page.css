@@ -237,6 +237,10 @@
   z-index: 1;
 }
 
+.fp-cell-unlockable::before {
+  background: rgba(74, 124, 63, 0.3);
+}
+
 .fp-lock-img {
   position: absolute;
   top: 50%;
