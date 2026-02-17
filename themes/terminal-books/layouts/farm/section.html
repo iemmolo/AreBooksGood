@@ -185,6 +185,251 @@
           </table>
           <p>Milestones stack &mdash; reaching wave 30 gives +5+10+15+20+30 = 80 bonus SB on every future run. You can also invest JB before a run for extra starting SB at a 2:1 rate (max 50 SB).</p>
 
+          <details class="farm-details farm-details-nested">
+            <summary class="farm-details-summary">> More?</summary>
+            <div class="farm-details-content">
+
+              <h3>Tower Defense &mdash; The Full Technical Manual</h3>
+              <p>You asked for it. Here is every number, formula, and mechanic in the entire tower defense system. No stone unturned. No variable unlogged. You're welcome.</p>
+
+              <h4>Grid &amp; Canvas Specifications</h4>
+              <table class="farm-info-table">
+                <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+                <tbody>
+                  <tr><td>Grid Columns</td><td>16</td></tr>
+                  <tr><td>Grid Rows</td><td>12</td></tr>
+                  <tr><td>Tile Size</td><td>40px</td></tr>
+                  <tr><td>Canvas Width</td><td>640px (16 &times; 40)</td></tr>
+                  <tr><td>Canvas Height</td><td>480px (12 &times; 40)</td></tr>
+                  <tr><td>Spawn Interval</td><td>0.8 seconds between enemies</td></tr>
+                  <tr><td>Projectile Speed</td><td>6 tile-widths/sec (240px/sec)</td></tr>
+                </tbody>
+              </table>
+
+              <h4>Starting Resources</h4>
+              <table class="farm-info-table">
+                <thead><tr><th>Resource</th><th>Base Value</th><th>Modifiers</th></tr></thead>
+                <tbody>
+                  <tr><td>Lives</td><td>20</td><td>+2 per Reinforced Walls tier, +10 Easy / &minus;5 Hard</td></tr>
+                  <tr><td>SamBucks (SB)</td><td>50</td><td>+5 per Supply Lines tier, +milestone bonus, +invested SB</td></tr>
+                </tbody>
+              </table>
+              <p>Full starting SB formula: <code>50 + (Supply Lines tier &times; 5) + milestone bonus + invested SB</code></p>
+
+              <h4>Difficulty Modifiers &mdash; Exact Numbers</h4>
+              <table class="farm-info-table">
+                <thead><tr><th>Difficulty</th><th>Lives Bonus</th><th>HP Mult</th><th>Reward Mult</th><th>Speed Mult</th></tr></thead>
+                <tbody>
+                  <tr><td>Easy</td><td>+10</td><td>&times;0.7</td><td>&times;0.8</td><td>&times;0.9</td></tr>
+                  <tr><td>Normal</td><td>+0</td><td>&times;1.0</td><td>&times;1.0</td><td>&times;1.0</td></tr>
+                  <tr><td>Hard</td><td>&minus;5</td><td>&times;1.5</td><td>&times;1.3</td><td>&times;1.15</td></tr>
+                </tbody>
+              </table>
+              <p>So on Hard you start with 15 lives (20 &minus; 5), enemies have 50% more HP and move 15% faster, but you earn 30% more SB per wave. Risk and reward, baby.</p>
+
+              <h4>Map Coordinates</h4>
+              <p>Each map is a series of waypoints on the 16&times;12 grid. Enemies walk tile-to-tile between them. Here are the exact paths:</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Map</th><th>Path Waypoints (col, row)</th></tr></thead>
+                <tbody>
+                  <tr><td>Valley</td><td>(0,6) &rarr; (3,6) &rarr; (3,2) &rarr; (8,2) &rarr; (8,8) &rarr; (12,8) &rarr; (12,4) &rarr; (15,4)</td></tr>
+                  <tr><td>Switchback</td><td>(15,1) &rarr; (12,1) &rarr; (12,5) &rarr; (4,5) &rarr; (4,8) &rarr; (10,8) &rarr; (10,11) &rarr; (0,11)</td></tr>
+                  <tr><td>Spiral</td><td>(0,1) &rarr; (14,1) &rarr; (14,10) &rarr; (2,10) &rarr; (2,5) &rarr; (8,5) &rarr; (8,8) &rarr; (13,8)</td></tr>
+                </tbody>
+              </table>
+              <p>Valley is a classic zigzag. Switchback has tight turns from the north. Spiral is a long winding path toward the centre &mdash; longest path, best for slow towers.</p>
+
+              <h4>Complete Tower Specifications</h4>
+              <table class="farm-info-table">
+                <thead><tr><th>Tower</th><th>Symbol</th><th>DMG</th><th>Range</th><th>Speed</th><th>Cost</th><th>Special</th></tr></thead>
+                <tbody>
+                  <tr><td>Arrow</td><td>A</td><td>5</td><td>3 tiles</td><td>1.0s</td><td>10 SB</td><td>&mdash;</td></tr>
+                  <tr><td>Cannon</td><td>C</td><td>15</td><td>2 tiles</td><td>2.5s</td><td>25 SB</td><td>50% splash in 40px radius</td></tr>
+                  <tr><td>Frost</td><td>Fr</td><td>3</td><td>3 tiles</td><td>1.5s</td><td>20 SB</td><td>50% slow for 2 seconds</td></tr>
+                  <tr><td>Watchtower</td><td>Wt</td><td>0</td><td>3 tiles</td><td>&mdash;</td><td>15 SB</td><td>+10% range to towers within 2 tiles</td></tr>
+                  <tr><td>Fire</td><td>Fi</td><td>10</td><td>2 tiles</td><td>1.2s</td><td>30 SB</td><td>DOT: 3 dmg/tick for 3 seconds</td></tr>
+                  <tr><td>Sniper</td><td>S</td><td>25</td><td>5 tiles</td><td>3.0s</td><td>50 SB</td><td>&mdash;</td></tr>
+                  <tr><td>Gold Mine</td><td>G</td><td>0</td><td>&mdash;</td><td>&mdash;</td><td>40 SB</td><td>+2 SB per completed wave</td></tr>
+                  <tr><td>Lightning</td><td>L</td><td>15</td><td>3 tiles</td><td>2.5s</td><td>60 SB</td><td>Chains to 3 targets within 2 tiles</td></tr>
+                </tbody>
+              </table>
+
+              <h4>Tower Upgrade Costs &amp; Scaling</h4>
+              <p>Each tower can be upgraded to Lv3 (or Lv4 with Hardened Steel armory upgrade). Upgrade costs scale from the base build cost:</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Upgrade</th><th>Cost Formula</th><th>DMG Mult</th><th>Range Mult</th></tr></thead>
+                <tbody>
+                  <tr><td>Lv1 (base)</td><td>Base cost</td><td>&times;1.0</td><td>&times;1.0</td></tr>
+                  <tr><td>Lv1 &rarr; Lv2</td><td>Base &times; 1.5</td><td>&times;1.4</td><td>&times;1.1</td></tr>
+                  <tr><td>Lv2 &rarr; Lv3</td><td>Base &times; 2.5</td><td>&times;1.8</td><td>&times;1.2</td></tr>
+                </tbody>
+              </table>
+              <p>Sell value is always 50% of total investment (build + all upgrades).</p>
+
+              <h4>Full Upgrade Cost Breakdown Per Tower</h4>
+              <p>Because you deserve to know exactly how much SB you're sinking into each tower.</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Tower</th><th>Build</th><th>Lv2</th><th>Lv3</th><th>Total (Lv3)</th><th>Sell (Lv3)</th></tr></thead>
+                <tbody>
+                  <tr><td>Arrow</td><td>10</td><td>15</td><td>25</td><td>50</td><td>25</td></tr>
+                  <tr><td>Cannon</td><td>25</td><td>38</td><td>63</td><td>126</td><td>63</td></tr>
+                  <tr><td>Frost</td><td>20</td><td>30</td><td>50</td><td>100</td><td>50</td></tr>
+                  <tr><td>Watchtower</td><td>15</td><td>23</td><td>38</td><td>76</td><td>38</td></tr>
+                  <tr><td>Fire</td><td>30</td><td>45</td><td>75</td><td>150</td><td>75</td></tr>
+                  <tr><td>Sniper</td><td>50</td><td>75</td><td>125</td><td>250</td><td>125</td></tr>
+                  <tr><td>Gold Mine</td><td>40</td><td>60</td><td>100</td><td>200</td><td>100</td></tr>
+                  <tr><td>Lightning</td><td>60</td><td>90</td><td>150</td><td>300</td><td>150</td></tr>
+                </tbody>
+              </table>
+              <p>With the Sturdy Foundations armory upgrade (&minus;10% per tier), a fully upgraded Arrow at tier 3 costs just 35 SB total instead of 50. Every SB counts in the late game.</p>
+
+              <h4>Effective DPS Analysis</h4>
+              <p>Damage per second at each level, not accounting for range or special effects. Just raw numbers for the spreadsheet enthusiasts.</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Tower</th><th>Lv1 DPS</th><th>Lv2 DPS</th><th>Lv3 DPS</th></tr></thead>
+                <tbody>
+                  <tr><td>Arrow</td><td>5.0</td><td>7.0</td><td>9.0</td></tr>
+                  <tr><td>Cannon</td><td>6.0</td><td>8.4</td><td>10.8</td></tr>
+                  <tr><td>Frost</td><td>2.0</td><td>2.8</td><td>3.6</td></tr>
+                  <tr><td>Fire</td><td>8.3 + DOT</td><td>11.7 + DOT</td><td>15.0 + DOT</td></tr>
+                  <tr><td>Sniper</td><td>8.3</td><td>11.7</td><td>15.0</td></tr>
+                  <tr><td>Lightning</td><td>6.0 (&times;3)</td><td>8.4 (&times;3)</td><td>10.8 (&times;3)</td></tr>
+                </tbody>
+              </table>
+              <p>Lightning's effective DPS is tripled when all 3 chain targets are in range. Fire's DOT adds 3 dmg/tick over 3 seconds on top of the direct hit. Cannon's splash means its effective DPS multiplies with enemy density. Frost DPS is low but the 50% slow makes every other tower more effective.</p>
+
+              <h4>Enemy Stat Scaling Per Wave</h4>
+              <p>Enemies per wave: <code>min(35, 5 + floor(wave &times; 1.5))</code>. The cap of 35 prevents lag on mobile.</p>
+              <p>HP multiplier:</p>
+              <ul>
+                <li>Waves 1&ndash;30: <code>1 + wave &times; 0.15</code> (linear)</li>
+                <li>Waves 31+: <code>5.5 &times; 1.08<sup>(wave &minus; 30)</sup></code> (exponential)</li>
+              </ul>
+              <p>Then multiply by difficulty HP modifier (0.7 / 1.0 / 1.5).</p>
+
+              <h4>Enemy HP at Selected Waves (Normal Difficulty)</h4>
+              <table class="farm-info-table">
+                <thead><tr><th>Wave</th><th>HP Mult</th><th>Slime HP</th><th>Orc HP</th><th>Enemies</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td>1.15</td><td>23</td><td>&mdash;</td><td>6</td></tr>
+                  <tr><td>5</td><td>1.75</td><td>35</td><td>&mdash;</td><td>12</td></tr>
+                  <tr><td>10</td><td>2.50</td><td>50</td><td>&mdash;</td><td>20</td></tr>
+                  <tr><td>15</td><td>3.25</td><td>65</td><td>&mdash;</td><td>27</td></tr>
+                  <tr><td>20</td><td>4.00</td><td>80</td><td>320</td><td>35</td></tr>
+                  <tr><td>25</td><td>4.75</td><td>95</td><td>380</td><td>35</td></tr>
+                  <tr><td>30</td><td>5.50</td><td>110</td><td>440</td><td>35</td></tr>
+                  <tr><td>35</td><td>8.08</td><td>162</td><td>646</td><td>35</td></tr>
+                  <tr><td>40</td><td>11.88</td><td>238</td><td>950</td><td>35</td></tr>
+                  <tr><td>50</td><td>25.65</td><td>513</td><td>2,052</td><td>35</td></tr>
+                </tbody>
+              </table>
+              <p>Past wave 30 the exponential scaling gets brutal. A wave 50 Orc has over 2,000 HP. On Hard difficulty, multiply all those numbers by 1.5. Good luck.</p>
+
+              <h4>Boss Mechanics</h4>
+              <p>Boss waves occur every 10 waves, plus every 5 waves past wave 30. A single boss spawns alongside the regular wave.</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Wave</th><th>Boss HP (Normal)</th><th>Bonus SB</th></tr></thead>
+                <tbody>
+                  <tr><td>10</td><td>750</td><td>50</td></tr>
+                  <tr><td>20</td><td>1,000</td><td>100</td></tr>
+                  <tr><td>30</td><td>1,250</td><td>150</td></tr>
+                  <tr><td>35</td><td>1,250 &times; 1.08<sup>5</sup> = 1,837</td><td>150</td></tr>
+                  <tr><td>40</td><td>1,500 &times; 1.08<sup>10</sup> = 3,238</td><td>200</td></tr>
+                  <tr><td>50</td><td>1,500 &times; 1.08<sup>20</sup> = 6,993</td><td>250</td></tr>
+                </tbody>
+              </table>
+              <p>Boss HP formula: <code>500 &times; (1 + bossNumber &times; 0.5)</code>, then multiplied by the exponential wave scaling past wave 30. The wave 50 boss has nearly 7,000 HP on Normal. On Hard: 10,490 HP. It moves at 0.4 speed though, so you have time &mdash; just not enough towers.</p>
+
+              <h4>SB Reward Formula &mdash; Complete Breakdown</h4>
+              <p>Per-wave SB earned:</p>
+              <p><code>reward = round((5 + wave &times; 2 + goldMines &times; 2) &times; armoryMult &times; difficultyMult)</code></p>
+              <p>Where:</p>
+              <ul>
+                <li><code>armoryMult = 1 + Golden Treasury tier &times; 0.2</code> (max 1.6 at tier 3)</li>
+                <li><code>difficultyMult</code> = 0.8 (Easy) / 1.0 (Normal) / 1.3 (Hard)</li>
+                <li>Boss waves add: <code>50 &times; bossNumber</code> on top</li>
+              </ul>
+
+              <h4>SB Earned at Selected Waves (Normal, No Upgrades, No Gold Mines)</h4>
+              <table class="farm-info-table">
+                <thead><tr><th>Wave</th><th>Base Reward</th><th>Boss Bonus</th><th>Cumulative</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td>7</td><td>&mdash;</td><td>7</td></tr>
+                  <tr><td>5</td><td>15</td><td>&mdash;</td><td>55</td></tr>
+                  <tr><td>10</td><td>25</td><td>+50</td><td>205</td></tr>
+                  <tr><td>15</td><td>35</td><td>&mdash;</td><td>355</td></tr>
+                  <tr><td>20</td><td>45</td><td>+100</td><td>605</td></tr>
+                  <tr><td>25</td><td>55</td><td>&mdash;</td><td>855</td></tr>
+                  <tr><td>30</td><td>65</td><td>+150</td><td>1,255</td></tr>
+                </tbody>
+              </table>
+              <p>Each Gold Mine adds +2 SB per wave. Three Gold Mines over 30 waves = +180 SB. With max Golden Treasury (&times;1.6) and Hard difficulty (&times;1.3), the same 30 waves yields around 2,610 SB. That's 2,610 JB per run.</p>
+
+              <h4>Investment System &mdash; ROI Analysis</h4>
+              <p>Invest up to 100 JB before a run to receive up to 50 bonus starting SB (2:1 rate). Is it worth it?</p>
+              <p>50 extra starting SB lets you build an early Gold Mine (40 SB) with 10 SB left over. That Gold Mine generates +2 SB per wave. Over a 30-wave run that's +60 SB earned. You spent 100 JB to gain 60 extra JB, net loss of 40 JB. <strong>Not great.</strong></p>
+              <p>But if you invest 20 JB for 10 extra SB and use it to build an extra Arrow tower on wave 1, potentially surviving 2&ndash;3 more waves in the late game, those extra waves could earn 70+ SB each. <strong>Small investments beat big ones.</strong></p>
+
+              <h4>Ghost Evasion Mechanics</h4>
+              <p>Ghosts have a 50% dodge chance against projectile hits. Each projectile rolls independently. However, Fire tower DOT bypasses evasion entirely &mdash; the damage-over-time effect modifies HP directly without a hit check. Ghosts are rendered at 50% opacity to look spooky.</p>
+              <p>Optimal anti-ghost strategy: Fire towers. Their direct hit might miss, but the DOT always lands. Lightning chains also roll dodge per target, so statistically 1.5 of 3 chain hits connect.</p>
+
+              <h4>Tower Synergies &amp; Placement Theory</h4>
+              <p><strong>Watchtower + Snipers:</strong> Sniper base range is 5 tiles (200px). A nearby Watchtower adds +10%, giving 5.5 tiles (220px). At Lv3 with Crystal Optics tier 3 (+45% range), a Sniper covers 7.25 tiles &mdash; nearly half the map.</p>
+              <p><strong>Frost + Cannon:</strong> Frost slows enemies to 50% speed. Slower enemies bunch up. Bunched enemies take more cannon splash hits. A single Lv3 Cannon can hit 4&ndash;5 slowed enemies per shot.</p>
+              <p><strong>Gold Mine placement:</strong> Gold Mines don't attack, so put them in dead zones away from the path. They pay for themselves in 20 waves (40 SB cost, +2 SB/wave). Build early.</p>
+              <p><strong>Lightning chains:</strong> Lightning jumps to up to 3 targets within 2 tiles of each other. Place it where the path doubles back on itself for maximum chain potential. On Spiral map, the centre is ideal.</p>
+
+              <h4>Armory Upgrade Costs &mdash; Full Resource Requirements</h4>
+              <p>Each armory tier costs more. The cost multipliers per tier are &times;1.0, &times;1.5, &times;2.0.</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Upgrade</th><th>Tier 1 Cost</th><th>Tier 2 Cost</th><th>Tier 3 Cost</th><th>Total Resources</th></tr></thead>
+                <tbody>
+                  <tr><td>Reinforced Walls</td><td>5 Stone Bricks</td><td>8 Stone Bricks</td><td>10 Stone Bricks</td><td>23 Stone Bricks</td></tr>
+                  <tr><td>Sharpened Arrows</td><td>3 Planks + 1 Iron Bars</td><td>5 Planks + 2 Iron Bars</td><td>6 Planks + 2 Iron Bars</td><td>14 Planks + 5 Iron Bars</td></tr>
+                  <tr><td>Sturdy Foundations</td><td>4 Planks + 3 Stone Bricks</td><td>6 Planks + 5 Stone Bricks</td><td>8 Planks + 6 Stone Bricks</td><td>18 Planks + 14 Stone Bricks</td></tr>
+                  <tr><td>Supply Lines</td><td>3 Bread + 2 Rope</td><td>5 Bread + 3 Rope</td><td>6 Bread + 4 Rope</td><td>14 Bread + 9 Rope</td></tr>
+                  <tr><td>Crystal Optics</td><td>2 Crystal Lens</td><td>3 Crystal Lens</td><td>4 Crystal Lens</td><td>9 Crystal Lens</td></tr>
+                  <tr><td>Golden Treasury</td><td>2 Gold</td><td>3 Gold</td><td>4 Gold</td><td>9 Gold</td></tr>
+                  <tr><td>Hardened Steel</td><td colspan="3">4 Iron Bars + 2 Hardwood</td><td>4 Iron Bars + 2 Hardwood</td></tr>
+                  <tr><td>Arcane Mastery</td><td colspan="3">3 Crystal Lens + 2 Gold</td><td>3 Crystal Lens + 2 Gold</td></tr>
+                </tbody>
+              </table>
+
+              <h4>Complete Modifier Stack at Max Upgrades</h4>
+              <p>If you max every armory upgrade, here's what you're working with on Hard difficulty:</p>
+              <table class="farm-info-table">
+                <thead><tr><th>Stat</th><th>Base</th><th>Armory</th><th>Difficulty</th><th>Final</th></tr></thead>
+                <tbody>
+                  <tr><td>Starting Lives</td><td>20</td><td>+6</td><td>&minus;5</td><td>21</td></tr>
+                  <tr><td>Starting SB</td><td>50</td><td>+15</td><td>&mdash;</td><td>65 + milestones</td></tr>
+                  <tr><td>Arrow Damage</td><td>5</td><td>&times;1.3</td><td>&mdash;</td><td>6.5</td></tr>
+                  <tr><td>Tower Cost</td><td>varies</td><td>&times;0.7</td><td>&mdash;</td><td>30% cheaper</td></tr>
+                  <tr><td>Tower Range</td><td>varies</td><td>&times;1.45</td><td>&mdash;</td><td>45% further</td></tr>
+                  <tr><td>Wave Rewards</td><td>varies</td><td>&times;1.6</td><td>&times;1.3</td><td>&times;2.08 total</td></tr>
+                </tbody>
+              </table>
+              <p>With fully stacked modifiers, wave 30 on Hard earns <code>round(65 &times; 2.08) = 135 SB</code> per wave. That's the dream. Getting there requires approximately 23 Stone Bricks, 32 Planks, 9 Iron Bars, 12 Crystal Lens, 9 Gold, 2 Hardwood, 14 Bread, and 9 Rope. So start farming.</p>
+
+              <h4>Cashout &mdash; SB to JB Conversion</h4>
+              <p>When your run ends (you die), all SB earned during the run converts to JB at a 1:1 rate. That's it. No multiplier, no tax, no hidden fees. A 30-wave run earning 1,255 SB deposits exactly 1,255 JB into your wallet. Invest wisely.</p>
+
+              <h4>The Optimal First 10 Waves (Speedrun Strat)</h4>
+              <p>Wave 1: Build 2 Arrows at the first bend (20 SB). You have 30 SB left.</p>
+              <p>Wave 2: Save. Slimes die easily.</p>
+              <p>Wave 3: Build a Frost tower at the second bend (20 SB).</p>
+              <p>Wave 4&ndash;5: Save SB. Upgrade an Arrow to Lv2 after wave 5 (15 SB).</p>
+              <p>Wave 6: Skeletons appear. Build a Cannon (25 SB) for splash damage.</p>
+              <p>Wave 7&ndash;9: Upgrade towers. Get the Cannon to Lv2 (38 SB).</p>
+              <p>Wave 10: Boss wave. You should have 2 Lv2 Arrows, 1 Frost, 1 Lv2 Cannon. The boss has 750 HP. It will be tight but survivable. Collect 50 bonus SB.</p>
+              <p>After wave 10 you should have ~300+ total SB earned. Use it to unlock Watchtower and start stacking range buffs.</p>
+
+              <h4>Why You Will Lose at Wave 37</h4>
+              <p>Wave 37 is where most runs die. Here's why: the exponential scaling has been compounding for 7 waves. Slimes now have ~170 HP. Orcs have ~680 HP. You're facing 35 enemies per wave. And it's a boss-adjacent wave (if past 30, mini-bosses every 5), meaning you just burned resources on wave 35's boss and haven't recovered economically. The gap between wave 30 (linear) and wave 37 (exponential) is where tower DPS falls behind enemy HP growth. The solution: have 3+ Gold Mines generating passive SB, and invest all of it into Lv3 Snipers with Watchtower range buffs. Or just accept wave 37 as your destiny.</p>
+
+            </div>
+          </details>
+
         </div>
       </details>
     </div>
