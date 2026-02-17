@@ -1516,13 +1516,7 @@
     // Set home position at farmhouse center
     updateMiniPetHomePos();
 
-    // Click to beam pet back to page
-    farmhousePetEl.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (window.PetSystem && window.PetSystem.beamToPage) {
-        window.PetSystem.beamToPage();
-      }
-    });
+    // Pet no longer undocks on click — use pet shop to recall
 
     // Only show if pet is beamed to farm
     if (window.PetSystem.isBeamed && window.PetSystem.isBeamed()) {
