@@ -513,6 +513,14 @@
 
     // ── Farm animals that wander near their buildings ─────
 
+    var ANIMAL_STORAGE_KEY = 'arebooksgood-farm-animals';
+    function loadAnimalPositions() {
+      try { return JSON.parse(localStorage.getItem(ANIMAL_STORAGE_KEY)) || {}; } catch (e) { return {}; }
+    }
+    function saveAnimalPositions(data) {
+      try { localStorage.setItem(ANIMAL_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* quota */ }
+    }
+
     // Direction row Y offsets (spritesheet rows: 0=down, 1=left, 2=right, 3=up)
     // Chicken 2x: 32px per row. Cow/Sheep 2x: 64px per row.
     var ANIMAL_INFO = {
@@ -562,26 +570,33 @@
       var zoneTop   = (baseRow + (rowSpan || 1) - 0.5) * cellH;
       var zoneBot   = (baseRow + (rowSpan || 1) + 1.5) * cellH;
 
+      var saved = loadAnimalPositions();
+      var savedList = saved[animalType] || [];
+
       for (var a = 0; a < count; a++) {
         var el = document.createElement('div');
         el.className = 'fp-anim ' + className;
-        // Start at a random position within the zone
-        var startX = zoneLeft + Math.random() * (zoneRight - zoneLeft);
-        var startY = zoneTop + Math.random() * (zoneBot - zoneTop);
+        // Restore saved position or pick random within zone
+        var s = savedList[a];
+        var startX = (s && s.x >= zoneLeft && s.x <= zoneRight) ? s.x : zoneLeft + Math.random() * (zoneRight - zoneLeft);
+        var startY = (s && s.y >= zoneTop && s.y <= zoneBot) ? s.y : zoneTop + Math.random() * (zoneBot - zoneTop);
+        var startDir = (s && s.dir) || 'down';
         el.style.left = startX + '%';
         el.style.top = startY + '%';
         el.style.marginLeft = (-w / 2) + 'px';
         el.style.marginTop = (-h / 2) + 'px';
-        // Start facing down (idle frame 0)
-        el.style.backgroundPosition = '0px 0px';
+        // Face saved direction (or down on first visit)
+        var info = ANIMAL_INFO[animalType];
+        var yOff = info.dirY[startDir] || 0;
+        el.style.backgroundPosition = '0px ' + yOff + 'px';
         gridEl.appendChild(el);
 
         // Start wander loop
-        scheduleWander(el, animalType, zoneLeft, zoneRight, zoneTop, zoneBot, w, h);
+        scheduleWander(el, animalType, a, zoneLeft, zoneRight, zoneTop, zoneBot, w, h);
       }
     }
 
-    function scheduleWander(el, animalType, zLeft, zRight, zTop, zBot, w, h) {
+    function scheduleWander(el, animalType, idx, zLeft, zRight, zTop, zBot, w, h) {
       var idleTime = 2000 + Math.floor(Math.random() * 4000); // 2-6s idle
       setTimeout(function doWander() {
         if (!el.parentNode) return; // removed by re-render
@@ -616,6 +631,12 @@
         setTimeout(function () {
           if (!el.parentNode) return;
           stopWalk(el, walkData);
+
+          // Persist position so animals stay put across page loads
+          var all = loadAnimalPositions();
+          if (!all[animalType]) all[animalType] = [];
+          all[animalType][idx] = { x: targetX, y: targetY, dir: dir };
+          saveAnimalPositions(all);
 
           var nextIdle = 3000 + Math.floor(Math.random() * 5000); // 3-8s idle
           setTimeout(function () { doWander(); }, nextIdle);
