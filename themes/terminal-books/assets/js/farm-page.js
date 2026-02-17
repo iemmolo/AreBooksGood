@@ -513,13 +513,47 @@
 
     // ── Farm animals that wander near their buildings ─────
 
-    // Direction row Y offsets (spritesheet rows: 0=down, 1=right, 2=left, 3=up)
+    // Direction row Y offsets (spritesheet rows: 0=down, 1=left, 2=right, 3=up)
     // Chicken 2x: 32px per row. Cow/Sheep 2x: 64px per row.
-    var DIR_Y = {
-      chicken: { down: '0px', right: '-32px', left: '-64px', up: '-96px' },
-      cow:     { down: '0px', right: '-64px', left: '-128px', up: '-192px' },
-      sheep:   { down: '0px', right: '-64px', left: '-128px', up: '-192px' }
+    var ANIMAL_INFO = {
+      chicken: {
+        frameW: 32,
+        dirY: { down: 0, left: -32, right: -64, up: -96 },
+        frameMs: 150, walkMs: 2000
+      },
+      cow: {
+        frameW: 64,
+        dirY: { down: 0, left: -64, right: -128, up: -192 },
+        frameMs: 200, walkMs: 3000
+      },
+      sheep: {
+        frameW: 64,
+        dirY: { down: 0, left: -64, right: -128, up: -192 },
+        frameMs: 200, walkMs: 3000
+      }
     };
+
+    // Start walk frame cycling via setInterval (sets full background-position
+    // shorthand so CSS animation cannot override the Y direction offset).
+    function startWalk(el, animalType, dir) {
+      var info = ANIMAL_INFO[animalType];
+      var yOff = info.dirY[dir];
+      // Set direction immediately (don't wait for first interval tick)
+      el.style.backgroundPosition = '0px ' + yOff + 'px';
+      var frame = 1;
+      var iv = setInterval(function () {
+        if (!el.parentNode) { clearInterval(iv); return; }
+        el.style.backgroundPosition = -(frame * info.frameW) + 'px ' + yOff + 'px';
+        frame = (frame + 1) % 4;
+      }, info.frameMs);
+      return { iv: iv, yOff: yOff };
+    }
+
+    // Stop walk and show idle frame (frame 0, preserving last direction)
+    function stopWalk(el, walkData) {
+      clearInterval(walkData.iv);
+      el.style.backgroundPosition = '0px ' + walkData.yOff + 'px';
+    }
 
     function spawnWanderingAnimal(className, animalType, baseRow, baseCol, rowSpan, colSpan, w, h, count) {
       // Wander zone: area around and below the building (in % of grid)
@@ -538,9 +572,8 @@
         el.style.top = startY + '%';
         el.style.marginLeft = (-w / 2) + 'px';
         el.style.marginTop = (-h / 2) + 'px';
-        // Start facing down (toward camera)
-        el.style.backgroundPositionY = DIR_Y[animalType].down;
-        el.style.animationDelay = (Math.random() * 2).toFixed(2) + 's';
+        // Start facing down (idle frame 0)
+        el.style.backgroundPosition = '0px 0px';
         gridEl.appendChild(el);
 
         // Start wander loop
@@ -570,22 +603,19 @@
         } else {
           dir = dy > 0 ? 'down' : 'up';
         }
-        el.style.backgroundPositionY = DIR_Y[animalType][dir];
 
-        // Resume walk animation
-        el.classList.remove('fp-anim-animal-idle');
+        // Start walk animation (JS-driven frame cycling)
+        var walkData = startWalk(el, animalType, dir);
 
         // Move to target
         el.style.left = targetX + '%';
         el.style.top = targetY + '%';
 
         // After transition completes, go idle and schedule next wander
-        var walkDuration = animalType === 'chicken' ? 2000 : 3000;
+        var walkDuration = ANIMAL_INFO[animalType].walkMs;
         setTimeout(function () {
           if (!el.parentNode) return;
-          // Face down (idle) and pause walk animation
-          el.style.backgroundPositionY = DIR_Y[animalType].down;
-          el.classList.add('fp-anim-animal-idle');
+          stopWalk(el, walkData);
 
           var nextIdle = 3000 + Math.floor(Math.random() * 5000); // 3-8s idle
           setTimeout(function () { doWander(); }, nextIdle);
