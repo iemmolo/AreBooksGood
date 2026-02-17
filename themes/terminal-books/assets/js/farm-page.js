@@ -41,11 +41,11 @@
     { key: 'quarry',      name: 'Quarry',        row: 12, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
     { key: 'mine',        name: 'Mine',          row: 11, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
     { key: 'deepMine',    name: 'Deep Mine',     row: 11, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'oldGrowth',   name: 'Old Growth',    row: 8,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'oldGrowth',   name: 'Old Growth',    row: 14, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
     // Row 9: empty gap
     { key: 'mill',        name: 'Mill',          row: 10, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
     { key: 'sawmill',     name: 'Sawmill',       row: 9,  col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'mason',       name: 'Mason',         row: 8,  col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'mason',       name: 'Mason',         row: 10, col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
     { key: 'kitchen',     name: 'Kitchen',       row: 9,  col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
     { key: 'forge',       name: 'Forge',         row: 9,  col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'loom',        name: 'Loom',          row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
