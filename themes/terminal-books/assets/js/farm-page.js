@@ -54,6 +54,52 @@
     { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
   ];
 
+  // ── Building requirements (JB cost + farmhouse level gate) ──
+  var BUILDING_REQS = {
+    // Starter crops (free, farmhouse Lv1) — 4 plots
+    crop0:       { cost: 0,   minFH: 1 },
+    crop1:       { cost: 0,   minFH: 1 },
+    crop2:       { cost: 0,   minFH: 1 },
+    crop4:       { cost: 0,   minFH: 1 },
+    // Tier 2 crops (farmhouse Lv2) — 3 more = 7 total
+    crop5:       { cost: 0,   minFH: 2 },
+    crop6:       { cost: 0,   minFH: 2 },
+    crop7:       { cost: 0,   minFH: 2 },
+    // Tier 3 crops (farmhouse Lv3) — 4 more = 11 total
+    crop8:       { cost: 0,   minFH: 3 },
+    crop9:       { cost: 0,   minFH: 3 },
+    crop10:      { cost: 0,   minFH: 3 },
+    crop11:      { cost: 0,   minFH: 3 },
+    // Tier 4 crops (farmhouse Lv4) — 2 more = 13 total
+    crop12:      { cost: 0,   minFH: 4 },
+    crop13:      { cost: 0,   minFH: 4 },
+    // Tier 5 crops (farmhouse Lv5) — 2 more = 15 total
+    crop14:      { cost: 0,   minFH: 5 },
+    crop15:      { cost: 0,   minFH: 5 },
+    // Starter buildings (free, farmhouse Lv1)
+    lumberYard:  { cost: 0,   minFH: 1 },
+    quarry:      { cost: 0,   minFH: 1 },
+    fishingPond: { cost: 0,   minFH: 1 },
+    mill:        { cost: 0,   minFH: 1 },
+    sawmill:     { cost: 0,   minFH: 1 },
+    mason:       { cost: 0,   minFH: 1 },
+    kitchen:     { cost: 0,   minFH: 1 },
+    // Tier 2 buildings (farmhouse Lv2)
+    chickenCoop: { cost: 50,  minFH: 2 },
+    cowPasture:  { cost: 75,  minFH: 2 },
+    sheepPen:    { cost: 75,  minFH: 2 },
+    // Tier 3 buildings (farmhouse Lv3)
+    mine:        { cost: 100, minFH: 3 },
+    forge:       { cost: 150, minFH: 3 },
+    smokehouse:  { cost: 100, minFH: 3 },
+    loom:        { cost: 100, minFH: 3 },
+    // Tier 4 buildings (farmhouse Lv4)
+    deepMine:    { cost: 200, minFH: 4 },
+    oldGrowth:   { cost: 150, minFH: 4 },
+    // Tier 5 buildings (farmhouse Lv5)
+    enchanter:   { cost: 300, minFH: 5 }
+  };
+
   // ── Layout helpers ──────────────────────────────────────────
   function getActiveLayout() {
     return GRID_LAYOUT;
@@ -202,16 +248,22 @@
 
   var occupiedMap = buildOccupiedMap(getActiveLayout());
 
+  // ── Helper: current farmhouse level ─────────────────────────
+  function getCurrentFHLevel() {
+    return (window.FarmAPI && window.FarmAPI.getFarmhouseLevel) ? window.FarmAPI.getFarmhouseLevel() : 1;
+  }
+
   // ── Determine if a station/building is built ──────────────
   function isCellBuilt(item) {
-    if (item.key === 'farmhouse' || item.key.indexOf('forest') === 0) return true; // farmhouse + forest always built
-    if (item.type === 'crop') return true;    // crop plots always available
-
-    // All stations unlocked for testing
-    if (item.type === 'processing') return true;
-    if (item.type === 'gathering') return true;
-
-    // Fallback: check FarmResources
+    if (item.key === 'farmhouse' || item.key.indexOf('forest') === 0) return true;
+    var req = BUILDING_REQS[item.key];
+    // Farmhouse level gate — not high enough = locked regardless
+    if (req && getCurrentFHLevel() < req.minFH) return false;
+    // Crop plots: unlocked once farmhouse level met (no JB cost)
+    if (item.type === 'crop') return true;
+    // Starter buildings (cost 0) are always built
+    if (req && req.cost === 0) return true;
+    // Non-starter stations: check FarmResources built flag
     if (window.FarmResources && window.FarmResources.isStationBuilt) {
       return window.FarmResources.isStationBuilt(item.key);
     }
@@ -337,8 +389,8 @@
         }
       }
 
-      // Crop progress + pixel art sprites
-      if (item.type === 'crop') {
+      // Crop progress + pixel art sprites (only when unlocked)
+      if (item.type === 'crop' && built) {
         var plotIdx = parseInt(item.key.replace('crop', ''), 10);
         var cropInfo = getCropInfo(plotIdx);
         if (cropInfo && cropInfo.crop) {
@@ -371,13 +423,21 @@
         cell.appendChild(countFH);
       }
 
-      // Click handler for built cells
+      // Click handler for built cells + locked cells
       if (built) {
         (function (itm, cel) {
           cel.style.cursor = 'pointer';
           cel.addEventListener('click', function (e) {
             e.stopPropagation();
             openStationPopup(itm, cel);
+          });
+        })(item, cell);
+      } else if (BUILDING_REQS[item.key]) {
+        (function (itm, cel) {
+          cel.style.cursor = 'pointer';
+          cel.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openLockedPopup(itm, cel);
           });
         })(item, cell);
       }
@@ -953,6 +1013,10 @@
         var cellKey = 'crop' + p;
         var cellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
 
+        // Skip locked crop cells (not yet unlocked)
+        var isLocked = cellEl && cellEl.classList.contains('fp-cell-locked');
+        if (isLocked) continue;
+
         // Structural change (planted/harvested) — needs full rebuild
         var isEmpty = cellEl && cellEl.classList.contains('fp-cell-crop-empty');
         if ((isEmpty && hasCrop) || (!isEmpty && !hasCrop)) {
@@ -1113,6 +1177,122 @@
       stationPopupEl.style.top = (rect.bottom + 6) + 'px';
     } else {
       // Neither side fits perfectly — pick whichever has more room
+      if (spaceAbove > spaceBelow) {
+        stationPopupEl.style.top = '8px';
+      } else {
+        stationPopupEl.style.top = (rect.bottom + 6) + 'px';
+      }
+    }
+
+    stationPopupEl.style.visibility = '';
+
+    setTimeout(function () {
+      document.addEventListener('click', outsideStationPopupClick);
+      window.addEventListener('scroll', onScrollClosePopup, true);
+    }, 0);
+  }
+
+  function openLockedPopup(item, cellEl) {
+    closeStationPopup();
+
+    var req = BUILDING_REQS[item.key];
+    if (!req) return;
+
+    stationPopupEl = document.createElement('div');
+    stationPopupEl.className = 'fp-station-popup';
+
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '\uD83D\uDD12') + ' ' + item.name;
+    stationPopupEl.appendChild(header);
+
+    var fhLevel = getCurrentFHLevel();
+    var meetsLevel = fhLevel >= req.minFH;
+    var jbBalance = (window.JackBucks && window.JackBucks.getBalance) ? window.JackBucks.getBalance() : 0;
+    var canAfford = jbBalance >= req.cost;
+    var isCrop = item.type === 'crop';
+
+    // Farmhouse level requirement
+    var levelRow = document.createElement('div');
+    levelRow.className = 'fp-popup-row';
+    if (meetsLevel) {
+      levelRow.innerHTML = 'Farmhouse: <span class="fp-popup-count">Lv.' + fhLevel + '</span> \u2714';
+    } else {
+      levelRow.innerHTML = '<span style="color:#e57373">Requires Farmhouse Lv.' + req.minFH + '</span>';
+      levelRow.innerHTML += '<br><span class="fp-popup-rate">Current: Lv.' + fhLevel + '</span>';
+    }
+    stationPopupEl.appendChild(levelRow);
+
+    // JB cost (only for non-free buildings)
+    if (req.cost > 0) {
+      var costRow = document.createElement('div');
+      costRow.className = 'fp-popup-row';
+      var costClass = canAfford ? 'fp-has-enough' : 'fp-not-enough';
+      costRow.innerHTML = 'Cost: <span class="' + costClass + '">' + req.cost + ' JB</span>';
+      costRow.innerHTML += ' <span class="fp-popup-rate">(you have ' + jbBalance + ')</span>';
+      stationPopupEl.appendChild(costRow);
+    }
+
+    // Build / Unlock button
+    if (isCrop) {
+      // Crops unlock automatically with farmhouse level — show hint
+      if (!meetsLevel) {
+        var hint = document.createElement('div');
+        hint.className = 'fp-popup-row fp-popup-rate';
+        hint.textContent = 'Upgrade your farmhouse to unlock this plot.';
+        stationPopupEl.appendChild(hint);
+      }
+    } else {
+      var canBuild = meetsLevel && canAfford;
+      var btn = document.createElement('button');
+      btn.className = 'fp-popup-btn';
+      btn.type = 'button';
+      if (req.cost === 0) {
+        btn.textContent = 'Unlock';
+      } else {
+        btn.textContent = 'Build (' + req.cost + ' JB)';
+      }
+      if (!canBuild) {
+        btn.classList.add('fp-recipe-disabled');
+        btn.disabled = true;
+      }
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!canBuild) return;
+        if (req.cost > 0 && window.JackBucks) {
+          window.JackBucks.deduct(req.cost);
+        }
+        if (window.FarmResources && window.FarmResources.buildStation) {
+          window.FarmResources.buildStation(item.key);
+        }
+        closeStationPopup();
+        renderGrid();
+      });
+      stationPopupEl.appendChild(btn);
+    }
+
+    // Position popup (reuse same logic)
+    var rect = cellEl.getBoundingClientRect();
+    var popupWidth = 170;
+    var popupLeft = Math.max(8, Math.min(rect.left + rect.width / 2 - popupWidth / 2, window.innerWidth - popupWidth - 8));
+    stationPopupEl.style.left = popupLeft + 'px';
+
+    stationPopupEl.style.visibility = 'hidden';
+    stationPopupEl.style.top = '0';
+    document.body.appendChild(stationPopupEl);
+    var popupHeight = stationPopupEl.offsetHeight;
+
+    var spaceAbove = rect.top - 6;
+    var spaceBelow = window.innerHeight - rect.bottom - 6;
+
+    stationPopupEl.style.top = '';
+    stationPopupEl.style.bottom = '';
+
+    if (spaceAbove >= popupHeight) {
+      stationPopupEl.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+    } else if (spaceBelow >= popupHeight) {
+      stationPopupEl.style.top = (rect.bottom + 6) + 'px';
+    } else {
       if (spaceAbove > spaceBelow) {
         stationPopupEl.style.top = '8px';
       } else {
@@ -1461,15 +1641,88 @@
     header.textContent = (ICONS[item.key] || '') + ' Farmhouse';
     popup.appendChild(header);
 
-    var level = 1;
-    if (window.FarmAPI && window.FarmAPI.getFarmhouseLevel) {
-      level = window.FarmAPI.getFarmhouseLevel();
-    }
+    var level = getCurrentFHLevel();
+    var curDef = (window.FarmAPI && window.FarmAPI.getFarmhouseLevelDef) ? window.FarmAPI.getFarmhouseLevelDef(level) : null;
+    var curName = curDef ? curDef.name : 'Farmhouse';
 
     var row = document.createElement('div');
     row.className = 'fp-popup-row';
-    row.innerHTML = 'Level: <span class="fp-popup-count">' + level + '</span>';
+    row.innerHTML = '<span class="fp-popup-count">' + curName + '</span> (Lv.' + level + ')';
     popup.appendChild(row);
+
+    // Bonuses
+    if (curDef) {
+      var bonuses = [];
+      if (curDef.sellBonus > 1) bonuses.push('+' + Math.round((curDef.sellBonus - 1) * 100) + '% sell price');
+      if (curDef.growBonus < 1) bonuses.push(Math.round((1 - curDef.growBonus) * 100) + '% faster growth');
+      if (curDef.autoWater) bonuses.push('Auto-water');
+      if (bonuses.length > 0) {
+        var bonusRow = document.createElement('div');
+        bonusRow.className = 'fp-popup-row fp-popup-rate';
+        bonusRow.textContent = bonuses.join(' \u2022 ');
+        popup.appendChild(bonusRow);
+      }
+    }
+
+    // Upgrade section
+    if (level < 5 && window.FarmAPI && window.FarmAPI.getFarmhouseLevelDef) {
+      var nextDef = window.FarmAPI.getFarmhouseLevelDef(level + 1);
+      if (nextDef) {
+        var sep = document.createElement('div');
+        sep.className = 'fp-popup-separator';
+        popup.appendChild(sep);
+
+        var nextRow = document.createElement('div');
+        nextRow.className = 'fp-popup-row';
+        nextRow.innerHTML = 'Next: <span class="fp-popup-count">' + nextDef.name + '</span> (Lv.' + (level + 1) + ')';
+        popup.appendChild(nextRow);
+
+        // Next level bonuses
+        var nextBonuses = [];
+        if (nextDef.sellBonus > 1) nextBonuses.push('+' + Math.round((nextDef.sellBonus - 1) * 100) + '% sell');
+        if (nextDef.growBonus < 1) nextBonuses.push(Math.round((1 - nextDef.growBonus) * 100) + '% faster');
+        if (nextDef.autoWater) nextBonuses.push('Auto-water');
+        if (nextBonuses.length > 0) {
+          var nextBonusRow = document.createElement('div');
+          nextBonusRow.className = 'fp-popup-row fp-popup-rate';
+          nextBonusRow.textContent = nextBonuses.join(' \u2022 ');
+          popup.appendChild(nextBonusRow);
+        }
+
+        var jbBalance = (window.JackBucks && window.JackBucks.getBalance) ? window.JackBucks.getBalance() : 0;
+        var canAfford = jbBalance >= nextDef.cost;
+
+        var btn = document.createElement('button');
+        btn.className = 'fp-popup-btn';
+        btn.type = 'button';
+        btn.textContent = 'Upgrade (' + nextDef.cost + ' JB)';
+        if (!canAfford) {
+          btn.classList.add('fp-recipe-disabled');
+          btn.disabled = true;
+        }
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (!canAfford) return;
+          window.JackBucks.deduct(nextDef.cost);
+          window.FarmAPI.setFarmhouseLevel(level + 1);
+          closeStationPopup();
+          renderGrid();
+        });
+        popup.appendChild(btn);
+
+        if (!canAfford) {
+          var costHint = document.createElement('div');
+          costHint.className = 'fp-popup-row fp-popup-rate';
+          costHint.innerHTML = 'You have <span class="fp-not-enough">' + jbBalance + ' JB</span>';
+          popup.appendChild(costHint);
+        }
+      }
+    } else if (level >= 5) {
+      var maxRow = document.createElement('div');
+      maxRow.className = 'fp-popup-row fp-popup-rate';
+      maxRow.textContent = 'Max level reached!';
+      popup.appendChild(maxRow);
+    }
   }
 
   // ── Toggle collapsed/expanded ───────────────────────────

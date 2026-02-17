@@ -9,12 +9,12 @@
     lumberYard:  { resource: 'wood',     rate: 720000,   built: true },   // 12min
     quarry:      { resource: 'stone',    rate: 1200000,  built: true },   // 20min
     fishingPond: { resource: 'fish',     rate: 600000,   built: true },   // 10min
-    chickenCoop: { resource: 'eggs',     rate: 900000,   built: true },
-    cowPasture:  { resource: 'milk',     rate: 1800000,  built: true },
-    sheepPen:    { resource: 'wool',     rate: 2700000,  built: true },
-    mine:        { resource: 'iron',     rate: 2400000,  built: true },
-    deepMine:    { resource: 'gold',     rate: 5400000,  built: true },
-    oldGrowth:   { resource: 'hardwood', rate: 2100000,  built: true }
+    chickenCoop: { resource: 'eggs',     rate: 900000,   built: false },
+    cowPasture:  { resource: 'milk',     rate: 1800000,  built: false },
+    sheepPen:    { resource: 'wool',     rate: 2700000,  built: false },
+    mine:        { resource: 'iron',     rate: 2400000,  built: false },
+    deepMine:    { resource: 'gold',     rate: 5400000,  built: false },
+    oldGrowth:   { resource: 'hardwood', rate: 2100000,  built: false }
   };
 
   // ── Default state ───────────────────────────────────────

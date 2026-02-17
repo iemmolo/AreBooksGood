@@ -2034,6 +2034,10 @@
       return farmState && farmState.farmhouse ? farmState.farmhouse.level : 1;
     },
 
+    getFarmhouseLevelDef: function (n) {
+      return FARMHOUSE_LEVELS[n] || null;
+    },
+
     setFarmhouseLevel: function (n) {
       if (!farmState) return;
       if (n < 1 || n > 5) return;
