@@ -2307,6 +2307,23 @@
     });
   }
 
+  // ── Click outside game area → deselect ───────────
+  document.addEventListener('click', function (e) {
+    if (gameState !== 'building' && gameState !== 'waving') return;
+    if (canvas.contains(e.target) || towerBarEl.contains(e.target) || (crateBarEl && crateBarEl.contains(e.target))) return;
+    var panel = document.getElementById('td-inspect-panel');
+    if (panel && panel.contains(e.target)) return;
+    if (inspectedTower) closeInspect();
+    if (selectedTower) {
+      selectedTower = null;
+      placingCaltrops = false;
+      var all = towerBarEl.querySelectorAll('.td-tower-btn');
+      for (var i = 0; i < all.length; i++) {
+        all[i].classList.remove('td-tower-btn-selected');
+      }
+    }
+  });
+
   // ── Play / Retry ──────────────────────────────────
   function startGame() {
     gameSpeed = 1;
