@@ -956,6 +956,7 @@
     return {
       plots: [{ crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }, { crop: null }],
       unlockedPlots: 16,
+      unlockedCropPlots: { crop8: true, crop9: true, crop10: true, crop11: true },
       inventory: {},
       farmhouse: { level: 1 },
       upgrades: { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 },
@@ -980,6 +981,7 @@
           if (saved.unlockedPlots < 16) saved.unlockedPlots = 16;
           if (!saved.upgrades) saved.upgrades = { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 };
           if (!saved.cosmetics) saved.cosmetics = { farmerHat: false, dirtTrail: false, overgrownTheme: false, harvestMoon: false };
+          if (!saved.unlockedCropPlots) saved.unlockedCropPlots = { crop8: true, crop9: true, crop10: true, crop11: true };
           return saved;
         }
       }
@@ -2028,6 +2030,17 @@
       saveState();
       rebuildFarmBar();
       return true;
+    },
+
+    isCropPlotUnlocked: function (key) {
+      return farmState && farmState.unlockedCropPlots && farmState.unlockedCropPlots[key] === true;
+    },
+
+    unlockCropPlot: function (key) {
+      if (!farmState) return;
+      if (!farmState.unlockedCropPlots) farmState.unlockedCropPlots = {};
+      farmState.unlockedCropPlots[key] = true;
+      saveState();
     },
 
     getFarmhouseLevel: function () {

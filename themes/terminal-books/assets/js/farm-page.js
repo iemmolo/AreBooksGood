@@ -56,26 +56,26 @@
 
   // ── Building requirements (JB cost + farmhouse level gate) ──
   var BUILDING_REQS = {
-    // Starter crops (free, farmhouse Lv1) — 4 plots
-    crop0:       { cost: 0,   minFH: 1 },
-    crop1:       { cost: 0,   minFH: 1 },
-    crop2:       { cost: 0,   minFH: 1 },
-    crop4:       { cost: 0,   minFH: 1 },
-    // Tier 2 crops (farmhouse Lv2) — 3 more = 7 total
-    crop5:       { cost: 0,   minFH: 2 },
-    crop6:       { cost: 0,   minFH: 2 },
-    crop7:       { cost: 0,   minFH: 2 },
-    // Tier 3 crops (farmhouse Lv3) — 4 more = 11 total
-    crop8:       { cost: 0,   minFH: 3 },
-    crop9:       { cost: 0,   minFH: 3 },
-    crop10:      { cost: 0,   minFH: 3 },
-    crop11:      { cost: 0,   minFH: 3 },
-    // Tier 4 crops (farmhouse Lv4) — 2 more = 13 total
-    crop12:      { cost: 0,   minFH: 4 },
-    crop13:      { cost: 0,   minFH: 4 },
-    // Tier 5 crops (farmhouse Lv5) — 2 more = 15 total
-    crop14:      { cost: 0,   minFH: 5 },
-    crop15:      { cost: 0,   minFH: 5 },
+    // Starter crops (free, farmhouse Lv1) — top-right 2×2 next to farmhouse
+    crop8:       { cost: 0,   minFH: 1 },
+    crop9:       { cost: 0,   minFH: 1 },
+    crop10:      { cost: 0,   minFH: 1 },
+    crop11:      { cost: 0,   minFH: 1 },
+    // Tier 2 crops (farmhouse Lv2, 25 JB each) — row below, 3 plots
+    crop0:       { cost: 25,  minFH: 2 },
+    crop1:       { cost: 25,  minFH: 2 },
+    crop2:       { cost: 25,  minFH: 2 },
+    // Tier 3 crops (farmhouse Lv3, 50 JB each) — row 3, 4 plots
+    crop12:      { cost: 50,  minFH: 3 },
+    crop13:      { cost: 50,  minFH: 3 },
+    crop6:       { cost: 50,  minFH: 3 },
+    crop7:       { cost: 50,  minFH: 3 },
+    // Tier 4 crops (farmhouse Lv4, 75 JB each) — row 4 left
+    crop14:      { cost: 75,  minFH: 4 },
+    crop15:      { cost: 75,  minFH: 4 },
+    // Tier 5 crops (farmhouse Lv5, 100 JB each) — row 4 right
+    crop4:       { cost: 100, minFH: 5 },
+    crop5:       { cost: 100, minFH: 5 },
     // Starter buildings (free, farmhouse Lv1)
     lumberYard:  { cost: 0,   minFH: 1 },
     quarry:      { cost: 0,   minFH: 1 },
@@ -259,8 +259,11 @@
     var req = BUILDING_REQS[item.key];
     // Farmhouse level gate — not high enough = locked regardless
     if (req && getCurrentFHLevel() < req.minFH) return false;
-    // Crop plots: unlocked once farmhouse level met (no JB cost)
-    if (item.type === 'crop') return true;
+    // Crop plots: free ones auto-unlock, paid ones need JB purchase
+    if (item.type === 'crop') {
+      if (req && req.cost === 0) return true;
+      return window.FarmAPI && window.FarmAPI.isCropPlotUnlocked && window.FarmAPI.isCropPlotUnlocked(item.key);
+    }
     // Starter buildings (cost 0) are always built
     if (req && req.cost === 0) return true;
     // Non-starter stations: check FarmResources built flag
@@ -1235,12 +1238,32 @@
 
     // Build / Unlock button
     if (isCrop) {
-      // Crops unlock automatically with farmhouse level — show hint
       if (!meetsLevel) {
+        // Farmhouse level not met — show upgrade hint
         var hint = document.createElement('div');
         hint.className = 'fp-popup-row fp-popup-rate';
         hint.textContent = 'Upgrade your farmhouse to unlock this plot.';
         stationPopupEl.appendChild(hint);
+      } else if (req && req.cost > 0) {
+        // Farmhouse level met but needs JB purchase
+        var cropCanBuy = meetsLevel && canAfford;
+        var cropBtn = document.createElement('button');
+        cropBtn.className = 'fp-popup-btn';
+        cropBtn.type = 'button';
+        cropBtn.textContent = 'Unlock (' + req.cost + ' JB)';
+        if (!cropCanBuy) {
+          cropBtn.classList.add('fp-recipe-disabled');
+          cropBtn.disabled = true;
+        }
+        cropBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (!cropCanBuy) return;
+          if (window.JackBucks) window.JackBucks.deduct(req.cost);
+          if (window.FarmAPI && window.FarmAPI.unlockCropPlot) window.FarmAPI.unlockCropPlot(item.key);
+          closeStationPopup();
+          renderGrid();
+        });
+        stationPopupEl.appendChild(cropBtn);
       }
     } else {
       var canBuild = meetsLevel && canAfford;

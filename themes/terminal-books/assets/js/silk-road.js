@@ -27,9 +27,6 @@
     5: { name: 'Golden Estate',    cost: 2000, sellBonus: 1.5,  growBonus: 0.75, autoWater: true }
   };
 
-  var PLOT_COST = 50;
-  var MAX_PLOTS = 6;
-
   // ── Cosmetic definitions ─────────────────────────────────
   var COSMETICS = {
     farmerHat:      { name: 'Farmer Hat',      cost: 300,  desc: 'Pet head accessory \u2014 straw hat pixel overlay' },
@@ -41,7 +38,6 @@
   var balanceEl;
   var dialogueEl;
   var seedsGrid;
-  var upgradesGrid;
   var farmhouseSection;
   var toolsGrid;
   var cosmeticsGrid;
@@ -151,66 +147,6 @@
     updateBalance();
     flashCard(cardEl);
     renderSeeds(); // Re-render counts
-  }
-
-  // ── Upgrades (plot unlock) ────────────────────────────
-  function renderUpgrades() {
-    var farm = getFarmAPI();
-    if (!farm || !upgradesGrid) return;
-
-    upgradesGrid.innerHTML = '';
-    var jb = getJB();
-    var balance = jb ? jb.getBalance() : 0;
-    var unlocked = farm.getUnlockedPlots();
-    var canBuyPlot = unlocked < MAX_PLOTS && balance >= PLOT_COST;
-
-    var card = document.createElement('div');
-    card.className = 'sr-card';
-
-    var name = document.createElement('div');
-    name.className = 'sr-card-name';
-    name.textContent = '+1 Farm Plot';
-
-    var info = document.createElement('div');
-    info.className = 'sr-card-info';
-    info.textContent = 'Current: ' + unlocked + '/' + MAX_PLOTS + ' plots';
-
-    var price = document.createElement('div');
-    price.className = 'sr-card-price';
-    price.textContent = unlocked >= MAX_PLOTS ? 'MAXED' : PLOT_COST + ' JB';
-
-    var btn = document.createElement('button');
-    btn.className = 'sr-card-btn';
-    btn.type = 'button';
-    btn.textContent = unlocked >= MAX_PLOTS ? 'MAXED' : 'BUY';
-    btn.disabled = !canBuyPlot;
-
-    btn.addEventListener('click', function () {
-      buyPlot(card);
-    });
-
-    card.appendChild(name);
-    card.appendChild(info);
-    card.appendChild(price);
-    card.appendChild(btn);
-    upgradesGrid.appendChild(card);
-  }
-
-  function buyPlot(cardEl) {
-    var jb = getJB();
-    var farm = getFarmAPI();
-    if (!jb || !farm) return;
-
-    if (jb.getBalance() < PLOT_COST) return;
-    if (farm.getUnlockedPlots() >= MAX_PLOTS) return;
-
-    jb.deduct(PLOT_COST);
-    farm.unlockPlot();
-
-    rotateMerchant();
-    updateBalance();
-    flashCard(cardEl);
-    renderUpgrades();
   }
 
   // ── Farmhouse ─────────────────────────────────────────
@@ -546,7 +482,6 @@
     balanceEl = document.getElementById('sr-balance');
     dialogueEl = document.getElementById('sr-dialogue');
     seedsGrid = document.getElementById('sr-seeds-grid');
-    upgradesGrid = document.getElementById('sr-upgrades-grid');
     farmhouseSection = document.getElementById('sr-farmhouse');
     toolsGrid = document.getElementById('sr-tools-grid');
     cosmeticsGrid = document.getElementById('sr-cosmetics-grid');
@@ -556,7 +491,6 @@
     updateBalance();
     rotateMerchant();
     renderSeeds();
-    renderUpgrades();
     renderFarmhouse();
     renderTools();
     renderCosmetics();
