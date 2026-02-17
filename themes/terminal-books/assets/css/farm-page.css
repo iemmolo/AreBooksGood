@@ -162,6 +162,11 @@
   z-index: 1;
 }
 
+/* Nudge quarry sprite to top of its cell (away from water edge) */
+.fp-cell[data-key="quarry"] .fp-sprite-img {
+  object-position: center top;
+}
+
 /* Crop sprites: fixed size, flexbox centered, no sub-pixel blur */
 .fp-cell-crop.fp-cell-built {
   display: flex;
