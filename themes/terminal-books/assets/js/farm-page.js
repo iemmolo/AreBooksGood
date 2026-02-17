@@ -513,12 +513,12 @@
 
     // ── Farm animals that wander near their buildings ─────
 
-    // Direction row Y offsets (spritesheet rows: 0=down, 1=up, 2=right, 3=left)
+    // Direction row Y offsets (spritesheet rows: 0=down, 1=right, 2=left, 3=up)
     // Chicken 2x: 32px per row. Cow/Sheep 2x: 64px per row.
     var DIR_Y = {
-      chicken: { down: '0px', up: '-32px', right: '-64px', left: '-96px' },
-      cow:     { down: '0px', up: '-64px', right: '-128px', left: '-192px' },
-      sheep:   { down: '0px', up: '-64px', right: '-128px', left: '-192px' }
+      chicken: { down: '0px', right: '-32px', left: '-64px', up: '-96px' },
+      cow:     { down: '0px', right: '-64px', left: '-128px', up: '-192px' },
+      sheep:   { down: '0px', right: '-64px', left: '-128px', up: '-192px' }
     };
 
     function spawnWanderingAnimal(className, animalType, baseRow, baseCol, rowSpan, colSpan, w, h, count) {

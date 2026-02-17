@@ -836,7 +836,7 @@
 }
 
 /* ── Farm animals — multi-direction walk animations ──── */
-/* Spritesheets: 4 cols × 4 rows (down, up, right, left) */
+/* Spritesheets: 4 cols × 4 rows (down, right, left, up) */
 /* background-position-y set by JS for direction selection */
 
 .fp-anim-chicken {
