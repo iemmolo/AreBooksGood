@@ -37,12 +37,15 @@ AreBooksGood - Improvement TODO
 - [ ] Add aria-live="polite" to speech bubbles for screen readers (pet.js:769)
 - [ ] Add tooltip on disabled evolution button showing what's missing (coins vs games watched)
 
-## Farm System
+## Farm System (Shipped 2026-02-17)
 
-### Phase 1 (Done)
+### Phase 1: Core Farm (Done)
 - [x] JB wallet module (jackbucks.js)
 - [x] Farm bar with 2 plots, 3 starter crops, timestamp growth, harvest for JB
 - [x] JB display in header wallet widget
+- [x] Farm page with fixed 12x8 pixel-art grid
+- [x] Dashboard strip (resource summary tiles replacing old plot tiles)
+- [x] Station click popups, collection interactions, pulse animations
 
 ### Phase 2: Pet Farming AI (Done)
 - [x] Add autonomous walk-to-plot behavior on idle timer (every 20-30s)
@@ -75,15 +78,26 @@ AreBooksGood - Improvement TODO
 - [x] Add upgrades: sprinkler, fertilizer, scarecrow, golden trowel, seed bag
 - [x] Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)
 
-## Pet Teleporter & Farm Rework
+### Phase 4: Farm Page Expansion (Done)
+- [x] All 10 gathering stations (lumber, quarry, mine, deep mine, old growth, chicken, cow, sheep, fishing, crops)
+- [x] All 8 processing stations with queue system (mill, sawmill, mason, kitchen, forge, loom, smokehouse, enchanter)
+- [x] Farmhouse-gated progression (buildings + plots unlock by farmhouse level)
+- [x] Pixel-art sprites for all stations + crops (5 growth stages each)
+- [x] Animated farm decorations (waterfall, bonfire, fountain, butterflies, smoke, bubbles)
+- [x] Animated farm animals (chicken, cow, sheep) wandering near buildings
+- [x] Decorative elements (wood fence, grass tufts, maple tree)
+- [x] Pet AI on farm grid (harvest, water, idle visits, speech bubbles)
+- [x] Fertilizer UI (once per crop, Silk Road purchase)
+- [x] Stale DOM ref fixes in harvest/water sequences
+- [ ] Fishing pond interactive mini-game (idle mode works, click-to-fish not built)
+
+## Pet Teleporter & Farm Rework (Done)
 
 - [x] Replace dock with teleporter — beam animation that transports pet to the farm
 - [x] Farm scene: pet walks up and down grass, tends crops autonomously
 - [x] Beam teleporter: Star Trek beam-up/down animation, pet materializes at farmhouse
-- [ ] Add idle furniture (chair/bench/hammock) for pet to rest on between farming cycles
-- [ ] Scope out full design (animation style, farm layout, idle behaviors, transitions)
 
-## Silk Road & Farmhouse Polish
+## Silk Road & Farmhouse Polish (Done)
 
 - [x] Fix Silk Road page styling
 - [x] Make farmhouse pixel art bigger

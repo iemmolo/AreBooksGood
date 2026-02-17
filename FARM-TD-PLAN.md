@@ -278,12 +278,12 @@ Pet sprite rendered on canvas using `fillRect` per pixel (same approach as flapp
 7. ~~Transform existing farm strip into notification dashboard (mini tile row)~~ **DONE (1c)**
 8. ~~Add farm page to games section hub + nav~~ **DONE (1a)**
 
-### Phase 2: Expanded Farm
-1. Livestock stations (chicken, cow, sheep) - locked until blueprint
-2. Fishing pond (idle + interactive mini-game)
-3. Basic processing stations (mill, sawmill, mason, kitchen)
-4. Processing queue UI
-5. Additional resource types
+### Phase 2: Expanded Farm ✅ DONE
+1. ~~Livestock stations (chicken, cow, sheep) - locked until blueprint~~ **DONE** (unlocked via farmhouse level instead of TD blueprints)
+2. ~~Fishing pond (idle + interactive mini-game)~~ **DONE** (idle mode; interactive mini-game deferred)
+3. ~~Basic processing stations (mill, sawmill, mason, kitchen)~~ **DONE**
+4. ~~Processing queue UI~~ **DONE**
+5. ~~Additional resource types~~ **DONE** (9 raw crops, 10 gathering resources, 8 processed resources)
 
 ### Phase 3: Tower Defense MVP
 1. Canvas game: grid, path rendering, game loop
@@ -574,3 +574,42 @@ This section is updated at the end of each implementation session to track what'
   1. Edit your background in Tiled as usual
   2. Copy the new PNG to static/images/farm/ground/grass.png
   3. Ask me to regenerate the waterfall spritesheet (I've saved the whole process in my memory)
+
+### Sessions 6-10 — Phase 2 Complete: Full Farm Page (2026-02-15 to 2026-02-17)
+
+**Completed (across multiple sessions):**
+- Waterfall animation: 4-frame spritesheet extraction, CSS steps() animation, JS overlay layer
+- Farm decorations: bonfire, fountain, butterflies, smoke, bubbles — unlocked by farmhouse level
+- Pixel-art sprites for all 10 gathering stations (extracted from asset pack)
+- Animated farm animals: chicken, cow, sheep — wander near their buildings, persist positions
+- Decorative elements: wood fence row, grass tufts, maple tree
+- Farmhouse-gated progression: buildings + crop plots unlock by farmhouse level, locked cells show pixel lock icon + soil sprite, green tint on unlockable cells
+- JB cost to unlock crop plots
+- Farm grid layout reorganization: supply chain clusters, mining near cliff, processing row
+- Pet farming AI on farm grid: harvest sequences, water sequences, idle visits, speech bubbles
+- Fertilizer UI: button in crop popup (once per crop), showFpFertilizerFloat(), boundary check in useFertilizer()
+- Stale DOM ref fix: renderGrid() before showFpJBFloat() in harvest sequence, re-query cellEl after water call
+- Bug fixes: quickSellAll bonuses, offline queue chaining, Lv3 processing unlock, notification badge styling
+- Grass tuft decorations scattered across green areas
+
+**Key design changes from original plan:**
+- Building unlocks use farmhouse level progression instead of TD blueprints (TD not built yet)
+- All gathering + processing stations unlocked for gameplay (no blueprint gating)
+- Farm animals are decorative (wander + animate), not resource-producing stations
+- Fishing pond is idle-only (interactive mini-game deferred)
+- Grid layout evolved significantly from original 12x8 plan — now uses pixel-art background with positioned cells
+
+**Files created:**
+- `static/images/farm/animations/*.png` — waterfall, bonfire, fountain, butterfly, smoke, bubbles, chicken, cow, sheep
+- `static/images/farm/decorations/*.png` — fence-wood, grass tufts (5 variants)
+- `static/images/farm/ui/lock.png`
+- `scripts/extract-farm-sprites.py`
+
+**Deployed to production:** 2026-02-17 (merged feature/farm-td -> main, 40 commits, Cloudflare cache purged)
+
+**What's next — Phase 3: Tower Defense MVP:**
+- Canvas game: grid, path rendering, game loop
+- 3 starter towers (arrow, cannon, frost) - JB cost only
+- 3 starter enemies (slime, skeleton, goblin)
+- Wave system, HUD, overlays, stats persistence
+- Hook TD wave milestones back into farm unlocks (blueprints)
