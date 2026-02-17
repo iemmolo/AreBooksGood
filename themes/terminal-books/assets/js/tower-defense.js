@@ -14,6 +14,8 @@
 
   var TOWER_DEFS = {
     arrow:      { symbol: 'A',  name: 'Arrow',      dmg: 5,  range: 3, speed: 1.0, cost: 10, color: null,     blueprint: false },
+    cannon:     { symbol: 'C',  name: 'Cannon',     dmg: 15, range: 2, speed: 2.5, cost: 25, color: '#a86',   blueprint: false },
+    frost:      { symbol: 'Fr', name: 'Frost',      dmg: 3,  range: 3, speed: 1.5, cost: 20, color: '#4cf',   blueprint: false },
     watchtower: { symbol: 'Wt', name: 'Watchtower',  dmg: 0,  range: 3, speed: 0,   cost: 15, color: '#aaa',   blueprint: true, unlockCost: { processed: { stoneBricks: 1 } }, waveReq: 10 },
     fire:       { symbol: 'Fi', name: 'Fire',        dmg: 10, range: 2, speed: 1.2, cost: 30, color: '#f84',   blueprint: true, unlockCost: { raw: { hardwood: 2 } }, waveReq: 15 },
     sniper:     { symbol: 'S',  name: 'Sniper',      dmg: 25, range: 5, speed: 3.0, cost: 50, color: '#8cf',   blueprint: true, unlockCost: { processed: { ironBars: 2 } }, waveReq: 20 },
@@ -22,7 +24,12 @@
   };
 
   var ENEMY_DEFS = {
-    slime: { hp: 20, speed: 1.0, radius: 6, color: '#4a4' }
+    slime:    { hp: 20,  speed: 1.0, radius: 6,  color: '#4a4', shape: 'circle',   special: null },
+    skeleton: { hp: 40,  speed: 1.2, radius: 6,  color: '#ddd', shape: 'triangle', special: null },
+    goblin:   { hp: 30,  speed: 1.8, radius: 5,  color: '#ac4', shape: 'circle',   special: 'fast' },
+    orc:      { hp: 80,  speed: 0.7, radius: 8,  color: '#484', shape: 'square',   special: 'tanky' },
+    ghost:    { hp: 25,  speed: 1.0, radius: 6,  color: '#999', shape: 'circle',   special: 'dodge' },
+    boss:     { hp: 500, speed: 0.4, radius: 12, color: '#e44', shape: 'boss',     special: 'boss' }
   };
 
   var START_LIVES = 20;
@@ -343,6 +350,8 @@
   var projectiles = [];
   var particles = [];
   var lightningEffects = [];
+  var splashEffects = [];
+  var inspectedTower = null;
   var selectedTower = 'arrow';
   var hoverTile = null;
   var spawnQueue = [];
@@ -436,9 +445,12 @@
       speed: def.speed,
       radius: def.radius,
       color: def.color,
+      shape: def.shape,
+      special: def.special,
       dist: 0,
       alive: true,
       dot: null,
+      slow: null,
       caltropsHit: {}
     });
   }
@@ -469,6 +481,10 @@
       // Move along path
       var pxPerSec = e.speed * TILE_SIZE * 1.5;
       if (ropeTrapActive) pxPerSec *= 0.5;
+      if (e.slow && e.slow.remaining > 0) {
+        pxPerSec *= e.slow.factor;
+        e.slow.remaining -= dt;
+      }
       e.dist += pxPerSec * dt;
 
       // Check caltrops
@@ -511,6 +527,12 @@
   }
 
   function damageEnemy(enemy, dmg) {
+    // Ghost dodge: 50% evasion (DOT bypasses since it modifies hp directly)
+    if (enemy.special === 'dodge' && Math.random() < 0.5) {
+      var dodgePos = getPathPos(enemy.dist);
+      spawnParticle(dodgePos.x + (Math.random() - 0.5) * 10, dodgePos.y - 12, 'DODGE', '#999');
+      return;
+    }
     enemy.hp -= dmg;
     var pos = getPathPos(enemy.dist);
     spawnParticle(pos.x + (Math.random() - 0.5) * 10, pos.y - 12, '-' + dmg, colorFg);
@@ -533,25 +555,71 @@
     }
   }
 
+  function drawEnemyShape(pos, e) {
+    var r = e.radius;
+    // Ghost: draw at 50% alpha
+    if (e.special === 'dodge') ctx.globalAlpha = 0.5;
+
+    ctx.fillStyle = e.color;
+    ctx.strokeStyle = colorFg;
+    ctx.lineWidth = 1;
+
+    if (e.shape === 'triangle') {
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y - r);
+      ctx.lineTo(pos.x - r, pos.y + r * 0.7);
+      ctx.lineTo(pos.x + r, pos.y + r * 0.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (e.shape === 'square') {
+      ctx.fillRect(pos.x - r, pos.y - r, r * 2, r * 2);
+      ctx.strokeRect(pos.x - r, pos.y - r, r * 2, r * 2);
+    } else if (e.shape === 'boss') {
+      // Large square body
+      ctx.fillRect(pos.x - r, pos.y - r, r * 2, r * 2);
+      ctx.strokeRect(pos.x - r, pos.y - r, r * 2, r * 2);
+      // Gold star marker
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold ' + Math.round(r) + 'px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u2605', pos.x, pos.y);
+    } else {
+      // circle (default) — slime, goblin, ghost
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    if (e.special === 'dodge') ctx.globalAlpha = 1;
+  }
+
   function drawEnemies() {
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
       if (!e.alive) continue;
       var pos = getPathPos(e.dist);
 
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, e.radius, 0, Math.PI * 2);
-      ctx.fillStyle = e.color;
-      ctx.fill();
-      ctx.strokeStyle = colorFg;
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      drawEnemyShape(pos, e);
 
-      // DOT indicator
+      // DOT indicator (orange ring)
       if (e.dot && e.dot.remaining > 0) {
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, e.radius + 2, 0, Math.PI * 2);
         ctx.strokeStyle = '#f84';
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // Frost slow indicator (blue ring)
+      if (e.slow && e.slow.remaining > 0) {
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, e.radius + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = '#4cf';
         ctx.globalAlpha = 0.5;
         ctx.lineWidth = 1;
         ctx.stroke();
@@ -597,6 +665,73 @@
     return Math.max(1, Math.round(def.cost * mods.costMult));
   }
 
+  function getEffectiveDmg(tower) {
+    var def = TOWER_DEFS[tower.type];
+    var lvlMult = tower.level === 2 ? 1.4 : (tower.level >= 3 ? 1.8 : 1);
+    return Math.round(def.dmg * mods.dmgMult * lvlMult);
+  }
+
+  function getEffectiveRangePx(tower) {
+    var def = TOWER_DEFS[tower.type];
+    var wtBonus = getWatchtowerBonus(tower);
+    var lvlMult = tower.level === 2 ? 1.1 : (tower.level >= 3 ? 1.2 : 1);
+    return def.range * TILE_SIZE * mods.rangeMult * lvlMult * (1 + wtBonus);
+  }
+
+  function getUpgradeCostForTower(tower) {
+    var def = TOWER_DEFS[tower.type];
+    var baseCost = getEffectiveCost(def);
+    if (tower.level === 1) return Math.round(baseCost * 1.5);
+    if (tower.level === 2) return Math.round(baseCost * 2.5);
+    return null; // max level
+  }
+
+  function getTotalInvestment(tower) {
+    var def = TOWER_DEFS[tower.type];
+    var baseCost = getEffectiveCost(def);
+    var total = baseCost;
+    if (tower.level >= 2) total += Math.round(baseCost * 1.5);
+    if (tower.level >= 3) total += Math.round(baseCost * 2.5);
+    return total;
+  }
+
+  function upgradeTower(tower) {
+    if (tower.level >= 3) return false;
+    var cost = getUpgradeCostForTower(tower);
+    if (cost === null || jb < cost) return false;
+    jb -= cost;
+    tower.level++;
+    var tc = tileCenter(tower.col, tower.row);
+    spawnParticle(tc.x, tc.y, 'Lv' + tower.level + '!', '#ffd700');
+    updateHUD();
+    renderInspectPanel();
+    return true;
+  }
+
+  function sellTower(tower) {
+    var refund = Math.floor(getTotalInvestment(tower) * 0.5);
+    var tc = tileCenter(tower.col, tower.row);
+    spawnParticle(tc.x, tc.y, '+' + refund + ' JB', '#ffd700');
+    jb += refund;
+    for (var i = 0; i < towers.length; i++) {
+      if (towers[i] === tower) {
+        towers.splice(i, 1);
+        break;
+      }
+    }
+    inspectedTower = null;
+    hideInspectPanel();
+    updateHUD();
+    updateTowerBtnStates();
+  }
+
+  function getTowerAt(col, row) {
+    for (var i = 0; i < towers.length; i++) {
+      if (towers[i].col === col && towers[i].row === row) return towers[i];
+    }
+    return null;
+  }
+
   function placeTower(col, row, type) {
     var def = TOWER_DEFS[type];
     var cost = getEffectiveCost(def);
@@ -609,6 +744,7 @@
       col: col,
       row: row,
       type: type,
+      level: 1,
       cooldown: 0
     });
     updateHUD();
@@ -654,8 +790,7 @@
     var def = TOWER_DEFS[tower.type];
     if (def.range === 0) return null;
     var tc = tileCenter(tower.col, tower.row);
-    var wtBonus = getWatchtowerBonus(tower);
-    var rangePx = def.range * TILE_SIZE * mods.rangeMult * (1 + wtBonus);
+    var rangePx = getEffectiveRangePx(tower);
     var best = null;
     var bestDist = Infinity;
 
@@ -679,6 +814,7 @@
       var t = towers[i];
       var def = TOWER_DEFS[t.type];
       var tc = tileCenter(t.col, t.row);
+      var isInspected = inspectedTower === t;
 
       var half = TILE_SIZE * 0.35;
       var towerColor = def.color || colorAccent;
@@ -686,15 +822,18 @@
       ctx.globalAlpha = 0.3;
       ctx.fillRect(tc.x - half, tc.y - half, half * 2, half * 2);
       ctx.globalAlpha = 1;
-      ctx.strokeStyle = towerColor;
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = isInspected ? '#fff' : towerColor;
+      ctx.lineWidth = isInspected ? 2.5 : 1.5;
       ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
 
+      // Tower symbol with level
+      var label = def.symbol;
+      if (t.level > 1) label = def.symbol + t.level;
       ctx.fillStyle = colorFg;
-      ctx.font = 'bold 14px monospace';
+      ctx.font = 'bold ' + (t.level > 1 ? '12' : '14') + 'px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(def.symbol, tc.x, tc.y);
+      ctx.fillText(label, tc.x, tc.y);
 
       // Watchtower aura ring
       if (t.type === 'watchtower') {
@@ -707,15 +846,15 @@
         ctx.globalAlpha = 1;
       }
 
-      // Range circle on hover
-      if (hoverTile && hoverTile.col === t.col && hoverTile.row === t.row && def.range > 0) {
-        var wtBonus = getWatchtowerBonus(t);
-        var rangePx = def.range * TILE_SIZE * mods.rangeMult * (1 + wtBonus);
+      // Range circle: permanent for inspected tower, on hover otherwise
+      var showRange = isInspected || (hoverTile && hoverTile.col === t.col && hoverTile.row === t.row);
+      if (showRange && def.range > 0) {
+        var rangePx = getEffectiveRangePx(t);
         ctx.beginPath();
         ctx.arc(tc.x, tc.y, rangePx, 0, Math.PI * 2);
         ctx.strokeStyle = towerColor;
-        ctx.globalAlpha = 0.2;
-        ctx.lineWidth = 1;
+        ctx.globalAlpha = isInspected ? 0.35 : 0.2;
+        ctx.lineWidth = isInspected ? 1.5 : 1;
         ctx.stroke();
         ctx.globalAlpha = 1;
       }
@@ -725,7 +864,7 @@
   // ── Lightning chain ───────────────────────────────
   function fireLightningChain(tower, firstTarget, maxHits) {
     var tc = tileCenter(tower.col, tower.row);
-    var dmg = Math.round(TOWER_DEFS.lightning.dmg * mods.dmgMult);
+    var dmg = getEffectiveDmg(tower);
     var hit = [firstTarget];
     var hitSet = {};
     hitSet[enemies.indexOf(firstTarget)] = true;
@@ -769,8 +908,7 @@
   // ── Projectiles ───────────────────────────────────
   function fireProjectile(tower, target) {
     var tc = tileCenter(tower.col, tower.row);
-    var def = TOWER_DEFS[tower.type];
-    var dmg = Math.round(def.dmg * mods.dmgMult);
+    var dmg = getEffectiveDmg(tower);
     projectiles.push({
       x: tc.x,
       y: tc.y,
@@ -800,6 +938,26 @@
         if (p.towerType === 'fire' && p.target.alive) {
           p.target.dot = { dmg: 3, remaining: 3, tickTimer: 0 };
         }
+        // Frost tower slow
+        if (p.towerType === 'frost' && p.target.alive) {
+          p.target.slow = { remaining: 2, factor: 0.5 };
+        }
+        // Cannon tower splash
+        if (p.towerType === 'cannon') {
+          var splashRadius = TILE_SIZE;
+          var splashDmg = Math.round(p.dmg * 0.5);
+          for (var si = 0; si < enemies.length; si++) {
+            var se = enemies[si];
+            if (!se.alive || se === p.target) continue;
+            var sp = getPathPos(se.dist);
+            var sdx = sp.x - p.x;
+            var sdy = sp.y - p.y;
+            if (Math.sqrt(sdx * sdx + sdy * sdy) <= splashRadius) {
+              damageEnemy(se, splashDmg);
+            }
+          }
+          splashEffects.push({ x: p.x, y: p.y, radius: 0, maxRadius: splashRadius, life: 0.3 });
+        }
         projectiles.splice(i, 1);
       } else {
         var move = p.speed * dt;
@@ -813,12 +971,39 @@
     for (var i = 0; i < projectiles.length; i++) {
       var p = projectiles[i];
       var col = colorFg;
+      var r = 3;
       if (p.towerType === 'fire') col = '#f84';
-      else if (p.towerType === 'sniper') col = '#8cf';
+      else if (p.towerType === 'sniper') { col = '#8cf'; r = 4; }
+      else if (p.towerType === 'frost') col = '#4cf';
+      else if (p.towerType === 'cannon') { col = '#a86'; r = 5; }
       ctx.fillStyle = col;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.towerType === 'sniper' ? 4 : 3, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  // ── Splash effects (cannon) ──────────────────────
+  function updateSplash(dt) {
+    for (var i = splashEffects.length - 1; i >= 0; i--) {
+      var s = splashEffects[i];
+      s.life -= dt;
+      s.radius = s.maxRadius * (1 - s.life / 0.3);
+      if (s.life <= 0) splashEffects.splice(i, 1);
+    }
+  }
+
+  function drawSplash() {
+    for (var i = 0; i < splashEffects.length; i++) {
+      var s = splashEffects[i];
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, s.life / 0.3) * 0.4;
+      ctx.strokeStyle = '#a86';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -900,16 +1085,36 @@
   }
 
   // ── Waves ─────────────────────────────────────────
+  function getAvailableEnemyTypes(w) {
+    var pool = ['slime'];
+    if (w >= 6) pool.push('skeleton');
+    if (w >= 11) pool.push('goblin');
+    if (w >= 16) pool.push('orc');
+    if (w >= 21) pool.push('ghost');
+    return pool;
+  }
+
   function startWave() {
     wave++;
     var count = 5 + Math.floor(wave * 1.5);
     var hpMult = 1 + wave * 0.15;
-    var baseHp = ENEMY_DEFS.slime.hp;
+    var pool = getAvailableEnemyTypes(wave);
 
     spawnQueue = [];
     for (var i = 0; i < count; i++) {
-      spawnQueue.push({ type: 'slime', hp: Math.round(baseHp * hpMult) });
+      var type = pool[Math.floor(Math.random() * pool.length)];
+      var baseHp = ENEMY_DEFS[type].hp;
+      spawnQueue.push({ type: type, hp: Math.round(baseHp * hpMult) });
     }
+
+    // Boss wave every 10 waves
+    if (wave % 10 === 0) {
+      var bossNum = wave / 10;
+      var bossHp = Math.round(500 * (1 + bossNum * 0.5));
+      spawnQueue.push({ type: 'boss', hp: bossHp });
+      spawnParticle(CANVAS_W / 2, CANVAS_H / 2, 'BOSS WAVE!', '#e44');
+    }
+
     totalSpawned = 0;
     spawnTimer = 0;
     gameState = 'waving';
@@ -932,9 +1137,12 @@
         speed: def.speed,
         radius: def.radius,
         color: def.color,
+        shape: def.shape,
+        special: def.special,
         dist: 0,
         alive: true,
         dot: null,
+        slow: null,
         caltropsHit: {}
       });
       totalSpawned++;
@@ -956,6 +1164,13 @@
 
   function endWave() {
     var baseReward = 5 + wave * 2;
+
+    // Boss wave bonus
+    if (wave % 10 === 0) {
+      var bossNum = wave / 10;
+      var bossBonus = 50 * bossNum;
+      baseReward += bossBonus;
+    }
 
     // Gold mine bonus
     var goldMineCount = 0;
@@ -1374,6 +1589,7 @@
       updateEnemies(dt);
       updateTowers(dt);
       updateProjectiles(dt);
+      updateSplash(dt);
       updateLightning(dt);
       checkWaveComplete();
     }
@@ -1390,6 +1606,7 @@
     drawTowers();
     drawEnemies();
     drawProjectiles();
+    drawSplash();
     drawLightning();
     drawParticles();
   }
@@ -1416,6 +1633,100 @@
     }
   }
 
+  // ── Tower Inspection ─────────────────────────────
+  function renderInspectPanel() {
+    var panel = document.getElementById('td-inspect-panel');
+    if (!panel || !inspectedTower) return;
+
+    var t = inspectedTower;
+    var def = TOWER_DEFS[t.type];
+    var towerColor = def.color || colorAccent;
+    var dmg = getEffectiveDmg(t);
+    var rangeTiles = (getEffectiveRangePx(t) / TILE_SIZE).toFixed(1);
+    var upgradeCost = getUpgradeCostForTower(t);
+
+    var html = '<div class="td-inspect-header" style="border-color:' + towerColor + '">';
+    html += '<span class="td-inspect-name" style="color:' + towerColor + '">' + def.name + ' Lv' + t.level + '</span>';
+    html += '<button class="td-inspect-close" id="td-inspect-close-btn">&times;</button>';
+    html += '</div>';
+
+    html += '<div class="td-inspect-stats">';
+    if (def.dmg > 0) html += '<span>DMG: ' + dmg + '</span>';
+    if (def.range > 0) html += '<span>Range: ' + rangeTiles + '</span>';
+    if (def.speed > 0) html += '<span>Speed: ' + def.speed.toFixed(1) + 's</span>';
+    html += '</div>';
+
+    html += '<div class="td-inspect-actions">';
+    if (t.level < 3 && upgradeCost !== null) {
+      var canUpgrade = jb >= upgradeCost;
+      html += '<button class="td-inspect-btn td-inspect-upgrade" id="td-inspect-upgrade-btn"' +
+        (canUpgrade ? '' : ' disabled') + '>Upgrade Lv' + (t.level + 1) + ' (' + upgradeCost + ' JB)</button>';
+    } else {
+      html += '<span class="td-inspect-maxed">MAX LEVEL</span>';
+    }
+    var refund = Math.floor(getTotalInvestment(t) * 0.5);
+    html += '<button class="td-inspect-btn td-inspect-sell" id="td-inspect-sell-btn">Sell (+' + refund + ' JB)</button>';
+    html += '</div>';
+    html += '<div class="td-inspect-hint">ESC to close</div>';
+
+    panel.innerHTML = html;
+    panel.classList.remove('td-hidden');
+
+    // Position panel near tower
+    var towerScreenX = t.col * TILE_SIZE * scale;
+    var towerScreenY = t.row * TILE_SIZE * scale;
+    var panelW = 180;
+    var wrapW = canvasWrap.clientWidth;
+    var wrapH = canvasWrap.clientHeight;
+
+    var left = Math.min(Math.max(4, towerScreenX - panelW / 2 + TILE_SIZE * scale / 2), wrapW - panelW - 4);
+    panel.style.left = left + 'px';
+    panel.style.width = panelW + 'px';
+
+    if (towerScreenY > wrapH / 2) {
+      panel.style.bottom = (wrapH - towerScreenY + 4) + 'px';
+      panel.style.top = 'auto';
+    } else {
+      panel.style.top = (towerScreenY + TILE_SIZE * scale + 4) + 'px';
+      panel.style.bottom = 'auto';
+    }
+
+    // Bind buttons
+    var closeBtn = document.getElementById('td-inspect-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', function (ev) { ev.stopPropagation(); closeInspect(); });
+
+    var upgradeBtn = document.getElementById('td-inspect-upgrade-btn');
+    if (upgradeBtn) upgradeBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      if (inspectedTower) upgradeTower(inspectedTower);
+    });
+
+    var sellBtn = document.getElementById('td-inspect-sell-btn');
+    if (sellBtn) sellBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      if (inspectedTower) sellTower(inspectedTower);
+    });
+  }
+
+  function hideInspectPanel() {
+    var panel = document.getElementById('td-inspect-panel');
+    if (panel) {
+      panel.classList.add('td-hidden');
+      panel.innerHTML = '';
+    }
+  }
+
+  function closeInspect() {
+    inspectedTower = null;
+    hideInspectPanel();
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && inspectedTower) {
+      closeInspect();
+    }
+  });
+
   // ── Input ─────────────────────────────────────────
   function canvasCoords(e) {
     var rect = canvas.getBoundingClientRect();
@@ -1437,6 +1748,23 @@
       placingCaltrops = false;
       renderCrateBar();
       return;
+    }
+
+    // Check for existing tower -> inspect
+    var existingTower = getTowerAt(tile.col, tile.row);
+    if (existingTower) {
+      if (inspectedTower === existingTower) {
+        closeInspect();
+      } else {
+        inspectedTower = existingTower;
+        renderInspectPanel();
+      }
+      return;
+    }
+
+    // Close inspection if clicking elsewhere
+    if (inspectedTower) {
+      closeInspect();
     }
 
     if (selectedTower && isTowerUnlocked(selectedTower) && isBuildable(tile.col, tile.row)) {
@@ -1468,11 +1796,14 @@
     projectiles = [];
     particles = [];
     lightningEffects = [];
+    splashEffects = [];
     spawnQueue = [];
     totalSpawned = 0;
     totalKilled = 0;
     towersBuilt = 0;
     hoverTile = null;
+    inspectedTower = null;
+    hideInspectPanel();
     lastTime = 0;
 
     // Reset crate state
