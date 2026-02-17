@@ -13,7 +13,8 @@
   // ── Dashboard tiles (strip resource summary) ─────────
   var DASHBOARD_TILES = [
     { key: 'farmLink', icon: '\u2192', label: 'Farm' },
-    { key: 'crops', icon: '\uD83C\uDF3E', label: 'Crops' }
+    { key: 'crops', icon: '\uD83C\uDF3E', label: 'Crops' },
+    { key: 'tdLink', icon: '\uD83D\uDDE1' }
   ];
 
   // ── Crop definitions ────────────────────────────────────
@@ -1142,12 +1143,12 @@
     tile.className = 'farm-dash-tile';
     tile.setAttribute('data-tile', conf.key);
 
-    if (conf.key === 'farmLink') {
+    if (conf.key === 'farmLink' || conf.key === 'tdLink') {
       tile.classList.add('farm-dash-link');
     }
 
     // Always visible on mobile (not hidden when count=0)
-    if (conf.key === 'crops' || conf.key === 'farmLink') {
+    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink') {
       tile.classList.add('farm-dash-always');
     }
 
@@ -1171,15 +1172,21 @@
       tile.appendChild(label);
     }
 
-    // Click → scroll to grid if on farm page, otherwise navigate
-    tile.addEventListener('click', function () {
-      var grid = document.getElementById('fp-grid');
-      if (grid) {
-        grid.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        window.location.href = '/farm/game/#fp-grid';
-      }
-    });
+    // Click handler
+    if (conf.key === 'tdLink') {
+      tile.addEventListener('click', function () {
+        window.location.href = '/td/#td-game-area';
+      });
+    } else {
+      tile.addEventListener('click', function () {
+        var grid = document.getElementById('fp-grid');
+        if (grid) {
+          grid.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.href = '/farm/game/#fp-grid';
+        }
+      });
+    }
 
     updateDashTile(tile, conf);
     return tile;
@@ -1215,7 +1222,7 @@
   }
 
   function updateDashTile(tile, conf) {
-    if (conf.key === 'farmLink') return;
+    if (conf.key === 'farmLink' || conf.key === 'tdLink') return;
 
     var countEl = tile.querySelector('.farm-dash-count');
     var count = getDashTileCount(conf);
