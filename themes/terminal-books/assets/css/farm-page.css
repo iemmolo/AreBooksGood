@@ -869,6 +869,23 @@
   to { background-position: -384px 0; }
 }
 
+/* ── Grass tuft decorations ───────────────────────────────────────── */
+.fp-grass-tuft {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  z-index: 0;
+  /* Reset global img styles */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  max-width: none;
+}
+
 /* ── Waterfall animation — 4 frames, percentage-positioned overlay ── */
 .fp-anim-waterfall {
   position: absolute;

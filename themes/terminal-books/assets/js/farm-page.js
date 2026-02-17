@@ -547,6 +547,62 @@
       return div;
     }
 
+    // ── Scatter grass tufts on empty green cells ──
+    var TUFT_SPRITES = [
+      '/images/farm/decorations/grass-tuft-small-1.png',
+      '/images/farm/decorations/grass-tuft-small-2.png',
+      '/images/farm/decorations/grass-tuft-small-3.png',
+      '/images/farm/decorations/grass-tuft-large-1.png',
+      '/images/farm/decorations/grass-tuft-large-2.png'
+    ];
+    // Seeded RNG so tufts stay consistent across re-renders
+    var tuftSeed = 42;
+    function tuftRng() {
+      tuftSeed = (tuftSeed * 16807 + 0) % 2147483647;
+      return tuftSeed / 2147483647;
+    }
+    // Pure-green cells: value = max tufts to place in that cell
+    var tuftAllowed = {
+      '6,2':1, '6,4':1,
+      '7,1':1, '7,3':1, '7,4':1,
+      '8,0':1, '8,1':1, '8,2':1, '8,3':1, '8,4':1, '8,5':1,
+      '9,2':2, '9,3':2,
+      '10,2':2, '10,3':2,
+      '10,4':1, '10,5':1
+    };
+    for (var gk in tuftAllowed) {
+      if (!tuftAllowed.hasOwnProperty(gk)) continue;
+      if (occupiedMap[gk]) continue;
+      var maxTufts = tuftAllowed[gk];
+      var parts = gk.split(',');
+      var gr = parseInt(parts[0], 10);
+      var gc = parseInt(parts[1], 10);
+      for (var ti = 0; ti < maxTufts; ti++) {
+        // ~70% chance per slot
+        if (tuftRng() > 0.7) continue;
+        var isLarge = tuftRng() < 0.25;
+        var spriteIdx = isLarge
+          ? (3 + Math.floor(tuftRng() * 2))
+          : Math.floor(tuftRng() * 3);
+        var tuftImg = document.createElement('img');
+        tuftImg.src = TUFT_SPRITES[spriteIdx];
+        tuftImg.className = 'fp-grass-tuft';
+        // Inset position within cell to avoid bleeding into neighbors
+        var pad = 0.15;
+        var padBot = (gr === 8) ? 0.55 : (gr === 10) ? 0.45 : pad; // row 8: fence; row 10: cliff below
+        var tx = gc * cellW + (pad + tuftRng() * (1 - 2 * pad)) * cellW;
+        var ty = gr * cellH + (pad + tuftRng() * (1 - pad - padBot)) * cellH;
+        tuftImg.style.left = tx + '%';
+        tuftImg.style.top = ty + '%';
+        if (isLarge) {
+          tuftImg.style.width = '32px';
+          tuftImg.style.height = '32px';
+        }
+        if (tuftRng() < 0.5) tuftImg.style.transform = 'scaleX(-1)';
+        gridEl.appendChild(tuftImg);
+      }
+    }
+
     // Waterfall — always active (not tied to farmhouse level)
     var waterfallEl = document.createElement('div');
     waterfallEl.className = 'fp-anim-waterfall';
