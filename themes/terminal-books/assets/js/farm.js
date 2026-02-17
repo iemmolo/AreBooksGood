@@ -1310,6 +1310,7 @@
 
   // ── Plant seed ──────────────────────────────────────────
   function plantSeed(plotIndex, cropKey) {
+    if (!CROPS[cropKey]) return;
     // Check inventory for non-free crops
     if (!FREE_CROPS[cropKey]) {
       var count = farmState.inventory[cropKey] || 0;
@@ -1857,7 +1858,7 @@
             showSeedFloat(i, cropKey);
           }
 
-          farmState.plots[i] = { crop: null };
+          farmState.plots[i] = { crop: null, wateredAt: null };
         }
       }
     }
@@ -1944,7 +1945,7 @@
         }
       }
 
-      farmState.plots[plotIndex] = { crop: null };
+      farmState.plots[plotIndex] = { crop: null, wateredAt: null };
       saveState();
       updatePlots();
       showJBFloat(plotIndex, sellValue);

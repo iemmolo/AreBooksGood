@@ -207,8 +207,8 @@
           if (recipe) {
             var pool = recipe.output.type === 'raw' ? state.raw : state.processed;
             pool[recipe.output.key] = (pool[recipe.output.key] || 0) + recipe.output.qty;
+            lastEndTime = endTime;
           }
-          lastEndTime = endTime;
           queue.shift();
           changed = true;
         } else {

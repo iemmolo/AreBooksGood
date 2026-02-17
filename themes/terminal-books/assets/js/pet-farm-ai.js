@@ -4,8 +4,6 @@
   // ── Config ──────────────────────────────────────────
   var AI_TICK_MIN = 20000;  // 20s
   var AI_TICK_MAX = 30000;  // 30s
-  var INTERACT_DELAY = 1500; // time pet "tends" the plot
-  var WATER_DELAY = 1200;    // time pet waters
   var IDLE_LOOK_DELAY = 1500; // time pet looks at an element
   var RETURN_DELAY = 500;
 
@@ -15,20 +13,6 @@
     dragon: ['*warms the soil*', 'grow faster!', '*smoke fertilizer*', 'FIRE HARVEST'],
     robot:  ['CROP STATUS: READY', 'harvesting...', 'yield: optimal', 'soil pH: 6.5']
   };
-
-  var WATER_SPEECH = {
-    cat:    ['*splashes water*', '*paws at puddle*', 'wet paws!', '*shakes off water*'],
-    dragon: ['*steam hiss*', 'gentle warmth~', '*breathes mist*', 'grow, little one'],
-    robot:  ['H2O DISPENSED', 'irrigation: active', 'moisture: +10%', 'watering protocol']
-  };
-
-  var DOUBLE_HARVEST_SPEECH = {
-    cat:    'double harvest! *purrs*',
-    dragon: 'DOUBLE FIRE HARVEST!',
-    robot:  'BONUS YIELD DETECTED'
-  };
-
-  var REPLANT_SPEECH = '*plants another*';
 
   // ── Idle interaction speech per target ───────────────
   var IDLE_SPEECH = {
@@ -105,254 +89,8 @@
   function onCancel() {
     cancelled = true;
     busy = false;
-    // Remove indicator classes from all plots
-    var tending = document.querySelectorAll('.farm-plot-pet-tending, .farm-plot-watering');
-    for (var i = 0; i < tending.length; i++) {
-      tending[i].classList.remove('farm-plot-pet-tending');
-      tending[i].classList.remove('farm-plot-watering');
-    }
     var ps = getPetSystem();
     if (ps) ps.setFarming(false, null);
-  }
-
-  // ── Find best plot to harvest ───────────────────────
-  function findReadyPlot() {
-    var farm = getFarmAPI();
-    if (!farm) return null;
-
-    var plots = farm.getPlots();
-    for (var i = 0; i < plots.length; i++) {
-      if (plots[i].stage === 'ready') return plots[i];
-    }
-    return null;
-  }
-
-  // ── Find best plot to water ─────────────────────────
-  function findWaterablePlot() {
-    var farm = getFarmAPI();
-    if (!farm) return null;
-
-    var plots = farm.getPlots();
-    var best = null;
-    for (var i = 0; i < plots.length; i++) {
-      var p = plots[i];
-      if (!p.crop || p.wateredAt) continue;
-      // Only water between 25% and 90% growth
-      if (p.growthPct < 0.25 || p.growthPct > 0.90) continue;
-      if (p.stage === 'ready') continue;
-      // Prefer highest progress
-      if (!best || p.growthPct > best.growthPct) {
-        best = p;
-      }
-    }
-    return best;
-  }
-
-  // ── Walk → Interact → Harvest → Return sequence ────
-  function farmSequence(plot) {
-    var ps = getPetSystem();
-    var farm = getFarmAPI();
-    if (!ps || !farm) { busy = false; return; }
-
-    var state = ps.getState();
-    if (!state) { busy = false; return; }
-
-    cancelled = false;
-    busy = true;
-
-    // 1. Enable farming mode (drag will cancel)
-    ps.setFarming(true, onCancel);
-
-    // 2. Speak a farm line
-    var petId = state.petId;
-    var lines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
-    ps.speak(randomMessage(lines));
-
-    // 3. Get plot DOM position
-    var plotEl = farm.getPlotElement(plot.index);
-    if (!plotEl) { cleanup(); return; }
-
-    var rect = plotEl.getBoundingClientRect();
-    var size = 48; // pet sprite size approx
-    var plotX = rect.left + rect.width / 2 - size / 2;
-    var plotY = rect.top - size;
-
-    // 4. Walk to plot
-    var walked = ps.walkTo(plotX, plotY, function (wasDocked) {
-      if (cancelled) return;
-
-      // 5. Add tending indicator
-      plotEl.classList.add('farm-plot-pet-tending');
-
-      // 6. Wait interaction time, then harvest
-      setTimeout(function () {
-        if (cancelled) return;
-
-        plotEl.classList.remove('farm-plot-pet-tending');
-
-        // Harvest
-        var result = farm.harvest(plot.index);
-        if (result) {
-          farm.showHarvestParticle(plot.index, result.crop);
-          ps.celebrate();
-
-          // Per-pet bonuses
-          applyBonuses(petId, state.level, plot.index, result);
-        }
-
-        // 7. Return after delay
-        setTimeout(function () {
-          if (cancelled) return;
-          ps.returnToPosition(wasDocked);
-          cleanup();
-        }, RETURN_DELAY);
-
-      }, INTERACT_DELAY);
-    });
-
-    if (!walked) {
-      cleanup();
-    }
-  }
-
-  // ── Walk → Water → Return sequence ─────────────────
-  function waterSequence(plot) {
-    var ps = getPetSystem();
-    var farm = getFarmAPI();
-    if (!ps || !farm) { busy = false; return; }
-
-    var state = ps.getState();
-    if (!state) { busy = false; return; }
-
-    cancelled = false;
-    busy = true;
-
-    ps.setFarming(true, onCancel);
-
-    var petId = state.petId;
-    var lines = WATER_SPEECH[petId] || WATER_SPEECH.cat;
-    ps.speak(randomMessage(lines));
-
-    var plotEl = farm.getPlotElement(plot.index);
-    if (!plotEl) { cleanup(); return; }
-
-    var rect = plotEl.getBoundingClientRect();
-    var size = 48;
-    var plotX = rect.left + rect.width / 2 - size / 2;
-    var plotY = rect.top - size;
-
-    var walked = ps.walkTo(plotX, plotY, function (wasDocked) {
-      if (cancelled) return;
-
-      plotEl.classList.add('farm-plot-watering');
-
-      setTimeout(function () {
-        if (cancelled) return;
-
-        plotEl.classList.remove('farm-plot-watering');
-
-        // Apply water boost
-        var watered = farm.water(plot.index);
-        if (watered) {
-          farm.showWaterParticle(plot.index);
-        }
-
-        setTimeout(function () {
-          if (cancelled) return;
-          ps.returnToPosition(wasDocked);
-          cleanup();
-        }, RETURN_DELAY);
-
-      }, WATER_DELAY);
-    });
-
-    if (!walked) {
-      cleanup();
-    }
-  }
-
-  // ── Beamed farm sequence (mini pet walks to plot) ──
-  function beamedFarmSequence(plot) {
-    var ps = getPetSystem();
-    var farm = getFarmAPI();
-    if (!ps || !farm) { busy = false; return; }
-
-    var state = ps.getState();
-    if (!state) { busy = false; return; }
-
-    busy = true;
-    farm.setMiniPetBusy(true);
-
-    var petId = state.petId;
-    var lines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
-    farm.miniPetSpeak(randomMessage(lines));
-
-    // Walk to plot
-    farm.walkMiniPetToPlot(plot.index, function () {
-      // Add tending indicator
-      var plotEl = farm.getPlotElement(plot.index);
-      if (plotEl) plotEl.classList.add('farm-plot-pet-tending');
-
-      setTimeout(function () {
-        if (plotEl) plotEl.classList.remove('farm-plot-pet-tending');
-
-        // Harvest
-        var result = farm.harvest(plot.index);
-        if (result) {
-          farm.showHarvestParticle(plot.index, result.crop);
-          farm.miniPetCelebrate();
-          applyBonuses(petId, state.level, plot.index, result);
-        }
-
-        // Return home after delay
-        setTimeout(function () {
-          farm.returnMiniPetHome(function () {
-            busy = false;
-            farm.setMiniPetBusy(false);
-          });
-        }, RETURN_DELAY);
-
-      }, INTERACT_DELAY);
-    });
-  }
-
-  // ── Beamed water sequence (mini pet walks to plot) ─
-  function beamedWaterSequence(plot) {
-    var ps = getPetSystem();
-    var farm = getFarmAPI();
-    if (!ps || !farm) { busy = false; return; }
-
-    var state = ps.getState();
-    if (!state) { busy = false; return; }
-
-    busy = true;
-    farm.setMiniPetBusy(true);
-
-    var petId = state.petId;
-    var lines = WATER_SPEECH[petId] || WATER_SPEECH.cat;
-    farm.miniPetSpeak(randomMessage(lines));
-
-    farm.walkMiniPetToPlot(plot.index, function () {
-      var plotEl = farm.getPlotElement(plot.index);
-      if (plotEl) plotEl.classList.add('farm-plot-watering');
-
-      setTimeout(function () {
-        if (plotEl) plotEl.classList.remove('farm-plot-watering');
-
-        var watered = farm.water(plot.index);
-        if (watered) {
-          farm.showWaterParticle(plot.index);
-        }
-
-        setTimeout(function () {
-          farm.returnMiniPetHome(function () {
-            busy = false;
-            farm.setMiniPetBusy(false);
-          });
-        }, RETURN_DELAY);
-
-      }, WATER_DELAY);
-    });
   }
 
   // ── Beamed idle interaction ───────────────────────
@@ -479,45 +217,6 @@
     if (ps) ps.setFarming(false, null);
   }
 
-  // ── Per-pet bonuses ─────────────────────────────────
-  function applyBonuses(petId, level, plotIndex, harvestResult) {
-    var farm = getFarmAPI();
-    var ps = getPetSystem();
-    if (!farm || !ps) return;
-
-    // Level 3 bonus: 8% chance of double harvest
-    if (level >= 3 && Math.random() < 0.08) {
-      var extra = harvestResult.amount;
-      if (window.JackBucks) {
-        window.JackBucks.add(extra);
-      }
-      var speech = DOUBLE_HARVEST_SPEECH[petId] || 'double harvest!';
-      setTimeout(function () { ps.speak(speech); }, 600);
-    }
-
-    // Cat "Green Paw": 15% chance auto-replant
-    if (petId === 'cat' && Math.random() < 0.15) {
-      setTimeout(function () {
-        var planted = farm.plant(plotIndex, harvestResult.crop);
-        if (planted) {
-          ps.speak(REPLANT_SPEECH);
-        }
-      }, 400);
-    }
-
-    // Farmhouse level 5 bonus: 5% chance to drop a random seed
-    if (farm.getFarmhouseLevel && farm.getFarmhouseLevel() >= 5 && Math.random() < 0.05) {
-      var seedOptions = ['tomato', 'corn', 'pumpkin', 'golden_apple', 'crystal_herb', 'dragon_fruit'];
-      var dropped = seedOptions[Math.floor(Math.random() * seedOptions.length)];
-      if (farm.addSeeds) {
-        farm.addSeeds(dropped, 1);
-        setTimeout(function () {
-          ps.speak('found a ' + dropped + ' seed!');
-        }, 800);
-      }
-    }
-  }
-
   // ── Dragon "Warm Soil" bonus ────────────────────────
   function applyDragonBonus() {
     var ps = getPetSystem();
@@ -529,32 +228,6 @@
       farm.setGrowTimeMultiplier(0.9);
     } else {
       farm.setGrowTimeMultiplier(1);
-    }
-  }
-
-  // ── Robot "Auto-Harvest" on page load ───────────────
-  function robotAutoHarvest() {
-    var ps = getPetSystem();
-    var farm = getFarmAPI();
-    if (!ps || !farm) return;
-
-    var state = ps.getState();
-    if (!state || state.petId !== 'robot') return;
-
-    var plots = farm.getPlots();
-    var harvested = 0;
-    for (var i = 0; i < plots.length; i++) {
-      if (plots[i].stage === 'ready') {
-        var result = farm.harvest(plots[i].index);
-        if (result) {
-          farm.showHarvestParticle(plots[i].index, result.crop);
-          harvested++;
-        }
-      }
-    }
-
-    if (harvested > 0) {
-      ps.speak('auto-harvested ' + harvested + ' crop' + (harvested > 1 ? 's' : ''));
     }
   }
 
@@ -652,9 +325,6 @@
 
     // Apply dragon bonus on load
     applyDragonBonus();
-
-    // Robot auto-harvest disabled (crops managed via farm page)
-    // robotAutoHarvest();
 
     // Wrap reload for pet switches
     wrapReload();
