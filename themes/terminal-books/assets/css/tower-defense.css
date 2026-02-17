@@ -597,11 +597,11 @@
   cursor: pointer;
   flex: 1 1 0;
   min-width: 0;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 .td-tower-btn:hover {
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .td-tower-btn-selected {
@@ -612,8 +612,12 @@
 }
 
 .td-tower-btn-disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   cursor: not-allowed;
+}
+
+.td-tower-btn-disabled .td-tower-cost {
+  color: #e55;
 }
 
 .td-tower-btn-locked {
