@@ -38,9 +38,9 @@
     { key: 'sheepPen',    name: 'Sheep Pen',     row: 5, col: 4, rowSpan: 2, colSpan: 2, type: 'gathering' },
     // Row 7: empty gap
     { key: 'lumberYard',  name: 'Lumber Yard',   row: 8,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'quarry',      name: 'Quarry',        row: 8,  col: 1, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'mine',        name: 'Mine',          row: 8,  col: 2, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'deepMine',    name: 'Deep Mine',     row: 8,  col: 3, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'quarry',      name: 'Quarry',        row: 12, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'mine',        name: 'Mine',          row: 12, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'deepMine',    name: 'Deep Mine',     row: 13, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
     { key: 'oldGrowth',   name: 'Old Growth',    row: 8,  col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
     // Row 9: empty gap
     { key: 'mill',        name: 'Mill',          row: 10, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
@@ -51,7 +51,6 @@
     { key: 'loom',        name: 'Loom',          row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'smokehouse',  name: 'Smokehouse',    row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
-    // Row 12: empty gap
     { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
   ];
 

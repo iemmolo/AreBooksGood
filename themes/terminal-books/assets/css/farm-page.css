@@ -811,6 +811,9 @@
   z-index: 1;
   pointer-events: none;
   animation: fp-anim-waterfall 0.8s steps(4) infinite;
+  /* Clip to only the centre waterfall column (grass col 5, rows 23-26).
+     Hides edge tiles (cliff flicker) and static water (pond number flicker). */
+  clip-path: inset(0 40% 42.86% 50%);
 }
 
 @keyframes fp-anim-waterfall {
