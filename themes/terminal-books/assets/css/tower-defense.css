@@ -1,0 +1,209 @@
+/* Tower Defense — td- prefix */
+
+#td-game-area {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── HUD ─────────────────────────────────────────── */
+#td-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 6px 12px;
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--background) 80%, var(--accent) 20%);
+  border: 1px solid var(--accent);
+  border-bottom: none;
+  box-sizing: border-box;
+}
+
+#td-hud span {
+  white-space: nowrap;
+}
+
+#td-lives {
+  color: #e55;
+}
+
+#td-jb {
+  color: #ffd700;
+}
+
+/* ── Canvas wrapper ──────────────────────────────── */
+#td-canvas-wrap {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--accent);
+  box-sizing: border-box;
+  background: var(--background);
+}
+
+#td-canvas {
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+}
+
+/* ── Overlays ────────────────────────────────────── */
+.td-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+  z-index: 10;
+}
+
+.td-hidden {
+  display: none !important;
+}
+
+.td-overlay-content {
+  text-align: center;
+  padding: 24px;
+  color: var(--foreground);
+  font-family: monospace;
+}
+
+.td-title {
+  font-size: 28px;
+  margin: 0 0 8px;
+  color: var(--accent);
+}
+
+.td-subtitle {
+  font-size: 14px;
+  margin: 0 0 16px;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.td-instructions {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.td-instructions p {
+  margin: 2px 0;
+}
+
+.td-final-stats {
+  font-size: 15px;
+  margin-bottom: 16px;
+  line-height: 1.8;
+}
+
+.td-final-stats span {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.td-stats-block {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.td-btn {
+  font-family: monospace;
+  font-size: 16px;
+  padding: 10px 28px;
+  background: var(--accent);
+  color: var(--background);
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.td-btn:hover {
+  opacity: 0.85;
+}
+
+.td-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Tower bar ───────────────────────────────────── */
+#td-tower-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--background) 80%, var(--accent) 20%);
+  border: 1px solid var(--accent);
+  border-top: none;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+
+.td-tower-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--background) 60%, var(--accent) 10%);
+  border: 1px solid var(--accent);
+  color: var(--foreground);
+  font-family: monospace;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 70px;
+  opacity: 0.6;
+}
+
+.td-tower-btn:hover {
+  opacity: 0.9;
+}
+
+.td-tower-btn-selected {
+  opacity: 1;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--background) 40%, var(--accent) 25%);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.td-tower-btn-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.td-tower-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.td-tower-name {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.td-tower-cost {
+  font-size: 10px;
+  color: #ffd700;
+  margin-top: 1px;
+}
+
+.td-wave-start-btn {
+  margin-left: auto;
+  font-size: 13px;
+  padding: 8px 16px;
+}

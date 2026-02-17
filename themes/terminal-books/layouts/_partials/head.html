@@ -72,6 +72,12 @@
   <link rel="stylesheet" href="{{ $dj.RelPermalink }}">
 {{- end }}
 
+{{/* Tower Defense CSS */}}
+{{ if eq .Type "tower-defense" -}}
+  {{- $td := resources.Get "css/tower-defense.css" | minify -}}
+  <link rel="stylesheet" href="{{ $td.RelPermalink }}">
+{{- end }}
+
 {{/* Trebuchet CSS */}}
 {{ if eq .Type "trebuchet" -}}
   {{- $tb := resources.Get "css/trebuchet.css" | minify -}}

@@ -1,5 +1,64 @@
 # Farm Page + Tower Defense - Final Design Plan
 
+---
+
+## Tower Defense Progress Checklist
+
+### Phase 1a: Core Skeleton
+- [x] Content page + layout template + CSS + JS files created
+- [x] Conditional asset loading wired in head.html / baseof.html
+- [x] Game tile added to games hub
+- [x] Canvas rendering: responsive, DPR-aware, theme-reactive
+- [x] 16x12 grid with S-curve path rendered
+- [x] Arrow tower (1 type): placement, ghost preview, targeting, firing
+- [x] Slime enemy (1 type): spawn, path-follow, HP bar, death
+- [x] Projectile system (dots travel to target, apply damage)
+- [x] Particle system (damage numbers, death burst, JB float)
+- [x] Wave system: scaling HP/count, 0.8s spawn stagger, JB rewards
+- [x] Lives system (20 starting, -1 per leak)
+- [x] HUD (DOM): wave, lives, JB, enemy count
+- [x] Start overlay + game over overlay + stats persistence
+- [x] JackBucks integration (earnings → real JB balance)
+- [x] Theme switching updates canvas colors immediately
+
+### Phase 1b: Expand Core
+- [ ] Cannon tower (splash damage)
+- [ ] Frost tower (slow effect)
+- [ ] Skeleton enemy, Goblin enemy
+- [ ] Tower upgrade system (Lv1→2→3)
+- [ ] Tower selection/inspection + sell
+- [ ] Boss wave every 10 waves
+- [ ] Wave scaling tuning
+
+### Phase 1c: Pet Hero
+- [ ] Pet sprite on canvas
+- [ ] Click to reposition pet
+- [ ] Auto-attack nearest enemy
+- [ ] Q ability (burst damage) + W ability (heal lives)
+- [ ] Ability buttons + keyboard shortcuts + cooldown timers
+
+### Phase 2: Farm-TD Integration
+- [ ] td-unlocks.js global unlock tracker
+- [ ] Blueprint gating retrofit on farm buildings
+- [ ] Material tower upgrades (Lv2-3 require processed resources)
+- [ ] New material-gated towers (Fire, Wall, Sniper, Gold Mine, Lightning)
+- [ ] Consumables (Bread, Smoked Fish)
+
+### Phase 3: Pet Heroes (Full Differentiation)
+- [ ] Cat hero (fast melee, Pounce, Nine Lives)
+- [ ] Dragon hero (ranged AOE, Inferno, Flame Shield)
+- [ ] Robot hero (long-range laser, EMP Blast, Shield Generator)
+
+### Phase 4: Polish & Expansion
+- [ ] Sprite assets
+- [ ] More enemies + multi-phase boss
+- [ ] Tower targeting options + speed controls
+- [ ] Additional maps
+- [ ] Mobile touch controls
+- [ ] Sound effects
+
+---
+
 ## Context
 
 Expand the existing farming system into a dedicated interactive farm page (idle game) and add a tower defense game. The two systems feed each other: farm resources upgrade TD towers, TD wave rewards unlock farm buildings. Pets serve as hero units in TD.

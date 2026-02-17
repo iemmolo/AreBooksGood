@@ -1,0 +1,47 @@
+{{ define "main" }}
+<div id="td-game-area">
+  <div id="td-hud">
+    <span id="td-wave">Wave: 1</span>
+    <span id="td-lives">&#9829; 20</span>
+    <span id="td-jb">JB: 0</span>
+    <span id="td-enemies">0/0</span>
+  </div>
+  <div id="td-canvas-wrap">
+    <canvas id="td-canvas"></canvas>
+    <div id="td-start-overlay" class="td-overlay">
+      <div class="td-overlay-content">
+        <h2 class="td-title">Tower Defense</h2>
+        <p class="td-subtitle">Place towers to defend the path.<br>Earn JackBucks for each wave survived.</p>
+        <div class="td-instructions">
+          <p>1. Select a tower from the bar below</p>
+          <p>2. Click a grid cell to place it</p>
+          <p>3. Press Start Wave to begin</p>
+        </div>
+        <div id="td-start-stats" class="td-stats-block"></div>
+        <button id="td-play-btn" class="td-btn">Start Game</button>
+      </div>
+    </div>
+    <div id="td-gameover-overlay" class="td-overlay td-hidden">
+      <div class="td-overlay-content">
+        <h2 class="td-title">Game Over</h2>
+        <div class="td-final-stats">
+          <p>Reached Wave <span id="td-final-wave">1</span></p>
+          <p>Enemies Killed: <span id="td-final-kills">0</span></p>
+          <p>Towers Built: <span id="td-final-towers">0</span></p>
+          <p>JB Earned: <span id="td-final-jb">0</span></p>
+        </div>
+        <div id="td-gameover-stats" class="td-stats-block"></div>
+        <button id="td-retry-btn" class="td-btn">Play Again</button>
+      </div>
+    </div>
+  </div>
+  <div id="td-tower-bar">
+    <button class="td-tower-btn td-tower-btn-selected" data-tower="arrow">
+      <span class="td-tower-icon">A</span>
+      <span class="td-tower-name">Arrow</span>
+      <span class="td-tower-cost">10 JB</span>
+    </button>
+    <button id="td-wave-btn" class="td-btn td-wave-start-btn" disabled>Start Wave</button>
+  </div>
+</div>
+{{ end }}

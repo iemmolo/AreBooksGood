@@ -111,6 +111,15 @@ AreBooksGood - Improvement TODO
 - [ ] Build solitaire game
 - [ ] Build spider solitaire game
 
+## Tower Defense (Phase 1a shipped, see FARM-TD-PLAN.md)
+
+- [x] Core skeleton: canvas, grid, path, 1 tower (arrow), 1 enemy (slime), waves, HUD, overlays, stats, JB integration
+- [ ] Phase 1b: Cannon + Frost towers, Skeleton + Goblin enemies, tower upgrades, boss waves, sell tower
+- [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
+- [ ] Phase 2: Farm-TD integration (blueprint gating, material upgrades, consumables)
+- [ ] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
+- [ ] Phase 4: Sprites, more enemies/maps, mobile touch, sound
+
 ## Future Ideas
 
 - [x] Add pet sprite previews to casino tile cards
