@@ -352,7 +352,10 @@
       var iconEl = document.createElement('div');
       iconEl.className = 'fp-cell-icon';
       if (!built) {
-        iconEl.textContent = '\uD83D\uDD12'; // lock
+        iconEl.textContent = '';
+        var lockImg = createFarmImg(FARM_IMG + '/ui/lock.png', 'Locked');
+        lockImg.className = 'fp-lock-img';
+        cell.appendChild(lockImg);
       } else {
         iconEl.textContent = ICONS[item.key] || '';
 
@@ -373,11 +376,13 @@
       }
       cell.appendChild(iconEl);
 
-      // Label
-      var labelEl = document.createElement('div');
-      labelEl.className = 'fp-cell-label';
-      labelEl.textContent = item.name;
-      cell.appendChild(labelEl);
+      // Label (skip for locked cells — lock icon is sufficient)
+      if (built) {
+        var labelEl = document.createElement('div');
+        labelEl.className = 'fp-cell-label';
+        labelEl.textContent = item.name;
+        cell.appendChild(labelEl);
+      }
 
       // Processing indicator
       if (built && item.type === 'processing' && window.FarmResources) {
@@ -407,9 +412,12 @@
           // Glow ramp class for current stage
           cell.classList.add('fp-cell-crop-' + cropInfo.stage);
         } else {
-          // Empty plot styling
+          // Empty plot styling — show soil tile
           cell.classList.add('fp-cell-crop-empty');
-          iconEl.textContent = '+';
+          iconEl.textContent = '';
+          var soilImg = createFarmImg(FARM_IMG + '/ground/soil.png', 'Empty plot');
+          soilImg.className = 'fp-soil-img';
+          cell.appendChild(soilImg);
           prevStages[plotIdx] = null;
         }
       }

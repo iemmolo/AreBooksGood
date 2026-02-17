@@ -105,14 +105,8 @@
 
 /* ── Type-specific visuals (unbuilt only) ────────────── */
 
-.fp-cell-farmhouse:not(.fp-cell-built) {
-  border-color: var(--accent);
-  border-width: 2px;
-}
-
 .fp-cell-crop:not(.fp-cell-built) {
   background: none;
-  border-color: color-mix(in srgb, #8B4513 30%, transparent);
 }
 
 .fp-cell-crop.fp-cell-built {
@@ -121,7 +115,6 @@
 
 .fp-cell-pond:not(.fp-cell-built) {
   background: color-mix(in srgb, #4a90d9 20%, transparent);
-  border-color: color-mix(in srgb, #4a90d9 40%, transparent);
 }
 
 .fp-cell-pond.fp-cell-built {
@@ -207,27 +200,61 @@
 
 .fp-cell-crop-empty {
   background: none;
-  border-style: dashed;
-  border-color: color-mix(in srgb, #8B4513 30%, transparent);
+  border: 0;
+  cursor: pointer;
 }
 
-.fp-cell-crop-empty .fp-cell-icon {
-  color: color-mix(in srgb, var(--foreground) 30%, transparent);
-  font-size: 0.8rem;
+.fp-soil-img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 1;
+  pointer-events: none;
+  /* Reset global img styles */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  max-width: none;
 }
 
 .fp-cell-locked {
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--foreground) 15%, transparent);
-  opacity: 0.5;
+  border: 0;
+  cursor: pointer;
 }
 
-.fp-cell-locked .fp-cell-icon {
-  opacity: 0.4;
+.fp-cell-locked::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 2px;
+  z-index: 1;
 }
 
-.fp-cell-locked .fp-cell-label {
-  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+.fp-lock-img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 2;
+  opacity: 0.85;
+  pointer-events: none;
+  /* Reset global img styles */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  max-width: none;
 }
 
 .fp-cell-empty {
@@ -905,8 +932,14 @@
     font-size: 0.4rem;
   }
 
-  .fp-cell-crop-empty .fp-cell-icon {
-    font-size: 0.65rem;
+  .fp-lock-img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .fp-soil-img {
+    width: 36px;
+    height: 36px;
   }
 
   .fp-resource-row {
