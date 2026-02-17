@@ -177,9 +177,16 @@
 /* ── Start screen buttons ──────────────────────── */
 .td-start-buttons {
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 12px;
+  gap: 6px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--background) 80%, var(--accent) 20%);
+  border: 1px solid var(--accent);
+  border-top: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+.td-start-buttons .td-btn {
+  flex: 1;
 }
 
 .td-btn-resume {
@@ -326,10 +333,6 @@
   cursor: not-allowed;
 }
 
-.td-start-content .td-btn {
-  display: block;
-  margin: 12px auto 0;
-}
 
 /* ── Tab bar ─────────────────────────────────────── */
 .td-tab-bar {

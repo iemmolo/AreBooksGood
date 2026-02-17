@@ -342,6 +342,7 @@
   var hudEnemies = document.getElementById('td-enemies');
 
   var startOverlay = document.getElementById('td-start-overlay');
+  var startButtonsEl = document.getElementById('td-start-buttons');
   var gameoverOverlay = document.getElementById('td-gameover-overlay');
   var playBtn = document.getElementById('td-play-btn');
   var retryBtn = document.getElementById('td-retry-btn');
@@ -1479,7 +1480,9 @@
 
     gameState = 'building';
     startOverlay.classList.add('td-hidden');
+    startButtonsEl.classList.add('td-hidden');
     gameoverOverlay.classList.add('td-hidden');
+    towerBarEl.classList.remove('td-hidden');
 
     renderTowerBar();
     renderCrateBar();
@@ -2158,7 +2161,9 @@
 
     gameState = 'building';
     startOverlay.classList.add('td-hidden');
+    startButtonsEl.classList.add('td-hidden');
     gameoverOverlay.classList.add('td-hidden');
+    towerBarEl.classList.remove('td-hidden');
 
     renderTowerBar();
     renderCrateBar();
@@ -2209,6 +2214,8 @@
   function showStartScreen() {
     gameState = 'idle';
     startOverlay.classList.remove('td-hidden');
+    startButtonsEl.classList.remove('td-hidden');
+    towerBarEl.classList.add('td-hidden');
     gameoverOverlay.classList.add('td-hidden');
     investedSB = 0;
     selectedTower = 'arrow';
