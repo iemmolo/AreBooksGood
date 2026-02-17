@@ -607,6 +607,28 @@
       try { localStorage.setItem(ANIMAL_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* quota */ }
     }
 
+    // Animal speech bubbles — random sounds during idle
+    var ANIMAL_SOUNDS = {
+      chicken: ['cluck!', 'bawk bawk!', 'cluck cluck~', 'bawk!', 'bok bok!', 'cluck?'],
+      cow: ['moo~', 'mooo!', 'moo moo!', 'moooo~', '*chewing*', 'moo?'],
+      sheep: ['baa~', 'baaa!', 'baa baa!', 'baaah~', '*munching*', 'baa?']
+    };
+
+    function showAnimalSpeech(el, animalType) {
+      // Don't stack bubbles
+      var existing = el.querySelector('.fp-animal-speech');
+      if (existing) return;
+      var sounds = ANIMAL_SOUNDS[animalType];
+      if (!sounds) return;
+      var bubble = document.createElement('div');
+      bubble.className = 'fp-animal-speech';
+      bubble.textContent = sounds[Math.floor(Math.random() * sounds.length)];
+      el.appendChild(bubble);
+      setTimeout(function () {
+        if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
+      }, 2000);
+    }
+
     // Direction row Y offsets (spritesheet rows: 0=down, 1=left, 2=right, 3=up)
     // Chicken 2x: 32px per row. Cow/Sheep 2x: 64px per row.
     var ANIMAL_INFO = {
@@ -723,6 +745,11 @@
           if (!all[animalType]) all[animalType] = [];
           all[animalType][idx] = { x: targetX, y: targetY, dir: dir };
           saveAnimalPositions(all);
+
+          // Random chance to speak during idle (~30%)
+          if (Math.random() < 0.3) {
+            setTimeout(function () { showAnimalSpeech(el, animalType); }, 500);
+          }
 
           var nextIdle = 3000 + Math.floor(Math.random() * 5000); // 3-8s idle
           setTimeout(function () { doWander(); }, nextIdle);

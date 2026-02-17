@@ -638,6 +638,30 @@
   100% { transform: scale(1); }
 }
 
+/* ── Farm animal speech bubbles ──────────────────────── */
+
+.fp-animal-speech {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--foreground);
+  padding: 1px 5px;
+  font-size: 8px;
+  font-family: inherit;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 6;
+  animation: fp-animal-speech-pop 0.3s ease-out;
+}
+
+@keyframes fp-animal-speech-pop {
+  0% { opacity: 0; transform: translateX(-50%) translateY(4px) scale(0.8); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
 /* ── Farm grid pet ───────────────────────────────────── */
 
 .fp-grid-pet {
