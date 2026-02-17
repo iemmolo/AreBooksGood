@@ -129,7 +129,21 @@ AreBooksGood - Improvement TODO
 - [x] Second map — new path layout for replayability (3 maps: Valley, Switchback, Spiral)
 - [x] Endless mode — waves keep scaling past 30, high-score tracking
 - [x] Difficulty selection — easy/normal/hard (starting lives, enemy scaling, reward multiplier)
-- [ ] Tower special abilities — tied to Arcane Mastery armory upgrade
+- [x] x2 speed toggle during gameplay
+- [x] Tower special abilities — tied to Arcane Mastery armory upgrade (Volley, Mega Blast, Blizzard, Rally, Inferno, Headshot, Payday, Storm)
+- [x] Per-tower targeting mode — Closest/First/Weakest/Strongest cycle in inspect panel
+- [x] Tower affordability contrast — brighter affordable, red cost when broke
+- [x] Click outside deselect — clicking outside play area clears selection during gameplay
+- [x] TD shortcut tile on farm bar — sword icon links to /td/#td-game-area
+- [ ] Wave preview — show upcoming enemies before starting wave
+- [ ] Tower range preview on hover in tower bar (before placing)
+- [ ] Kill counter per tower in inspect panel
+- [ ] Hotkeys for tower selection (1-8 keys)
+- [ ] Auto-start waves toggle
+- [ ] Mobile touch support — tap to place/inspect, touch-friendly tower bar and UI
+- [ ] New enemy types — healer, splitter, shield
+- [ ] Tower synergies — bonus effects when certain towers are adjacent
+- [ ] Challenge modes — "Arrow only", "No upgrades", "Speed run"
 - [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
 - [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
 - [ ] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)

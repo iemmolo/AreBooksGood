@@ -949,8 +949,8 @@
     }
   }
 
-  var TARGET_MODES = ['closest', 'first', 'weakest', 'strongest'];
-  var TARGET_MODE_LABELS = { closest: 'Closest', first: 'First', weakest: 'Weakest', strongest: 'Strongest' };
+  var TARGET_MODES = ['closest', 'first', 'last', 'weakest', 'strongest'];
+  var TARGET_MODE_LABELS = { closest: 'Closest', first: 'First', last: 'Last', weakest: 'Weakest', strongest: 'Strongest' };
 
   function findTarget(tower) {
     var def = TOWER_DEFS[tower.type];
@@ -959,7 +959,7 @@
     var rangePx = getEffectiveRangePx(tower);
     var mode = tower.targetMode || 'closest';
     var best = null;
-    var bestVal = mode === 'weakest' ? Infinity : -Infinity;
+    var bestVal = null;
 
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
@@ -972,16 +972,25 @@
 
       var val;
       if (mode === 'closest') {
-        val = -d; // higher = better (closest)
+        val = d;
       } else if (mode === 'first') {
-        val = e.dist; // higher dist = further along path
+        val = e.dist;
+      } else if (mode === 'last') {
+        val = e.dist;
       } else if (mode === 'weakest') {
-        val = -e.hp; // higher = better (lowest HP)
+        val = e.hp;
       } else { // strongest
         val = e.hp;
       }
 
-      if (val > bestVal) {
+      var isBetter = bestVal === null ||
+        (mode === 'closest' && val < bestVal) ||
+        (mode === 'first' && val > bestVal) ||
+        (mode === 'last' && val < bestVal) ||
+        (mode === 'weakest' && val < bestVal) ||
+        (mode === 'strongest' && val > bestVal);
+
+      if (isBetter) {
         bestVal = val;
         best = e;
       }
