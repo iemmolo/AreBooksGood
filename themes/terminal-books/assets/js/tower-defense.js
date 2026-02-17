@@ -720,15 +720,19 @@
 
   function getEffectiveDmg(tower) {
     var def = TOWER_DEFS[tower.type];
-    var lvlMult = tower.level === 2 ? 1.4 : (tower.level >= 3 ? 1.8 : 1);
+    var lvlMult = tower.level >= 4 ? 2.3 : (tower.level === 3 ? 1.8 : (tower.level === 2 ? 1.4 : 1));
     return Math.round(def.dmg * mods.dmgMult * lvlMult);
   }
 
   function getEffectiveRangePx(tower) {
     var def = TOWER_DEFS[tower.type];
     var wtBonus = getWatchtowerBonus(tower);
-    var lvlMult = tower.level === 2 ? 1.1 : (tower.level >= 3 ? 1.2 : 1);
+    var lvlMult = tower.level >= 4 ? 1.3 : (tower.level === 3 ? 1.2 : (tower.level === 2 ? 1.1 : 1));
     return def.range * TILE_SIZE * mods.rangeMult * lvlMult * (1 + wtBonus);
+  }
+
+  function getMaxTowerLevel() {
+    return mods.towerLv4 ? 4 : 3;
   }
 
   function getUpgradeCostForTower(tower) {
@@ -736,6 +740,7 @@
     var baseCost = getEffectiveCost(def);
     if (tower.level === 1) return Math.round(baseCost * 1.5);
     if (tower.level === 2) return Math.round(baseCost * 2.5);
+    if (tower.level === 3 && mods.towerLv4) return Math.round(baseCost * 4);
     return null; // max level
   }
 
@@ -745,11 +750,12 @@
     var total = baseCost;
     if (tower.level >= 2) total += Math.round(baseCost * 1.5);
     if (tower.level >= 3) total += Math.round(baseCost * 2.5);
+    if (tower.level >= 4) total += Math.round(baseCost * 4);
     return total;
   }
 
   function upgradeTower(tower) {
-    if (tower.level >= 3) return false;
+    if (tower.level >= getMaxTowerLevel()) return false;
     var cost = getUpgradeCostForTower(tower);
     if (cost === null || sb < cost) return false;
     sb -= cost;
@@ -1962,7 +1968,7 @@
     html += '</div>';
 
     html += '<div class="td-inspect-actions">';
-    if (t.level < 3 && upgradeCost !== null) {
+    if (t.level < getMaxTowerLevel() && upgradeCost !== null) {
       var canUpgrade = sb >= upgradeCost;
       html += '<button class="td-inspect-btn td-inspect-upgrade" id="td-inspect-upgrade-btn"' +
         (canUpgrade ? '' : ' disabled') + '>Upgrade Lv' + (t.level + 1) + ' (' + upgradeCost + ' SB)</button>';
