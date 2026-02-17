@@ -33,6 +33,15 @@
   </ul>
 </nav>
 {{ end }}
+{{ if eq .Section "farm" }}
+<nav class="farm-sub-nav">
+  <ul class="farm-sub-nav-links">
+    <li><a href="{{ "farm/game/" | relURL }}"{{ if eq .RelPermalink "/farm/game/" }} class="active"{{ end }}>Farm</a></li>
+    <li><a href="{{ "farm/tower-defense/" | relURL }}"{{ if eq .RelPermalink "/farm/tower-defense/" }} class="active"{{ end }}>Tower Defense</a></li>
+    <li><a href="{{ "shops/" | relURL }}"{{ if eq .RelPermalink "/shops/" }} class="active"{{ end }}>Shops</a></li>
+  </ul>
+</nav>
+{{ end }}
 {{ if eq .Section "games" }}
 <nav class="games-sub-nav">
   <ul class="games-sub-nav-links">
@@ -45,7 +54,6 @@
     <li><a href="{{ "games/sudoku/" | relURL }}"{{ if eq .RelPermalink "/games/sudoku/" }} class="active"{{ end }}>Sudoku</a></li>
     <li><a href="{{ "games/trebuchet/" | relURL }}"{{ if eq .RelPermalink "/games/trebuchet/" }} class="active"{{ end }}>Trebuchet</a></li>
     <li><a href="{{ "games/doodle-jump/" | relURL }}"{{ if eq .RelPermalink "/games/doodle-jump/" }} class="active"{{ end }}>Doodle Jump</a></li>
-    <li><a href="{{ "games/farm/" | relURL }}"{{ if eq .RelPermalink "/games/farm/" }} class="active"{{ end }}>Farm</a></li>
   </ul>
 </nav>
 {{ end }}

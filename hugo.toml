@@ -26,17 +26,13 @@ theme = 'terminal-books'
     pageRef = '/chess'
     weight = 30
   [[menus.main]]
-    name = 'Games'
-    pageRef = '/games'
+    name = 'Farm'
+    pageRef = '/farm'
     weight = 35
   [[menus.main]]
-    name = 'Shops'
-    pageRef = '/shops'
-    weight = 40
-  [[menus.main]]
-    name = 'Pets'
-    pageRef = '/shops/pet-shop'
-    weight = 45
+    name = 'Games'
+    pageRef = '/games'
+    weight = 36
   [[menus.main]]
     name = 'About'
     pageRef = '/about'

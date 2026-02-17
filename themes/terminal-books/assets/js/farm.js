@@ -1177,7 +1177,7 @@
       if (grid) {
         grid.scrollIntoView({ behavior: 'smooth' });
       } else {
-        window.location.href = '/games/farm/#fp-grid';
+        window.location.href = '/farm/game/#fp-grid';
       }
     });
 

@@ -524,6 +524,44 @@ a.site-title {
 }
 
 /* ============================================
+   Farm Sub-Nav
+   ============================================ */
+.farm-sub-nav {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.farm-sub-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.farm-sub-nav-links li {
+  padding: 0;
+  margin: 0;
+}
+
+.farm-sub-nav-links li::marker {
+  content: none;
+}
+
+.farm-sub-nav-links a {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.farm-sub-nav-links a:hover,
+.farm-sub-nav-links a.active {
+  color: var(--accent);
+}
+
+/* ============================================
    Games Sub-Nav
    ============================================ */
 .games-sub-nav {
@@ -726,6 +764,7 @@ a.site-title {
   }
 
   .chess-sub-nav-links,
+  .farm-sub-nav-links,
   .games-sub-nav-links,
   .shops-sub-nav-links {
     flex-wrap: wrap;
