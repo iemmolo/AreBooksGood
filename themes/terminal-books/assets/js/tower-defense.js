@@ -1538,7 +1538,7 @@
   function updateHUD() {
     if (hudWave) hudWave.textContent = 'Wave: ' + (wave || '\u2014');
     if (hudLives) hudLives.textContent = '\u2665 ' + lives;
-    if (hudSB) hudSB.textContent = 'SB: ' + sb;
+    if (hudSB) hudSB.textContent = 'SB: ' + (gameState === 'idle' ? '\u2014' : sb);
     if (hudEnemies) {
       var alive = 0;
       for (var i = 0; i < enemies.length; i++) {
@@ -1606,6 +1606,8 @@
       btn.addEventListener('click', (function (k) {
         return function () {
           if (!isTowerUnlocked(k)) return;
+          var def = TOWER_DEFS[k];
+          if (def && sb < getEffectiveCost(def)) return;
           placingCaltrops = false;
           var all = towerBarEl.querySelectorAll('.td-tower-btn');
           // Toggle: clicking selected tower deselects it
