@@ -1599,6 +1599,28 @@
     pctRow.textContent = pctText;
     popup.appendChild(pctRow);
 
+    // Fertilize button when growing (once per crop)
+    if (cropInfo.stage !== 'ready' && !cropInfo.fertilized && window.FarmAPI && window.FarmAPI.useFertilizer) {
+      var upgrades = window.FarmAPI.getUpgrades();
+      if (upgrades.fertilizer > 0) {
+        var fertBtn = document.createElement('button');
+        fertBtn.className = 'fp-popup-btn';
+        fertBtn.type = 'button';
+        fertBtn.textContent = 'Fertilize (' + upgrades.fertilizer + ')';
+        fertBtn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          var used = window.FarmAPI.useFertilizer(plotIdx);
+          if (used) {
+            var cellEl = gridEl.querySelector('[data-key="' + item.key + '"]');
+            showFpFertilizerFloat(cellEl);
+          }
+          closeStationPopup();
+          renderGrid();
+        });
+        popup.appendChild(fertBtn);
+      }
+    }
+
     // Harvest button when ready
     if (cropInfo.stage === 'ready' && window.FarmAPI && window.FarmAPI.harvest) {
       var harvestBtn = document.createElement('button');
@@ -1627,6 +1649,20 @@
     floatEl.className = 'fp-jb-float';
     floatEl.textContent = '+' + amount + ' JB';
     floatEl.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+    floatEl.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(floatEl);
+    setTimeout(function () {
+      if (floatEl.parentNode) floatEl.parentNode.removeChild(floatEl);
+    }, 1000);
+  }
+
+  function showFpFertilizerFloat(cellEl) {
+    if (!cellEl) return;
+    var rect = cellEl.getBoundingClientRect();
+    var floatEl = document.createElement('div');
+    floatEl.className = 'fp-resource-float';
+    floatEl.textContent = '\uD83C\uDF3F';
+    floatEl.style.left = (rect.left + rect.width / 2 - 10) + 'px';
     floatEl.style.top = (rect.top - 10) + 'px';
     document.body.appendChild(floatEl);
     setTimeout(function () {
@@ -2195,12 +2231,13 @@
           result = window.FarmAPI.harvest(plotIndex);
         }
 
+        renderGrid();
+
         if (result) {
-          showFpJBFloat(cellEl, result.amount);
+          var freshCellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
+          showFpJBFloat(freshCellEl, result.amount);
           fpApplyBonuses(petType, petLevel, plotIndex, result);
         }
-
-        renderGrid();
 
         setTimeout(function () {
           movePetToCell('farmhouse', false);
@@ -2234,7 +2271,8 @@
           window.FarmAPI.water(plotIndex);
         }
 
-        showFpWaterFloat(cellEl);
+        var freshCellEl = gridEl.querySelector('[data-key="' + cellKey + '"]');
+        showFpWaterFloat(freshCellEl || cellEl);
 
         setTimeout(function () {
           movePetToCell('farmhouse', false);

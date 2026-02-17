@@ -1379,9 +1379,11 @@
 
   // ── Fertilizer ─────────────────────────────────────────
   function useFertilizer(plotIndex) {
+    if (plotIndex < 0 || plotIndex >= farmState.plots.length) return false;
     if (!farmState.upgrades || farmState.upgrades.fertilizer <= 0) return false;
     var plot = farmState.plots[plotIndex];
     if (!plot || !plot.crop) return false;
+    if (plot.fertilized) return false;
     var stage = getPlotStage(plot);
     if (stage === 'ready') return false;
 
@@ -1395,6 +1397,7 @@
 
     // Shift plantedAt backward by half the remaining time
     plot.plantedAt -= Math.floor(remaining / 2);
+    plot.fertilized = true;
     farmState.upgrades.fertilizer--;
     saveState();
     updatePlots();
@@ -1904,6 +1907,7 @@
           stage: getPlotStage(plot),
           growthPct: getGrowthPct(plot),
           wateredAt: plot.wateredAt || null,
+          fertilized: !!plot.fertilized,
           timeRemaining: formatTimeRemaining(plot)
         });
       }
