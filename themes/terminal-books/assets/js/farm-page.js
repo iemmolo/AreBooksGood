@@ -578,7 +578,7 @@
       var zoneLeft  = baseCol * cellW;
       var zoneRight = (baseCol + (colSpan || 1)) * cellW;
       var zoneTop   = (baseRow + (rowSpan || 1) - 0.5) * cellH;
-      var zoneBot   = (baseRow + (rowSpan || 1) + 1.5) * cellH;
+      var zoneBot   = (baseRow + (rowSpan || 1) + 1.0) * cellH;
 
       var saved = loadAnimalPositions();
       var savedList = saved[animalType] || [];
