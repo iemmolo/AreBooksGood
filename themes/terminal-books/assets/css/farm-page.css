@@ -835,6 +835,18 @@
   image-rendering: crisp-edges;
 }
 
+/* ── Decorative fence row ──────────────────────────────── */
+.fp-fence-row {
+  position: absolute;
+  height: 32px;
+  background: url('/images/farm/decorations/fence-wood.png') repeat-x;
+  background-size: 32px 32px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  z-index: 2;
+}
+
 /* ── Farm animals — multi-direction walk animations ──── */
 /* Spritesheets: 4 cols × 4 rows (down, left, right, up) */
 /* Walk frame cycling driven by JS setInterval (background-position shorthand) */

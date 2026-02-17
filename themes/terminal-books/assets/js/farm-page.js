@@ -511,6 +511,16 @@
       addAnim('fp-anim-fountain', 9, 2, 1, 2, 96, 128);
     }
 
+    // ── Decorative fence row above processing buildings (row 9) ─────
+    var fenceEl = document.createElement('div');
+    fenceEl.className = 'fp-fence-row';
+    // Span all 6 columns, positioned at bottom edge of row 8
+    fenceEl.style.left = '0%';
+    fenceEl.style.top = (9 * cellH) + '%';
+    fenceEl.style.width = '100%';
+    fenceEl.style.marginTop = '-32px';
+    gridEl.appendChild(fenceEl);
+
     // ── Farm animals that wander near their buildings ─────
 
     var ANIMAL_STORAGE_KEY = 'arebooksgood-farm-animals';
