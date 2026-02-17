@@ -778,6 +778,30 @@
   padding: 2px 8px 5px;
 }
 
+/* ── Target mode toggle (inspect panel) ──────────── */
+.td-inspect-target {
+  padding: 3px 8px;
+}
+
+.td-inspect-target-btn {
+  font-family: monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  background: none;
+  color: var(--foreground);
+  cursor: pointer;
+  opacity: 0.6;
+  box-sizing: border-box;
+}
+
+.td-inspect-target-btn:hover {
+  opacity: 1;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ── Speed toggle button ─────────────────────────── */
 .td-speed-btn {
   font-family: monospace;
@@ -873,6 +897,7 @@
   .td-inspect-panel { width: 160px !important; }
   .td-inspect-btn { font-size: 11px; padding: 6px 10px; min-height: 32px; }
   .td-inspect-close { font-size: 20px; padding: 4px 6px; min-width: 32px; min-height: 32px; }
+  .td-inspect-target-btn { font-size: 11px; padding: 5px 8px; min-height: 28px; }
   .td-inspect-ability-btn { font-size: 11px; padding: 6px 10px; min-height: 32px; }
   .td-inspect-hint { display: none; }
 }

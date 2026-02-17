@@ -903,7 +903,8 @@
       cooldown: 0,
       abilityCooldown: 0,
       megaBlast: false,
-      rallyTimer: 0
+      rallyTimer: 0,
+      targetMode: 'closest'
     });
     updateHUD();
     return true;
@@ -948,13 +949,17 @@
     }
   }
 
+  var TARGET_MODES = ['closest', 'first', 'weakest', 'strongest'];
+  var TARGET_MODE_LABELS = { closest: 'Closest', first: 'First', weakest: 'Weakest', strongest: 'Strongest' };
+
   function findTarget(tower) {
     var def = TOWER_DEFS[tower.type];
     if (def.range === 0) return null;
     var tc = tileCenter(tower.col, tower.row);
     var rangePx = getEffectiveRangePx(tower);
+    var mode = tower.targetMode || 'closest';
     var best = null;
-    var bestDist = Infinity;
+    var bestVal = mode === 'weakest' ? Infinity : -Infinity;
 
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
@@ -963,8 +968,21 @@
       var dx = pos.x - tc.x;
       var dy = pos.y - tc.y;
       var d = Math.sqrt(dx * dx + dy * dy);
-      if (d <= rangePx && d < bestDist) {
-        bestDist = d;
+      if (d > rangePx) continue;
+
+      var val;
+      if (mode === 'closest') {
+        val = -d; // higher = better (closest)
+      } else if (mode === 'first') {
+        val = e.dist; // higher dist = further along path
+      } else if (mode === 'weakest') {
+        val = -e.hp; // higher = better (lowest HP)
+      } else { // strongest
+        val = e.hp;
+      }
+
+      if (val > bestVal) {
+        bestVal = val;
         best = e;
       }
     }
@@ -1526,7 +1544,7 @@
         sbEarned: sbEarned,
         lives: lives,
         towers: towers.map(function (t) {
-          return { col: t.col, row: t.row, type: t.type, level: t.level, abilityCooldown: t.abilityCooldown || 0 };
+          return { col: t.col, row: t.row, type: t.type, level: t.level, abilityCooldown: t.abilityCooldown || 0, targetMode: t.targetMode || 'closest' };
         }),
         totalKilled: totalKilled,
         towersBuilt: towersBuilt,
@@ -1570,7 +1588,7 @@
     towers = [];
     for (var i = 0; i < (save.towers || []).length; i++) {
       var t = save.towers[i];
-      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0, abilityCooldown: t.abilityCooldown || 0, megaBlast: false, rallyTimer: 0 });
+      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0, abilityCooldown: t.abilityCooldown || 0, megaBlast: false, rallyTimer: 0, targetMode: t.targetMode || 'closest' });
     }
 
     enemies = [];
@@ -2095,6 +2113,13 @@
     if (def.speed > 0) html += '<span>Speed: ' + def.speed.toFixed(1) + 's</span>';
     html += '</div>';
 
+    // Targeting mode (only for attacking towers)
+    if (def.range > 0 && (def.dmg > 0 || def.speed > 0)) {
+      html += '<div class="td-inspect-target">';
+      html += '<button class="td-inspect-btn td-inspect-target-btn" id="td-inspect-target-btn">\u25CE ' + TARGET_MODE_LABELS[t.targetMode || 'closest'] + '</button>';
+      html += '</div>';
+    }
+
     html += '<div class="td-inspect-actions">';
     if (t.level < getMaxTowerLevel() && upgradeCost !== null) {
       var canUpgrade = sb >= upgradeCost;
@@ -2146,6 +2171,16 @@
     // Bind buttons
     var closeBtn = document.getElementById('td-inspect-close-btn');
     if (closeBtn) closeBtn.addEventListener('click', function (ev) { ev.stopPropagation(); closeInspect(); });
+
+    var targetBtn = document.getElementById('td-inspect-target-btn');
+    if (targetBtn) targetBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      if (!inspectedTower) return;
+      var cur = inspectedTower.targetMode || 'closest';
+      var idx = TARGET_MODES.indexOf(cur);
+      inspectedTower.targetMode = TARGET_MODES[(idx + 1) % TARGET_MODES.length];
+      renderInspectPanel();
+    });
 
     var upgradeBtn = document.getElementById('td-inspect-upgrade-btn');
     if (upgradeBtn) upgradeBtn.addEventListener('click', function (ev) {
