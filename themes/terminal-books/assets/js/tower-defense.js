@@ -30,6 +30,7 @@
   var SPAWN_INTERVAL = 0.8;
   var PROJECTILE_SPEED = 6;
   var STATS_KEY = 'arebooksgood-td-stats';
+  var CRATE_KEY = 'arebooksgood-td-crate';
 
   // ── Farm integration guard ────────────────────────
   var hasFarmResources = typeof window.FarmResources !== 'undefined';
@@ -184,6 +185,21 @@
   var BASE_CRATE_SLOTS = 3;
   var crate = [];           // loaded items (strings = keys from CRATE_DEFS)
   var crateUsed = {};       // which items used this run
+
+  function saveCrate() {
+    try { localStorage.setItem(CRATE_KEY, JSON.stringify(crate)); } catch (e) {}
+  }
+  function loadSavedCrate() {
+    try {
+      var raw = localStorage.getItem(CRATE_KEY);
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr;
+      }
+    } catch (e) {}
+    return [];
+  }
+  crate = loadSavedCrate();
   var shieldCharges = 0;
   var atkSpeedActive = false;
   var atkSpeedTimer = 0;
@@ -197,6 +213,7 @@
     if (!canAffordCost(def.cost)) return false;
     deductCost(def.cost);
     crate.push(itemKey);
+    saveCrate();
     return true;
   }
 
@@ -206,11 +223,13 @@
     var def = CRATE_DEFS[itemKey];
     if (def) refundCost(def.cost);
     crate.splice(index, 1);
+    saveCrate();
     return true;
   }
 
   function commitCrate() {
     // Called on game start — materials already deducted, no refunds after this
+    try { localStorage.removeItem(CRATE_KEY); } catch (e) {}
   }
 
   function useCrateItem(itemKey) {
@@ -1492,6 +1511,7 @@
     }
     crate = [];
     crateUsed = {};
+    saveCrate();
     showStartScreen();
   });
 
