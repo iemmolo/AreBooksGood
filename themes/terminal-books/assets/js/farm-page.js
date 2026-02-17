@@ -427,17 +427,8 @@
         }
       }
 
-      // Farmhouse level
-      if (item.key === 'farmhouse' && window.FarmAPI) {
-        var countFH = document.createElement('div');
-        countFH.className = 'fp-cell-count';
-        var fhState = null;
-        try {
-          fhState = window.FarmAPI.getFarmhouseLevel ? window.FarmAPI.getFarmhouseLevel() : null;
-        } catch (e) {}
-        countFH.textContent = 'Lv ' + (fhState || 1);
-        cell.appendChild(countFH);
-      }
+      // Farmhouse level (used internally, no visible label)
+
 
       // Click handler for built cells + locked cells
       if (built) {
