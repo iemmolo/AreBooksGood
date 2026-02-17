@@ -506,7 +506,7 @@
     var target = e.target;
     if (container && container.contains(target)) return;
     if (dockEl && dockEl.contains(target)) return;
-    if (target.closest && target.closest('a, button, input, textarea, select')) return;
+    if (target.closest && target.closest('a, button, input, textarea, select, .fp-cell-built, .fp-popup, .td-game-area')) return;
 
     var touch = e.changedTouches && e.changedTouches[0];
     if (!touch) return;

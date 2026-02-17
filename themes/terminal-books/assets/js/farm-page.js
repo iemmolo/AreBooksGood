@@ -416,6 +416,14 @@
           prevStages[plotIdx] = cropInfo.stage;
           // Glow ramp class for current stage
           cell.classList.add('fp-cell-crop-' + cropInfo.stage);
+          // Watered indicator
+          if (cropInfo.wateredAt) {
+            cell.classList.add('fp-cell-watered');
+            var droplet = document.createElement('div');
+            droplet.className = 'fp-watered-icon';
+            droplet.textContent = '\uD83D\uDCA7';
+            cell.appendChild(droplet);
+          }
         } else {
           // Empty plot styling — show soil tile
           cell.classList.add('fp-cell-crop-empty');
@@ -1498,6 +1506,13 @@
             nameSpan.textContent = crop.name;
             btn.appendChild(nameSpan);
 
+            if (window.FarmAPI.getEffectiveGrowTime && window.FarmAPI.formatTime) {
+              var timeSpan = document.createElement('span');
+              timeSpan.className = 'fp-popup-seed-time';
+              timeSpan.textContent = window.FarmAPI.formatTime(window.FarmAPI.getEffectiveGrowTime(key));
+              btn.appendChild(timeSpan);
+            }
+
             var infoSpan = document.createElement('span');
             infoSpan.className = 'fp-popup-seed-info';
             infoSpan.textContent = isFree ? 'free' : ('x' + count);
@@ -1534,6 +1549,13 @@
             nameSpan.className = 'fp-popup-seed-name';
             nameSpan.textContent = entry.crop.name;
             btn.appendChild(nameSpan);
+
+            if (window.FarmAPI.getEffectiveGrowTime && window.FarmAPI.formatTime) {
+              var timeSpan = document.createElement('span');
+              timeSpan.className = 'fp-popup-seed-time';
+              timeSpan.textContent = window.FarmAPI.formatTime(window.FarmAPI.getEffectiveGrowTime(entry.key));
+              btn.appendChild(timeSpan);
+            }
 
             var infoSpan = document.createElement('span');
             infoSpan.className = 'fp-popup-seed-info';

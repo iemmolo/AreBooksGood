@@ -180,6 +180,9 @@
   background: var(--background);
 }
 
+#td-game-area { touch-action: manipulation; }
+#td-canvas { touch-action: none; }
+
 #td-canvas {
   display: block;
   width: 100%;
@@ -715,4 +718,41 @@
   font-size: 9px;
   opacity: 0.4;
   padding: 2px 8px 5px;
+}
+
+/* ── Mobile ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* HUD */
+  #td-hud { font-size: 12px; padding: 4px 8px; }
+
+  /* Tower bar */
+  #td-tower-bar { gap: 4px; padding: 6px 8px; }
+  .td-tower-btn { min-width: 0; padding: 4px 6px; flex: 1 1 auto; max-width: calc(25% - 4px); }
+  .td-tower-icon { font-size: 16px; }
+  .td-tower-name { font-size: 9px; }
+  .td-tower-cost { font-size: 9px; }
+  .td-wave-start-btn { margin-left: 0; flex: 1 1 100%; font-size: 12px; padding: 8px; }
+  .td-menu-btn { font-size: 10px; padding: 4px 8px; }
+
+  /* Crate bar */
+  .td-crate-bar { gap: 4px; padding: 4px 8px; }
+  .td-crate-btn { font-size: 10px; padding: 3px 6px; }
+
+  /* Overlays */
+  .td-title { font-size: 22px; }
+  .td-subtitle { font-size: 12px; }
+  .td-instructions { font-size: 12px; }
+  .td-tab { font-size: 11px; padding: 6px 8px; }
+  .td-tab-panel { max-height: 200px; }
+  .td-upgrade-grid { grid-template-columns: 1fr; }
+  .td-upgrade-card { padding: 6px; }
+  .td-crate-items-grid { grid-template-columns: 1fr; }
+  .td-btn { font-size: 14px; padding: 10px 20px; min-height: 44px; }
+  .td-invest-btn { width: 36px; height: 36px; font-size: 16px; }
+
+  /* Inspect panel */
+  .td-inspect-panel { width: 160px !important; }
+  .td-inspect-btn { font-size: 11px; padding: 6px 10px; min-height: 32px; }
+  .td-inspect-close { font-size: 20px; padding: 4px 6px; min-width: 32px; min-height: 32px; }
+  .td-inspect-hint { display: none; }
 }

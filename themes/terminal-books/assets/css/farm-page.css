@@ -249,6 +249,17 @@
   filter: brightness(1.2);
 }
 
+/* ── Watered indicator ─────────────────────────── */
+.fp-watered-icon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+}
+
 .fp-cell-unlockable::before {
   background: rgba(74, 124, 63, 0.3);
 }
@@ -554,6 +565,11 @@
 
 .fp-popup-seed-name {
   flex: 1;
+}
+
+.fp-popup-seed-time {
+  font-size: 0.5rem;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
 .fp-popup-seed-info {

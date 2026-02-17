@@ -378,6 +378,7 @@
   var inspectedTower = null;
   var selectedTower = 'arrow';
   var hoverTile = null;
+  var isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   var spawnQueue = [];
   var spawnTimer = 0;
   var totalSpawned = 0;
@@ -1902,7 +1903,7 @@
     var refund = Math.floor(getTotalInvestment(t) * 0.5);
     html += '<button class="td-inspect-btn td-inspect-sell" id="td-inspect-sell-btn">Sell (+' + refund + ' SB)</button>';
     html += '</div>';
-    html += '<div class="td-inspect-hint">ESC to close</div>';
+    html += '<div class="td-inspect-hint">' + (isMobile ? '' : 'ESC to close') + '</div>';
 
     panel.innerHTML = html;
     panel.classList.remove('td-hidden');
@@ -1910,7 +1911,7 @@
     // Position panel near tower
     var towerScreenX = t.col * TILE_SIZE * scale;
     var towerScreenY = t.row * TILE_SIZE * scale;
-    var panelW = 180;
+    var panelW = isMobile ? 160 : 180;
     var wrapW = canvasWrap.clientWidth;
     var wrapH = canvasWrap.clientHeight;
 
@@ -1973,15 +1974,30 @@
 
   // ── Input ─────────────────────────────────────────
   function canvasCoords(e) {
+    var touch = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
+    var clientX = touch ? touch.clientX : e.clientX;
+    var clientY = touch ? touch.clientY : e.clientY;
     var rect = canvas.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left) / scale,
-      y: (e.clientY - rect.top) / scale
+      x: (clientX - rect.left) / scale,
+      y: (clientY - rect.top) / scale
     };
   }
 
-  canvas.addEventListener('click', function (e) {
+  var touchMoved = false;
+  var lastTouchTime = 0;
+
+  canvas.addEventListener('touchstart', function () { touchMoved = false; }, { passive: true });
+  canvas.addEventListener('touchmove', function () { touchMoved = true; }, { passive: true });
+
+  function onCanvasTap(e) {
     if (gameState === 'idle' || gameState === 'gameover') return;
+    if (e.type === 'touchend' && touchMoved) return;
+    if (e.type === 'click' && Date.now() - lastTouchTime < 500) return;
+    if (e.type === 'touchend') {
+      lastTouchTime = Date.now();
+      e.preventDefault();
+    }
 
     var coords = canvasCoords(e);
     var tile = pixelToTile(coords.x, coords.y);
@@ -2018,16 +2034,21 @@
         updateTowerBtnStates();
       }
     }
-  });
+  }
 
-  canvas.addEventListener('mousemove', function (e) {
-    var coords = canvasCoords(e);
-    hoverTile = pixelToTile(coords.x, coords.y);
-  });
+  canvas.addEventListener('click', onCanvasTap);
+  canvas.addEventListener('touchend', onCanvasTap, { passive: false });
 
-  canvas.addEventListener('mouseleave', function () {
-    hoverTile = null;
-  });
+  if (!isMobile) {
+    canvas.addEventListener('mousemove', function (e) {
+      var coords = canvasCoords(e);
+      hoverTile = pixelToTile(coords.x, coords.y);
+    });
+
+    canvas.addEventListener('mouseleave', function () {
+      hoverTile = null;
+    });
+  }
 
   // ── Play / Retry ──────────────────────────────────
   function startGame() {

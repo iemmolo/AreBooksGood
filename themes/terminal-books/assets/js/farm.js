@@ -2130,6 +2130,16 @@
       return defs;
     },
 
+    getEffectiveGrowTime: function (cropKey) {
+      var crop = CROPS[cropKey];
+      if (!crop) return 0;
+      return getEffectiveGrowTime(crop);
+    },
+
+    formatTime: function (ms) {
+      return formatTime(ms);
+    },
+
     // ── Upgrade API ──────────────────────────────────────────
     getUpgrades: function () {
       if (!farmState || !farmState.upgrades) return { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 };

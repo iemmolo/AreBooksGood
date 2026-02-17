@@ -16,6 +16,7 @@
 
 .pet-container.pet-following {
   transition: left 0.15s ease-out, top 0.15s ease-out;
+  pointer-events: none;
 }
 
 .pet-container.pet-farming-walk {
