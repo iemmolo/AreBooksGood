@@ -14,7 +14,12 @@
     sheepPen:    { resource: 'wool',     rate: 2700000,  built: false },
     mine:        { resource: 'iron',     rate: 2400000,  built: false },
     deepMine:    { resource: 'gold',     rate: 5400000,  built: false },
-    oldGrowth:   { resource: 'hardwood', rate: 2100000,  built: false }
+    oldGrowth:   { resource: 'hardwood', rate: 2100000,  built: false },
+    // Processing stations (no resource — build state only)
+    forge:       { resource: null, rate: 0, built: false },
+    loom:        { resource: null, rate: 0, built: false },
+    smokehouse:  { resource: null, rate: 0, built: false },
+    enchanter:   { resource: null, rate: 0, built: false }
   };
 
   // ── Default state ───────────────────────────────────────
@@ -226,6 +231,7 @@
       var station = state.stations[k];
       if (!station || !station.built || station.level < 1) continue;
       var def = STATIONS[k];
+      if (!def.resource) continue;
       var elapsed = now - station.lastCollect;
       var count = Math.floor(elapsed / def.rate);
       if (count > 0) {
