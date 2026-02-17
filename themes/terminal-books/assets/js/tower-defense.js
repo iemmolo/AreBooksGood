@@ -33,7 +33,7 @@
   };
 
   var START_LIVES = 20;
-  var START_JB = 50;
+  var START_SB = 50;
   var SPAWN_INTERVAL = 0.8;
   var PROJECTILE_SPEED = 6;
   var STATS_KEY = 'arebooksgood-td-stats';
@@ -48,9 +48,9 @@
     reinforcedWalls:   { name: 'Reinforced Walls',   desc: '+2 starting lives/tier',    maxTier: 3, baseCost: { processed: { stoneBricks: 5 } } },
     sharpenedArrows:   { name: 'Sharpened Arrows',   desc: '+10% arrow damage/tier',    maxTier: 3, baseCost: { processed: { planks: 3, ironBars: 1 } } },
     sturdyFoundations: { name: 'Sturdy Foundations',  desc: '-10% tower build cost/tier', maxTier: 3, baseCost: { processed: { planks: 4, stoneBricks: 3 } } },
-    supplyLines:       { name: 'Supply Lines',        desc: '+5 starting JB/tier',       maxTier: 3, baseCost: { processed: { bread: 3, rope: 2 } } },
+    supplyLines:       { name: 'Supply Lines',        desc: '+5 starting SB/tier',       maxTier: 3, baseCost: { processed: { bread: 3, rope: 2 } } },
     crystalOptics:     { name: 'Crystal Optics',      desc: '+15% tower range/tier',     maxTier: 3, baseCost: { processed: { crystalLens: 2 } } },
-    goldenTreasury:    { name: 'Golden Treasury',     desc: '+20% wave JB rewards/tier', maxTier: 3, baseCost: { raw: { gold: 2 } } },
+    goldenTreasury:    { name: 'Golden Treasury',     desc: '+20% wave SB rewards/tier', maxTier: 3, baseCost: { raw: { gold: 2 } } },
     hardenedSteel:     { name: 'Hardened Steel',      desc: 'Unlock tower Lv4 tier',     maxTier: 1, baseCost: { processed: { ironBars: 4 }, raw: { hardwood: 2 } } },
     arcaneMastery:     { name: 'Arcane Mastery',      desc: 'Unlock special abilities',  maxTier: 1, baseCost: { processed: { crystalLens: 3 }, raw: { gold: 2 } } }
   };
@@ -168,7 +168,7 @@
       startLives: getArmoryTier('reinforcedWalls') * 2,
       dmgMult: 1 + getArmoryTier('sharpenedArrows') * 0.1,
       costMult: 1 - getArmoryTier('sturdyFoundations') * 0.1,
-      startJB: getArmoryTier('supplyLines') * 5,
+      startSB: getArmoryTier('supplyLines') * 5,
       rangeMult: 1 + getArmoryTier('crystalOptics') * 0.15,
       rewardMult: 1 + getArmoryTier('goldenTreasury') * 0.2,
       towerLv4: getArmoryTier('hardenedSteel') >= 1,
@@ -177,6 +177,28 @@
   }
 
   var mods = computeModifiers();
+
+  // ── Wave Milestones ─────────────────────────────
+  var WAVE_MILESTONES = [
+    { wave: 5, bonus: 5 },
+    { wave: 10, bonus: 10 },
+    { wave: 15, bonus: 15 },
+    { wave: 20, bonus: 20 },
+    { wave: 30, bonus: 30 }
+  ];
+
+  var MAX_INVEST_SB = 50;
+  var INVEST_RATE = 2; // 2 JB per 1 SB
+
+  function getMilestoneBonus() {
+    var total = 0;
+    for (var i = 0; i < WAVE_MILESTONES.length; i++) {
+      if (stats.highestWave >= WAVE_MILESTONES[i].wave) {
+        total += WAVE_MILESTONES[i].bonus;
+      }
+    }
+    return total;
+  }
 
   // ── Supply Crate ──────────────────────────────────
   var CRATE_DEFS = {
@@ -288,7 +310,7 @@
 
   var hudWave = document.getElementById('td-wave');
   var hudLives = document.getElementById('td-lives');
-  var hudJB = document.getElementById('td-jb');
+  var hudSB = document.getElementById('td-sb');
   var hudEnemies = document.getElementById('td-enemies');
 
   var startOverlay = document.getElementById('td-start-overlay');
@@ -299,7 +321,7 @@
   var finalWave = document.getElementById('td-final-wave');
   var finalKills = document.getElementById('td-final-kills');
   var finalTowers = document.getElementById('td-final-towers');
-  var finalJBEl = document.getElementById('td-final-jb');
+  var finalSBEl = document.getElementById('td-final-sb');
 
   var startStats = document.getElementById('td-start-stats');
   var goStats = document.getElementById('td-gameover-stats');
@@ -343,8 +365,9 @@
   var gameState = 'idle';
   var wave = 0;
   var lives = START_LIVES;
-  var jb = START_JB;
-  var jbEarned = 0;
+  var sb = START_SB;
+  var sbEarned = 0;
+  var investedSB = 0;
   var towers = [];
   var enemies = [];
   var projectiles = [];
@@ -698,8 +721,8 @@
   function upgradeTower(tower) {
     if (tower.level >= 3) return false;
     var cost = getUpgradeCostForTower(tower);
-    if (cost === null || jb < cost) return false;
-    jb -= cost;
+    if (cost === null || sb < cost) return false;
+    sb -= cost;
     tower.level++;
     var tc = tileCenter(tower.col, tower.row);
     spawnParticle(tc.x, tc.y, 'Lv' + tower.level + '!', '#ffd700');
@@ -711,8 +734,8 @@
   function sellTower(tower) {
     var refund = Math.floor(getTotalInvestment(tower) * 0.5);
     var tc = tileCenter(tower.col, tower.row);
-    spawnParticle(tc.x, tc.y, '+' + refund + ' JB', '#ffd700');
-    jb += refund;
+    spawnParticle(tc.x, tc.y, '+' + refund + ' SB', '#ffd700');
+    sb += refund;
     for (var i = 0; i < towers.length; i++) {
       if (towers[i] === tower) {
         towers.splice(i, 1);
@@ -735,10 +758,10 @@
   function placeTower(col, row, type) {
     var def = TOWER_DEFS[type];
     var cost = getEffectiveCost(def);
-    if (jb < cost) return false;
+    if (sb < cost) return false;
     if (!isBuildable(col, row)) return false;
 
-    jb -= cost;
+    sb -= cost;
     towersBuilt++;
     towers.push({
       col: col,
@@ -1180,14 +1203,10 @@
     var mineBonus = goldMineCount * 2;
 
     var reward = Math.round((baseReward + mineBonus) * mods.rewardMult);
-    jb += reward;
-    jbEarned += reward;
+    sb += reward;
+    sbEarned += reward;
 
-    if (typeof JackBucks !== 'undefined' && JackBucks.add) {
-      JackBucks.add(reward);
-    }
-
-    var rewardText = '+' + reward + ' JB';
+    var rewardText = '+' + reward + ' SB';
     if (mineBonus > 0) rewardText += ' (+' + mineBonus + ' mines)';
     spawnParticle(CANVAS_W / 2, CANVAS_H / 2, rewardText, '#ffd700');
 
@@ -1258,16 +1277,21 @@
     stats.gamesPlayed++;
     stats.totalKills += totalKilled;
     stats.totalTowersBuilt += towersBuilt;
-    stats.totalJBEarned += jbEarned;
+    stats.totalJBEarned += sbEarned;
     if (wave > stats.highestWave) stats.highestWave = wave;
     saveStats();
+
+    // Lump-sum cash-out: deposit all earned SB as JB
+    if (sbEarned > 0 && typeof JackBucks !== 'undefined' && JackBucks.add) {
+      JackBucks.add(sbEarned);
+    }
 
     if (typeof PetEvents !== 'undefined' && PetEvents.onGameResult) {
       PetEvents.onGameResult({
         game: 'tower-defense',
         outcome: wave >= 5 ? 'win' : 'lose',
         bet: 0,
-        payout: jbEarned
+        payout: sbEarned
       });
     }
 
@@ -1275,7 +1299,16 @@
       if (finalWave) finalWave.textContent = wave;
       if (finalKills) finalKills.textContent = totalKilled;
       if (finalTowers) finalTowers.textContent = towersBuilt;
-      if (finalJBEl) finalJBEl.textContent = jbEarned;
+      if (finalSBEl) finalSBEl.textContent = sbEarned;
+      var cashoutLine = document.getElementById('td-cashout-line');
+      if (cashoutLine) {
+        if (sbEarned > 0) {
+          cashoutLine.textContent = sbEarned + ' SB \u2192 +' + sbEarned + ' JB deposited';
+        } else {
+          cashoutLine.textContent = 'No SB earned this run';
+          cashoutLine.style.opacity = '0.5';
+        }
+      }
       renderStatsBlock(goStats);
       gameoverOverlay.classList.remove('td-hidden');
     }, 500);
@@ -1315,7 +1348,102 @@
     el.innerHTML = 'Games: ' + stats.gamesPlayed +
       ' | Best Wave: ' + stats.highestWave +
       ' | Total Kills: ' + stats.totalKills +
-      ' | Total JB: ' + stats.totalJBEarned;
+      ' | Total JB Deposited: ' + stats.totalJBEarned;
+  }
+
+  // ── Start screen: SB breakdown + Investment UI ───
+  function renderStartBreakdown() {
+    var el = document.getElementById('td-start-breakdown');
+    if (!el) return;
+
+    var base = START_SB;
+    var armory = mods.startSB;
+    var milestone = getMilestoneBonus();
+    var invest = investedSB;
+    var total = base + armory + milestone + invest;
+
+    var html = '<div class="td-start-breakdown-title">Starting SamBucks</div>';
+
+    html += '<div class="td-start-breakdown-row"><span>Base</span><span>' + base + ' SB</span></div>';
+    if (armory > 0) {
+      html += '<div class="td-start-breakdown-row"><span>Supply Lines</span><span>+' + armory + ' SB</span></div>';
+    }
+    if (milestone > 0) {
+      html += '<div class="td-start-breakdown-row"><span>Wave Milestones</span><span>+' + milestone + ' SB</span></div>';
+    }
+    if (invest > 0) {
+      html += '<div class="td-start-breakdown-row"><span>JB Investment</span><span>+' + invest + ' SB</span></div>';
+    }
+    html += '<div class="td-start-breakdown-row td-start-breakdown-total"><span>Total</span><span>' + total + ' SB</span></div>';
+
+    // Next milestone hint
+    var nextMilestone = null;
+    for (var i = 0; i < WAVE_MILESTONES.length; i++) {
+      if (stats.highestWave < WAVE_MILESTONES[i].wave) {
+        nextMilestone = WAVE_MILESTONES[i];
+        break;
+      }
+    }
+    if (nextMilestone) {
+      html += '<div style="font-size:11px;opacity:0.5;margin-top:4px">Next milestone: Wave ' + nextMilestone.wave + ' (+' + nextMilestone.bonus + ' SB)</div>';
+    }
+
+    el.innerHTML = html;
+  }
+
+  function renderInvestSection() {
+    var el = document.getElementById('td-invest-section');
+    if (!el) return;
+
+    var hasJB = typeof JackBucks !== 'undefined' && JackBucks.get;
+    if (!hasJB) {
+      el.style.display = 'none';
+      return;
+    }
+
+    var jbBalance = JackBucks.get();
+    var maxAffordSB = Math.min(MAX_INVEST_SB, Math.floor(jbBalance / INVEST_RATE));
+
+    var html = '<div class="td-invest-title">Invest JackBucks</div>';
+    html += '<div style="opacity:0.6;margin-bottom:6px">Convert JB \u2192 SB at 2:1 rate (max ' + MAX_INVEST_SB + ' SB)</div>';
+
+    html += '<div class="td-invest-row">';
+    html += '<button class="td-invest-btn" id="td-invest-minus"' + (investedSB <= 0 ? ' disabled' : '') + '>\u2212</button>';
+    html += '<span class="td-invest-amount">' + investedSB + ' SB</span>';
+    html += '<button class="td-invest-btn" id="td-invest-plus"' + (investedSB >= maxAffordSB ? ' disabled' : '') + '>+</button>';
+    html += '</div>';
+
+    var cost = investedSB * INVEST_RATE;
+    html += '<div class="td-invest-info">Cost: ' + cost + ' JB | Balance: ' + jbBalance + ' JB</div>';
+
+    el.style.display = '';
+    el.innerHTML = html;
+
+    // Bind buttons
+    var minusBtn = document.getElementById('td-invest-minus');
+    var plusBtn = document.getElementById('td-invest-plus');
+    if (minusBtn) {
+      minusBtn.addEventListener('click', function () {
+        if (investedSB > 0) {
+          investedSB -= 5;
+          if (investedSB < 0) investedSB = 0;
+          renderInvestSection();
+          renderStartBreakdown();
+        }
+      });
+    }
+    if (plusBtn) {
+      plusBtn.addEventListener('click', function () {
+        var curBalance = JackBucks.get();
+        var maxNow = Math.min(MAX_INVEST_SB, Math.floor(curBalance / INVEST_RATE));
+        if (investedSB < maxNow) {
+          investedSB += 5;
+          if (investedSB > maxNow) investedSB = maxNow;
+          renderInvestSection();
+          renderStartBreakdown();
+        }
+      });
+    }
   }
 
   // ── HUD ───────────────────────────────────────────
@@ -1324,7 +1452,7 @@
   function updateHUD() {
     if (hudWave) hudWave.textContent = 'Wave: ' + (wave || '\u2014');
     if (hudLives) hudLives.textContent = '\u2665 ' + lives;
-    if (hudJB) hudJB.textContent = 'JB: ' + jb;
+    if (hudSB) hudSB.textContent = 'SB: ' + sb;
     if (hudEnemies) {
       var alive = 0;
       for (var i = 0; i < enemies.length; i++) {
@@ -1347,7 +1475,7 @@
       if (!isTowerUnlocked(type)) {
         btn.classList.add('td-tower-btn-locked');
         btn.classList.remove('td-tower-btn-disabled');
-      } else if (jb < cost) {
+      } else if (sb < cost) {
         btn.classList.add('td-tower-btn-disabled');
         btn.classList.remove('td-tower-btn-locked');
       } else {
@@ -1386,7 +1514,7 @@
 
       var cost = document.createElement('span');
       cost.className = 'td-tower-cost';
-      cost.textContent = unlocked ? getEffectiveCost(def) + ' JB' : '\uD83D\uDD12';
+      cost.textContent = unlocked ? getEffectiveCost(def) + ' SB' : '\uD83D\uDD12';
       btn.appendChild(cost);
 
       btn.addEventListener('click', (function (k) {
@@ -1658,14 +1786,14 @@
 
     html += '<div class="td-inspect-actions">';
     if (t.level < 3 && upgradeCost !== null) {
-      var canUpgrade = jb >= upgradeCost;
+      var canUpgrade = sb >= upgradeCost;
       html += '<button class="td-inspect-btn td-inspect-upgrade" id="td-inspect-upgrade-btn"' +
-        (canUpgrade ? '' : ' disabled') + '>Upgrade Lv' + (t.level + 1) + ' (' + upgradeCost + ' JB)</button>';
+        (canUpgrade ? '' : ' disabled') + '>Upgrade Lv' + (t.level + 1) + ' (' + upgradeCost + ' SB)</button>';
     } else {
       html += '<span class="td-inspect-maxed">MAX LEVEL</span>';
     }
     var refund = Math.floor(getTotalInvestment(t) * 0.5);
-    html += '<button class="td-inspect-btn td-inspect-sell" id="td-inspect-sell-btn">Sell (+' + refund + ' JB)</button>';
+    html += '<button class="td-inspect-btn td-inspect-sell" id="td-inspect-sell-btn">Sell (+' + refund + ' SB)</button>';
     html += '</div>';
     html += '<div class="td-inspect-hint">ESC to close</div>';
 
@@ -1769,7 +1897,7 @@
 
     if (selectedTower && isTowerUnlocked(selectedTower) && isBuildable(tile.col, tile.row)) {
       var def = TOWER_DEFS[selectedTower];
-      if (jb >= getEffectiveCost(def)) {
+      if (sb >= getEffectiveCost(def)) {
         placeTower(tile.col, tile.row, selectedTower);
         updateTowerBtnStates();
       }
@@ -1787,10 +1915,16 @@
 
   // ── Play / Retry ──────────────────────────────────
   function startGame() {
+    // Deduct JB investment before starting
+    var investCost = investedSB * INVEST_RATE;
+    if (investedSB > 0 && typeof JackBucks !== 'undefined' && JackBucks.deduct) {
+      JackBucks.deduct(investCost);
+    }
+
     wave = 0;
     lives = START_LIVES + mods.startLives;
-    jb = START_JB + mods.startJB;
-    jbEarned = 0;
+    sb = START_SB + mods.startSB + getMilestoneBonus() + investedSB;
+    sbEarned = 0;
     towers = [];
     enemies = [];
     projectiles = [];
@@ -1850,7 +1984,10 @@
     gameState = 'idle';
     startOverlay.classList.remove('td-hidden');
     gameoverOverlay.classList.add('td-hidden');
+    investedSB = 0;
     renderStatsBlock(startStats);
+    renderStartBreakdown();
+    renderInvestSection();
     renderTowerBar();
     refreshAllPanels();
     drawIdle();
@@ -1976,7 +2113,7 @@
       html += '<div class="td-upgrade-desc">';
       if (def.dmg > 0) html += 'DMG: ' + def.dmg + ' | ';
       if (def.range > 0) html += 'Range: ' + def.range + ' | ';
-      html += 'Cost: ' + def.cost + ' JB';
+      html += 'Cost: ' + def.cost + ' SB';
       html += '</div>';
 
       html += '<div class="td-upgrade-tier">';
@@ -2155,6 +2292,8 @@
   renderTowerBar();
   initTabs();
   renderStatsBlock(startStats);
+  renderStartBreakdown();
+  renderInvestSection();
   refreshAllPanels();
   updateHUD();
   drawIdle();

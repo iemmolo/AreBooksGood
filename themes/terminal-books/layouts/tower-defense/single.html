@@ -3,7 +3,7 @@
   <div id="td-hud">
     <span id="td-wave">Wave: 1</span>
     <span id="td-lives">&#9829; 20</span>
-    <span id="td-jb">JB: 0</span>
+    <span id="td-sb">SB: 0</span>
     <span id="td-enemies">0/0</span>
   </div>
   <div id="td-canvas-wrap">
@@ -19,12 +19,14 @@
           <button class="td-tab" data-tab="blueprints">Blueprints</button>
         </div>
         <div id="td-tab-overview" class="td-tab-panel">
-          <p class="td-subtitle">Place towers to defend the path.<br>Earn JackBucks for each wave survived.</p>
+          <p class="td-subtitle">Place towers to defend the path.<br>Earn SamBucks (SB) each wave.</p>
           <div class="td-instructions">
             <p>1. Select a tower from the bar below</p>
             <p>2. Click a grid cell to place it</p>
             <p>3. Press Start Wave to begin</p>
           </div>
+          <div id="td-start-breakdown" class="td-start-breakdown"></div>
+          <div id="td-invest-section" class="td-invest-section"></div>
           <div id="td-start-stats" class="td-stats-block"></div>
         </div>
         <div id="td-tab-armory" class="td-tab-panel td-hidden"></div>
@@ -40,7 +42,8 @@
           <p>Reached Wave <span id="td-final-wave">1</span></p>
           <p>Enemies Killed: <span id="td-final-kills">0</span></p>
           <p>Towers Built: <span id="td-final-towers">0</span></p>
-          <p>JB Earned: <span id="td-final-jb">0</span></p>
+          <p>SB Earned: <span id="td-final-sb">0</span></p>
+          <p id="td-cashout-line" class="td-cashout-line"></p>
         </div>
         <div id="td-gameover-stats" class="td-stats-block"></div>
         <button id="td-retry-btn" class="td-btn">Play Again</button>
