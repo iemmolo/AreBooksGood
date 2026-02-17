@@ -191,9 +191,15 @@
       var queue = state.processing[sk];
       if (!queue || queue.length === 0) continue;
 
-      // Complete finished jobs
-      while (queue.length > 0 && queue[0].startedAt > 0) {
+      // Complete finished jobs and chain-start waiting ones
+      var lastEndTime = 0;
+      while (queue.length > 0) {
         var job = queue[0];
+        // Start waiting jobs using previous job's end time (offline chaining)
+        if (job.startedAt === 0) {
+          job.startedAt = lastEndTime || now;
+          changed = true;
+        }
         var endTime = job.startedAt + job.duration;
         if (now >= endTime) {
           // Deliver output
@@ -202,17 +208,12 @@
             var pool = recipe.output.type === 'raw' ? state.raw : state.processed;
             pool[recipe.output.key] = (pool[recipe.output.key] || 0) + recipe.output.qty;
           }
+          lastEndTime = endTime;
           queue.shift();
           changed = true;
         } else {
           break;
         }
-      }
-
-      // Start next waiting job
-      if (queue.length > 0 && queue[0].startedAt === 0) {
-        queue[0].startedAt = now;
-        changed = true;
       }
     }
     if (changed) {

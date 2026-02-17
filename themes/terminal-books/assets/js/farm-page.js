@@ -1237,7 +1237,7 @@
 
     var header = document.createElement('div');
     header.className = 'fp-popup-header';
-    header.textContent = (ICONS[item.key] || '\uD83D\uDD12') + ' ' + item.name;
+    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
     stationPopupEl.appendChild(header);
 
     var fhLevel = getCurrentFHLevel();
@@ -1816,6 +1816,11 @@
     });
   }
 
+  // Listen for external plot changes (e.g. quick sell all from farmhouse panel)
+  document.addEventListener('farm-plots-changed', function () {
+    renderGrid();
+  });
+
   // Periodic update for idle accumulation + crop progress
   setInterval(function () {
     updateCounts();
@@ -2240,10 +2245,10 @@
       }, 600);
     }
 
-    // Cat: 15% auto-replant
+    // Cat: 15% auto-replant (free crops only to avoid consuming expensive seeds)
     if (petType === 'cat' && Math.random() < 0.15) {
       setTimeout(function () {
-        if (window.FarmAPI && window.FarmAPI.plant) {
+        if (window.FarmAPI && window.FarmAPI.plant && window.FarmAPI.isFreeCrop && window.FarmAPI.isFreeCrop(harvestResult.crop)) {
           var planted = window.FarmAPI.plant(plotIndex, harvestResult.crop);
           if (planted) {
             fpPetSpeak('*plants another*');

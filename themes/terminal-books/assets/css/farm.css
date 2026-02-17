@@ -52,94 +52,13 @@
   pointer-events: auto;
 }
 
-/* ── Plot base ───────────────────────────────── */
-.farm-plot {
-  width: 48px;
-  height: 48px;
-  border: 1px dashed color-mix(in srgb, var(--foreground) 20%, transparent);
-  border-radius: 2px;
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--foreground) 4%, transparent);
-}
-
-/* ── Empty plot ──────────────────────────────── */
-.farm-plot-empty::after {
-  content: '+';
-  color: color-mix(in srgb, var(--foreground) 30%, transparent);
-  font-size: 20px;
-  font-family: inherit;
-  line-height: 1;
-}
-
-.farm-plot-empty:hover {
-  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-
-.farm-plot-empty:hover::after {
-  color: var(--accent);
-}
-
-/* ── Growing plot — progress bar ─────────────── */
-.farm-plot-growing {
-  border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
-}
-
-.farm-plot-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: color-mix(in srgb, var(--accent) 60%, transparent);
-  border-radius: 0 0 2px 2px;
-  transition: width 10s linear;
-}
-
-.farm-plot-progress-watered {
-  background: linear-gradient(90deg,
-    color-mix(in srgb, var(--accent) 60%, transparent),
-    rgba(74, 158, 255, 0.6));
-}
-
-/* ── Watered badge ─────────────────────────────── */
-.farm-plot-watered {
-  border-color: color-mix(in srgb, #4a9eff 40%, transparent);
-}
-
-.farm-plot-watered::after {
-  content: '\1F4A7';
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  font-size: 9px;
-  line-height: 1;
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-/* ── Ready plot — pulse ──────────────────────── */
-.farm-plot-ready {
-  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
-  animation: farm-plot-pulse 2s ease-in-out infinite;
-}
-
+/* ── Plot pulse keyframes (used by dashboard tiles) ── */
 @keyframes farm-plot-pulse {
   0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
   50% { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent); }
 }
 
-/* ── Crop sprite container ───────────────────── */
-.farm-crop-sprite {
-  width: 24px;
-  height: 24px;
-  position: relative;
-  image-rendering: pixelated;
-}
-
+/* ── Crop sprite canvas ─────────────────────── */
 .farm-crop-canvas {
   position: absolute;
   top: 0;
@@ -222,6 +141,10 @@
 }
 
 .farm-dash-tile[data-tile="crops"] .farm-dash-count:empty {
+  display: none;
+}
+
+.farm-dash-tile[data-tile="crops"] .farm-dash-label {
   display: none;
 }
 
@@ -475,7 +398,7 @@ body:not(.farm-dimmed-mode) .pet-teleporter {
   z-index: 10002;
   font-family: inherit;
   font-size: 11px;
-  color: #8ec07c;
+  color: var(--accent);
   pointer-events: none;
   animation: farm-jb-fly 1.2s ease-out forwards;
 }

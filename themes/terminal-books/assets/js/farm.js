@@ -1831,13 +1831,32 @@
 
   function quickSellAll() {
     var totalSold = 0;
+    var scarecrowLevel = farmState.upgrades ? farmState.upgrades.scarecrow : 0;
+    var scarecrowBonus = (scarecrowLevel > 0) ? FARM_UPGRADES.scarecrow.effects[scarecrowLevel - 1].bonus : 0;
+    var seedBagLevel = farmState.upgrades ? farmState.upgrades.seedBag : 0;
+    var seedDropChance = (seedBagLevel > 0) ? FARM_UPGRADES.seedBag.effects[seedBagLevel - 1].chance : 0;
+
     for (var i = 0; i < farmState.plots.length; i++) {
       var plot = farmState.plots[i];
       if (plot && plot.crop && getPlotStage(plot) === 'ready') {
         var crop = CROPS[plot.crop];
         if (crop) {
+          var cropKey = plot.crop;
           var val = Math.round(crop.sell * sellMultiplier);
+          if (scarecrowBonus > 0) {
+            val = Math.round(val * (1 + scarecrowBonus));
+          }
           totalSold += val;
+
+          // Add raw crop resource for processing recipes
+          if (window.FarmResources) window.FarmResources.add('raw', cropKey, 1);
+
+          // Seed bag chance
+          if (seedDropChance > 0 && Math.random() < seedDropChance) {
+            farmState.inventory[cropKey] = (farmState.inventory[cropKey] || 0) + 1;
+            showSeedFloat(i, cropKey);
+          }
+
           farmState.plots[i] = { crop: null };
         }
       }
@@ -1847,6 +1866,8 @@
     }
     saveState();
     updatePlots();
+    // Notify farm page grid to re-render
+    document.dispatchEvent(new Event('farm-plots-changed'));
   }
 
   // ── FarmhouseWidget global API ────────────────────────────
@@ -2024,7 +2045,7 @@
 
     unlockPlot: function () {
       if (!farmState) return false;
-      if (farmState.unlockedPlots >= 8) return false;
+      if (farmState.unlockedPlots >= 16) return false;
       farmState.unlockedPlots++;
       farmState.plots.push({ crop: null });
       saveState();
@@ -2059,6 +2080,10 @@
       applyFarmhouseBonuses();
       renderFarmhouseSprite();
       updatePlots();
+    },
+
+    isFreeCrop: function (cropKey) {
+      return !!FREE_CROPS[cropKey];
     },
 
     setSellMultiplier: function (m) {
