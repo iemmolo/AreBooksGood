@@ -116,7 +116,29 @@ AreBooksGood - Improvement TODO
 - [x] Core skeleton: canvas, grid, path, 1 tower (arrow), 1 enemy (slime), waves, HUD, overlays, stats, JB integration
 - [ ] Phase 1b: Cannon + Frost towers, Skeleton + Goblin enemies, tower upgrades, boss waves, sell tower
 - [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
-- [ ] Phase 2: Farm-TD integration (blueprint gating, material upgrades, consumables)
+- [ ] Phase 2a: Armory — permanent meta-upgrades bought with processed materials (persist across runs)
+      - Reinforced Walls (Stone Bricks): +2 starting lives per tier
+      - Sharpened Arrows (Planks + Iron Bar): +10% arrow damage per tier
+      - Sturdy Foundations (Planks + Stone Bricks): -10% tower build cost per tier
+      - Supply Lines (Bread + Rope): +5 starting JB per tier
+      - Crystal Optics (Crystal Lens): +15% tower range per tier
+      - Golden Treasury (Gold): +20% wave JB rewards per tier
+      - Hardened Steel (Iron Bars + Hardwood): unlock tower Lv4 upgrade tier
+      - Arcane Mastery (Crystal Lens + Gold): unlock special tower abilities
+      - Each upgrade has 2–3 tiers with escalating costs
+- [ ] Phase 2b: Supply Crate — load 3–5 consumables before each TD run, consumed from farm inventory
+      - Bread: heal +3 lives
+      - Smoked Fish: all towers +30% attack speed for 30s
+      - Rope Trap: place on path, slows enemies 50% for one wave
+      - Iron Caltrops: place on path, 15 dmg to each enemy crossing
+      - Milk Flask: reset all tower cooldowns instantly
+      - Crystal Bomb: deal 50% max HP to all on-screen enemies
+      - Golden Shield: block next 3 enemy leaks
+      - Carry limit upgradeable via Armory
+- [ ] Phase 2c: Tower Blueprints — new towers require one-time material investment to unlock permanently
+      - Fire (2 Hardwood, wave 15), Wall (1 Stone Bricks, wave 10), Sniper (2 Iron Bars, wave 20)
+      - Gold Mine (1 Gold, wave 25), Lightning (1 Crystal Lens, wave 30)
+- [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
 - [ ] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
 - [ ] Phase 4: Sprites, more enemies/maps, mobile touch, sound
 
