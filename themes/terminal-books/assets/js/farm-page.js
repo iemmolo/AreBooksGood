@@ -37,20 +37,20 @@
     { key: 'cowPasture',  name: 'Cow Pasture',   row: 5, col: 2, rowSpan: 2, colSpan: 2, type: 'gathering' },
     { key: 'sheepPen',    name: 'Sheep Pen',     row: 5, col: 4, rowSpan: 2, colSpan: 2, type: 'gathering' },
     // Row 7: empty gap
-    { key: 'lumberYard',  name: 'Lumber Yard',   row: 8,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'lumberYard',  name: 'Lumber Yard',   row: 9,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
     { key: 'quarry',      name: 'Quarry',        row: 12, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
     { key: 'mine',        name: 'Mine',          row: 11, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
     { key: 'deepMine',    name: 'Deep Mine',     row: 11, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'oldGrowth',   name: 'Old Growth',    row: 8,  col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'oldGrowth',   name: 'Old Growth',    row: 8,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
     // Row 9: empty gap
     { key: 'mill',        name: 'Mill',          row: 10, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'sawmill',     name: 'Sawmill',       row: 10, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'mason',       name: 'Mason',         row: 10, col: 2, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'kitchen',     name: 'Kitchen',       row: 10, col: 3, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'forge',       name: 'Forge',         row: 10, col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'sawmill',     name: 'Sawmill',       row: 9,  col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'mason',       name: 'Mason',         row: 8,  col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'kitchen',     name: 'Kitchen',       row: 9,  col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'forge',       name: 'Forge',         row: 9,  col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'loom',        name: 'Loom',          row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'smokehouse',  name: 'Smokehouse',    row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
+    { key: 'smokehouse',  name: 'Smokehouse',    row: 10, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
     { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
   ];
 
@@ -324,15 +324,6 @@
       labelEl.textContent = item.name;
       cell.appendChild(labelEl);
 
-      // Count for gathering stations (if built)
-      if (built && item.type === 'gathering') {
-        var countEl = document.createElement('div');
-        countEl.className = 'fp-cell-count';
-        countEl.id = 'fp-count-' + item.key;
-        countEl.textContent = getStationCount(item);
-        cell.appendChild(countEl);
-      }
-
       // Processing indicator
       if (built && item.type === 'processing' && window.FarmResources) {
         var pQueue = window.FarmResources.getQueue(item.key);
@@ -517,7 +508,7 @@
 
     // Lv5: Water fountain in gap row
     if (fhLevel >= 5) {
-      addAnim('fp-anim-fountain', 7, 2, 1, 2, 96, 128);
+      addAnim('fp-anim-fountain', 9, 2, 1, 2, 96, 128);
     }
   }
 
