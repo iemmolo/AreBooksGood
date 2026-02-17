@@ -204,6 +204,10 @@
   cursor: pointer;
 }
 
+.fp-cell-crop-empty .fp-cell-label {
+  display: none;
+}
+
 .fp-soil-img {
   position: absolute;
   top: 50%;
