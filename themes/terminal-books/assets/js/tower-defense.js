@@ -1481,13 +1481,13 @@
     var el = document.getElementById('td-invest-section');
     if (!el) return;
 
-    var hasJB = typeof JackBucks !== 'undefined' && JackBucks.get;
+    var hasJB = typeof JackBucks !== 'undefined' && JackBucks.getBalance;
     if (!hasJB) {
       el.style.display = 'none';
       return;
     }
 
-    var jbBalance = JackBucks.get();
+    var jbBalance = JackBucks.getBalance();
     var maxAffordSB = Math.min(MAX_INVEST_SB, Math.floor(jbBalance / INVEST_RATE));
 
     var html = '<div class="td-invest-title">Invest JackBucks</div>';
@@ -1520,7 +1520,7 @@
     }
     if (plusBtn) {
       plusBtn.addEventListener('click', function () {
-        var curBalance = JackBucks.get();
+        var curBalance = JackBucks.getBalance();
         var maxNow = Math.min(MAX_INVEST_SB, Math.floor(curBalance / INVEST_RATE));
         if (investedSB < maxNow) {
           investedSB += 5;

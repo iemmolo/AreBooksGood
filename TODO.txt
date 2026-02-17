@@ -111,33 +111,21 @@ AreBooksGood - Improvement TODO
 - [ ] Build solitaire game
 - [ ] Build spider solitaire game
 
-## Tower Defense (Phase 1a shipped, see FARM-TD-PLAN.md)
+## Tower Defense (Phase 1b shipped, see FARM-TD-PLAN.md)
 
 - [x] Core skeleton: canvas, grid, path, 1 tower (arrow), 1 enemy (slime), waves, HUD, overlays, stats, JB integration
-- [ ] Phase 1b: Cannon + Frost towers, Skeleton + Goblin enemies, tower upgrades, boss waves, sell tower
+- [x] Phase 1b: Cannon + Frost towers, Skeleton + Goblin + Orc + Ghost enemies, tower upgrades (Lv1-3), boss waves (every 10), sell tower, inspect panel
+- [x] Phase 2a: Armory — 8 permanent meta-upgrades with tiered material costs
+- [x] Phase 2b: Supply Crate — 7 consumable items, 3-slot loadout, material costs
+- [x] Phase 2c: Tower Blueprints — 5 blueprint towers (Watchtower, Fire, Sniper, Gold Mine, Lightning) with wave + material requirements
+- [x] SamBucks (SB) in-game currency — renamed from JB, lump-sum cash-out to JB on game over
+- [x] Wave milestone starting bonuses (+5/10/15/20/30 SB at waves 5/10/15/20/30, stacking)
+- [x] JB investment pre-run — spend JB for extra starting SB (2:1 rate, 50 SB cap)
+- [x] Starting SB breakdown on start screen (base + armory + milestones + invested)
+- [x] Save/resume — run state saved after each wave, resume button on start screen
+- [x] Quit-to-menu button during gameplay (saves progress between waves)
+- [x] Tower deselect — click selected tower or press Escape to clear cursor
 - [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
-- [ ] Phase 2a: Armory — permanent meta-upgrades bought with processed materials (persist across runs)
-      - Reinforced Walls (Stone Bricks): +2 starting lives per tier
-      - Sharpened Arrows (Planks + Iron Bar): +10% arrow damage per tier
-      - Sturdy Foundations (Planks + Stone Bricks): -10% tower build cost per tier
-      - Supply Lines (Bread + Rope): +5 starting JB per tier
-      - Crystal Optics (Crystal Lens): +15% tower range per tier
-      - Golden Treasury (Gold): +20% wave JB rewards per tier
-      - Hardened Steel (Iron Bars + Hardwood): unlock tower Lv4 upgrade tier
-      - Arcane Mastery (Crystal Lens + Gold): unlock special tower abilities
-      - Each upgrade has 2–3 tiers with escalating costs
-- [ ] Phase 2b: Supply Crate — load 3–5 consumables before each TD run, consumed from farm inventory
-      - Bread: heal +3 lives
-      - Smoked Fish: all towers +30% attack speed for 30s
-      - Rope Trap: place on path, slows enemies 50% for one wave
-      - Iron Caltrops: place on path, 15 dmg to each enemy crossing
-      - Milk Flask: reset all tower cooldowns instantly
-      - Crystal Bomb: deal 50% max HP to all on-screen enemies
-      - Golden Shield: block next 3 enemy leaks
-      - Carry limit upgradeable via Armory
-- [ ] Phase 2c: Tower Blueprints — new towers require one-time material investment to unlock permanently
-      - Fire (2 Hardwood, wave 15), Wall (1 Stone Bricks, wave 10), Sniper (2 Iron Bars, wave 20)
-      - Gold Mine (1 Gold, wave 25), Lightning (1 Crystal Lens, wave 30)
 - [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
 - [ ] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
 - [ ] Phase 4: Sprites, more enemies/maps, mobile touch, sound
