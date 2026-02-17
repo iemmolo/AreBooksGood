@@ -38,6 +38,7 @@
   var PROJECTILE_SPEED = 6;
   var STATS_KEY = 'arebooksgood-td-stats';
   var CRATE_KEY = 'arebooksgood-td-crate';
+  var SAVE_KEY = 'arebooksgood-td-save';
 
   // ── Farm integration guard ────────────────────────
   var hasFarmResources = typeof window.FarmResources !== 'undefined';
@@ -1221,6 +1222,7 @@
     waveBtn.textContent = 'Start Wave ' + (wave + 1);
     updateTowerBtnStates();
     updateHUD();
+    saveRun();
   }
 
   function checkWaveMilestones() {
@@ -1273,6 +1275,7 @@
   function gameOver() {
     gameState = 'gameover';
     waveBtn.disabled = true;
+    clearSave();
 
     stats.gamesPlayed++;
     stats.totalKills += totalKilled;
@@ -1341,6 +1344,89 @@
 
   function saveStats() {
     try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch (e) {}
+  }
+
+  // ── Run save / resume ────────────────────────────
+  function saveRun() {
+    try {
+      var data = {
+        wave: wave,
+        sb: sb,
+        sbEarned: sbEarned,
+        lives: lives,
+        towers: towers.map(function (t) {
+          return { col: t.col, row: t.row, type: t.type, level: t.level };
+        }),
+        totalKilled: totalKilled,
+        towersBuilt: towersBuilt,
+        crate: crate,
+        crateUsed: crateUsed,
+        shieldCharges: shieldCharges,
+        caltropZones: caltropZones
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function loadSave() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
+
+  function clearSave() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  }
+
+  function resumeGame(save) {
+    wave = save.wave || 0;
+    sb = save.sb || START_SB;
+    sbEarned = save.sbEarned || 0;
+    lives = save.lives || START_LIVES;
+    totalKilled = save.totalKilled || 0;
+    towersBuilt = save.towersBuilt || 0;
+
+    towers = [];
+    for (var i = 0; i < (save.towers || []).length; i++) {
+      var t = save.towers[i];
+      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0 });
+    }
+
+    enemies = [];
+    projectiles = [];
+    particles = [];
+    lightningEffects = [];
+    splashEffects = [];
+    spawnQueue = [];
+    totalSpawned = 0;
+    hoverTile = null;
+    inspectedTower = null;
+    hideInspectPanel();
+    lastTime = 0;
+
+    crate = save.crate || [];
+    crateUsed = save.crateUsed || {};
+    shieldCharges = save.shieldCharges || 0;
+    atkSpeedActive = false;
+    atkSpeedTimer = 0;
+    ropeTrapActive = false;
+    caltropZones = save.caltropZones || [];
+    placingCaltrops = false;
+
+    gameState = 'building';
+    startOverlay.classList.add('td-hidden');
+    gameoverOverlay.classList.add('td-hidden');
+
+    renderTowerBar();
+    renderCrateBar();
+    updateTowerBtnStates();
+    updateHUD();
+
+    if (!rafId) {
+      rafId = requestAnimationFrame(loop);
+    }
   }
 
   function renderStatsBlock(el) {
@@ -1520,13 +1606,21 @@
       btn.addEventListener('click', (function (k) {
         return function () {
           if (!isTowerUnlocked(k)) return;
-          selectedTower = k;
           placingCaltrops = false;
           var all = towerBarEl.querySelectorAll('.td-tower-btn');
-          for (var j = 0; j < all.length; j++) {
-            all[j].classList.remove('td-tower-btn-selected');
+          // Toggle: clicking selected tower deselects it
+          if (selectedTower === k) {
+            selectedTower = null;
+            for (var j = 0; j < all.length; j++) {
+              all[j].classList.remove('td-tower-btn-selected');
+            }
+          } else {
+            selectedTower = k;
+            for (var j = 0; j < all.length; j++) {
+              all[j].classList.remove('td-tower-btn-selected');
+            }
+            this.classList.add('td-tower-btn-selected');
           }
-          this.classList.add('td-tower-btn-selected');
         };
       })(key));
 
@@ -1544,6 +1638,17 @@
     });
     towerBarEl.appendChild(wb);
     waveBtn = wb;
+
+    // Menu button (only during gameplay)
+    if (gameState === 'building' || gameState === 'waving') {
+      var mb = document.createElement('button');
+      mb.className = 'td-menu-btn';
+      mb.textContent = 'Quit';
+      mb.addEventListener('click', function () {
+        quitToMenu();
+      });
+      towerBarEl.appendChild(mb);
+    }
   }
 
   // ── Crate bar rendering (in-game) ─────────────────
@@ -1850,8 +1955,17 @@
   }
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && inspectedTower) {
-      closeInspect();
+    if (e.key === 'Escape') {
+      if (inspectedTower) {
+        closeInspect();
+      } else if (selectedTower) {
+        selectedTower = null;
+        placingCaltrops = false;
+        var all = towerBarEl.querySelectorAll('.td-tower-btn');
+        for (var i = 0; i < all.length; i++) {
+          all[i].classList.remove('td-tower-btn-selected');
+        }
+      }
     }
   });
 
@@ -1964,27 +2078,63 @@
     }
   }
 
-  if (playBtn) playBtn.addEventListener('click', function (e) { e.stopPropagation(); startGame(); });
+  if (playBtn) playBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    clearSave();
+    startGame();
+  });
+
+  var resumeBtn = document.getElementById('td-resume-btn');
+  if (resumeBtn) resumeBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var save = loadSave();
+    if (save) {
+      resumeGame(save);
+    }
+  });
+
   if (retryBtn) retryBtn.addEventListener('click', function (e) {
     e.stopPropagation();
-    // Refund any remaining crate items since we're going back to start
-    for (var i = crate.length - 1; i >= 0; i--) {
-      var def = CRATE_DEFS[crate[i]];
-      if (def && !crateUsed[crate[i]]) {
-        // items already committed — no refund on retry
-      }
-    }
     crate = [];
     crateUsed = {};
     saveCrate();
     showStartScreen();
   });
 
+  function quitToMenu() {
+    // Save current run if between waves
+    if (gameState === 'building') {
+      saveRun();
+    }
+    // Stop game loop
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    showStartScreen();
+  }
+
   function showStartScreen() {
     gameState = 'idle';
     startOverlay.classList.remove('td-hidden');
     gameoverOverlay.classList.add('td-hidden');
     investedSB = 0;
+    selectedTower = 'arrow';
+
+    // Check for saved run
+    var save = loadSave();
+    var resumeBtn = document.getElementById('td-resume-btn');
+    if (save && save.wave > 0) {
+      if (resumeBtn) {
+        resumeBtn.classList.remove('td-hidden');
+        resumeBtn.textContent = 'Resume (Wave ' + save.wave + ')';
+      }
+      if (playBtn) playBtn.textContent = 'New Game';
+    } else {
+      if (resumeBtn) resumeBtn.classList.add('td-hidden');
+      if (playBtn) playBtn.textContent = 'Start Game';
+    }
+
     renderStatsBlock(startStats);
     renderStartBreakdown();
     renderInvestSection();
@@ -2291,12 +2441,11 @@
   computePath();
   renderTowerBar();
   initTabs();
-  renderStatsBlock(startStats);
-  renderStartBreakdown();
-  renderInvestSection();
   refreshAllPanels();
   updateHUD();
-  drawIdle();
+
+  // Show start screen (handles save detection + resume button)
+  showStartScreen();
 
   function drawIdle() {
     draw();

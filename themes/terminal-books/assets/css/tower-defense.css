@@ -135,6 +135,42 @@
   margin-top: 4px;
 }
 
+/* ── Start screen buttons ──────────────────────── */
+.td-start-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.td-btn-resume {
+  background: #ffd700;
+  color: #000;
+}
+
+/* ── Menu button in tower bar ──────────────────── */
+.td-menu-btn {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.td-menu-btn:hover {
+  opacity: 0.8;
+}
+
+/* ── Deselect cursor indicator ─────────────────── */
+.td-tower-btn-selected .td-tower-name::after {
+  content: ' \2715';
+  font-size: 9px;
+  opacity: 0.5;
+}
+
 /* ── Canvas wrapper ──────────────────────────────── */
 #td-canvas-wrap {
   position: relative;
