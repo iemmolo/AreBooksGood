@@ -25,6 +25,7 @@ PROPS_DIR   = os.path.join(PACK, 'Farm', 'Props')
 EXT_DIR     = os.path.join(PACK, 'Exterior')
 TREE_DIR    = os.path.join(PACK, 'Farm', 'Tree')
 TILESET_DIR = os.path.join(PACK, 'Farm', 'Tileset', 'Modular')
+ANIMALS_DIR = os.path.join(PACK, 'Farm Animals')
 
 # ── Crop definitions ─────────────────────────────────────────────
 # Each: (output_name, source_path, frame_width, frame_height, stage_indices)
@@ -387,6 +388,40 @@ def extract_tree_decoration():
     tree.save(os.path.join(out_dir, 'tree.png'))
 
     print('Tree: 1 PNG (32x64 maple)')
+
+
+def extract_animals():
+    """Extract walk animation rows from animal spritesheets.
+
+    For each animal, extracts rows 0-3 (down, up, right, left) into a
+    4-row spritesheet (4 frames wide x 4 rows tall) for multi-direction
+    CSS step animation.
+    """
+    anim_dir = os.path.join(OUT, 'animations')
+    ensure_dir(anim_dir)
+    count = 0
+
+    # (output_name, source_path, frame_size)
+    animals = [
+        ('chicken', os.path.join(ANIMALS_DIR, 'Chicken', 'Chicken White.png'), 16),
+        ('cow',     os.path.join(ANIMALS_DIR, 'Cow', 'Common Cow', 'Female Cow Brown.png'), 32),
+        ('sheep',   os.path.join(ANIMALS_DIR, 'Sheep', 'Sheep Female.png'), 32),
+    ]
+
+    for name, src, fs in animals:
+        img = Image.open(src)
+        # 4 cols x 4 rows (down, up, right, left)
+        sheet = Image.new('RGBA', (4 * fs, 4 * fs), (0, 0, 0, 0))
+        for row in range(4):
+            for f in range(4):
+                frame = img.crop((f * fs, row * fs, f * fs + fs, row * fs + fs))
+                sheet.paste(frame, (f * fs, row * fs), frame)
+        out_path = os.path.join(anim_dir, '{}.png'.format(name))
+        sheet.save(out_path)
+        count += 1
+        print('  {} -> {}x{} (4 directions)'.format(name, sheet.width, sheet.height))
+
+    print('Animals: {} PNGs'.format(count))
 
 
 if __name__ == '__main__':

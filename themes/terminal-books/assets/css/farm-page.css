@@ -835,6 +835,56 @@
   image-rendering: crisp-edges;
 }
 
+/* ── Farm animals — multi-direction walk animations ──── */
+/* Spritesheets: 4 cols × 4 rows (down, up, right, left) */
+/* background-position-y set by JS for direction selection */
+
+.fp-anim-chicken {
+  width: 32px;
+  height: 32px;
+  background-image: url('/images/farm/animations/chicken.png');
+  background-repeat: no-repeat;
+  background-size: 128px 128px;
+  animation: fp-walk-chicken 0.6s steps(4) infinite;
+  transition: left 2s linear, top 2s linear;
+}
+
+@keyframes fp-walk-chicken {
+  to { background-position-x: -128px; }
+}
+
+.fp-anim-cow {
+  width: 64px;
+  height: 64px;
+  background-image: url('/images/farm/animations/cow.png');
+  background-repeat: no-repeat;
+  background-size: 256px 256px;
+  animation: fp-walk-cow 0.8s steps(4) infinite;
+  transition: left 3s linear, top 3s linear;
+}
+
+@keyframes fp-walk-cow {
+  to { background-position-x: -256px; }
+}
+
+.fp-anim-sheep {
+  width: 64px;
+  height: 64px;
+  background-image: url('/images/farm/animations/sheep.png');
+  background-repeat: no-repeat;
+  background-size: 256px 256px;
+  animation: fp-walk-sheep 0.8s steps(4) infinite;
+  transition: left 3s linear, top 3s linear;
+}
+
+@keyframes fp-walk-sheep {
+  to { background-position-x: -256px; }
+}
+
+.fp-anim-animal-idle {
+  animation-play-state: paused;
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 600px) {

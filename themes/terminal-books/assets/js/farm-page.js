@@ -510,7 +510,210 @@
     if (fhLevel >= 5) {
       addAnim('fp-anim-fountain', 9, 2, 1, 2, 96, 128);
     }
+
+    // ── Farm animals that wander near their buildings ─────
+
+    // Direction row Y offsets (spritesheet rows: 0=down, 1=up, 2=right, 3=left)
+    // Chicken 2x: 32px per row. Cow/Sheep 2x: 64px per row.
+    var DIR_Y = {
+      chicken: { down: '0px', up: '-32px', right: '-64px', left: '-96px' },
+      cow:     { down: '0px', up: '-64px', right: '-128px', left: '-192px' },
+      sheep:   { down: '0px', up: '-64px', right: '-128px', left: '-192px' }
+    };
+
+    function spawnWanderingAnimal(className, animalType, baseRow, baseCol, rowSpan, colSpan, w, h, count) {
+      // Wander zone: area around and below the building (in % of grid)
+      var zoneLeft  = baseCol * cellW;
+      var zoneRight = (baseCol + (colSpan || 1)) * cellW;
+      var zoneTop   = (baseRow + (rowSpan || 1) - 0.5) * cellH;
+      var zoneBot   = (baseRow + (rowSpan || 1) + 1.5) * cellH;
+
+      for (var a = 0; a < count; a++) {
+        var el = document.createElement('div');
+        el.className = 'fp-anim ' + className;
+        // Start at a random position within the zone
+        var startX = zoneLeft + Math.random() * (zoneRight - zoneLeft);
+        var startY = zoneTop + Math.random() * (zoneBot - zoneTop);
+        el.style.left = startX + '%';
+        el.style.top = startY + '%';
+        el.style.marginLeft = (-w / 2) + 'px';
+        el.style.marginTop = (-h / 2) + 'px';
+        // Start facing down (toward camera)
+        el.style.backgroundPositionY = DIR_Y[animalType].down;
+        el.style.animationDelay = (Math.random() * 2).toFixed(2) + 's';
+        gridEl.appendChild(el);
+
+        // Start wander loop
+        scheduleWander(el, animalType, zoneLeft, zoneRight, zoneTop, zoneBot, w, h);
+      }
+    }
+
+    function scheduleWander(el, animalType, zLeft, zRight, zTop, zBot, w, h) {
+      var idleTime = 2000 + Math.floor(Math.random() * 4000); // 2-6s idle
+      setTimeout(function doWander() {
+        if (!el.parentNode) return; // removed by re-render
+
+        // Pick a random target within the wander zone
+        var targetX = zLeft + Math.random() * (zRight - zLeft);
+        var targetY = zTop + Math.random() * (zBot - zTop);
+
+        // Determine direction from current position
+        var curX = parseFloat(el.style.left) || 0;
+        var curY = parseFloat(el.style.top) || 0;
+        var dx = targetX - curX;
+        var dy = targetY - curY;
+
+        // Pick direction based on dominant axis
+        var dir;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          dir = dx > 0 ? 'right' : 'left';
+        } else {
+          dir = dy > 0 ? 'down' : 'up';
+        }
+        el.style.backgroundPositionY = DIR_Y[animalType][dir];
+
+        // Resume walk animation
+        el.classList.remove('fp-anim-animal-idle');
+
+        // Move to target
+        el.style.left = targetX + '%';
+        el.style.top = targetY + '%';
+
+        // After transition completes, go idle and schedule next wander
+        var walkDuration = animalType === 'chicken' ? 2000 : 3000;
+        setTimeout(function () {
+          if (!el.parentNode) return;
+          // Face down (idle) and pause walk animation
+          el.style.backgroundPositionY = DIR_Y[animalType].down;
+          el.classList.add('fp-anim-animal-idle');
+
+          var nextIdle = 3000 + Math.floor(Math.random() * 5000); // 3-8s idle
+          setTimeout(function () { doWander(); }, nextIdle);
+        }, walkDuration);
+      }, idleTime);
+    }
+
+    // Chicken Coop: row 5, col 0, 2×2
+    if (isCellBuilt({ key: 'chickenCoop', type: 'gathering' })) {
+      spawnWanderingAnimal('fp-anim-chicken', 'chicken', 5, 0, 2, 2, 32, 32, 3);
+    }
+
+    // Cow Pasture: row 5, col 2, 2×2
+    if (isCellBuilt({ key: 'cowPasture', type: 'gathering' })) {
+      spawnWanderingAnimal('fp-anim-cow', 'cow', 5, 2, 2, 2, 64, 64, 2);
+    }
+
+    // Sheep Pen: row 5, col 4, 2×2
+    if (isCellBuilt({ key: 'sheepPen', type: 'gathering' })) {
+      spawnWanderingAnimal('fp-anim-sheep', 'sheep', 5, 4, 2, 2, 64, 64, 2);
+    }
   }
+
+  // ── Procedural farm animal sounds (Web Audio) ──────────────
+
+  var farmAudioCtx = null;
+  var farmSoundsActive = false;
+
+  function initFarmAudio() {
+    if (farmAudioCtx) return;
+    try {
+      farmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) { /* no audio support */ }
+  }
+
+  function playCluck() {
+    if (!farmAudioCtx) return;
+    var osc = farmAudioCtx.createOscillator();
+    var gain = farmAudioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(800, farmAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, farmAudioCtx.currentTime + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(600, farmAudioCtx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.05, farmAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, farmAudioCtx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(farmAudioCtx.destination);
+    osc.start(farmAudioCtx.currentTime);
+    osc.stop(farmAudioCtx.currentTime + 0.08);
+  }
+
+  function playMoo() {
+    if (!farmAudioCtx) return;
+    var osc = farmAudioCtx.createOscillator();
+    var gain = farmAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, farmAudioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, farmAudioCtx.currentTime + 0.4);
+    gain.gain.setValueAtTime(0.05, farmAudioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, farmAudioCtx.currentTime + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, farmAudioCtx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(farmAudioCtx.destination);
+    osc.start(farmAudioCtx.currentTime);
+    osc.stop(farmAudioCtx.currentTime + 0.4);
+  }
+
+  function playBaa() {
+    if (!farmAudioCtx) return;
+    var osc = farmAudioCtx.createOscillator();
+    var gain = farmAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, farmAudioCtx.currentTime);
+    // Vibrato via rapid frequency modulation
+    var lfo = farmAudioCtx.createOscillator();
+    var lfoGain = farmAudioCtx.createGain();
+    lfo.frequency.value = 12;
+    lfoGain.gain.value = 30;
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+    lfo.start(farmAudioCtx.currentTime);
+    lfo.stop(farmAudioCtx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.05, farmAudioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, farmAudioCtx.currentTime + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, farmAudioCtx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(farmAudioCtx.destination);
+    osc.start(farmAudioCtx.currentTime);
+    osc.stop(farmAudioCtx.currentTime + 0.3);
+  }
+
+  function scheduleFarmSounds() {
+    if (farmSoundsActive) return;
+    farmSoundsActive = true;
+
+    function tick() {
+      if (!farmAudioCtx) { farmSoundsActive = false; return; }
+
+      // Pick a random sound from built buildings
+      var sounds = [];
+      if (isCellBuilt({ key: 'chickenCoop', type: 'gathering' })) sounds.push(playCluck);
+      if (isCellBuilt({ key: 'cowPasture', type: 'gathering' }))  sounds.push(playMoo);
+      if (isCellBuilt({ key: 'sheepPen', type: 'gathering' }))    sounds.push(playBaa);
+
+      if (sounds.length > 0) {
+        sounds[Math.floor(Math.random() * sounds.length)]();
+      }
+
+      var delay = 15000 + Math.floor(Math.random() * 25000); // 15-40s
+      setTimeout(tick, delay);
+    }
+
+    // First sound after a short delay
+    setTimeout(tick, 5000 + Math.floor(Math.random() * 10000));
+  }
+
+  // Init audio on first user interaction
+  document.addEventListener('click', function onFirstClick() {
+    initFarmAudio();
+    scheduleFarmSounds();
+    document.removeEventListener('click', onFirstClick);
+  }, { once: true });
+
+  document.addEventListener('touchend', function onFirstTouch() {
+    initFarmAudio();
+    scheduleFarmSounds();
+    document.removeEventListener('touchend', onFirstTouch);
+  }, { once: true });
 
   // ── Render sidebar resources ──────────────────────────────
   function renderSidebar() {
