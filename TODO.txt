@@ -135,11 +135,11 @@ AreBooksGood - Improvement TODO
 - [x] Tower affordability contrast — brighter affordable, red cost when broke
 - [x] Click outside deselect — clicking outside play area clears selection during gameplay
 - [x] TD shortcut tile on farm bar — sword icon links to /td/#td-game-area
-- [ ] Wave preview — show upcoming enemies before starting wave
-- [ ] Tower range preview on hover in tower bar (before placing)
-- [ ] Kill counter per tower in inspect panel
-- [ ] Hotkeys for tower selection (1-8 keys)
-- [ ] Auto-start waves toggle
+- [x] Wave preview — show upcoming enemies before starting wave
+- [x] Tower range preview on hover in tower bar (already existed via ghost tower)
+- [x] Kill counter per tower in inspect panel
+- [x] Hotkeys for tower selection (1-8 keys)
+- [x] Auto-start waves toggle
 - [ ] Mobile touch support — tap to place/inspect, touch-friendly tower bar and UI
 - [ ] New enemy types — healer, splitter, shield
 - [ ] Tower synergies — bonus effects when certain towers are adjacent

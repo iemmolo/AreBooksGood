@@ -782,6 +782,22 @@
   padding: 2px 8px 5px;
 }
 
+/* ── Wave preview ────────────────────────────────── */
+.td-wave-preview {
+  flex: 1 1 100%;
+  font-family: monospace;
+  font-size: 10px;
+  text-align: center;
+  opacity: 0.5;
+  padding: 2px 0 0;
+}
+
+/* ── Kill counter (inspect panel) ────────────────── */
+.td-inspect-kills {
+  white-space: nowrap;
+  font-size: 11px;
+}
+
 /* ── Target mode toggle (inspect panel) ──────────── */
 .td-inspect-target {
   padding: 3px 8px;
@@ -877,6 +893,7 @@
   .td-wave-start-btn { flex: 1 1 100%; font-size: 12px; padding: 8px; }
   .td-menu-btn { font-size: 10px; padding: 4px 8px; }
   .td-speed-btn { font-size: 10px; padding: 4px 8px; }
+  .td-wave-preview { font-size: 9px; }
 
   /* Crate bar */
   .td-crate-bar { gap: 4px; padding: 4px 8px; }

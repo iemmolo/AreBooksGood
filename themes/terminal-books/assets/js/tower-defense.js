@@ -415,6 +415,7 @@
   var rafId = null;
   var lastTime = 0;
   var gameSpeed = 1;
+  var autoWave = false;
 
   // ── Path computation ──────────────────────────────
   var pathTiles = {};
@@ -580,7 +581,7 @@
     }
   }
 
-  function damageEnemy(enemy, dmg) {
+  function damageEnemy(enemy, dmg, sourceTower) {
     // Ghost dodge: 50% evasion (DOT bypasses since it modifies hp directly)
     if (enemy.special === 'dodge' && Math.random() < 0.5) {
       var dodgePos = getPathPos(enemy.dist);
@@ -594,6 +595,7 @@
     if (enemy.hp <= 0) {
       enemy.alive = false;
       totalKilled++;
+      if (sourceTower && typeof sourceTower.kills === 'number') sourceTower.kills++;
       for (var i = 0; i < 5; i++) {
         particles.push({
           x: pos.x,
@@ -849,7 +851,7 @@
           }
         }
         if (best) {
-          damageEnemy(best, 200);
+          damageEnemy(best, 200, tower);
           spawnParticle(tc.x, tc.y, 'HEADSHOT!', '#8cf');
         } else {
           spawnParticle(tc.x, tc.y, 'No target!', '#e55');
@@ -868,7 +870,7 @@
         var stormDmg = getEffectiveDmg(tower);
         for (var i = 0; i < enemies.length; i++) {
           if (!enemies[i].alive) continue;
-          damageEnemy(enemies[i], stormDmg);
+          damageEnemy(enemies[i], stormDmg, tower);
           var ep = getPathPos(enemies[i].dist);
           lightningEffects.push({ points: [{ x: tc.x, y: tc.y }, { x: ep.x, y: ep.y }], life: 0.3 });
         }
@@ -904,7 +906,8 @@
       abilityCooldown: 0,
       megaBlast: false,
       rallyTimer: 0,
-      targetMode: 'closest'
+      targetMode: 'closest',
+      kills: 0
     });
     updateHUD();
     return true;
@@ -1058,7 +1061,7 @@
     var hitSet = {};
     hitSet[enemies.indexOf(firstTarget)] = true;
 
-    damageEnemy(firstTarget, dmg);
+    damageEnemy(firstTarget, dmg, tower);
 
     var current = firstTarget;
     for (var n = 1; n < maxHits; n++) {
@@ -1080,7 +1083,7 @@
         }
       }
       if (!best) break;
-      damageEnemy(best, dmg);
+      damageEnemy(best, dmg, tower);
       hit.push(best);
       current = best;
     }
@@ -1110,7 +1113,8 @@
       dmg: dmg,
       speed: PROJECTILE_SPEED * TILE_SIZE,
       towerType: tower.type,
-      megaBlast: isMega
+      megaBlast: isMega,
+      sourceTower: tower
     });
   }
 
@@ -1128,7 +1132,7 @@
       var dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < 5) {
-        damageEnemy(p.target, p.dmg);
+        damageEnemy(p.target, p.dmg, p.sourceTower);
         // Fire tower DOT
         if (p.towerType === 'fire' && p.target.alive) {
           p.target.dot = { dmg: 3, remaining: 3, tickTimer: 0 };
@@ -1148,7 +1152,7 @@
             var sdx = sp.x - p.x;
             var sdy = sp.y - p.y;
             if (Math.sqrt(sdx * sdx + sdy * sdy) <= splashRadius) {
-              damageEnemy(se, splashDmg);
+              damageEnemy(se, splashDmg, p.sourceTower);
             }
           }
           splashEffects.push({ x: p.x, y: p.y, radius: 0, maxRadius: splashRadius, life: 0.3 });
@@ -1408,11 +1412,15 @@
     checkWaveMilestones();
 
     gameState = 'building';
-    waveBtn.disabled = false;
-    waveBtn.textContent = 'Start Wave ' + (wave + 1);
+    renderTowerBar();
     updateTowerBtnStates();
     updateHUD();
     saveRun();
+
+    // Auto-start next wave
+    if (autoWave) {
+      startWave();
+    }
   }
 
   function checkWaveMilestones() {
@@ -1553,7 +1561,7 @@
         sbEarned: sbEarned,
         lives: lives,
         towers: towers.map(function (t) {
-          return { col: t.col, row: t.row, type: t.type, level: t.level, abilityCooldown: t.abilityCooldown || 0, targetMode: t.targetMode || 'closest' };
+          return { col: t.col, row: t.row, type: t.type, level: t.level, abilityCooldown: t.abilityCooldown || 0, targetMode: t.targetMode || 'closest', kills: t.kills || 0 };
         }),
         totalKilled: totalKilled,
         towersBuilt: towersBuilt,
@@ -1582,6 +1590,7 @@
 
   function resumeGame(save) {
     gameSpeed = 1;
+    autoWave = false;
     // Restore map and difficulty from save
     currentMapId = save.mapId || 'map1';
     currentDifficulty = save.difficulty || 'normal';
@@ -1597,7 +1606,7 @@
     towers = [];
     for (var i = 0; i < (save.towers || []).length; i++) {
       var t = save.towers[i];
-      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0, abilityCooldown: t.abilityCooldown || 0, megaBlast: false, rallyTimer: 0, targetMode: t.targetMode || 'closest' });
+      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0, abilityCooldown: t.abilityCooldown || 0, megaBlast: false, rallyTimer: 0, targetMode: t.targetMode || 'closest', kills: t.kills || 0 });
     }
 
     enemies = [];
@@ -1854,6 +1863,23 @@
     towerBarEl.appendChild(wb);
     waveBtn = wb;
 
+    // Wave preview (building phase only)
+    if (gameState === 'building') {
+      var nextWave = wave + 1;
+      var pool = getAvailableEnemyTypes(nextWave);
+      var count = Math.min(35, 5 + Math.floor(nextWave * 1.5));
+      var isBoss = (nextWave % 10 === 0) || (nextWave > 30 && nextWave % 5 === 0);
+      var preview = document.createElement('div');
+      preview.className = 'td-wave-preview';
+      var parts = [];
+      for (var pi = 0; pi < pool.length; pi++) {
+        var ed = ENEMY_DEFS[pool[pi]];
+        parts.push('<span style="color:' + ed.color + '">' + pool[pi] + '</span>');
+      }
+      preview.innerHTML = count + 'x [' + parts.join(', ') + ']' + (isBoss ? ' + <span style="color:#e44">BOSS</span>' : '');
+      towerBarEl.appendChild(preview);
+    }
+
     // Speed toggle button
     var spd = document.createElement('button');
     spd.className = 'td-speed-btn' + (gameSpeed === 2 ? ' td-speed-btn-active' : '');
@@ -1864,6 +1890,19 @@
       updateTowerBtnStates();
     });
     towerBarEl.appendChild(spd);
+
+    // Auto-wave toggle button
+    var aw = document.createElement('button');
+    aw.className = 'td-speed-btn' + (autoWave ? ' td-speed-btn-active' : '');
+    aw.textContent = autoWave ? 'Auto' : 'Auto';
+    aw.title = 'Auto-start next wave';
+    aw.addEventListener('click', function () {
+      autoWave = !autoWave;
+      renderTowerBar();
+      updateTowerBtnStates();
+      if (autoWave && gameState === 'building' && wave > 0) startWave();
+    });
+    towerBarEl.appendChild(aw);
 
     // Menu button (only during gameplay)
     if (gameState === 'building' || gameState === 'waving') {
@@ -2120,6 +2159,7 @@
     if (def.dmg > 0) html += '<span>DMG: ' + dmg + '</span>';
     if (def.range > 0) html += '<span>Range: ' + rangeTiles + '</span>';
     if (def.speed > 0) html += '<span>Speed: ' + def.speed.toFixed(1) + 's</span>';
+    html += '<span class="td-inspect-kills">\uD83D\uDC80 ' + (t.kills || 0) + '</span>';
     html += '</div>';
 
     // Targeting mode (only for attacking towers)
@@ -2223,6 +2263,8 @@
     hideInspectPanel();
   }
 
+  var towerHotkeys = Object.keys(TOWER_DEFS);
+
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
       if (inspectedTower) {
@@ -2233,6 +2275,30 @@
         var all = towerBarEl.querySelectorAll('.td-tower-btn');
         for (var i = 0; i < all.length; i++) {
           all[i].classList.remove('td-tower-btn-selected');
+        }
+      }
+    }
+
+    // Tower hotkeys: 1-8
+    if (gameState !== 'building' && gameState !== 'waving') return;
+    var num = parseInt(e.key, 10);
+    if (num >= 1 && num <= towerHotkeys.length) {
+      var key = towerHotkeys[num - 1];
+      if (!isTowerUnlocked(key)) return;
+      var def = TOWER_DEFS[key];
+      if (selectedTower === key) {
+        selectedTower = null;
+      } else if (sb >= getEffectiveCost(def)) {
+        selectedTower = key;
+      } else {
+        return;
+      }
+      placingCaltrops = false;
+      var all = towerBarEl.querySelectorAll('.td-tower-btn');
+      for (var i = 0; i < all.length; i++) {
+        all[i].classList.remove('td-tower-btn-selected');
+        if (selectedTower && all[i].getAttribute('data-tower') === selectedTower) {
+          all[i].classList.add('td-tower-btn-selected');
         }
       }
     }
@@ -2336,6 +2402,7 @@
   // ── Play / Retry ──────────────────────────────────
   function startGame() {
     gameSpeed = 1;
+    autoWave = false;
     // Deduct JB investment before starting
     var investCost = investedSB * INVEST_RATE;
     if (investedSB > 0 && typeof JackBucks !== 'undefined' && JackBucks.deduct) {
@@ -2428,6 +2495,7 @@
 
   function showStartScreen() {
     gameSpeed = 1;
+    autoWave = false;
     gameState = 'idle';
     startOverlay.classList.remove('td-hidden');
     startButtonsEl.classList.remove('td-hidden');
