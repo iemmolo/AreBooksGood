@@ -6,11 +6,36 @@
   var GRID_ROWS = 12;
   var TILE_SIZE = 40;
 
-  var MAP_1 = {
-    path: [[0, 6], [3, 6], [3, 2], [8, 2], [8, 8], [12, 8], [12, 4], [15, 4]],
-    spawn: [0, 6],
-    exit: [15, 4]
+  var MAPS = {
+    map1: {
+      name: 'Valley',
+      desc: 'Classic zigzag through the valley',
+      path: [[0,6],[3,6],[3,2],[8,2],[8,8],[12,8],[12,4],[15,4]],
+      spawn: [0,6], exit: [15,4]
+    },
+    map2: {
+      name: 'Switchback',
+      desc: 'Tight switchbacks from the north',
+      path: [[15,1],[12,1],[12,5],[4,5],[4,8],[10,8],[10,11],[0,11]],
+      spawn: [15,1], exit: [0,11]
+    },
+    map3: {
+      name: 'Spiral',
+      desc: 'Long spiral toward the center',
+      path: [[0,1],[14,1],[14,10],[2,10],[2,5],[8,5],[8,8],[13,8]],
+      spawn: [0,1], exit: [13,8]
+    }
   };
+
+  var currentMapId = 'map1';
+
+  var DIFFICULTIES = {
+    easy:   { label: 'Easy',   livesBonus: 10, hpMult: 0.7,  rewardMult: 0.8, speedMult: 0.9 },
+    normal: { label: 'Normal', livesBonus: 0,  hpMult: 1.0,  rewardMult: 1.0, speedMult: 1.0 },
+    hard:   { label: 'Hard',   livesBonus: -5, hpMult: 1.5,  rewardMult: 1.3, speedMult: 1.15 }
+  };
+
+  var currentDifficulty = 'normal';
 
   var TOWER_DEFS = {
     arrow:      { symbol: 'A',  name: 'Arrow',      dmg: 5,  range: 3, speed: 1.0, cost: 10, color: null,     blueprint: false },
@@ -185,7 +210,9 @@
     { wave: 10, bonus: 10 },
     { wave: 15, bonus: 15 },
     { wave: 20, bonus: 20 },
-    { wave: 30, bonus: 30 }
+    { wave: 30, bonus: 30 },
+    { wave: 40, bonus: 40 },
+    { wave: 50, bonus: 50 }
   ];
 
   var MAX_INVEST_SB = 50;
@@ -267,7 +294,7 @@
     crateUsed[itemKey] = true;
 
     if (itemKey === 'bread') {
-      var maxLives = START_LIVES + mods.startLives;
+      var maxLives = START_LIVES + mods.startLives + DIFFICULTIES[currentDifficulty].livesBonus;
       lives = Math.min(lives + 3, maxLives);
       spawnParticle(CANVAS_W / 2, CANVAS_H / 2, '+3 \u2665', '#4f4');
     } else if (itemKey === 'smokedFish') {
@@ -397,7 +424,7 @@
     pathSegments = [];
     pathTotalLen = 0;
 
-    var wp = MAP_1.path;
+    var wp = MAPS[currentMapId].path;
     for (var i = 0; i < wp.length - 1; i++) {
       var c1 = wp[i][0], r1 = wp[i][1];
       var c2 = wp[i + 1][0], r2 = wp[i + 1][1];
@@ -1121,22 +1148,40 @@
 
   function startWave() {
     wave++;
-    var count = 5 + Math.floor(wave * 1.5);
-    var hpMult = 1 + wave * 0.15;
+    var diff = DIFFICULTIES[currentDifficulty];
+
+    // Enemy count: cap at 35 to prevent lag
+    var count = Math.min(35, 5 + Math.floor(wave * 1.5));
+
+    // HP scaling: linear up to 30, then exponential ramp
+    var hpMult;
+    if (wave <= 30) {
+      hpMult = 1 + wave * 0.15;
+    } else {
+      var base30 = 1 + 30 * 0.15; // 5.5
+      hpMult = base30 * Math.pow(1.08, wave - 30);
+    }
+    hpMult *= diff.hpMult;
+
+    var speedMult = diff.speedMult;
     var pool = getAvailableEnemyTypes(wave);
 
     spawnQueue = [];
     for (var i = 0; i < count; i++) {
       var type = pool[Math.floor(Math.random() * pool.length)];
       var baseHp = ENEMY_DEFS[type].hp;
-      spawnQueue.push({ type: type, hp: Math.round(baseHp * hpMult) });
+      spawnQueue.push({ type: type, hp: Math.round(baseHp * hpMult), speedMult: speedMult });
     }
 
-    // Boss wave every 10 waves
-    if (wave % 10 === 0) {
-      var bossNum = wave / 10;
-      var bossHp = Math.round(500 * (1 + bossNum * 0.5));
-      spawnQueue.push({ type: 'boss', hp: bossHp });
+    // Boss wave: every 10, or every 5 past wave 30
+    var isBossWave = (wave % 10 === 0) || (wave > 30 && wave % 5 === 0);
+    if (isBossWave) {
+      var bossNum = Math.floor(wave / 10) || 1;
+      var bossHp = Math.round(500 * (1 + bossNum * 0.5) * diff.hpMult);
+      if (wave > 30) {
+        bossHp = Math.round(bossHp * Math.pow(1.08, wave - 30));
+      }
+      spawnQueue.push({ type: 'boss', hp: bossHp, speedMult: speedMult });
       spawnParticle(CANVAS_W / 2, CANVAS_H / 2, 'BOSS WAVE!', '#e44');
     }
 
@@ -1159,7 +1204,7 @@
         type: next.type,
         hp: next.hp,
         maxHp: next.hp,
-        speed: def.speed,
+        speed: def.speed * (next.speedMult || 1),
         radius: def.radius,
         color: def.color,
         shape: def.shape,
@@ -1191,8 +1236,9 @@
     var baseReward = 5 + wave * 2;
 
     // Boss wave bonus
-    if (wave % 10 === 0) {
-      var bossNum = wave / 10;
+    var isBoss = (wave % 10 === 0) || (wave > 30 && wave % 5 === 0);
+    if (isBoss) {
+      var bossNum = Math.floor(wave / 10) || 1;
       var bossBonus = 50 * bossNum;
       baseReward += bossBonus;
     }
@@ -1204,7 +1250,7 @@
     }
     var mineBonus = goldMineCount * 2;
 
-    var reward = Math.round((baseReward + mineBonus) * mods.rewardMult);
+    var reward = Math.round((baseReward + mineBonus) * mods.rewardMult * DIFFICULTIES[currentDifficulty].rewardMult);
     sb += reward;
     sbEarned += reward;
 
@@ -1283,6 +1329,13 @@
     stats.totalTowersBuilt += towersBuilt;
     stats.totalJBEarned += sbEarned;
     if (wave > stats.highestWave) stats.highestWave = wave;
+
+    // Per-map-difficulty record
+    var recordKey = currentMapId + '-' + currentDifficulty;
+    if (!stats.records) stats.records = {};
+    var prev = stats.records[recordKey] || 0;
+    if (wave > prev) stats.records[recordKey] = wave;
+
     saveStats();
 
     // Lump-sum cash-out: deposit all earned SB as JB
@@ -1322,7 +1375,7 @@
   var stats = loadStats();
 
   function defaultStats() {
-    return { gamesPlayed: 0, highestWave: 0, totalKills: 0, totalTowersBuilt: 0, totalJBEarned: 0, unlockedTowers: [] };
+    return { gamesPlayed: 0, highestWave: 0, totalKills: 0, totalTowersBuilt: 0, totalJBEarned: 0, unlockedTowers: [], records: {} };
   }
 
   function loadStats() {
@@ -1336,7 +1389,8 @@
           totalKills: s.totalKills || 0,
           totalTowersBuilt: s.totalTowersBuilt || 0,
           totalJBEarned: s.totalJBEarned || 0,
-          unlockedTowers: s.unlockedTowers || []
+          unlockedTowers: s.unlockedTowers || [],
+          records: s.records || {}
         };
       }
     } catch (e) {}
@@ -1363,7 +1417,9 @@
         crate: crate,
         crateUsed: crateUsed,
         shieldCharges: shieldCharges,
-        caltropZones: caltropZones
+        caltropZones: caltropZones,
+        mapId: currentMapId,
+        difficulty: currentDifficulty
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch (e) {}
@@ -1382,6 +1438,11 @@
   }
 
   function resumeGame(save) {
+    // Restore map and difficulty from save
+    currentMapId = save.mapId || 'map1';
+    currentDifficulty = save.difficulty || 'normal';
+    computePath();
+
     wave = save.wave || 0;
     sb = save.sb || START_SB;
     sbEarned = save.sbEarned || 0;
@@ -1537,7 +1598,11 @@
   var waveBtn = null; // set during renderTowerBar
 
   function updateHUD() {
-    if (hudWave) hudWave.textContent = 'Wave: ' + (wave || '\u2014');
+    if (hudWave) {
+      var waveText = 'Wave: ' + (wave || '\u2014');
+      if (wave > 30) waveText += ' \u221E';
+      hudWave.textContent = waveText;
+    }
     if (hudLives) hudLives.textContent = '\u2665 ' + lives;
     if (hudSB) hudSB.textContent = 'SB: ' + (gameState === 'idle' ? '\u2014' : sb);
     if (hudEnemies) {
@@ -1728,7 +1793,7 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    var wp = MAP_1.path;
+    var wp = MAPS[currentMapId].path;
     for (var i = 0; i < wp.length - 1; i++) {
       var c1 = wp[i][0], r1 = wp[i][1];
       var c2 = wp[i + 1][0], r2 = wp[i + 1][1];
@@ -1753,10 +1818,11 @@
     ctx.font = 'bold 10px monospace';
     ctx.globalAlpha = 0.4;
     ctx.fillStyle = colorAccent;
-    var spawnTC = tileCenter(MAP_1.spawn[0], MAP_1.spawn[1]);
+    var curMap = MAPS[currentMapId];
+    var spawnTC = tileCenter(curMap.spawn[0], curMap.spawn[1]);
     ctx.textAlign = 'right';
     ctx.fillText('IN', spawnTC.x - 4, spawnTC.y);
-    var exitTC = tileCenter(MAP_1.exit[0], MAP_1.exit[1]);
+    var exitTC = tileCenter(curMap.exit[0], curMap.exit[1]);
     ctx.textAlign = 'left';
     ctx.fillText('OUT', exitTC.x + TILE_SIZE / 2 + 2, exitTC.y);
     ctx.globalAlpha = 1;
@@ -2058,8 +2124,11 @@
       JackBucks.deduct(investCost);
     }
 
+    // Map + difficulty already set from UI selection
+    computePath();
+
     wave = 0;
-    lives = START_LIVES + mods.startLives;
+    lives = START_LIVES + mods.startLives + DIFFICULTIES[currentDifficulty].livesBonus;
     sb = START_SB + mods.startSB + getMilestoneBonus() + investedSB;
     sbEarned = 0;
     towers = [];
@@ -2146,11 +2215,16 @@
 
     // Check for saved run
     var save = loadSave();
+    var hasSave = save && save.wave > 0;
     var resumeBtn = document.getElementById('td-resume-btn');
-    if (save && save.wave > 0) {
+    if (hasSave) {
+      // Auto-select saved map + difficulty
+      currentMapId = save.mapId || 'map1';
+      currentDifficulty = save.difficulty || 'normal';
       if (resumeBtn) {
         resumeBtn.classList.remove('td-hidden');
-        resumeBtn.textContent = 'Resume (Wave ' + save.wave + ')';
+        var saveMap = MAPS[save.mapId || 'map1'];
+        resumeBtn.textContent = 'Resume (Wave ' + save.wave + ' \u2014 ' + saveMap.name + ')';
       }
       if (playBtn) playBtn.textContent = 'New Game';
     } else {
@@ -2158,12 +2232,93 @@
       if (playBtn) playBtn.textContent = 'Start Game';
     }
 
+    computePath();
+    renderMapSelector(hasSave);
+    renderDifficultySelector(hasSave);
+    renderRecordDisplay();
     renderStatsBlock(startStats);
     renderStartBreakdown();
     renderInvestSection();
     renderTowerBar();
     refreshAllPanels();
     drawIdle();
+  }
+
+  // ── Map selector ─────────────────────────────────
+  function renderMapSelector(locked) {
+    var el = document.getElementById('td-map-select');
+    if (!el) return;
+    el.innerHTML = '';
+
+    var mapKeys = Object.keys(MAPS);
+    for (var i = 0; i < mapKeys.length; i++) {
+      var key = mapKeys[i];
+      var map = MAPS[key];
+      var btn = document.createElement('button');
+      btn.className = 'td-select-btn';
+      if (key === currentMapId) btn.className += ' td-select-btn-active';
+      if (locked) btn.className += ' td-select-btn-locked';
+      btn.textContent = map.name;
+      btn.title = map.desc;
+      if (locked) btn.disabled = true;
+
+      btn.addEventListener('click', (function (k) {
+        return function () {
+          currentMapId = k;
+          computePath();
+          renderMapSelector(false);
+          renderRecordDisplay();
+          renderStartBreakdown();
+          drawIdle();
+        };
+      })(key));
+
+      el.appendChild(btn);
+    }
+  }
+
+  // ── Difficulty selector ──────────────────────────
+  function renderDifficultySelector(locked) {
+    var el = document.getElementById('td-difficulty-select');
+    if (!el) return;
+    el.innerHTML = '';
+
+    var diffKeys = Object.keys(DIFFICULTIES);
+    for (var i = 0; i < diffKeys.length; i++) {
+      var key = diffKeys[i];
+      var diff = DIFFICULTIES[key];
+      var btn = document.createElement('button');
+      btn.className = 'td-select-btn';
+      if (key === currentDifficulty) btn.className += ' td-select-btn-active';
+      if (locked) btn.className += ' td-select-btn-locked';
+      btn.textContent = diff.label;
+      if (locked) btn.disabled = true;
+
+      btn.addEventListener('click', (function (k) {
+        return function () {
+          currentDifficulty = k;
+          renderDifficultySelector(false);
+          renderRecordDisplay();
+          renderStartBreakdown();
+        };
+      })(key));
+
+      el.appendChild(btn);
+    }
+  }
+
+  // ── Record display ───────────────────────────────
+  function renderRecordDisplay() {
+    var el = document.getElementById('td-record-display');
+    if (!el) return;
+
+    var recordKey = currentMapId + '-' + currentDifficulty;
+    var best = (stats.records && stats.records[recordKey]) || 0;
+    if (best > 0) {
+      el.textContent = 'Your Record: Wave ' + best;
+    } else {
+      el.textContent = 'Your Record: \u2014';
+    }
   }
 
   // ── Tab system ────────────────────────────────────

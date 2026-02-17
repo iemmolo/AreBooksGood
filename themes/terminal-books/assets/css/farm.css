@@ -78,6 +78,9 @@
   align-items: center;
   justify-content: center;
   background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .farm-dash-tile:hover {
@@ -88,6 +91,7 @@
 .farm-dash-icon {
   font-size: 18px;
   line-height: 1;
+  pointer-events: none;
 }
 
 .farm-dash-count {

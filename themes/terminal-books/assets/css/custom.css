@@ -639,6 +639,98 @@ a.site-title {
 }
 
 /* ============================================
+   Farm Info Collapsible
+   ============================================ */
+.farm-details {
+  margin: 16px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.farm-details[open] {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.farm-details-summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 0.9em;
+  color: var(--accent);
+  opacity: 0.7;
+  list-style: none;
+}
+
+.farm-details-summary::-webkit-details-marker { display: none; }
+.farm-details-summary::marker { content: ''; }
+
+.farm-details-summary:hover {
+  opacity: 1;
+}
+
+.farm-details-content {
+  padding: 4px 16px 12px;
+  font-size: 0.85em;
+  line-height: 1.6;
+  opacity: 0.8;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.farm-details-content h3 {
+  color: var(--accent);
+  font-size: 0.95em;
+  margin: 12px 0 4px;
+}
+
+.farm-details-content h3:first-child {
+  margin-top: 8px;
+}
+
+.farm-details-content p {
+  margin: 4px 0 8px;
+}
+
+.farm-details-nested {
+  margin: 12px 0 4px;
+  border-color: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.farm-details-nested[open] {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.farm-details-nested .farm-details-content {
+  border-top-color: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.farm-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+  margin: 6px 0 10px;
+}
+
+.farm-info-table th {
+  text-align: left;
+  color: var(--accent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  padding: 3px 6px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.farm-info-table td {
+  padding: 2px 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.farm-info-table tr:last-child td {
+  border-bottom: none;
+}
+
+.farm-info-rare td {
+  color: #ffd700;
+}
+
+/* ============================================
    Casino Tile Grid
    ============================================ */
 .casino-tile-grid {

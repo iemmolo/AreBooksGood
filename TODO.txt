@@ -125,10 +125,15 @@ AreBooksGood - Improvement TODO
 - [x] Save/resume — run state saved after each wave, resume button on start screen
 - [x] Quit-to-menu button during gameplay (saves progress between waves)
 - [x] Tower deselect — click selected tower or press Escape to clear cursor
+- [ ] Mobile touch support — tap to place/inspect, touch-friendly tower bar and UI
+- [x] Second map — new path layout for replayability (3 maps: Valley, Switchback, Spiral)
+- [x] Endless mode — waves keep scaling past 30, high-score tracking
+- [x] Difficulty selection — easy/normal/hard (starting lives, enemy scaling, reward multiplier)
+- [ ] Tower special abilities — tied to Arcane Mastery armory upgrade
 - [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
 - [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
 - [ ] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
-- [ ] Phase 4: Sprites, more enemies/maps, mobile touch, sound
+- [ ] Phase 4: Sprites, more enemies/maps, sound
 
 ## Future Ideas
 
@@ -140,4 +145,4 @@ AreBooksGood - Improvement TODO
 - [ ] Add search functionality (Pagefind or Lunr.js)
 - [ ] Add related reviews section on each review page
 - [ ] Add Goodreads/external links for each book
-- [ ] Reduce favicon size (currently 15KB)
+- [x] Reduce favicon size (SVG 230B + PNGs, apple-touch-icon, web manifest)

@@ -36,6 +36,45 @@
   color: #ffd700;
 }
 
+/* ── Map / Difficulty selectors ───────────────── */
+.td-select-group {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.td-select-btn {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 5px 12px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.td-select-btn:hover { opacity: 0.8; }
+
+.td-select-btn-active {
+  opacity: 1;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.td-select-btn-locked {
+  cursor: not-allowed;
+}
+
+.td-record-display {
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
 /* ── SB Breakdown on start screen ──────────────── */
 .td-start-breakdown {
   font-size: 12px;
@@ -530,10 +569,10 @@
 /* ── Tower bar ───────────────────────────────────── */
 #td-tower-bar {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 4px;
+  align-items: stretch;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: color-mix(in srgb, var(--background) 80%, var(--accent) 20%);
   border: 1px solid var(--accent);
   border-top: none;
@@ -545,14 +584,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 6px 12px;
+  justify-content: center;
+  padding: 5px 4px;
   background: color-mix(in srgb, var(--background) 60%, var(--accent) 10%);
   border: 1px solid var(--accent);
   color: var(--foreground);
   font-family: monospace;
   font-size: 12px;
   cursor: pointer;
-  min-width: 70px;
+  flex: 1 1 0;
+  min-width: 0;
   opacity: 0.6;
 }
 
@@ -579,25 +620,29 @@
 }
 
 .td-tower-icon {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color: var(--accent);
   line-height: 1;
 }
 
 .td-tower-name {
-  font-size: 11px;
+  font-size: 10px;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .td-tower-cost {
-  font-size: 10px;
+  font-size: 9px;
   color: #ffd700;
   margin-top: 1px;
 }
 
 .td-wave-start-btn {
-  margin-left: auto;
+  flex: 1 1 100%;
   font-size: 13px;
   padding: 8px 16px;
 }
@@ -726,17 +771,20 @@
   #td-hud { font-size: 12px; padding: 4px 8px; }
 
   /* Tower bar */
-  #td-tower-bar { gap: 4px; padding: 6px 8px; }
-  .td-tower-btn { min-width: 0; padding: 4px 6px; flex: 1 1 auto; max-width: calc(25% - 4px); }
-  .td-tower-icon { font-size: 16px; }
-  .td-tower-name { font-size: 9px; }
-  .td-tower-cost { font-size: 9px; }
-  .td-wave-start-btn { margin-left: 0; flex: 1 1 100%; font-size: 12px; padding: 8px; }
+  #td-tower-bar { gap: 3px; padding: 6px 6px; }
+  .td-tower-btn { padding: 4px 2px; flex: 1 1 0; max-width: calc(25% - 3px); }
+  .td-tower-icon { font-size: 14px; }
+  .td-tower-name { font-size: 8px; }
+  .td-tower-cost { font-size: 8px; }
+  .td-wave-start-btn { flex: 1 1 100%; font-size: 12px; padding: 8px; }
   .td-menu-btn { font-size: 10px; padding: 4px 8px; }
 
   /* Crate bar */
   .td-crate-bar { gap: 4px; padding: 4px 8px; }
   .td-crate-btn { font-size: 10px; padding: 3px 6px; }
+
+  /* Selectors */
+  .td-select-btn { font-size: 10px; padding: 4px 8px; }
 
   /* Overlays */
   .td-title { font-size: 22px; }

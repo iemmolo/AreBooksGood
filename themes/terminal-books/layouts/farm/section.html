@@ -1,8 +1,194 @@
 {{ define "main" }}
   <h1 class="page-title">{{ .Title }}</h1>
   <div class="casino-intro">
-    {{ .Content }}
+    <p>Your farm runs on two currencies: <strong>coins</strong> from the casino and <strong>JackBucks (JB)</strong> from selling crops. Plant seeds, harvest when they're ready, and sell for JB. Use JB at the Silk Road to buy better seeds and upgrades.</p>
+    <p>Your pet helps out too &mdash; it'll water crops, harvest for you, and even drop rare seeds at higher levels.</p>
   </div>
+
+  <details class="farm-details">
+    <summary class="farm-details-summary">> Would you like to know more?</summary>
+    <div class="farm-details-content">
+      <h3>The Farm</h3>
+      <p>Start with 2 plots and 3 basic crops (wheat, carrot, potato). Crops grow on real-time timers &mdash; they keep growing even when you close the page. Upgrade your <strong>farmhouse</strong> at the Silk Road to unlock more plots, buildings, and passive bonuses like auto-watering and faster growth.</p>
+      <p>At higher farmhouse levels you unlock gathering stations (lumber, quarry, mine, fishing) and processing buildings (mill, sawmill, kitchen, forge) that turn raw materials into refined goods.</p>
+
+      <h3>Tower Defense</h3>
+      <p>Place towers along the path to stop waves of enemies. You earn <strong>SamBucks (SB)</strong> each wave, which convert to JB when the run ends. Choose from 3 maps and 3 difficulty levels. Waves scale endlessly past 30 for high-score chasers.</p>
+      <p>Farm resources fuel the <strong>Armory</strong> (permanent upgrades), <strong>Supply Crate</strong> (consumable items), and <strong>Blueprints</strong> (unlock new tower types).</p>
+
+      <h3>Shops</h3>
+      <p>The <strong>Silk Road</strong> sells seeds, plot upgrades, farmhouse levels, tools, and exclusive cosmetics &mdash; all for JB. The <strong>Pet Shop</strong> lets you adopt and evolve pets using coins. Each pet type (cat, dragon, robot) has different farming bonuses.</p>
+
+      <details class="farm-details farm-details-nested">
+        <summary class="farm-details-summary">> Do you want to see more?</summary>
+        <div class="farm-details-content">
+
+          <h3>Crops</h3>
+          <table class="farm-info-table">
+            <thead><tr><th>Crop</th><th>Growth</th><th>Sells For</th><th>Seed Cost</th></tr></thead>
+            <tbody>
+              <tr><td>Carrot</td><td>5 min</td><td>2 JB</td><td>Free</td></tr>
+              <tr><td>Potato</td><td>15 min</td><td>5 JB</td><td>Free</td></tr>
+              <tr><td>Wheat</td><td>30 min</td><td>8 JB</td><td>Free</td></tr>
+              <tr><td>Tomato</td><td>1 hour</td><td>15 JB</td><td>5 JB</td></tr>
+              <tr><td>Corn</td><td>2 hours</td><td>25 JB</td><td>8 JB</td></tr>
+              <tr><td>Pumpkin</td><td>4 hours</td><td>45 JB</td><td>12 JB</td></tr>
+              <tr class="farm-info-rare"><td>Golden Apple</td><td>8 hours</td><td>90 JB</td><td>25 JB</td></tr>
+              <tr class="farm-info-rare"><td>Crystal Herb</td><td>12 hours</td><td>150 JB</td><td>40 JB</td></tr>
+              <tr class="farm-info-rare"><td>Dragon Fruit</td><td>24 hours</td><td>300 JB</td><td>75 JB</td></tr>
+            </tbody>
+          </table>
+          <p>All crops grow in real time &mdash; even when the page is closed. Watering a crop gives a 10% speed boost. Fertilizer (from the Silk Road) halves the remaining grow time.</p>
+
+          <h3>Farmhouse Levels</h3>
+          <p>Upgrade your farmhouse at the Silk Road to unlock bonuses that stack as you level up.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Level</th><th>Name</th><th>Cost</th><th>Bonus</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Dirt Shack</td><td>&mdash;</td><td>Starting farmhouse</td></tr>
+              <tr><td>2</td><td>Wooden Cabin</td><td>100 JB</td><td>1.1x sell price</td></tr>
+              <tr><td>3</td><td>Stone Farmhouse</td><td>300 JB</td><td>1.2x sell, 10% faster growth</td></tr>
+              <tr><td>4</td><td>Manor</td><td>800 JB</td><td>1.3x sell, 15% faster, auto-water on load</td></tr>
+              <tr><td>5</td><td>Golden Estate</td><td>2000 JB</td><td>1.5x sell, 25% faster, auto-water, rare seed drops</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Gathering Stations</h3>
+          <p>Gather raw materials on timers. Higher farmhouse levels unlock more stations.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Station</th><th>Produces</th><th>Timer</th></tr></thead>
+            <tbody>
+              <tr><td>Lumber Yard</td><td>Wood</td><td>12 min</td></tr>
+              <tr><td>Quarry</td><td>Stone</td><td>20 min</td></tr>
+              <tr><td>Fishing Pond</td><td>Fish</td><td>10 min</td></tr>
+              <tr><td>Chicken Coop</td><td>Eggs</td><td>15 min</td></tr>
+              <tr><td>Cow Pasture</td><td>Milk</td><td>30 min</td></tr>
+              <tr><td>Sheep Pen</td><td>Wool</td><td>45 min</td></tr>
+              <tr><td>Mine</td><td>Iron</td><td>40 min</td></tr>
+              <tr><td>Deep Mine</td><td>Gold</td><td>90 min</td></tr>
+              <tr><td>Old Growth</td><td>Hardwood</td><td>35 min</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Processing Stations</h3>
+          <p>Turn raw materials into refined goods. Each station queues up to 5 items.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Station</th><th>Recipe</th><th>Time</th></tr></thead>
+            <tbody>
+              <tr><td>Mill</td><td>3 Wheat &rarr; 1 Flour</td><td>5 min</td></tr>
+              <tr><td>Sawmill</td><td>3 Wood &rarr; 1 Planks</td><td>8 min</td></tr>
+              <tr><td>Mason</td><td>4 Stone &rarr; 1 Stone Bricks</td><td>10 min</td></tr>
+              <tr><td>Kitchen</td><td>2 Flour + 1 Eggs &rarr; 1 Bread</td><td>10 min</td></tr>
+              <tr><td>Forge</td><td>3 Iron + 2 Wood &rarr; 1 Iron Bars</td><td>15 min</td></tr>
+              <tr><td>Loom</td><td>2 Wool &rarr; 1 Rope</td><td>6 min</td></tr>
+              <tr><td>Smokehouse</td><td>2 Fish + 1 Wood &rarr; 1 Smoked Fish</td><td>8 min</td></tr>
+              <tr><td>Enchanter</td><td>2 Crystal Herb + 1 Gold &rarr; 1 Crystal Lens</td><td>30 min</td></tr>
+            </tbody>
+          </table>
+          <p>Refined goods are used in Tower Defense for Armory upgrades, Supply Crate items, and Blueprint unlocks.</p>
+
+          <h3>Tower Defense &mdash; Towers</h3>
+          <p>3 starter towers are always available. 5 blueprint towers must be unlocked with farm resources after reaching the required wave.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Tower</th><th>DMG</th><th>Range</th><th>Cost</th><th>Unlock</th></tr></thead>
+            <tbody>
+              <tr><td>Arrow</td><td>5</td><td>3</td><td>10 SB</td><td>Starter</td></tr>
+              <tr><td>Cannon</td><td>15</td><td>2</td><td>25 SB</td><td>Starter</td></tr>
+              <tr><td>Frost</td><td>3</td><td>3</td><td>20 SB</td><td>Starter (slows)</td></tr>
+              <tr><td>Watchtower</td><td>&mdash;</td><td>3</td><td>15 SB</td><td>Wave 10 + Stone Bricks</td></tr>
+              <tr><td>Fire</td><td>10</td><td>2</td><td>30 SB</td><td>Wave 15 + Hardwood</td></tr>
+              <tr><td>Sniper</td><td>25</td><td>5</td><td>50 SB</td><td>Wave 20 + Iron Bars</td></tr>
+              <tr><td>Gold Mine</td><td>&mdash;</td><td>&mdash;</td><td>40 SB</td><td>Wave 25 + Gold</td></tr>
+              <tr><td>Lightning</td><td>15</td><td>3</td><td>60 SB</td><td>Wave 30 + Crystal Lens</td></tr>
+            </tbody>
+          </table>
+          <p>Watchtower boosts nearby towers' range. Gold Mine generates bonus SB each wave. All towers upgrade to Lv3 (Lv4 with Hardened Steel armory upgrade).</p>
+
+          <h3>Tower Defense &mdash; Enemies</h3>
+          <table class="farm-info-table">
+            <thead><tr><th>Enemy</th><th>HP</th><th>Speed</th><th>Appears</th><th>Special</th></tr></thead>
+            <tbody>
+              <tr><td>Slime</td><td>20</td><td>1.0</td><td>Wave 1</td><td>&mdash;</td></tr>
+              <tr><td>Skeleton</td><td>40</td><td>1.2</td><td>Wave 6</td><td>&mdash;</td></tr>
+              <tr><td>Goblin</td><td>30</td><td>1.8</td><td>Wave 11</td><td>Fast</td></tr>
+              <tr><td>Orc</td><td>80</td><td>0.7</td><td>Wave 16</td><td>Tanky</td></tr>
+              <tr><td>Ghost</td><td>25</td><td>1.0</td><td>Wave 21</td><td>50% dodge chance</td></tr>
+              <tr><td>Boss</td><td>500</td><td>0.4</td><td>Every 10 waves</td><td>Massive HP, scales with wave</td></tr>
+            </tbody>
+          </table>
+          <p>Enemy HP scales each wave. Past wave 30 the scaling ramps exponentially and mini-bosses appear every 5 waves.</p>
+
+          <h3>Tower Defense &mdash; Armory</h3>
+          <p>Permanent meta-upgrades purchased with farm resources. Effects persist across all runs.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Upgrade</th><th>Tiers</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td>Reinforced Walls</td><td>3</td><td>+2 starting lives per tier</td></tr>
+              <tr><td>Sharpened Arrows</td><td>3</td><td>+10% arrow damage per tier</td></tr>
+              <tr><td>Sturdy Foundations</td><td>3</td><td>-10% tower build cost per tier</td></tr>
+              <tr><td>Supply Lines</td><td>3</td><td>+5 starting SB per tier</td></tr>
+              <tr><td>Crystal Optics</td><td>3</td><td>+15% tower range per tier</td></tr>
+              <tr><td>Golden Treasury</td><td>3</td><td>+20% wave SB rewards per tier</td></tr>
+              <tr><td>Hardened Steel</td><td>1</td><td>Unlock tower Lv4 upgrades</td></tr>
+              <tr><td>Arcane Mastery</td><td>1</td><td>Unlock tower special abilities</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Tower Defense &mdash; Supply Crate</h3>
+          <p>Load up to 3 consumable items before a run. Each can be used once per game.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Item</th><th>Effect</th><th>Cost</th></tr></thead>
+            <tbody>
+              <tr><td>Bread</td><td>Heal +3 lives</td><td>1 Bread</td></tr>
+              <tr><td>Smoked Fish</td><td>+30% attack speed for 30s</td><td>1 Smoked Fish</td></tr>
+              <tr><td>Rope Trap</td><td>Slow all enemies 50% for one wave</td><td>2 Rope</td></tr>
+              <tr><td>Iron Caltrops</td><td>Place on path, deals 15 damage</td><td>2 Iron Bars</td></tr>
+              <tr><td>Milk Flask</td><td>Reset all tower cooldowns</td><td>3 Milk</td></tr>
+              <tr><td>Crystal Bomb</td><td>50% HP damage to all enemies</td><td>1 Crystal Lens</td></tr>
+              <tr><td>Golden Shield</td><td>Block the next 3 enemy leaks</td><td>1 Gold</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Pets</h3>
+          <p>Adopt a pet at the Pet Shop for coins. Each type has unique casino and farming bonuses.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Pet</th><th>Cost</th><th>Casino Bonus</th><th>Farm Bonus</th></tr></thead>
+            <tbody>
+              <tr><td>Cat</td><td>500 coins</td><td>Refunds coins after losing streaks</td><td>15% auto-replant chance</td></tr>
+              <tr><td>Dragon</td><td>750 coins</td><td>Bonus coins on wins</td><td>10% faster crop growth</td></tr>
+              <tr><td>Robot</td><td>1000 coins</td><td>Recovery coins every N games</td><td>Auto-harvest ready crops on load</td></tr>
+            </tbody>
+          </table>
+          <p>Evolve pets to level 2 (2,000 coins + 50 games) and level 3 (10,000 coins + 200 games) for stronger bonuses. Pets also water crops, harvest for you, and drop rare seeds at farmhouse level 5.</p>
+
+          <h3>Silk Road</h3>
+          <p>The black market shop sells everything for JB.</p>
+          <p><strong>Seeds:</strong> All 9 crop types. Starter seeds (carrot, potato, wheat) are free.</p>
+          <p><strong>Farm Tools:</strong> Sprinkler (auto-water timer), Scarecrow (harvest bonus), Golden Trowel (sell price boost), Seed Bag (free seed chance), Fertilizer (halves grow time). Each tool has 3 upgrade tiers.</p>
+          <p><strong>Farmhouse:</strong> Levels 2&ndash;5 with stacking bonuses.</p>
+          <p><strong>Plot Expansion:</strong> Unlock additional farm plots up to 6 total.</p>
+          <p><strong>Exclusive Cosmetics:</strong> Farmer Hat (300 JB), Dirt Trail (500 JB), Harvest Moon ambient glow (800 JB), Overgrown site theme (1,000 JB).</p>
+
+          <h3>Wave Milestones</h3>
+          <p>Your highest TD wave unlocks permanent starting SB bonuses for future runs.</p>
+          <table class="farm-info-table">
+            <thead><tr><th>Wave</th><th>Bonus</th></tr></thead>
+            <tbody>
+              <tr><td>5</td><td>+5 SB</td></tr>
+              <tr><td>10</td><td>+10 SB</td></tr>
+              <tr><td>15</td><td>+15 SB</td></tr>
+              <tr><td>20</td><td>+20 SB</td></tr>
+              <tr><td>30</td><td>+30 SB</td></tr>
+              <tr><td>40</td><td>+40 SB</td></tr>
+              <tr><td>50</td><td>+50 SB</td></tr>
+            </tbody>
+          </table>
+          <p>Milestones stack &mdash; reaching wave 30 gives +5+10+15+20+30 = 80 bonus SB on every future run. You can also invest JB before a run for extra starting SB at a 2:1 rate (max 50 SB).</p>
+
+        </div>
+      </details>
+    </div>
+  </details>
 
   <div class="casino-tile-grid">
     <a href="{{ "farm/game/" | relURL }}" class="casino-tile">
