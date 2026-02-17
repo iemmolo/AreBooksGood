@@ -2040,7 +2040,7 @@
 
   // ── Input ─────────────────────────────────────────
   function canvasCoords(e) {
-    var touch = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
+    var touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || null;
     var clientX = touch ? touch.clientX : e.clientX;
     var clientY = touch ? touch.clientY : e.clientY;
     var rect = canvas.getBoundingClientRect();
