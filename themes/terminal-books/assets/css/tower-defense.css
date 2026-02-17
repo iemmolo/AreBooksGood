@@ -76,10 +76,19 @@
   font-family: monospace;
 }
 
+.td-start-content {
+  text-align: left;
+  width: 90%;
+  max-width: 520px;
+  max-height: 90%;
+  overflow-y: auto;
+}
+
 .td-title {
   font-size: 28px;
   margin: 0 0 8px;
   color: var(--accent);
+  text-align: center;
 }
 
 .td-subtitle {
@@ -87,6 +96,7 @@
   margin: 0 0 16px;
   opacity: 0.8;
   line-height: 1.5;
+  text-align: center;
 }
 
 .td-instructions {
@@ -139,6 +149,246 @@
   cursor: not-allowed;
 }
 
+.td-start-content .td-btn {
+  display: block;
+  margin: 12px auto 0;
+}
+
+/* ── Tab bar ─────────────────────────────────────── */
+.td-tab-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.td-tab {
+  font-family: monospace;
+  font-size: 12px;
+  padding: 6px 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.td-tab:hover {
+  opacity: 0.8;
+}
+
+.td-tab-active {
+  opacity: 1;
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Tab panels ──────────────────────────────────── */
+.td-tab-panel {
+  min-height: 120px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* ── Upgrade grid (Armory + Blueprints) ──────────── */
+.td-upgrade-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.td-upgrade-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  padding: 8px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.td-upgrade-card-maxed {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.td-upgrade-name {
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.td-upgrade-desc {
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.td-upgrade-tier {
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.td-upgrade-cost {
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.td-cost-ok {
+  color: var(--accent);
+}
+
+.td-cost-short {
+  color: #e55;
+}
+
+.td-upgrade-btn {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 3px 10px;
+  background: var(--accent);
+  color: var(--background);
+  border: none;
+  cursor: pointer;
+}
+
+.td-upgrade-btn:hover {
+  opacity: 0.85;
+}
+
+.td-upgrade-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.td-panel-empty {
+  text-align: center;
+  opacity: 0.5;
+  padding: 20px 0;
+  font-size: 13px;
+}
+
+/* ── Supply Crate panel ──────────────────────────── */
+.td-crate-slots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+.td-crate-slot {
+  width: 60px;
+  height: 40px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--foreground);
+  position: relative;
+}
+
+.td-crate-slot-filled {
+  border-style: solid;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.td-crate-slot-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e55;
+  color: #fff;
+  border: none;
+  font-size: 9px;
+  line-height: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.td-crate-items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.td-crate-item {
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  padding: 6px;
+  font-size: 11px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.td-crate-item-name {
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.td-crate-item-desc {
+  opacity: 0.7;
+}
+
+.td-crate-add-btn {
+  font-family: monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  margin-top: 4px;
+  background: var(--accent);
+  color: var(--background);
+  border: none;
+  cursor: pointer;
+}
+
+.td-crate-add-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── In-game Crate bar ───────────────────────────── */
+.td-crate-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--background) 80%, #ffd700 10%);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-top: none;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+
+.td-crate-btn {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  background: color-mix(in srgb, var(--background) 60%, var(--accent) 10%);
+  border: 1px solid var(--accent);
+  color: var(--foreground);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.td-crate-btn:hover {
+  opacity: 1;
+}
+
+.td-crate-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.td-crate-btn-active {
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
 /* ── Tower bar ───────────────────────────────────── */
 #td-tower-bar {
   display: flex;
@@ -184,6 +434,12 @@
   cursor: not-allowed;
 }
 
+.td-tower-btn-locked {
+  opacity: 0.2;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
 .td-tower-icon {
   font-size: 18px;
   font-weight: bold;
@@ -206,4 +462,23 @@
   margin-left: auto;
   font-size: 13px;
   padding: 8px 16px;
+}
+
+/* ── Tower type colors ───────────────────────────── */
+.td-tower-btn[data-tower="fire"] .td-tower-icon { color: #f84; }
+.td-tower-btn[data-tower="sniper"] .td-tower-icon { color: #8cf; }
+.td-tower-btn[data-tower="lightning"] .td-tower-icon { color: #ff0; }
+.td-tower-btn[data-tower="watchtower"] .td-tower-icon { color: #aaa; }
+.td-tower-btn[data-tower="goldmine"] .td-tower-icon { color: #ffd700; }
+
+/* ── Blueprint card unlocked state ───────────────── */
+.td-blueprint-unlocked {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.td-blueprint-unlocked .td-upgrade-name::after {
+  content: ' [UNLOCKED]';
+  font-size: 10px;
+  opacity: 0.6;
 }

@@ -9,15 +9,26 @@
   <div id="td-canvas-wrap">
     <canvas id="td-canvas"></canvas>
     <div id="td-start-overlay" class="td-overlay">
-      <div class="td-overlay-content">
+      <div class="td-overlay-content td-start-content">
         <h2 class="td-title">Tower Defense</h2>
-        <p class="td-subtitle">Place towers to defend the path.<br>Earn JackBucks for each wave survived.</p>
-        <div class="td-instructions">
-          <p>1. Select a tower from the bar below</p>
-          <p>2. Click a grid cell to place it</p>
-          <p>3. Press Start Wave to begin</p>
+        <div class="td-tab-bar">
+          <button class="td-tab td-tab-active" data-tab="overview">Overview</button>
+          <button class="td-tab" data-tab="armory">Armory</button>
+          <button class="td-tab" data-tab="crate">Supply Crate</button>
+          <button class="td-tab" data-tab="blueprints">Blueprints</button>
         </div>
-        <div id="td-start-stats" class="td-stats-block"></div>
+        <div id="td-tab-overview" class="td-tab-panel">
+          <p class="td-subtitle">Place towers to defend the path.<br>Earn JackBucks for each wave survived.</p>
+          <div class="td-instructions">
+            <p>1. Select a tower from the bar below</p>
+            <p>2. Click a grid cell to place it</p>
+            <p>3. Press Start Wave to begin</p>
+          </div>
+          <div id="td-start-stats" class="td-stats-block"></div>
+        </div>
+        <div id="td-tab-armory" class="td-tab-panel td-hidden"></div>
+        <div id="td-tab-crate" class="td-tab-panel td-hidden"></div>
+        <div id="td-tab-blueprints" class="td-tab-panel td-hidden"></div>
         <button id="td-play-btn" class="td-btn">Start Game</button>
       </div>
     </div>
@@ -35,13 +46,7 @@
       </div>
     </div>
   </div>
-  <div id="td-tower-bar">
-    <button class="td-tower-btn td-tower-btn-selected" data-tower="arrow">
-      <span class="td-tower-icon">A</span>
-      <span class="td-tower-name">Arrow</span>
-      <span class="td-tower-cost">10 JB</span>
-    </button>
-    <button id="td-wave-btn" class="td-btn td-wave-start-btn" disabled>Start Wave</button>
-  </div>
+  <div id="td-tower-bar"></div>
+  <div id="td-crate-bar" class="td-crate-bar td-hidden"></div>
 </div>
 {{ end }}
