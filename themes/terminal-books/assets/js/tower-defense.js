@@ -38,14 +38,14 @@
   var currentDifficulty = 'normal';
 
   var TOWER_DEFS = {
-    arrow:      { symbol: 'A',  name: 'Arrow',      dmg: 5,  range: 3, speed: 1.0, cost: 10, color: null,     blueprint: false },
-    cannon:     { symbol: 'C',  name: 'Cannon',     dmg: 15, range: 2, speed: 2.5, cost: 25, color: '#a86',   blueprint: false },
-    frost:      { symbol: 'Fr', name: 'Frost',      dmg: 3,  range: 3, speed: 1.5, cost: 20, color: '#4cf',   blueprint: false },
-    watchtower: { symbol: 'Wt', name: 'Watchtower',  dmg: 0,  range: 3, speed: 0,   cost: 15, color: '#aaa',   blueprint: true, unlockCost: { processed: { stoneBricks: 1 } }, waveReq: 10 },
-    fire:       { symbol: 'Fi', name: 'Fire',        dmg: 10, range: 2, speed: 1.2, cost: 30, color: '#f84',   blueprint: true, unlockCost: { raw: { hardwood: 2 } }, waveReq: 15 },
-    sniper:     { symbol: 'S',  name: 'Sniper',      dmg: 25, range: 5, speed: 3.0, cost: 50, color: '#8cf',   blueprint: true, unlockCost: { processed: { ironBars: 2 } }, waveReq: 20 },
-    goldmine:   { symbol: 'G',  name: 'Gold Mine',   dmg: 0,  range: 0, speed: 0,   cost: 40, color: '#ffd700',blueprint: true, unlockCost: { raw: { gold: 1 } }, waveReq: 25 },
-    lightning:  { symbol: 'L',  name: 'Lightning',   dmg: 15, range: 3, speed: 2.5, cost: 60, color: '#ff0',   blueprint: true, unlockCost: { processed: { crystalLens: 1 } }, waveReq: 30 }
+    arrow:      { symbol: 'A',  name: 'Arrow',      dmg: 5,  range: 3, speed: 1.0, cost: 10, color: null,     blueprint: false, ability: { name: 'Volley',    desc: 'Fire 5 arrows at random enemies in range', cooldown: 15 } },
+    cannon:     { symbol: 'C',  name: 'Cannon',     dmg: 15, range: 2, speed: 2.5, cost: 25, color: '#a86',   blueprint: false, ability: { name: 'Mega Blast', desc: 'Next shot 3x damage, 2x splash radius', cooldown: 20 } },
+    frost:      { symbol: 'Fr', name: 'Frost',      dmg: 3,  range: 3, speed: 1.5, cost: 20, color: '#4cf',   blueprint: false, ability: { name: 'Blizzard',  desc: 'Freeze all enemies in range for 3s', cooldown: 25 } },
+    watchtower: { symbol: 'Wt', name: 'Watchtower',  dmg: 0,  range: 3, speed: 0,   cost: 15, color: '#aaa',   blueprint: true, unlockCost: { processed: { stoneBricks: 1 } }, waveReq: 10, ability: { name: 'Rally', desc: 'Double range buff (+20%) for 10s', cooldown: 30 } },
+    fire:       { symbol: 'Fi', name: 'Fire',        dmg: 10, range: 2, speed: 1.2, cost: 30, color: '#f84',   blueprint: true, unlockCost: { raw: { hardwood: 2 } }, waveReq: 15, ability: { name: 'Inferno', desc: 'Apply DOT to all enemies on map', cooldown: 25 } },
+    sniper:     { symbol: 'S',  name: 'Sniper',      dmg: 25, range: 5, speed: 3.0, cost: 50, color: '#8cf',   blueprint: true, unlockCost: { processed: { ironBars: 2 } }, waveReq: 20, ability: { name: 'Headshot', desc: '200 damage to highest-HP enemy in range', cooldown: 20 } },
+    goldmine:   { symbol: 'G',  name: 'Gold Mine',   dmg: 0,  range: 0, speed: 0,   cost: 40, color: '#ffd700',blueprint: true, unlockCost: { raw: { gold: 1 } }, waveReq: 25, ability: { name: 'Payday', desc: '+15 SB instantly', cooldown: 30 } },
+    lightning:  { symbol: 'L',  name: 'Lightning',   dmg: 15, range: 3, speed: 2.5, cost: 60, color: '#ff0',   blueprint: true, unlockCost: { processed: { crystalLens: 1 } }, waveReq: 30, ability: { name: 'Storm', desc: 'Hit every enemy on screen', cooldown: 30 } }
   };
 
   var ENEMY_DEFS = {
@@ -414,6 +414,7 @@
   var towersBuilt = 0;
   var rafId = null;
   var lastTime = 0;
+  var gameSpeed = 1;
 
   // ── Path computation ──────────────────────────────
   var pathTiles = {};
@@ -707,7 +708,7 @@
       var dy = tc.y - oc.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
       if (dist <= 2 * TILE_SIZE) {
-        bonus += 0.1;
+        bonus += other.rallyTimer > 0 ? 0.2 : 0.1;
       }
     }
     return bonus;
@@ -784,6 +785,101 @@
     updateTowerBtnStates();
   }
 
+  function activateAbility(tower) {
+    if (!mods.specialAbilities) return;
+    if (tower.abilityCooldown > 0) return;
+    var def = TOWER_DEFS[tower.type];
+    var tc = tileCenter(tower.col, tower.row);
+    var rangePx = getEffectiveRangePx(tower);
+
+    switch (tower.type) {
+      case 'arrow': // Volley — fire 5 arrows at random enemies in range
+        var targets = [];
+        for (var i = 0; i < enemies.length; i++) {
+          if (!enemies[i].alive) continue;
+          var ep = getPathPos(enemies[i].dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) targets.push(enemies[i]);
+        }
+        for (var v = 0; v < 5 && targets.length > 0; v++) {
+          var pick = targets[Math.floor(Math.random() * targets.length)];
+          fireProjectile(tower, pick);
+        }
+        spawnParticle(tc.x, tc.y, 'VOLLEY!', def.color || colorAccent);
+        break;
+
+      case 'cannon': // Mega Blast — next shot 3x dmg, 2x splash
+        tower.megaBlast = true;
+        spawnParticle(tc.x, tc.y, 'MEGA BLAST!', '#a86');
+        break;
+
+      case 'frost': // Blizzard — freeze all enemies in range 3s
+        for (var i = 0; i < enemies.length; i++) {
+          if (!enemies[i].alive) continue;
+          var ep = getPathPos(enemies[i].dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
+            enemies[i].slow = { remaining: 3, factor: 0 };
+          }
+        }
+        spawnParticle(tc.x, tc.y, 'BLIZZARD!', '#4cf');
+        break;
+
+      case 'watchtower': // Rally — double range buff for 10s
+        tower.rallyTimer = 10;
+        spawnParticle(tc.x, tc.y, 'RALLY!', '#aaa');
+        break;
+
+      case 'fire': // Inferno — DOT to all enemies on map
+        for (var i = 0; i < enemies.length; i++) {
+          if (!enemies[i].alive) continue;
+          enemies[i].dot = { dmg: 5, remaining: 4, tickTimer: 0 };
+        }
+        spawnParticle(tc.x, tc.y, 'INFERNO!', '#f84');
+        break;
+
+      case 'sniper': // Headshot — 200 dmg to highest-HP enemy in range
+        var best = null;
+        for (var i = 0; i < enemies.length; i++) {
+          if (!enemies[i].alive) continue;
+          var ep = getPathPos(enemies[i].dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
+            if (!best || enemies[i].hp > best.hp) best = enemies[i];
+          }
+        }
+        if (best) {
+          damageEnemy(best, 200);
+          spawnParticle(tc.x, tc.y, 'HEADSHOT!', '#8cf');
+        } else {
+          spawnParticle(tc.x, tc.y, 'No target!', '#e55');
+          return; // Don't consume cooldown
+        }
+        break;
+
+      case 'goldmine': // Payday — +15 SB instantly
+        sb += 15;
+        sbEarned += 15;
+        updateHUD();
+        spawnParticle(tc.x, tc.y, '+15 SB!', '#ffd700');
+        break;
+
+      case 'lightning': // Storm — hit every enemy on screen
+        var stormDmg = getEffectiveDmg(tower);
+        for (var i = 0; i < enemies.length; i++) {
+          if (!enemies[i].alive) continue;
+          damageEnemy(enemies[i], stormDmg);
+          var ep = getPathPos(enemies[i].dist);
+          lightningEffects.push({ points: [{ x: tc.x, y: tc.y }, { x: ep.x, y: ep.y }], life: 0.3 });
+        }
+        spawnParticle(tc.x, tc.y, 'STORM!', '#ff0');
+        break;
+    }
+
+    tower.abilityCooldown = def.ability.cooldown;
+    renderInspectPanel();
+  }
+
   function getTowerAt(col, row) {
     for (var i = 0; i < towers.length; i++) {
       if (towers[i].col === col && towers[i].row === row) return towers[i];
@@ -804,7 +900,10 @@
       row: row,
       type: type,
       level: 1,
-      cooldown: 0
+      cooldown: 0,
+      abilityCooldown: 0,
+      megaBlast: false,
+      rallyTimer: 0
     });
     updateHUD();
     return true;
@@ -823,6 +922,10 @@
     for (var i = 0; i < towers.length; i++) {
       var t = towers[i];
       var def = TOWER_DEFS[t.type];
+
+      // Tick ability cooldowns
+      if (t.abilityCooldown > 0) t.abilityCooldown = Math.max(0, t.abilityCooldown - dt);
+      if (t.rallyTimer > 0) t.rallyTimer = Math.max(0, t.rallyTimer - dt);
 
       // Skip non-attacking towers
       if (t.type === 'watchtower' || t.type === 'goldmine') continue;
@@ -968,13 +1071,19 @@
   function fireProjectile(tower, target) {
     var tc = tileCenter(tower.col, tower.row);
     var dmg = getEffectiveDmg(tower);
+    var isMega = tower.megaBlast;
+    if (isMega) {
+      dmg *= 3;
+      tower.megaBlast = false;
+    }
     projectiles.push({
       x: tc.x,
       y: tc.y,
       target: target,
       dmg: dmg,
       speed: PROJECTILE_SPEED * TILE_SIZE,
-      towerType: tower.type
+      towerType: tower.type,
+      megaBlast: isMega
     });
   }
 
@@ -1003,7 +1112,7 @@
         }
         // Cannon tower splash
         if (p.towerType === 'cannon') {
-          var splashRadius = TILE_SIZE;
+          var splashRadius = p.megaBlast ? 2 * TILE_SIZE : TILE_SIZE;
           var splashDmg = Math.round(p.dmg * 0.5);
           for (var si = 0; si < enemies.length; si++) {
             var se = enemies[si];
@@ -1417,7 +1526,7 @@
         sbEarned: sbEarned,
         lives: lives,
         towers: towers.map(function (t) {
-          return { col: t.col, row: t.row, type: t.type, level: t.level };
+          return { col: t.col, row: t.row, type: t.type, level: t.level, abilityCooldown: t.abilityCooldown || 0 };
         }),
         totalKilled: totalKilled,
         towersBuilt: towersBuilt,
@@ -1445,6 +1554,7 @@
   }
 
   function resumeGame(save) {
+    gameSpeed = 1;
     // Restore map and difficulty from save
     currentMapId = save.mapId || 'map1';
     currentDifficulty = save.difficulty || 'normal';
@@ -1460,7 +1570,7 @@
     towers = [];
     for (var i = 0; i < (save.towers || []).length; i++) {
       var t = save.towers[i];
-      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0 });
+      towers.push({ col: t.col, row: t.row, type: t.type, level: t.level || 1, cooldown: 0, abilityCooldown: t.abilityCooldown || 0, megaBlast: false, rallyTimer: 0 });
     }
 
     enemies = [];
@@ -1682,7 +1792,8 @@
         return function () {
           if (!isTowerUnlocked(k)) return;
           var def = TOWER_DEFS[k];
-          if (def && sb < getEffectiveCost(def)) return;
+          // Allow deselect even if can't afford, but block selecting new tower
+          if (selectedTower !== k && def && sb < getEffectiveCost(def)) return;
           placingCaltrops = false;
           var all = towerBarEl.querySelectorAll('.td-tower-btn');
           // Toggle: clicking selected tower deselects it
@@ -1715,6 +1826,17 @@
     });
     towerBarEl.appendChild(wb);
     waveBtn = wb;
+
+    // Speed toggle button
+    var spd = document.createElement('button');
+    spd.className = 'td-speed-btn' + (gameSpeed === 2 ? ' td-speed-btn-active' : '');
+    spd.textContent = gameSpeed === 2 ? 'x2' : 'x1';
+    spd.addEventListener('click', function () {
+      gameSpeed = gameSpeed === 2 ? 1 : 2;
+      renderTowerBar();
+      updateTowerBtnStates();
+    });
+    towerBarEl.appendChild(spd);
 
     // Menu button (only during gameplay)
     if (gameState === 'building' || gameState === 'waving') {
@@ -1927,6 +2049,7 @@
     var dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
     if (dt > 0.1) dt = 0.1;
+    dt *= gameSpeed;
 
     update(dt);
     draw();
@@ -1935,6 +2058,11 @@
     // Update smoked fish timer on crate bar
     if (atkSpeedActive && crateBarEl && !crateBarEl.classList.contains('td-hidden')) {
       renderCrateBar();
+    }
+
+    // Auto-refresh inspect panel for ability cooldown countdown
+    if (inspectedTower && inspectedTower.abilityCooldown > 0 && mods.specialAbilities) {
+      renderInspectPanel();
     }
 
     if (gameState === 'building' || gameState === 'waving') {
@@ -1978,6 +2106,19 @@
     var refund = Math.floor(getTotalInvestment(t) * 0.5);
     html += '<button class="td-inspect-btn td-inspect-sell" id="td-inspect-sell-btn">Sell (+' + refund + ' SB)</button>';
     html += '</div>';
+
+    // Ability section (Arcane Mastery)
+    if (mods.specialAbilities && def.ability) {
+      html += '<div class="td-inspect-ability">';
+      var onCd = t.abilityCooldown > 0;
+      html += '<button class="td-inspect-btn td-inspect-ability-btn" id="td-inspect-ability-btn"' +
+        (onCd ? ' disabled' : '') + '>' +
+        def.ability.name + (onCd ? ' (' + Math.ceil(t.abilityCooldown) + 's)' : '') +
+        '</button>';
+      html += '<div class="td-inspect-ability-desc">' + def.ability.desc + '</div>';
+      html += '</div>';
+    }
+
     html += '<div class="td-inspect-hint">' + (isMobile ? '' : 'ESC to close') + '</div>';
 
     panel.innerHTML = html;
@@ -2016,6 +2157,12 @@
     if (sellBtn) sellBtn.addEventListener('click', function (ev) {
       ev.stopPropagation();
       if (inspectedTower) sellTower(inspectedTower);
+    });
+
+    var abilityBtn = document.getElementById('td-inspect-ability-btn');
+    if (abilityBtn) abilityBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      if (inspectedTower) activateAbility(inspectedTower);
     });
   }
 
@@ -2127,6 +2274,7 @@
 
   // ── Play / Retry ──────────────────────────────────
   function startGame() {
+    gameSpeed = 1;
     // Deduct JB investment before starting
     var investCost = investedSB * INVEST_RATE;
     if (investedSB > 0 && typeof JackBucks !== 'undefined' && JackBucks.deduct) {
@@ -2218,6 +2366,7 @@
   }
 
   function showStartScreen() {
+    gameSpeed = 1;
     gameState = 'idle';
     startOverlay.classList.remove('td-hidden');
     startButtonsEl.classList.remove('td-hidden');

@@ -778,6 +778,63 @@
   padding: 2px 8px 5px;
 }
 
+/* ── Speed toggle button ─────────────────────────── */
+.td-speed-btn {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.td-speed-btn:hover {
+  opacity: 0.8;
+}
+
+.td-speed-btn-active {
+  opacity: 1;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ── Tower ability (inspect panel) ───────────────── */
+.td-inspect-ability {
+  padding: 5px 8px 4px;
+  border-top: 1px solid color-mix(in srgb, #b4f 30%, transparent);
+}
+
+.td-inspect-ability-btn {
+  font-family: monospace;
+  font-size: 10px;
+  padding: 4px 8px;
+  width: 100%;
+  border: 1px solid #b4f;
+  background: color-mix(in srgb, var(--background) 60%, #b4f 10%);
+  color: #b4f;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.td-inspect-ability-btn:hover {
+  opacity: 0.85;
+}
+
+.td-inspect-ability-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.td-inspect-ability-desc {
+  font-size: 9px;
+  opacity: 0.5;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
 /* ── Mobile ──────────────────────────────────────── */
 @media (max-width: 480px) {
   /* HUD */
@@ -791,6 +848,7 @@
   .td-tower-cost { font-size: 8px; }
   .td-wave-start-btn { flex: 1 1 100%; font-size: 12px; padding: 8px; }
   .td-menu-btn { font-size: 10px; padding: 4px 8px; }
+  .td-speed-btn { font-size: 10px; padding: 4px 8px; }
 
   /* Crate bar */
   .td-crate-bar { gap: 4px; padding: 4px 8px; }
@@ -815,5 +873,6 @@
   .td-inspect-panel { width: 160px !important; }
   .td-inspect-btn { font-size: 11px; padding: 6px 10px; min-height: 32px; }
   .td-inspect-close { font-size: 20px; padding: 4px 6px; min-width: 32px; min-height: 32px; }
+  .td-inspect-ability-btn { font-size: 11px; padding: 6px 10px; min-height: 32px; }
   .td-inspect-hint { display: none; }
 }
