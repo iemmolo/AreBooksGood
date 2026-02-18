@@ -771,7 +771,7 @@
         var dropMat = dropMats[Math.floor(Math.random() * dropMats.length)];
         var dropQty = Math.max(1, Math.floor(wave / 10));
         window.FarmResources.add('raw', dropMat, dropQty);
-        spawnParticle(pos.x, pos.y - 20, '+' + dropQty + ' ' + dropMat, '#ffd700');
+        spawnParticle(pos.x, pos.y - 20, '+' + dropQty + ' ' + formatResourceName(dropMat), '#ffd700');
       }
 
       // Splitter: spawn 2 mini versions on death
@@ -1866,7 +1866,7 @@
         var ms = WAVE_MILESTONES[mi];
         if (ms.material && wave >= ms.wave && stats.highestWave < ms.wave) {
           window.FarmResources.add(ms.material.type, ms.material.key, ms.material.qty);
-          milestoneMats.push('+' + ms.material.qty + ' ' + ms.material.key);
+          milestoneMats.push('+' + ms.material.qty + ' ' + formatResourceName(ms.material.key));
         }
       }
     }
