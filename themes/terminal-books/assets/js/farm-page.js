@@ -47,8 +47,8 @@
     { key: 'sawmill',     name: 'Sawmill',       row: 9,  col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
     { key: 'mason',       name: 'Mason',         row: 10, col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
     { key: 'kitchen',     name: 'Kitchen',       row: 9,  col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'forge',       name: 'Forge',         row: 9,  col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'loom',        name: 'Loom',          row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'loom',        name: 'Loom',          row: 9,  col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'forge',       name: 'Forge',         row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'smokehouse',  name: 'Smokehouse',    row: 10, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
     { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
     { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
