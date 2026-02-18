@@ -10,6 +10,8 @@
   var toggleBtn = document.getElementById('fp-toggle');
   var UPDATE_INTERVAL = 10000; // 10s
   var COLLAPSE_KEY = 'arebooksgood-farm-page-collapsed';
+  var DOG_UNLOCK_KEY = 'arebooksgood-farm-dogs';
+  var DOG_BREEDS = ['Labrador', 'Beagle', 'Husky', 'Dalmatian', 'Corgi', 'Poodle', 'Bulldog', 'Shiba Inu', 'Retriever'];
   var prevCounts = {};
   var prevStages = {};
   var stationPopupEl = null;
@@ -32,7 +34,7 @@
     { key: 'crop15',      name: 'Crops',         row: 4, col: 3, rowSpan: 1, colSpan: 1, type: 'crop' },
     { key: 'crop6',       name: 'Crops',         row: 3, col: 4, rowSpan: 1, colSpan: 1, type: 'crop' },
     { key: 'crop7',       name: 'Crops',         row: 3, col: 5, rowSpan: 1, colSpan: 1, type: 'crop' },
-    // Row 4: empty gap
+    { key: 'dogHouse',   name: 'Dog House',   row: 3, col: 1, rowSpan: 1, colSpan: 1, type: 'special' },
     { key: 'chickenCoop', name: 'Chicken Coop',  row: 5, col: 0, rowSpan: 2, colSpan: 2, type: 'gathering' },
     { key: 'cowPasture',  name: 'Cow Pasture',   row: 5, col: 2, rowSpan: 2, colSpan: 2, type: 'gathering' },
     { key: 'sheepPen',    name: 'Sheep Pen',     row: 5, col: 4, rowSpan: 2, colSpan: 2, type: 'gathering' },
@@ -96,6 +98,8 @@
     // Tier 4 buildings (farmhouse Lv4)
     deepMine:    { cost: 200, minFH: 4 },
     oldGrowth:   { cost: 150, minFH: 4 },
+    // Tier 2 special buildings
+    dogHouse:    { cost: 100, minFH: 2 },
     // Tier 5 buildings (farmhouse Lv5)
     enchanter:   { cost: 300, minFH: 5 }
   };
@@ -124,6 +128,7 @@
     mine: FARM_IMG + '/stations/mine.png',
     deepMine: FARM_IMG + '/stations/deepMine.png',
     oldGrowth: FARM_IMG + '/stations/oldGrowth.png',
+    dogHouse: FARM_IMG + '/stations/dogHouse.png',
     fishingPond: null,  // background-painted
     forest0: null,      // background-painted
     forest1: null,
@@ -176,6 +181,7 @@
     mine: '\u26CF',        // pick
     deepMine: '\uD83D\uDC8E',   // gem
     oldGrowth: '\uD83C\uDF33',  // tree
+    dogHouse: '\uD83D\uDC15',    // dog
     fishingPond: '\uD83C\uDFA3', // fishing
     forest0: '\uD83C\uDF33', forest1: '\uD83C\uDF33',
     forest2: '\uD83C\uDF33', forest3: '\uD83C\uDF33'
@@ -287,6 +293,19 @@
       return window.FarmResources.isStationBuilt(item.key);
     }
     return false;
+  }
+
+  // ── Dog unlock state (localStorage) ──────────────────────
+  function getUnlockedDogs() {
+    try {
+      var raw = localStorage.getItem(DOG_UNLOCK_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return [];
+  }
+
+  function setUnlockedDogs(arr) {
+    try { localStorage.setItem(DOG_UNLOCK_KEY, JSON.stringify(arr)); } catch (e) {}
   }
 
   // ── Get resource count for a station ──────────────────────
@@ -922,10 +941,13 @@
     if (fhLevel >= 4) {
       spawnWanderingAnimal('fp-anim-pig', 'pig', 1, 2, 1, 4, 64, 64, 2, 2);
     }
-    // All 9 dog breeds in the crop area (rows 2-4, cols 2-5) — Lv2+
-    if (fhLevel >= 2) {
+    // Dogs — requires Dog House built + individually adopted
+    if (fhLevel >= 2 && isCellBuilt({ key: 'dogHouse', type: 'special' })) {
+      var unlockedDogs = getUnlockedDogs();
       for (var di = 1; di <= 9; di++) {
-        spawnWanderingAnimal('fp-anim-dog fp-anim-dog' + di, 'dog' + di, 1, 2, 1, 4, 64, 64, 1, 2);
+        if (unlockedDogs.indexOf(di) !== -1) {
+          spawnWanderingAnimal('fp-anim-dog fp-anim-dog' + di, 'dog' + di, 1, 2, 1, 4, 64, 64, 1, 2);
+        }
       }
     }
   }
@@ -1382,16 +1404,18 @@
       renderProcessingPopup(item, stationPopupEl);
     } else if (item.key === 'farmhouse') {
       renderFarmhousePopup(item, stationPopupEl);
+    } else if (item.key === 'dogHouse') {
+      renderDogHousePopup(item, stationPopupEl);
     }
 
-    // Processing popups need more width for recipe text
-    if (item.type === 'processing') {
+    // Processing popups and dog house need more width
+    if (item.type === 'processing' || item.key === 'dogHouse') {
       stationPopupEl.classList.add('fp-popup-wide');
     }
 
     // Position via getBoundingClientRect
     var rect = cellEl.getBoundingClientRect();
-    var popupWidth = item.type === 'processing' ? 240 : 170;
+    var popupWidth = (item.type === 'processing' || item.key === 'dogHouse') ? 240 : 170;
     var popupLeft = Math.max(8, Math.min(rect.left + rect.width / 2 - popupWidth / 2, window.innerWidth - popupWidth - 8));
     stationPopupEl.style.left = popupLeft + 'px';
 
@@ -1961,6 +1985,98 @@
 
         popup.appendChild(btn);
       })(recipes[r]);
+    }
+  }
+
+  // ── Dog House popup ─────────────────────────────────────
+  function renderDogHousePopup(item, popup) {
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = '\uD83D\uDC15 Dog House';
+    popup.appendChild(header);
+
+    var unlocked = getUnlockedDogs();
+
+    var grid = document.createElement('div');
+    grid.className = 'fp-dog-grid';
+
+    for (var i = 1; i <= 9; i++) {
+      (function (breed) {
+        var isAdopted = unlocked.indexOf(breed) !== -1;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fp-dog-btn' + (isAdopted ? ' fp-dog-btn-adopted' : '');
+
+        // Dog sprite preview (frame 0 of walk sheet — 32×32 native, show at 32×32)
+        var preview = document.createElement('div');
+        preview.className = 'fp-dog-preview';
+        preview.style.backgroundImage = 'url(/images/farm/animations/dog' + breed + '.png)';
+        btn.appendChild(preview);
+
+        // Breed name
+        var name = document.createElement('div');
+        name.className = 'fp-dog-name';
+        name.textContent = DOG_BREEDS[breed - 1] || ('Dog ' + breed);
+        btn.appendChild(name);
+
+        // Status / action
+        var status = document.createElement('div');
+        status.className = 'fp-dog-status';
+        if (isAdopted) {
+          status.textContent = '\u2714 Adopted';
+          status.style.color = '#4caf50';
+        } else {
+          status.textContent = 'Adopt';
+          status.style.color = 'var(--accent)';
+          status.style.cursor = 'pointer';
+        }
+        btn.appendChild(status);
+
+        if (!isAdopted) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var dogs = getUnlockedDogs();
+            if (dogs.indexOf(breed) === -1) {
+              dogs.push(breed);
+              setUnlockedDogs(dogs);
+            }
+            renderGrid();
+            // Re-render popup content
+            while (popup.firstChild) popup.removeChild(popup.firstChild);
+            renderDogHousePopup(item, popup);
+          });
+        }
+
+        grid.appendChild(btn);
+      })(i);
+    }
+
+    popup.appendChild(grid);
+
+    // Adopt All button (only if some are not yet adopted)
+    if (unlocked.length < 9) {
+      var adoptAll = document.createElement('button');
+      adoptAll.type = 'button';
+      adoptAll.className = 'fp-popup-btn';
+      adoptAll.textContent = 'Adopt All (' + (9 - unlocked.length) + ' remaining)';
+      adoptAll.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var all = [];
+        for (var j = 1; j <= 9; j++) all.push(j);
+        setUnlockedDogs(all);
+        renderGrid();
+        while (popup.firstChild) popup.removeChild(popup.firstChild);
+        renderDogHousePopup(item, popup);
+      });
+      popup.appendChild(adoptAll);
+    } else {
+      var allDone = document.createElement('div');
+      allDone.className = 'fp-popup-row';
+      allDone.style.textAlign = 'center';
+      allDone.style.color = '#4caf50';
+      allDone.style.marginTop = '0.3rem';
+      allDone.textContent = '\u2714 All dogs adopted!';
+      popup.appendChild(allDone);
     }
   }
 

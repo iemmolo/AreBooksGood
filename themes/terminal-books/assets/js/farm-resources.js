@@ -19,7 +19,9 @@
     forge:       { resource: null, rate: 0, built: false },
     loom:        { resource: null, rate: 0, built: false },
     smokehouse:  { resource: null, rate: 0, built: false },
-    enchanter:   { resource: null, rate: 0, built: false }
+    enchanter:   { resource: null, rate: 0, built: false },
+    // Special buildings (build state only)
+    dogHouse:    { resource: null, rate: 0, built: false }
   };
 
   // ── TD wave → farm building blueprints ──────────────────
