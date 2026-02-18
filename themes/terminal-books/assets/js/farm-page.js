@@ -1201,6 +1201,16 @@
 
   // ── Station click popups ────────────────────────────────
 
+  // Convert resource keys like "crystal_herb" or "ironBars" to "Crystal Herb" / "Iron Bars"
+  function prettyName(key) {
+    // snake_case → words
+    var s = key.replace(/_/g, ' ');
+    // camelCase → words
+    s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+    // Title case
+    return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+
   function formatMsToMinSec(ms) {
     if (ms <= 0) return '0s';
     var totalSec = Math.ceil(ms / 1000);
@@ -1769,7 +1779,7 @@
             var have = window.FarmResources.getRaw(rk[i]);
             var need = recipe.inputs.raw[rk[i]];
             var cls = have >= need ? 'fp-has-enough' : 'fp-not-enough';
-            inputParts.push('<span class="' + cls + '">' + need + ' ' + rk[i] + '</span>');
+            inputParts.push('<span class="' + cls + '">' + need + ' ' + prettyName(rk[i]) + '</span>');
           }
         }
         if (recipe.inputs.processed) {
@@ -1778,7 +1788,7 @@
             var haveP = window.FarmResources.getProcessed(pk[j]);
             var needP = recipe.inputs.processed[pk[j]];
             var clsP = haveP >= needP ? 'fp-has-enough' : 'fp-not-enough';
-            inputParts.push('<span class="' + clsP + '">' + needP + ' ' + pk[j] + '</span>');
+            inputParts.push('<span class="' + clsP + '">' + needP + ' ' + prettyName(pk[j]) + '</span>');
           }
         }
 
