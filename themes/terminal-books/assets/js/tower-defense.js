@@ -52,8 +52,11 @@
     slime:    { hp: 20,  speed: 1.0, radius: 6,  color: '#4a4', shape: 'circle',   special: null },
     skeleton: { hp: 40,  speed: 1.2, radius: 6,  color: '#ddd', shape: 'triangle', special: null },
     goblin:   { hp: 30,  speed: 1.8, radius: 5,  color: '#ac4', shape: 'circle',   special: 'fast' },
+    healer:   { hp: 45,  speed: 0.9, radius: 6,  color: '#4f8', shape: 'diamond',  special: 'healer' },
     orc:      { hp: 80,  speed: 0.7, radius: 8,  color: '#484', shape: 'square',   special: 'tanky' },
+    splitter: { hp: 60,  speed: 1.0, radius: 7,  color: '#c6f', shape: 'hexagon',  special: 'split' },
     ghost:    { hp: 25,  speed: 1.0, radius: 6,  color: '#999', shape: 'circle',   special: 'dodge' },
+    shielder: { hp: 50,  speed: 0.8, radius: 7,  color: '#6cf', shape: 'pentagon', special: 'shield' },
     boss:     { hp: 500, speed: 0.4, radius: 12, color: '#e44', shape: 'boss',     special: 'boss' }
   };
 
@@ -64,6 +67,90 @@
   var STATS_KEY = 'arebooksgood-td-stats';
   var CRATE_KEY = 'arebooksgood-td-crate';
   var SAVE_KEY = 'arebooksgood-td-save';
+
+  // ── Tower Synergies ─────────────────────────────
+  var SYNERGY_DEFS = [
+    { id: 'crossfire',     towers: ['arrow', 'arrow'],     name: 'Crossfire',     desc: '+15% attack speed',             color: '#0f0' },
+    { id: 'scorched',      towers: ['cannon', 'fire'],     name: 'Scorched Earth', desc: 'Cannon splash applies fire DOT', color: '#f84' },
+    { id: 'superconductor',towers: ['frost', 'lightning'],  name: 'Superconductor', desc: '+30% dmg to slowed enemies',    color: '#4cf' },
+    { id: 'spotter',       towers: ['sniper', 'watchtower'],name: 'Spotter',       desc: '+20% sniper damage',            color: '#8cf' },
+    { id: 'firestorm',     towers: ['fire', 'fire'],       name: 'Firestorm',     desc: '+50% DOT duration',             color: '#f84' },
+    { id: 'icearrows',     towers: ['arrow', 'frost'],     name: 'Ice Arrows',    desc: '25% chance to apply mild slow',  color: '#4cf' }
+  ];
+
+  var synergyCache = {};
+
+  function rebuildSynergyCache() {
+    synergyCache = {};
+    for (var i = 0; i < towers.length; i++) {
+      var key = towers[i].col + ',' + towers[i].row;
+      synergyCache[key] = computeSynergiesForTower(towers[i]);
+    }
+  }
+
+  function computeSynergiesForTower(tower) {
+    var synergies = [];
+    var neighbors = [];
+    for (var i = 0; i < towers.length; i++) {
+      var other = towers[i];
+      if (other === tower) continue;
+      if (Math.abs(other.col - tower.col) <= 1 && Math.abs(other.row - tower.row) <= 1) {
+        neighbors.push(other);
+      }
+    }
+    for (var si = 0; si < SYNERGY_DEFS.length; si++) {
+      var sd = SYNERGY_DEFS[si];
+      var pair = sd.towers;
+      // Same-type pair (e.g. arrow+arrow, fire+fire)
+      if (pair[0] === pair[1]) {
+        if (tower.type !== pair[0]) continue;
+        var count = 0;
+        for (var ni = 0; ni < neighbors.length; ni++) {
+          if (neighbors[ni].type === pair[0]) count++;
+        }
+        if (count > 0) {
+          synergies.push({ id: sd.id, stacks: count, partners: neighbors.filter(function (n) { return n.type === pair[0]; }) });
+        }
+      } else {
+        // Mixed pair — tower must be one of the two types
+        var myIdx = pair.indexOf(tower.type);
+        if (myIdx === -1) continue;
+        var partnerType = pair[1 - myIdx];
+        var partners = [];
+        for (var ni = 0; ni < neighbors.length; ni++) {
+          if (neighbors[ni].type === partnerType) partners.push(neighbors[ni]);
+        }
+        if (partners.length > 0) {
+          synergies.push({ id: sd.id, stacks: partners.length, partners: partners });
+        }
+      }
+    }
+    return synergies;
+  }
+
+  function hasSynergy(tower, id) {
+    var key = tower.col + ',' + tower.row;
+    var list = synergyCache[key];
+    if (!list) return null;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  function getSynergyMultiplier(stacks) {
+    // Diminishing returns: 1st=100%, 2nd=50%, 3rd=33%...
+    var total = 0;
+    for (var i = 1; i <= stacks; i++) {
+      total += 1 / i;
+    }
+    return total;
+  }
+
+  function getTowerSynergies(tower) {
+    var key = tower.col + ',' + tower.row;
+    return synergyCache[key] || [];
+  }
 
   // ── Farm integration guard ────────────────────────
   var hasFarmResources = typeof window.FarmResources !== 'undefined';
@@ -506,7 +593,9 @@
       alive: true,
       dot: null,
       slow: null,
-      caltropsHit: {}
+      caltropsHit: {},
+      healTimer: 0,
+      isMinion: false
     });
   }
 
@@ -581,12 +670,82 @@
     }
   }
 
-  function damageEnemy(enemy, dmg, sourceTower) {
+  function updateHealers(dt) {
+    for (var i = 0; i < enemies.length; i++) {
+      var e = enemies[i];
+      if (!e.alive || e.special !== 'healer') continue;
+      e.healTimer += dt;
+      if (e.healTimer < 2.5) continue;
+      e.healTimer -= 2.5;
+
+      var healerPos = getPathPos(e.dist);
+      for (var j = 0; j < enemies.length; j++) {
+        var target = enemies[j];
+        if (!target.alive || target === e) continue;
+        if (target.hp >= target.maxHp) continue;
+        var tp = getPathPos(target.dist);
+        var dx = tp.x - healerPos.x;
+        var dy = tp.y - healerPos.y;
+        if (Math.sqrt(dx * dx + dy * dy) <= 2 * TILE_SIZE) {
+          var heal = Math.round(target.maxHp * 0.05);
+          target.hp = Math.min(target.maxHp, target.hp + heal);
+          spawnParticle(tp.x + (Math.random() - 0.5) * 8, tp.y - 10, '+heal', '#4f8');
+        }
+      }
+    }
+  }
+
+  // Update shielded flag for visual indicator
+  function updateShieldFlags() {
+    for (var i = 0; i < enemies.length; i++) {
+      var e = enemies[i];
+      if (!e.alive) continue;
+      e.shielded = false;
+      if (e.special === 'shield') continue;
+      var ep = getPathPos(e.dist);
+      for (var j = 0; j < enemies.length; j++) {
+        var s = enemies[j];
+        if (!s.alive || s.special !== 'shield') continue;
+        var sp = getPathPos(s.dist);
+        var dx = sp.x - ep.x;
+        var dy = sp.y - ep.y;
+        if (Math.sqrt(dx * dx + dy * dy) <= 2 * TILE_SIZE) {
+          e.shielded = true;
+          break;
+        }
+      }
+    }
+  }
+
+  function getShieldReduction(enemy) {
+    // Check if any shielder is within 2 tiles — 40% damage reduction
+    // Does NOT protect the shielder itself, does NOT stack
+    if (enemy.special === 'shield') return 0;
+    for (var i = 0; i < enemies.length; i++) {
+      var s = enemies[i];
+      if (!s.alive || s.special !== 'shield') continue;
+      var sp = getPathPos(s.dist);
+      var ep = getPathPos(enemy.dist);
+      var dx = sp.x - ep.x;
+      var dy = sp.y - ep.y;
+      if (Math.sqrt(dx * dx + dy * dy) <= 2 * TILE_SIZE) return 0.4;
+    }
+    return 0;
+  }
+
+  function damageEnemy(enemy, dmg, sourceTower, bypassShield) {
     // Ghost dodge: 50% evasion (DOT bypasses since it modifies hp directly)
     if (enemy.special === 'dodge' && Math.random() < 0.5) {
       var dodgePos = getPathPos(enemy.dist);
       spawnParticle(dodgePos.x + (Math.random() - 0.5) * 10, dodgePos.y - 12, 'DODGE', '#999');
       return;
+    }
+    // Shield bearer damage reduction (DOT bypasses shield)
+    if (!bypassShield) {
+      var shieldRed = getShieldReduction(enemy);
+      if (shieldRed > 0) {
+        dmg = Math.round(dmg * (1 - shieldRed));
+      }
     }
     enemy.hp -= dmg;
     var pos = getPathPos(enemy.dist);
@@ -596,6 +755,34 @@
       enemy.alive = false;
       totalKilled++;
       if (sourceTower && typeof sourceTower.kills === 'number') sourceTower.kills++;
+
+      // Splitter: spawn 2 mini versions on death
+      if (enemy.special === 'split' && !enemy.isMinion) {
+        var miniHp = Math.round(enemy.maxHp * 0.35);
+        var miniSpeed = enemy.speed * 0.8;
+        var miniRadius = Math.round(enemy.radius * 0.65);
+        spawnParticle(pos.x, pos.y, 'SPLIT!', '#c6f');
+        for (var mi = 0; mi < 2; mi++) {
+          enemies.push({
+            type: 'splitter',
+            hp: miniHp,
+            maxHp: miniHp,
+            speed: miniSpeed,
+            radius: miniRadius,
+            color: '#d8f',
+            shape: 'hexagon',
+            special: 'split',
+            dist: enemy.dist + (mi === 0 ? -5 : 5),
+            alive: true,
+            dot: null,
+            slow: null,
+            caltropsHit: {},
+            healTimer: 0,
+            isMinion: true
+          });
+        }
+      }
+
       for (var i = 0; i < 5; i++) {
         particles.push({
           x: pos.x,
@@ -631,6 +818,49 @@
     } else if (e.shape === 'square') {
       ctx.fillRect(pos.x - r, pos.y - r, r * 2, r * 2);
       ctx.strokeRect(pos.x - r, pos.y - r, r * 2, r * 2);
+    } else if (e.shape === 'diamond') {
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y - r);
+      ctx.lineTo(pos.x + r, pos.y);
+      ctx.lineTo(pos.x, pos.y + r);
+      ctx.lineTo(pos.x - r, pos.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // White cross inside
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      var cr = r * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(pos.x - cr, pos.y);
+      ctx.lineTo(pos.x + cr, pos.y);
+      ctx.moveTo(pos.x, pos.y - cr);
+      ctx.lineTo(pos.x, pos.y + cr);
+      ctx.stroke();
+    } else if (e.shape === 'hexagon') {
+      ctx.beginPath();
+      for (var hi = 0; hi < 6; hi++) {
+        var angle = Math.PI / 3 * hi - Math.PI / 6;
+        var hx = pos.x + r * Math.cos(angle);
+        var hy = pos.y + r * Math.sin(angle);
+        if (hi === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    } else if (e.shape === 'pentagon') {
+      ctx.beginPath();
+      for (var pi = 0; pi < 5; pi++) {
+        var angle = Math.PI * 2 / 5 * pi - Math.PI / 2;
+        var px = pos.x + r * Math.cos(angle);
+        var py = pos.y + r * Math.sin(angle);
+        if (pi === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
     } else if (e.shape === 'boss') {
       // Large square body
       ctx.fillRect(pos.x - r, pos.y - r, r * 2, r * 2);
@@ -682,6 +912,45 @@
         ctx.globalAlpha = 1;
       }
 
+      // Healer aura — pulsing green dashed ring
+      if (e.special === 'healer') {
+        var healPulse = 0.3 + 0.2 * Math.sin(Date.now() * 0.004);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 2 * TILE_SIZE, 0, Math.PI * 2);
+        ctx.strokeStyle = '#4f8';
+        ctx.globalAlpha = healPulse;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      // Shield bearer aura — solid cyan ring
+      if (e.special === 'shield') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 2 * TILE_SIZE, 0, Math.PI * 2);
+        ctx.strokeStyle = '#6cf';
+        ctx.globalAlpha = 0.25;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Shield reduction indicator (cyan tint on shielded enemies)
+      if (e.shielded) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, e.radius + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = '#6cf';
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // HP bar
       if (e.hp < e.maxHp) {
         var barW = e.radius * 2.5;
@@ -724,7 +993,13 @@
   function getEffectiveDmg(tower) {
     var def = TOWER_DEFS[tower.type];
     var lvlMult = tower.level >= 4 ? 2.3 : (tower.level === 3 ? 1.8 : (tower.level === 2 ? 1.4 : 1));
-    return Math.round(def.dmg * mods.dmgMult * lvlMult);
+    var dmg = def.dmg * mods.dmgMult * lvlMult;
+    // Spotter synergy: +20% sniper damage per stack
+    if (tower.type === 'sniper') {
+      var spotter = hasSynergy(tower, 'spotter');
+      if (spotter) dmg *= 1 + 0.2 * getSynergyMultiplier(spotter.stacks);
+    }
+    return Math.round(dmg);
   }
 
   function getEffectiveRangePx(tower) {
@@ -781,6 +1056,7 @@
         break;
       }
     }
+    rebuildSynergyCache();
     inspectedTower = null;
     hideInspectPanel();
     updateHUD();
@@ -909,6 +1185,7 @@
       targetMode: 'closest',
       kills: 0
     });
+    rebuildSynergyCache();
     updateHUD();
     return true;
   }
@@ -936,6 +1213,9 @@
 
       if (t.cooldown > 0) {
         var cdRate = atkSpeedActive ? 1.3 : 1;
+        // Crossfire synergy: +15% attack speed per stack
+        var crossfire = hasSynergy(t, 'crossfire');
+        if (crossfire) cdRate *= 1 + 0.15 * getSynergyMultiplier(crossfire.stacks);
         t.cooldown -= dt * cdRate;
         continue;
       }
@@ -1050,6 +1330,54 @@
         ctx.stroke();
         ctx.globalAlpha = 1;
       }
+
+      // Synergy gold pulsing dot
+      var tSynergies = getTowerSynergies(t);
+      if (tSynergies.length > 0) {
+        var pulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.005);
+        ctx.save();
+        ctx.fillStyle = '#ffd700';
+        ctx.globalAlpha = 0.5 + 0.5 * pulse;
+        ctx.beginPath();
+        ctx.arc(tc.x + half - 2, tc.y - half + 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Synergy lines when inspected
+      if (isInspected && tSynergies.length > 0) {
+        for (var si = 0; si < tSynergies.length; si++) {
+          var syn = tSynergies[si];
+          var synDef = null;
+          for (var sdi = 0; sdi < SYNERGY_DEFS.length; sdi++) {
+            if (SYNERGY_DEFS[sdi].id === syn.id) { synDef = SYNERGY_DEFS[sdi]; break; }
+          }
+          if (!synDef) continue;
+          ctx.save();
+          ctx.strokeStyle = synDef.color;
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          for (var pi = 0; pi < syn.partners.length; pi++) {
+            var partner = syn.partners[pi];
+            var pc = tileCenter(partner.col, partner.row);
+            ctx.beginPath();
+            ctx.moveTo(tc.x, tc.y);
+            ctx.lineTo(pc.x, pc.y);
+            ctx.stroke();
+            // Dot at midpoint
+            var mx = (tc.x + pc.x) / 2;
+            var my = (tc.y + pc.y) / 2;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(mx, my, 3, 0, Math.PI * 2);
+            ctx.fillStyle = synDef.color;
+            ctx.fill();
+            ctx.setLineDash([4, 4]);
+          }
+          ctx.restore();
+        }
+      }
     }
   }
 
@@ -1057,11 +1385,17 @@
   function fireLightningChain(tower, firstTarget, maxHits) {
     var tc = tileCenter(tower.col, tower.row);
     var dmg = getEffectiveDmg(tower);
+    // Superconductor synergy: +30% damage to slowed enemies
+    var supercon = hasSynergy(tower, 'superconductor');
     var hit = [firstTarget];
     var hitSet = {};
     hitSet[enemies.indexOf(firstTarget)] = true;
 
-    damageEnemy(firstTarget, dmg, tower);
+    var firstDmg = dmg;
+    if (supercon && firstTarget.slow && firstTarget.slow.remaining > 0) {
+      firstDmg = Math.round(dmg * (1 + 0.3 * getSynergyMultiplier(supercon.stacks)));
+    }
+    damageEnemy(firstTarget, firstDmg, tower);
 
     var current = firstTarget;
     for (var n = 1; n < maxHits; n++) {
@@ -1083,7 +1417,11 @@
         }
       }
       if (!best) break;
-      damageEnemy(best, dmg, tower);
+      var chainDmg = dmg;
+      if (supercon && best.slow && best.slow.remaining > 0) {
+        chainDmg = Math.round(dmg * (1 + 0.3 * getSynergyMultiplier(supercon.stacks)));
+      }
+      damageEnemy(best, chainDmg, tower);
       hit.push(best);
       current = best;
     }
@@ -1135,16 +1473,31 @@
         damageEnemy(p.target, p.dmg, p.sourceTower);
         // Fire tower DOT
         if (p.towerType === 'fire' && p.target.alive) {
-          p.target.dot = { dmg: 3, remaining: 3, tickTimer: 0 };
+          var dotDur = 3;
+          // Firestorm synergy: +50% DOT duration per stack
+          if (p.sourceTower) {
+            var firestorm = hasSynergy(p.sourceTower, 'firestorm');
+            if (firestorm) dotDur *= 1 + 0.5 * getSynergyMultiplier(firestorm.stacks);
+          }
+          p.target.dot = { dmg: 3, remaining: dotDur, tickTimer: 0 };
         }
         // Frost tower slow
         if (p.towerType === 'frost' && p.target.alive) {
           p.target.slow = { remaining: 2, factor: 0.5 };
         }
+        // Ice Arrows synergy: 25% chance to apply mild slow on arrow hit
+        if (p.towerType === 'arrow' && p.target.alive && p.sourceTower) {
+          var iceArrows = hasSynergy(p.sourceTower, 'icearrows');
+          if (iceArrows && Math.random() < 0.25) {
+            p.target.slow = { remaining: 1.5, factor: 0.7 };
+          }
+        }
         // Cannon tower splash
         if (p.towerType === 'cannon') {
           var splashRadius = p.megaBlast ? 2 * TILE_SIZE : TILE_SIZE;
           var splashDmg = Math.round(p.dmg * 0.5);
+          // Scorched Earth synergy: cannon splash applies fire DOT
+          var scorched = p.sourceTower ? hasSynergy(p.sourceTower, 'scorched') : null;
           for (var si = 0; si < enemies.length; si++) {
             var se = enemies[si];
             if (!se.alive || se === p.target) continue;
@@ -1153,6 +1506,9 @@
             var sdy = sp.y - p.y;
             if (Math.sqrt(sdx * sdx + sdy * sdy) <= splashRadius) {
               damageEnemy(se, splashDmg, p.sourceTower);
+              if (scorched && se.alive) {
+                se.dot = { dmg: 3, remaining: 2, tickTimer: 0 };
+              }
             }
           }
           splashEffects.push({ x: p.x, y: p.y, radius: 0, maxRadius: splashRadius, life: 0.3 });
@@ -1288,8 +1644,11 @@
     var pool = ['slime'];
     if (w >= 6) pool.push('skeleton');
     if (w >= 11) pool.push('goblin');
+    if (w >= 14) pool.push('healer');
     if (w >= 16) pool.push('orc');
+    if (w >= 18) pool.push('splitter');
     if (w >= 21) pool.push('ghost');
+    if (w >= 24) pool.push('shielder');
     return pool;
   }
 
@@ -1360,7 +1719,9 @@
         alive: true,
         dot: null,
         slow: null,
-        caltropsHit: {}
+        caltropsHit: {},
+        healTimer: 0,
+        isMinion: false
       });
       totalSpawned++;
       updateHUD();
@@ -1630,6 +1991,7 @@
     caltropZones = save.caltropZones || [];
     placingCaltrops = false;
 
+    rebuildSynergyCache();
     gameState = 'building';
     startOverlay.classList.add('td-hidden');
     startButtonsEl.classList.add('td-hidden');
@@ -2086,6 +2448,8 @@
     if (gameState === 'waving') {
       updateSpawner(dt);
       updateEnemies(dt);
+      updateHealers(dt);
+      updateShieldFlags();
       updateTowers(dt);
       updateProjectiles(dt);
       updateSplash(dt);
@@ -2166,6 +2530,25 @@
     if (def.range > 0 && (def.dmg > 0 || def.speed > 0)) {
       html += '<div class="td-inspect-target">';
       html += '<button class="td-inspect-btn td-inspect-target-btn" id="td-inspect-target-btn">\u25CE ' + TARGET_MODE_LABELS[t.targetMode || 'closest'] + '</button>';
+      html += '</div>';
+    }
+
+    // Synergy section
+    var tSynergies = getTowerSynergies(t);
+    if (tSynergies.length > 0) {
+      html += '<div class="td-inspect-synergies">';
+      for (var si = 0; si < tSynergies.length; si++) {
+        var syn = tSynergies[si];
+        var synDef = null;
+        for (var sdi = 0; sdi < SYNERGY_DEFS.length; sdi++) {
+          if (SYNERGY_DEFS[sdi].id === syn.id) { synDef = SYNERGY_DEFS[sdi]; break; }
+        }
+        if (!synDef) continue;
+        html += '<div class="td-synergy-line" style="color:' + synDef.color + '">';
+        html += '\u26A1 ' + synDef.name + ': ' + synDef.desc;
+        if (syn.stacks > 1) html += ' (x' + syn.stacks + ')';
+        html += '</div>';
+      }
       html += '</div>';
     }
 
@@ -2441,6 +2824,7 @@
     placingCaltrops = false;
     commitCrate();
 
+    rebuildSynergyCache();
     gameState = 'building';
     startOverlay.classList.add('td-hidden');
     startButtonsEl.classList.add('td-hidden');
