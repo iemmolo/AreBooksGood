@@ -120,8 +120,8 @@ AreBooksGood - Improvement TODO
 - [x] Phase 2c: Tower Blueprints — 5 blueprint towers (Watchtower, Fire, Sniper, Gold Mine, Lightning) with wave + material requirements
 - [x] SamBucks (SB) in-game currency — renamed from JB, lump-sum cash-out to JB on game over
 - [x] Wave milestone starting bonuses (+5/10/15/20/30 SB at waves 5/10/15/20/30, stacking)
-- [x] JB investment pre-run — spend JB for extra starting SB (2:1 rate, 50 SB cap)
-- [x] Starting SB breakdown on start screen (base + armory + milestones + invested)
+- [x] JB investment pre-run — spend JB for extra starting SB (3:1 rate, 200 SB cap)
+- [x] Starting SB breakdown on start screen (base + armory + milestones + farmhouse + invested)
 - [x] Save/resume — run state saved after each wave, resume button on start screen
 - [x] Quit-to-menu button during gameplay (saves progress between waves)
 - [x] Tower deselect — click selected tower or press Escape to clear cursor
@@ -143,6 +143,8 @@ AreBooksGood - Improvement TODO
 - [x] Mobile touch support — tap to place/inspect, touch-friendly tower bar and UI
 - [x] New enemy types — healer, splitter, shield
 - [x] Tower synergies — bonus effects when certain towers are adjacent
+- [x] Synergies info tab on TD start screen
+- [x] Farm+TD economy balance audit — diminishing JB cashout, boss material drops, farmhouse→TD SB bonus, milestone material rewards, crop price buff, faster deep mine, investment cap raise
 - [ ] Challenge modes — "Arrow only", "No upgrades", "Speed run"
 - [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
 - [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)

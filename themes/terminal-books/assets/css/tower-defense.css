@@ -244,9 +244,12 @@
   height: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   background: color-mix(in srgb, var(--background) 90%, transparent);
   z-index: 10;
+  touch-action: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .td-hidden {
@@ -258,6 +261,7 @@
   padding: 24px;
   color: var(--foreground);
   font-family: monospace;
+  margin: auto 0;
 }
 
 .td-start-content {
@@ -512,6 +516,35 @@
 
 .td-crate-item-desc {
   opacity: 0.7;
+}
+
+/* ── Synergy grid ──────────────────────────────────── */
+.td-synergy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.td-synergy-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  padding: 6px;
+  font-size: 11px;
+  font-family: monospace;
+  line-height: 1.4;
+}
+
+.td-synergy-card-name {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.td-synergy-card-pair {
+  opacity: 0.6;
+  font-size: 10px;
+}
+
+.td-synergy-card-desc {
+  margin-top: 2px;
 }
 
 .td-crate-add-btn {

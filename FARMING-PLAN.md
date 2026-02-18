@@ -122,17 +122,17 @@ can be cleared for free.
 
 | Crop       | Seed Cost | Grow Time | Sell (JB) | Sprite Idea         |
 |------------|-----------|-----------|-----------|---------------------|
-| Tomato     | 5 JB      | 1 hr      | 15 JB     | Red circle on vine  |
-| Corn       | 8 JB      | 2 hr      | 25 JB     | Yellow cob          |
-| Pumpkin    | 12 JB     | 4 hr      | 45 JB     | Orange round        |
+| Tomato     | 5 JB      | 1 hr      | 20 JB     | Red circle on vine  |
+| Corn       | 8 JB      | 2 hr      | 40 JB     | Yellow cob          |
+| Pumpkin    | 12 JB     | 4 hr      | 75 JB     | Orange round        |
 
 ### Rare Crops (Silk Road, unlocked at milestones)
 
 | Crop         | Seed Cost | Grow Time | Sell (JB) | Sprite Idea        |
 |--------------|-----------|-----------|-----------|---------------------|
-| Golden Apple | 30 JB     | 8 hr      | 100 JB    | Glowing gold apple  |
-| Crystal Herb | 50 JB     | 12 hr     | 180 JB    | Shimmering cyan     |
-| Dragon Fruit | 80 JB     | 24 hr     | 350 JB    | Magenta spiky fruit |
+| Golden Apple | 25 JB     | 8 hr      | 150 JB    | Glowing gold apple  |
+| Crystal Herb | 40 JB     | 12 hr     | 200 JB    | Shimmering cyan     |
+| Dragon Fruit | 75 JB     | 24 hr     | 500 JB    | Magenta spiky fruit |
 
 ### Exotic / Secret Crops (Phase 3+)
 
@@ -468,12 +468,12 @@ themes/terminal-books/
 
 ### Mid Game (Week 1)
 - 4 plots, common crops unlocked
-- Corn (2hr, 25 JB) in 4 plots = 50 JB/hr passive
+- Corn (2hr, 40 JB) in 4 plots = 80 JB/hr passive
 - Saving for rare seeds and tool upgrades
 
 ### Late Game (Week 2+)
 - 6 plots, rare crops, all upgrades
-- Dragon fruit (24hr, 350 JB) in 6 plots = 2,100 JB/day passive
+- Dragon fruit (24hr, 500 JB) in 6 plots = 3,000 JB/day passive
 - Exclusive cosmetics as long-term goals (1,000+ JB)
 
 ### Key Principle

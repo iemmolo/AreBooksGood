@@ -293,17 +293,26 @@
 
   // ── Wave Milestones ─────────────────────────────
   var WAVE_MILESTONES = [
-    { wave: 5, bonus: 5 },
-    { wave: 10, bonus: 10 },
-    { wave: 15, bonus: 15 },
-    { wave: 20, bonus: 20 },
-    { wave: 30, bonus: 30 },
+    { wave: 5, bonus: 5, material: { type: 'processed', key: 'planks', qty: 2 } },
+    { wave: 10, bonus: 10, material: { type: 'processed', key: 'stoneBricks', qty: 2 } },
+    { wave: 15, bonus: 15, material: { type: 'processed', key: 'ironBars', qty: 1 } },
+    { wave: 20, bonus: 20, material: { type: 'processed', key: 'bread', qty: 2 } },
+    { wave: 30, bonus: 30, material: { type: 'processed', key: 'crystalLens', qty: 1 } },
     { wave: 40, bonus: 40 },
     { wave: 50, bonus: 50 }
   ];
 
-  var MAX_INVEST_SB = 50;
-  var INVEST_RATE = 2; // 2 JB per 1 SB
+  var MAX_INVEST_SB = 200;
+  var INVEST_RATE = 3; // 3 JB per 1 SB
+
+  function getFarmhouseBonus() {
+    if (typeof window.FarmAPI !== 'undefined' && window.FarmAPI.getFarmhouseLevel) {
+      var lvl = window.FarmAPI.getFarmhouseLevel();
+      // Lv1=0, Lv2=10, Lv3=20, Lv4=30, Lv5=40
+      return lvl > 1 ? (lvl - 1) * 10 : 0;
+    }
+    return 0;
+  }
 
   function getMilestoneBonus() {
     var total = 0;
@@ -755,6 +764,15 @@
       enemy.alive = false;
       totalKilled++;
       if (sourceTower && typeof sourceTower.kills === 'number') sourceTower.kills++;
+
+      // Boss material drop
+      if (enemy.special === 'boss' && typeof window.FarmResources !== 'undefined') {
+        var dropMats = ['stone', 'iron', 'wood', 'hardwood', 'gold'];
+        var dropMat = dropMats[Math.floor(Math.random() * dropMats.length)];
+        var dropQty = Math.max(1, Math.floor(wave / 10));
+        window.FarmResources.add('raw', dropMat, dropQty);
+        spawnParticle(pos.x, pos.y - 20, '+' + dropQty + ' ' + dropMat, '#ffd700');
+      }
 
       // Splitter: spawn 2 mini versions on death
       if (enemy.special === 'split' && !enemy.isMinion) {
@@ -1840,6 +1858,19 @@
     stats.totalKills += totalKilled;
     stats.totalTowersBuilt += towersBuilt;
     stats.totalJBEarned += sbEarned;
+
+    // Award one-time milestone material rewards for newly crossed milestones
+    var milestoneMats = [];
+    if (typeof window.FarmResources !== 'undefined') {
+      for (var mi = 0; mi < WAVE_MILESTONES.length; mi++) {
+        var ms = WAVE_MILESTONES[mi];
+        if (ms.material && wave >= ms.wave && stats.highestWave < ms.wave) {
+          window.FarmResources.add(ms.material.type, ms.material.key, ms.material.qty);
+          milestoneMats.push('+' + ms.material.qty + ' ' + ms.material.key);
+        }
+      }
+    }
+
     if (wave > stats.highestWave) stats.highestWave = wave;
 
     // Per-map-difficulty record
@@ -1850,9 +1881,18 @@
 
     saveStats();
 
-    // Lump-sum cash-out: deposit all earned SB as JB
-    if (sbEarned > 0 && typeof JackBucks !== 'undefined' && JackBucks.add) {
-      JackBucks.add(sbEarned);
+    // Lump-sum cash-out: deposit earned SB as JB with soft cap
+    // First 100 SB at 1:1, then sqrt scaling for diminishing returns
+    var jbCashout = 0;
+    if (sbEarned > 0) {
+      if (sbEarned <= 100) {
+        jbCashout = sbEarned;
+      } else {
+        jbCashout = 100 + Math.round(Math.sqrt((sbEarned - 100) * 50));
+      }
+      if (typeof JackBucks !== 'undefined' && JackBucks.add) {
+        JackBucks.add(jbCashout);
+      }
     }
 
     if (typeof PetEvents !== 'undefined' && PetEvents.onGameResult) {
@@ -1872,12 +1912,23 @@
       var cashoutLine = document.getElementById('td-cashout-line');
       if (cashoutLine) {
         if (sbEarned > 0) {
-          cashoutLine.textContent = sbEarned + ' SB \u2192 +' + sbEarned + ' JB deposited';
+          cashoutLine.textContent = sbEarned + ' SB \u2192 +' + jbCashout + ' JB deposited';
         } else {
           cashoutLine.textContent = 'No SB earned this run';
           cashoutLine.style.opacity = '0.5';
         }
       }
+      // Show milestone material rewards
+      var matLine = document.getElementById('td-milestone-mats');
+      if (matLine) {
+        if (milestoneMats.length > 0) {
+          matLine.textContent = 'Milestone rewards: ' + milestoneMats.join(', ');
+          matLine.style.display = '';
+        } else {
+          matLine.style.display = 'none';
+        }
+      }
+
       renderStatsBlock(goStats);
       gameoverOverlay.classList.remove('td-hidden');
     }, 500);
@@ -2024,8 +2075,9 @@
     var base = START_SB;
     var armory = mods.startSB;
     var milestone = getMilestoneBonus();
+    var farmhouse = getFarmhouseBonus();
     var invest = investedSB;
-    var total = base + armory + milestone + invest;
+    var total = base + armory + milestone + farmhouse + invest;
 
     var html = '<div class="td-start-breakdown-title">Starting SamBucks</div>';
 
@@ -2035,6 +2087,9 @@
     }
     if (milestone > 0) {
       html += '<div class="td-start-breakdown-row"><span>Wave Milestones</span><span>+' + milestone + ' SB</span></div>';
+    }
+    if (farmhouse > 0) {
+      html += '<div class="td-start-breakdown-row"><span>Farmhouse</span><span>+' + farmhouse + ' SB</span></div>';
     }
     if (invest > 0) {
       html += '<div class="td-start-breakdown-row"><span>JB Investment</span><span>+' + invest + ' SB</span></div>';
@@ -2070,7 +2125,7 @@
     var maxAffordSB = Math.min(MAX_INVEST_SB, Math.floor(jbBalance / INVEST_RATE));
 
     var html = '<div class="td-invest-title">Invest JackBucks</div>';
-    html += '<div style="opacity:0.6;margin-bottom:6px">Convert JB \u2192 SB at 2:1 rate (max ' + MAX_INVEST_SB + ' SB)</div>';
+    html += '<div style="opacity:0.6;margin-bottom:6px">Convert JB \u2192 SB at ' + INVEST_RATE + ':1 rate (max ' + MAX_INVEST_SB + ' SB)</div>';
 
     html += '<div class="td-invest-row">';
     html += '<button class="td-invest-btn" id="td-invest-minus"' + (investedSB <= 0 ? ' disabled' : '') + '>\u2212</button>';
@@ -2797,7 +2852,7 @@
 
     wave = 0;
     lives = START_LIVES + mods.startLives + DIFFICULTIES[currentDifficulty].livesBonus;
-    sb = START_SB + mods.startSB + getMilestoneBonus() + investedSB;
+    sb = START_SB + mods.startSB + getMilestoneBonus() + getFarmhouseBonus() + investedSB;
     sbEarned = 0;
     towers = [];
     enemies = [];
@@ -3003,6 +3058,7 @@
       overview: document.getElementById('td-tab-overview'),
       armory: document.getElementById('td-tab-armory'),
       crate: document.getElementById('td-tab-crate'),
+      synergies: document.getElementById('td-tab-synergies'),
       blueprints: document.getElementById('td-tab-blueprints')
     };
 
@@ -3253,11 +3309,39 @@
       .replace(/\b\w/g, function (c) { return c.toUpperCase(); });
   }
 
+  // ── Synergies panel ─────────────────────────────
+  function renderSynergiesPanel() {
+    var panel = document.getElementById('td-tab-synergies');
+    if (!panel) return;
+
+    var html = '<p style="opacity:0.6;font-size:12px;margin:0 0 8px">Place towers adjacent (including diagonal) to activate bonuses. Stacks with diminishing returns.</p>';
+    html += '<div class="td-synergy-grid">';
+
+    for (var i = 0; i < SYNERGY_DEFS.length; i++) {
+      var s = SYNERGY_DEFS[i];
+      var t1 = TOWER_DEFS[s.towers[0]];
+      var t2 = TOWER_DEFS[s.towers[1]];
+      var pairLabel = s.towers[0] === s.towers[1]
+        ? t1.name + ' + ' + t1.name
+        : t1.name + ' + ' + t2.name;
+
+      html += '<div class="td-synergy-card">';
+      html += '<div class="td-synergy-card-name" style="color:' + s.color + '">' + s.name + '</div>';
+      html += '<div class="td-synergy-card-pair">' + pairLabel + '</div>';
+      html += '<div class="td-synergy-card-desc">' + s.desc + '</div>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+    panel.innerHTML = html;
+  }
+
   // ── Refresh all panels ────────────────────────────
   function refreshAllPanels() {
     renderArmoryPanel();
     renderCratePanel();
     renderBlueprintsPanel();
+    renderSynergiesPanel();
   }
 
   // ── Resize handling ───────────────────────────────

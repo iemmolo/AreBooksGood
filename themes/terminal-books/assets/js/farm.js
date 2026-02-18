@@ -22,12 +22,12 @@
     carrot:       { name: 'Carrot',       growTime: 5 * 60 * 1000,    sell: 2,   seedCost: 0,  icon: 'C', rarity: 'common' },
     potato:       { name: 'Potato',       growTime: 15 * 60 * 1000,   sell: 5,   seedCost: 0,  icon: 'P', rarity: 'common' },
     wheat:        { name: 'Wheat',        growTime: 30 * 60 * 1000,   sell: 8,   seedCost: 0,  icon: 'W', rarity: 'common' },
-    tomato:       { name: 'Tomato',       growTime: 60 * 60 * 1000,   sell: 15,  seedCost: 5,  icon: 'T', rarity: 'common' },
-    corn:         { name: 'Corn',         growTime: 120 * 60 * 1000,  sell: 25,  seedCost: 8,  icon: 'K', rarity: 'common' },
-    pumpkin:      { name: 'Pumpkin',      growTime: 240 * 60 * 1000,  sell: 45,  seedCost: 12, icon: 'Q', rarity: 'common' },
-    golden_apple: { name: 'Golden Apple', growTime: 480 * 60 * 1000,  sell: 90,  seedCost: 25, icon: 'A', rarity: 'rare' },
-    crystal_herb: { name: 'Crystal Herb', growTime: 720 * 60 * 1000,  sell: 150, seedCost: 40, icon: 'H', rarity: 'rare' },
-    dragon_fruit: { name: 'Dragon Fruit', growTime: 1440 * 60 * 1000, sell: 300, seedCost: 75, icon: 'D', rarity: 'rare' }
+    tomato:       { name: 'Tomato',       growTime: 60 * 60 * 1000,   sell: 20,  seedCost: 5,  icon: 'T', rarity: 'common' },
+    corn:         { name: 'Corn',         growTime: 120 * 60 * 1000,  sell: 40,  seedCost: 8,  icon: 'K', rarity: 'common' },
+    pumpkin:      { name: 'Pumpkin',      growTime: 240 * 60 * 1000,  sell: 75,  seedCost: 12, icon: 'Q', rarity: 'common' },
+    golden_apple: { name: 'Golden Apple', growTime: 480 * 60 * 1000,  sell: 150, seedCost: 25, icon: 'A', rarity: 'rare' },
+    crystal_herb: { name: 'Crystal Herb', growTime: 720 * 60 * 1000,  sell: 200, seedCost: 40, icon: 'H', rarity: 'rare' },
+    dragon_fruit: { name: 'Dragon Fruit', growTime: 1440 * 60 * 1000, sell: 500, seedCost: 75, icon: 'D', rarity: 'rare' }
   };
 
   // Growth stages: 0-25% planted, 25-50% sprouting, 50-75% growing, 75-100% flowering, 100% ready

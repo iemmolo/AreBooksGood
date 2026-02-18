@@ -13,7 +13,7 @@
     cowPasture:  { resource: 'milk',     rate: 1800000,  built: false },
     sheepPen:    { resource: 'wool',     rate: 2700000,  built: false },
     mine:        { resource: 'iron',     rate: 2400000,  built: false },
-    deepMine:    { resource: 'gold',     rate: 5400000,  built: false },
+    deepMine:    { resource: 'gold',     rate: 3600000,  built: false },
     oldGrowth:   { resource: 'hardwood', rate: 2100000,  built: false },
     // Processing stations (no resource — build state only)
     forge:       { resource: null, rate: 0, built: false },
