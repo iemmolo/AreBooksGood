@@ -50,6 +50,13 @@
   font-size: 0.95em;
 }
 
+.shop-card-bonus {
+  font-size: 10px;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-top: -4px;
+}
+
 .shop-card-desc {
   font-size: 0.85em;
   color: color-mix(in srgb, var(--foreground) 60%, transparent);

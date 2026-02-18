@@ -146,9 +146,9 @@ AreBooksGood - Improvement TODO
 - [x] Synergies info tab on TD start screen
 - [x] Farm+TD economy balance audit — diminishing JB cashout, boss material drops, farmhouse→TD SB bonus, milestone material rewards, crop price buff, faster deep mine, investment cap raise
 - [ ] Challenge modes — "Arrow only", "No upgrades", "Speed run"
-- [ ] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities
+- [x] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities, cosmetic bonuses
 - [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
-- [ ] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
+- [x] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
 - [ ] Phase 4: Sprites, more enemies/maps, sound
 
 ## Future Ideas

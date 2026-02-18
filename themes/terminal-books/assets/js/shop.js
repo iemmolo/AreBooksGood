@@ -480,6 +480,20 @@
       nameEl.textContent = info.name;
       card.appendChild(nameEl);
 
+      // Hero bonus description
+      var heroBonuses = {
+        partyhat: '+5% hero attack speed', tophat: '+10% SB from hero kills',
+        monocle: '+20% hero range', crown: '+15% hero damage',
+        farmerhat: 'Hero attacks slow enemies', bowtie: '-10% ability cooldowns',
+        cape: '+15% ability damage'
+      };
+      if (heroBonuses[id]) {
+        var bonusEl = document.createElement('div');
+        bonusEl.className = 'shop-card-bonus';
+        bonusEl.textContent = '\u2694 ' + heroBonuses[id];
+        card.appendChild(bonusEl);
+      }
+
       if (owned) {
         var equipBtn = document.createElement('button');
         equipBtn.className = 'shop-btn shop-btn-equip';

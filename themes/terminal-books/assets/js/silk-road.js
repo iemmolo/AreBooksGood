@@ -425,6 +425,16 @@
         desc.textContent = cosmetic.desc;
         card.appendChild(desc);
 
+        // Hero bonus for Farmer Hat
+        if (key === 'farmerHat') {
+          var bonus = document.createElement('div');
+          bonus.className = 'sr-card-info';
+          bonus.style.color = '#4cf';
+          bonus.style.fontSize = '10px';
+          bonus.textContent = '\u2694 TD Hero: attacks slow enemies';
+          card.appendChild(bonus);
+        }
+
         if (isOwned) {
           var badge = document.createElement('div');
           badge.className = 'sr-card-price sr-cosmetic-owned-badge';

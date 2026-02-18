@@ -78,6 +78,78 @@
     { id: 'icearrows',     towers: ['arrow', 'frost'],     name: 'Ice Arrows',    desc: '25% chance to apply mild slow',  color: '#4cf' }
   ];
 
+  // ── Hero Definitions ─────────────────────────────
+  var HERO_DEFS = {
+    cat:    { dmg: 8,  speed: 0.8, range: 2.5, color: '#f9c', symbol: 'C',
+              q: { name: 'Pounce',     cooldown: 12, desc: 'Instant 3x damage to closest enemy' },
+              w: { name: 'Nine Lives',  cooldown: 25, desc: 'Next 5 attacks crit for 2x damage' } },
+    dragon: { dmg: 7,  speed: 1.0, range: 2.5, color: '#f84', symbol: 'D',
+              q: { name: 'Fire Breath', cooldown: 18, desc: 'Damage + fire DOT to all in range' },
+              w: { name: 'Dragon Rage', cooldown: 28, desc: '2x attack speed + fire DOT for 8s' } },
+    robot:  { dmg: 6,  speed: 1.2, range: 2.5, color: '#4cf', symbol: 'R',
+              q: { name: 'EMP Blast',   cooldown: 20, desc: 'Stun all enemies in range for 2s' },
+              w: { name: 'Overclock',   cooldown: 30, desc: '+30% attack speed to towers in range for 8s' } }
+  };
+
+  var HERO_ACCENT_COLORS = { cat: '#f9c', dragon: '#f84', robot: '#4cf' };
+
+  var ACCESSORY_HERO_BONUSES = {
+    partyhat:  { desc: '+5% hero attack speed',     stat: 'atkSpeed',   value: 0.05 },
+    tophat:    { desc: '+10% SB from hero kills',    stat: 'killSB',    value: 0.1 },
+    monocle:   { desc: '+20% hero range',            stat: 'range',     value: 0.2 },
+    crown:     { desc: '+15% hero damage',           stat: 'damage',    value: 0.15 },
+    farmerhat: { desc: 'Hero attacks slow enemies',  stat: 'slow',      value: 0.5 },
+    bowtie:    { desc: '-10% ability cooldowns',     stat: 'cdReduce',  value: 0.1 },
+    cape:      { desc: '+15% ability damage',        stat: 'abilityDmg',value: 0.15 }
+  };
+
+  // Hero sprite rendering
+  var heroSpriteData = null;
+  var HERO_PIXEL_SIZE = 2;
+  var heroAnimTimer = 0;
+  var heroAnimFrame = 0;
+
+  function loadHeroSprites() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/data/petsprites.json', true);
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        try { heroSpriteData = JSON.parse(xhr.responseText); } catch (e) {}
+      }
+    };
+    xhr.send();
+  }
+
+  function resolveHeroFrames(petId, level, anim) {
+    if (!heroSpriteData) return null;
+    var pet = heroSpriteData[petId];
+    if (!pet) return null;
+    var lv = pet[String(level)];
+    if (!lv) return null;
+    var frames = lv[anim];
+    if (!frames) return null;
+    // frames is either array of arrays (multi-frame) or flat array (single frame)
+    if (Array.isArray(frames[0])) return frames;
+    return [frames];
+  }
+
+  function drawHeroSprite(cx, cy, frame, petId) {
+    if (!frame) return;
+    var ps = HERO_PIXEL_SIZE;
+    var offset = 8 * ps; // center 16px sprite
+    var heroColor = HERO_ACCENT_COLORS[petId] || colorAccent;
+    for (var i = 0; i < 256; i++) {
+      var val = frame[i];
+      if (val === 0) continue;
+      var px = (i % 16) * ps + cx - offset;
+      var py = Math.floor(i / 16) * ps + cy - offset;
+      if (val === 1) ctx.fillStyle = colorFg;
+      else if (val === 2) ctx.fillStyle = colorAccent;
+      else ctx.fillStyle = heroColor;
+      ctx.fillRect(px, py, ps, ps);
+    }
+  }
+
   var synergyCache = {};
 
   function rebuildSynergyCache() {
@@ -404,6 +476,7 @@
       for (var i = 0; i < towers.length; i++) {
         towers[i].cooldown = 0;
       }
+      if (hero) { hero.cooldown = 0; hero.qCooldown = 0; hero.wCooldown = 0; }
       spawnParticle(CANVAS_W / 2, CANVAS_H / 2, 'Cooldowns Reset!', '#8cf');
     } else if (itemKey === 'crystalBomb') {
       for (var j = 0; j < enemies.length; j++) {
@@ -513,6 +586,14 @@
   var gameSpeed = 1;
   var autoWave = false;
 
+  // Hero state
+  var hero = null;
+  var heroPlacing = false;
+  var heroMoving = false;
+  var heroPetId = null;
+  var heroPetLevel = 1;
+  var heroAccessoryBonuses = {};
+
   // ── Path computation ──────────────────────────────
   var pathTiles = {};
   var pathSegments = [];
@@ -558,6 +639,7 @@
   function isBuildable(col, row) {
     if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS) return false;
     if (isPathTile(col, row)) return false;
+    if (hero && hero.col === col && hero.row === row) return false;
     for (var i = 0; i < towers.length; i++) {
       if (towers[i].col === col && towers[i].row === row) return false;
     }
@@ -764,6 +846,13 @@
       enemy.alive = false;
       totalKilled++;
       if (sourceTower && typeof sourceTower.kills === 'number') sourceTower.kills++;
+
+      // Hero kill SB bonus (Top Hat) — for ability kills
+      if (sourceTower && sourceTower.type === 'hero' && heroAccessoryBonuses.killSB) {
+        var killBonus = Math.max(1, Math.round(2 * heroAccessoryBonuses.killSB / 0.1));
+        sb += killBonus;
+        sbEarned += killBonus;
+      }
 
       // Boss material drop
       if (enemy.special === 'boss' && typeof window.FarmResources !== 'undefined') {
@@ -1051,6 +1140,7 @@
   }
 
   function upgradeTower(tower) {
+    if (tower.type === 'hero') return false;
     if (tower.level >= getMaxTowerLevel()) return false;
     var cost = getUpgradeCostForTower(tower);
     if (cost === null || sb < cost) return false;
@@ -1064,6 +1154,7 @@
   }
 
   function sellTower(tower) {
+    if (tower.type === 'hero') return;
     var refund = Math.floor(getTotalInvestment(tower) * 0.5);
     var tc = tileCenter(tower.col, tower.row);
     spawnParticle(tc.x, tc.y, '+' + refund + ' SB', '#ffd700');
@@ -1177,10 +1268,283 @@
   }
 
   function getTowerAt(col, row) {
+    if (hero && hero.col === col && hero.row === row) return hero;
     for (var i = 0; i < towers.length; i++) {
       if (towers[i].col === col && towers[i].row === row) return towers[i];
     }
     return null;
+  }
+
+  // ── Hero functions ───────────────────────────────
+  function getHeroPetInfo() {
+    heroPetId = null;
+    heroPetLevel = 1;
+    if (typeof window.PetSystem === 'undefined' || !window.PetSystem.getState) return;
+    var state = window.PetSystem.getState();
+    if (!state || !state.petId) return;
+    heroPetId = state.petId;
+    heroPetLevel = state.level || 1;
+  }
+
+  function getHeroAccessoryBonuses() {
+    heroAccessoryBonuses = {};
+    try {
+      var raw = localStorage.getItem('arebooksgood-pet');
+      if (!raw) return;
+      var ps = JSON.parse(raw);
+      if (!ps || !ps.accessories || !ps.accessories.equipped) return;
+      var equipped = ps.accessories.equipped;
+      var slots = ['head', 'body'];
+      for (var si = 0; si < slots.length; si++) {
+        var id = equipped[slots[si]];
+        if (id && ACCESSORY_HERO_BONUSES[id]) {
+          var bonus = ACCESSORY_HERO_BONUSES[id];
+          heroAccessoryBonuses[bonus.stat] = bonus.value;
+        }
+      }
+    } catch (e) {}
+  }
+
+  function placeHero(col, row) {
+    if (!heroPetId || !HERO_DEFS[heroPetId]) return false;
+    if (!isBuildable(col, row)) return false;
+    var def = HERO_DEFS[heroPetId];
+    hero = {
+      col: col, row: row, type: 'hero', petId: heroPetId,
+      cooldown: 0, qCooldown: 0, wCooldown: 0,
+      targetMode: 'closest', kills: 0, attackFlash: 0,
+      critHitsRemaining: 0, rageTimer: 0, overclockTimer: 0
+    };
+    var tc = tileCenter(col, row);
+    spawnParticle(tc.x, tc.y, 'Hero placed!', def.color);
+    heroPlacing = false;
+    return true;
+  }
+
+  function moveHero(col, row) {
+    if (!hero) return false;
+    if (hero.col === col && hero.row === row) return false;
+    if (!isBuildable(col, row)) return false;
+    hero.col = col;
+    hero.row = row;
+    var tc = tileCenter(col, row);
+    spawnParticle(tc.x, tc.y, 'Hero moved!', HERO_DEFS[heroPetId] ? HERO_DEFS[heroPetId].color : colorAccent);
+    heroMoving = false;
+    return true;
+  }
+
+  function getHeroEvolutionScale() {
+    if (heroPetLevel >= 3) return { dmg: 1.5, cd: 0.75 };
+    if (heroPetLevel >= 2) return { dmg: 1.25, cd: 0.85 };
+    return { dmg: 1, cd: 1 };
+  }
+
+  function getHeroDmg() {
+    if (!hero || !heroPetId) return 0;
+    var def = HERO_DEFS[heroPetId];
+    var evo = getHeroEvolutionScale();
+    var dmg = def.dmg * evo.dmg;
+    if (heroAccessoryBonuses.damage) dmg *= 1 + heroAccessoryBonuses.damage;
+    if (hero.critHitsRemaining > 0) dmg *= 2;
+    return Math.round(dmg);
+  }
+
+  function getHeroRangePx() {
+    if (!hero || !heroPetId) return 0;
+    var def = HERO_DEFS[heroPetId];
+    var range = def.range * TILE_SIZE;
+    if (heroAccessoryBonuses.range) range *= 1 + heroAccessoryBonuses.range;
+    return range;
+  }
+
+  function getHeroAbilityCooldown(baseCd) {
+    var evo = getHeroEvolutionScale();
+    var cd = baseCd * evo.cd;
+    if (heroAccessoryBonuses.cdReduce) cd *= 1 - heroAccessoryBonuses.cdReduce;
+    return cd;
+  }
+
+  function findHeroTarget() {
+    if (!hero) return null;
+    var tc = tileCenter(hero.col, hero.row);
+    var rangePx = getHeroRangePx();
+    var mode = hero.targetMode || 'closest';
+    var best = null;
+    var bestVal = null;
+
+    for (var i = 0; i < enemies.length; i++) {
+      var e = enemies[i];
+      if (!e.alive) continue;
+      var pos = getPathPos(e.dist);
+      var dx = pos.x - tc.x;
+      var dy = pos.y - tc.y;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d > rangePx) continue;
+
+      var val;
+      if (mode === 'closest') val = d;
+      else if (mode === 'first') val = e.dist;
+      else if (mode === 'last') val = e.dist;
+      else if (mode === 'weakest') val = e.hp;
+      else val = e.hp;
+
+      var isBetter = bestVal === null ||
+        (mode === 'closest' && val < bestVal) ||
+        (mode === 'first' && val > bestVal) ||
+        (mode === 'last' && val < bestVal) ||
+        (mode === 'weakest' && val < bestVal) ||
+        (mode === 'strongest' && val > bestVal);
+
+      if (isBetter) { bestVal = val; best = e; }
+    }
+    return best;
+  }
+
+  function updateHero(dt) {
+    if (!hero || !heroPetId) return;
+    var def = HERO_DEFS[heroPetId];
+
+    // Tick ability cooldowns
+    if (hero.qCooldown > 0) hero.qCooldown = Math.max(0, hero.qCooldown - dt);
+    if (hero.wCooldown > 0) hero.wCooldown = Math.max(0, hero.wCooldown - dt);
+    if (hero.attackFlash > 0) hero.attackFlash -= dt;
+
+    // Tick buff timers
+    if (hero.rageTimer > 0) hero.rageTimer = Math.max(0, hero.rageTimer - dt);
+    if (hero.overclockTimer > 0) {
+      hero.overclockTimer = Math.max(0, hero.overclockTimer - dt);
+    }
+
+    // Robot Overclock: buff towers in hero range
+    if (heroPetId === 'robot' && hero.overclockTimer > 0) {
+      // Applied in updateTowers via overclockActive check
+    }
+
+    // Sprite animation
+    heroAnimTimer += dt;
+    if (heroAnimTimer >= 0.5) {
+      heroAnimTimer -= 0.5;
+      heroAnimFrame = (heroAnimFrame + 1) % 2;
+    }
+
+    // Auto-attack
+    if (hero.cooldown > 0) {
+      var cdRate = 1;
+      if (heroAccessoryBonuses.atkSpeed) cdRate *= 1 + heroAccessoryBonuses.atkSpeed;
+      if (atkSpeedActive) cdRate *= 1.3;
+      if (hero.rageTimer > 0) cdRate *= 2;
+      hero.cooldown -= dt * cdRate;
+      return;
+    }
+
+    var target = findHeroTarget();
+    if (target) {
+      var tc = tileCenter(hero.col, hero.row);
+      var dmg = getHeroDmg();
+      projectiles.push({
+        x: tc.x, y: tc.y, target: target, dmg: dmg,
+        speed: PROJECTILE_SPEED * TILE_SIZE,
+        towerType: 'hero', megaBlast: false, sourceTower: hero,
+        heroPetId: heroPetId
+      });
+      hero.cooldown = def.speed;
+      hero.attackFlash = 0.15;
+
+      // Crit tracking
+      if (hero.critHitsRemaining > 0) hero.critHitsRemaining--;
+    }
+  }
+
+  function activateHeroQ() {
+    if (!hero || !heroPetId) return;
+    if (hero.qCooldown > 0) return;
+    var def = HERO_DEFS[heroPetId];
+    var tc = tileCenter(hero.col, hero.row);
+    var rangePx = getHeroRangePx();
+    var evo = getHeroEvolutionScale();
+
+    switch (heroPetId) {
+      case 'cat': // Pounce — 3x damage to closest enemy
+        var target = findHeroTarget();
+        if (!target) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
+        var dmg = Math.round(getHeroDmg() * 3);
+        if (heroAccessoryBonuses.abilityDmg) dmg = Math.round(dmg * (1 + heroAccessoryBonuses.abilityDmg));
+        damageEnemy(target, dmg, hero);
+        if (heroPetLevel >= 3 && target.alive) {
+          target.slow = { remaining: 0.5, factor: 0 }; // stun = speed 0
+        }
+        spawnParticle(tc.x, tc.y - 10, 'POUNCE!', '#f9c');
+        break;
+
+      case 'dragon': // Fire Breath — damage + DOT to all in range
+        var hitCount = 0;
+        var breathDmg = Math.round(getHeroDmg() * 1.5);
+        if (heroAccessoryBonuses.abilityDmg) breathDmg = Math.round(breathDmg * (1 + heroAccessoryBonuses.abilityDmg));
+        var dotDur = heroPetLevel >= 3 ? 5 : 3;
+        for (var i = 0; i < enemies.length; i++) {
+          var e = enemies[i];
+          if (!e.alive) continue;
+          var ep = getPathPos(e.dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
+            damageEnemy(e, breathDmg, hero);
+            if (e.alive) e.dot = { dmg: 3, remaining: dotDur, tickTimer: 0 };
+            hitCount++;
+          }
+        }
+        if (hitCount === 0) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
+        spawnParticle(tc.x, tc.y - 10, 'FIRE BREATH!', '#f84');
+        break;
+
+      case 'robot': // EMP Blast — stun all in range
+        var hitCount = 0;
+        var stunDur = heroPetLevel >= 3 ? 3 : 2;
+        for (var i = 0; i < enemies.length; i++) {
+          var e = enemies[i];
+          if (!e.alive) continue;
+          var ep = getPathPos(e.dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
+            e.slow = { remaining: stunDur, factor: 0 };
+            hitCount++;
+          }
+        }
+        if (hitCount === 0) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
+        // Splash ring effect
+        splashEffects.push({ x: tc.x, y: tc.y, radius: 0, maxRadius: rangePx, life: 0.4, color: '#4cf' });
+        spawnParticle(tc.x, tc.y - 10, 'EMP BLAST!', '#4cf');
+        break;
+    }
+
+    hero.qCooldown = getHeroAbilityCooldown(def.q.cooldown);
+    renderHeroAbilities();
+  }
+
+  function activateHeroW() {
+    if (!hero || !heroPetId) return;
+    if (hero.wCooldown > 0) return;
+    var def = HERO_DEFS[heroPetId];
+    var tc = tileCenter(hero.col, hero.row);
+
+    switch (heroPetId) {
+      case 'cat': // Nine Lives — next N attacks crit
+        hero.critHitsRemaining = heroPetLevel >= 3 ? 8 : 5;
+        spawnParticle(tc.x, tc.y - 10, 'NINE LIVES!', '#ffd700');
+        break;
+
+      case 'dragon': // Dragon Rage — 2x speed + DOT on hits
+        hero.rageTimer = heroPetLevel >= 3 ? 10 : 8;
+        spawnParticle(tc.x, tc.y - 10, 'DRAGON RAGE!', '#f84');
+        break;
+
+      case 'robot': // Overclock — buff towers in range
+        hero.overclockTimer = heroPetLevel >= 3 ? 12 : 8;
+        spawnParticle(tc.x, tc.y - 10, 'OVERCLOCK!', '#4cf');
+        break;
+    }
+
+    hero.wCooldown = getHeroAbilityCooldown(def.w.cooldown);
+    renderHeroAbilities();
   }
 
   function placeTower(col, row, type) {
@@ -1234,6 +1598,13 @@
         // Crossfire synergy: +15% attack speed per stack
         var crossfire = hasSynergy(t, 'crossfire');
         if (crossfire) cdRate *= 1 + 0.15 * getSynergyMultiplier(crossfire.stacks);
+        // Robot Overclock: +30% attack speed to towers in hero range
+        if (hero && heroPetId === 'robot' && hero.overclockTimer > 0) {
+          var htc = tileCenter(hero.col, hero.row);
+          var ttc = tileCenter(t.col, t.row);
+          var hdx = ttc.x - htc.x, hdy = ttc.y - htc.y;
+          if (Math.sqrt(hdx * hdx + hdy * hdy) <= getHeroRangePx()) cdRate *= 1.3;
+        }
         t.cooldown -= dt * cdRate;
         continue;
       }
@@ -1531,6 +1902,17 @@
           }
           splashEffects.push({ x: p.x, y: p.y, radius: 0, maxRadius: splashRadius, life: 0.3 });
         }
+        // Hero projectile effects
+        if (p.towerType === 'hero' && p.target.alive) {
+          // Dragon Rage: attacks apply fire DOT
+          if (p.heroPetId === 'dragon' && hero && hero.rageTimer > 0) {
+            p.target.dot = { dmg: 3, remaining: 3, tickTimer: 0 };
+          }
+          // Farmer Hat: attacks slow enemies
+          if (heroAccessoryBonuses.slow) {
+            p.target.slow = { remaining: heroAccessoryBonuses.slow, factor: 0.5 };
+          }
+        }
         projectiles.splice(i, 1);
       } else {
         var move = p.speed * dt;
@@ -1545,7 +1927,8 @@
       var p = projectiles[i];
       var col = colorFg;
       var r = 3;
-      if (p.towerType === 'fire') col = '#f84';
+      if (p.towerType === 'hero') { col = HERO_ACCENT_COLORS[p.heroPetId] || colorAccent; r = 3; }
+      else if (p.towerType === 'fire') col = '#f84';
       else if (p.towerType === 'sniper') { col = '#8cf'; r = 4; }
       else if (p.towerType === 'frost') col = '#4cf';
       else if (p.towerType === 'cannon') { col = '#a86'; r = 5; }
@@ -1560,8 +1943,9 @@
   function updateSplash(dt) {
     for (var i = splashEffects.length - 1; i >= 0; i--) {
       var s = splashEffects[i];
+      if (!s.maxLife) s.maxLife = s.life;
       s.life -= dt;
-      s.radius = s.maxRadius * (1 - s.life / 0.3);
+      s.radius = s.maxRadius * (1 - s.life / s.maxLife);
       if (s.life <= 0) splashEffects.splice(i, 1);
     }
   }
@@ -1570,8 +1954,8 @@
     for (var i = 0; i < splashEffects.length; i++) {
       var s = splashEffects[i];
       ctx.save();
-      ctx.globalAlpha = Math.max(0, s.life / 0.3) * 0.4;
-      ctx.strokeStyle = '#a86';
+      ctx.globalAlpha = Math.max(0, Math.min(1, s.life / 0.3)) * 0.4;
+      ctx.strokeStyle = s.color || '#a86';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
@@ -1853,6 +2237,8 @@
     gameState = 'gameover';
     waveBtn.disabled = true;
     clearSave();
+    var heroAbilBar = document.getElementById('td-hero-abilities');
+    if (heroAbilBar) heroAbilBar.classList.add('td-hidden');
 
     stats.gamesPlayed++;
     stats.totalKills += totalKilled;
@@ -1982,7 +2368,10 @@
         shieldCharges: shieldCharges,
         caltropZones: caltropZones,
         mapId: currentMapId,
-        difficulty: currentDifficulty
+        difficulty: currentDifficulty,
+        hero: hero ? { col: hero.col, row: hero.row, kills: hero.kills || 0, targetMode: hero.targetMode || 'closest', qCooldown: hero.qCooldown || 0, wCooldown: hero.wCooldown || 0 } : null,
+        heroPetId: heroPetId,
+        heroPetLevel: heroPetLevel
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch (e) {}
@@ -2042,6 +2431,23 @@
     caltropZones = save.caltropZones || [];
     placingCaltrops = false;
 
+    // Restore hero
+    heroPlacing = false;
+    heroMoving = false;
+    heroPetId = save.heroPetId || null;
+    heroPetLevel = save.heroPetLevel || 1;
+    getHeroAccessoryBonuses();
+    if (save.hero && heroPetId) {
+      hero = {
+        col: save.hero.col, row: save.hero.row, type: 'hero', petId: heroPetId,
+        cooldown: 0, qCooldown: save.hero.qCooldown || 0, wCooldown: save.hero.wCooldown || 0,
+        targetMode: save.hero.targetMode || 'closest', kills: save.hero.kills || 0,
+        attackFlash: 0, critHitsRemaining: 0, rageTimer: 0, overclockTimer: 0
+      };
+    } else {
+      hero = null;
+    }
+
     rebuildSynergyCache();
     gameState = 'building';
     startOverlay.classList.add('td-hidden');
@@ -2051,6 +2457,7 @@
 
     renderTowerBar();
     renderCrateBar();
+    renderHeroAbilities();
     updateTowerBtnStates();
     updateHUD();
 
@@ -2214,6 +2621,61 @@
     if (!towerBarEl) return;
     towerBarEl.innerHTML = '';
 
+    // Hero button (first in bar)
+    if (heroPetId && HERO_DEFS[heroPetId]) {
+      var heroDef = HERO_DEFS[heroPetId];
+      var hBtn = document.createElement('button');
+      hBtn.className = 'td-tower-btn td-hero-btn';
+      if (heroPlacing || heroMoving) hBtn.className += ' td-tower-btn-selected';
+      hBtn.setAttribute('data-tower', 'hero');
+      hBtn.style.borderColor = heroDef.color;
+
+      var hIcon = document.createElement('span');
+      hIcon.className = 'td-tower-icon';
+      hIcon.style.color = heroDef.color;
+      hIcon.textContent = hero ? '\u2714' : heroDef.symbol;
+      hBtn.appendChild(hIcon);
+
+      var hName = document.createElement('span');
+      hName.className = 'td-tower-name';
+      hName.textContent = hero ? 'Move' : 'Hero';
+      hBtn.appendChild(hName);
+
+      var hCost = document.createElement('span');
+      hCost.className = 'td-tower-cost';
+      hCost.style.color = heroDef.color;
+      hCost.textContent = 'FREE';
+      hBtn.appendChild(hCost);
+
+      hBtn.addEventListener('click', function () {
+        placingCaltrops = false;
+        selectedTower = null;
+        var all = towerBarEl.querySelectorAll('.td-tower-btn');
+        for (var j = 0; j < all.length; j++) all[j].classList.remove('td-tower-btn-selected');
+
+        if (hero) {
+          if (gameState !== 'building') return;
+          if (heroMoving) {
+            heroMoving = false;
+          } else {
+            heroMoving = true;
+            heroPlacing = false;
+            hBtn.classList.add('td-tower-btn-selected');
+          }
+        } else {
+          if (heroPlacing) {
+            heroPlacing = false;
+          } else {
+            heroPlacing = true;
+            heroMoving = false;
+            hBtn.classList.add('td-tower-btn-selected');
+          }
+        }
+      });
+
+      towerBarEl.appendChild(hBtn);
+    }
+
     var towerKeys = Object.keys(TOWER_DEFS);
     for (var i = 0; i < towerKeys.length; i++) {
       var key = towerKeys[i];
@@ -2248,6 +2710,8 @@
           // Allow deselect even if can't afford, but block selecting new tower
           if (selectedTower !== k && def && sb < getEffectiveCost(def)) return;
           placingCaltrops = false;
+          heroPlacing = false;
+          heroMoving = false;
           var all = towerBarEl.querySelectorAll('.td-tower-btn');
           // Toggle: clicking selected tower deselects it
           if (selectedTower === k) {
@@ -2442,9 +2906,146 @@
     ctx.globalAlpha = 1;
   }
 
+  // ── Hero drawing ─────────────────────────────────
+  function drawHero() {
+    if (!hero || !heroPetId) return;
+    var def = HERO_DEFS[heroPetId];
+    var tc = tileCenter(hero.col, hero.row);
+    var isInspected = inspectedTower === hero;
+
+    // Tile tint
+    ctx.fillStyle = def.color;
+    ctx.globalAlpha = 0.15;
+    ctx.fillRect(hero.col * TILE_SIZE, hero.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    ctx.globalAlpha = 1;
+
+    // Attack flash
+    if (hero.attackFlash > 0) {
+      ctx.fillStyle = def.color;
+      ctx.globalAlpha = hero.attackFlash / 0.15 * 0.3;
+      ctx.beginPath();
+      ctx.arc(tc.x, tc.y, TILE_SIZE * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Sprite or fallback
+    var frames = resolveHeroFrames(heroPetId, heroPetLevel, 'idle');
+    if (frames && frames.length > 0) {
+      var frame = frames[heroAnimFrame % frames.length];
+      drawHeroSprite(tc.x, tc.y, frame, heroPetId);
+    } else {
+      // Fallback: colored square with symbol
+      var half = TILE_SIZE * 0.35;
+      ctx.fillStyle = def.color;
+      ctx.globalAlpha = 0.4;
+      ctx.fillRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = isInspected ? '#fff' : def.color;
+      ctx.lineWidth = isInspected ? 2.5 : 1.5;
+      ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      ctx.fillStyle = colorFg;
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(def.symbol, tc.x, tc.y);
+    }
+
+    // Inspected border
+    if (isInspected) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(hero.col * TILE_SIZE + 2, hero.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+    }
+
+    // Ability auras
+    if (hero.critHitsRemaining > 0) {
+      // Cat crit: gold sparkle dots
+      ctx.fillStyle = '#ffd700';
+      ctx.globalAlpha = 0.6 + 0.4 * Math.sin(Date.now() * 0.008);
+      for (var di = 0; di < 4; di++) {
+        var angle = Date.now() * 0.003 + di * Math.PI / 2;
+        ctx.fillRect(tc.x + Math.cos(angle) * 14 - 1, tc.y + Math.sin(angle) * 14 - 1, 3, 3);
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (hero.rageTimer > 0) {
+      // Dragon rage: orange pulsing ring
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(tc.x, tc.y, TILE_SIZE * 0.45, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f84';
+      ctx.globalAlpha = 0.4 + 0.3 * Math.sin(Date.now() * 0.006);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (hero.overclockTimer > 0) {
+      // Robot overclock: cyan dashed ring at hero range
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(tc.x, tc.y, getHeroRangePx(), 0, Math.PI * 2);
+      ctx.strokeStyle = '#4cf';
+      ctx.globalAlpha = 0.25 + 0.15 * Math.sin(Date.now() * 0.005);
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    // Range circle when inspected or hovered
+    var showRange = isInspected || (hoverTile && hoverTile.col === hero.col && hoverTile.row === hero.row);
+    if (showRange) {
+      var rangePx = getHeroRangePx();
+      ctx.beginPath();
+      ctx.arc(tc.x, tc.y, rangePx, 0, Math.PI * 2);
+      ctx.strokeStyle = def.color;
+      ctx.globalAlpha = isInspected ? 0.35 : 0.2;
+      ctx.lineWidth = isInspected ? 1.5 : 1;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+
   function drawGhostTower() {
     if (gameState === 'gameover' || gameState === 'idle') return;
     if (!hoverTile) return;
+
+    // Hero placement/movement ghost
+    if (heroPlacing || heroMoving) {
+      var hc = hoverTile.col;
+      var hr = hoverTile.row;
+      var hBuildable = isBuildable(hc, hr);
+      var hDef = heroPetId ? HERO_DEFS[heroPetId] : null;
+      var hColor = hDef ? hDef.color : colorAccent;
+      var htc = tileCenter(hc, hr);
+
+      ctx.fillStyle = hBuildable ? hColor : '#e44';
+      ctx.globalAlpha = 0.15;
+      ctx.fillRect(hc * TILE_SIZE, hr * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      ctx.globalAlpha = 1;
+
+      if (hBuildable && hDef) {
+        ctx.fillStyle = colorFg;
+        ctx.globalAlpha = 0.4;
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(hDef.symbol, htc.x, htc.y);
+
+        var hRange = hDef.range * TILE_SIZE;
+        if (heroAccessoryBonuses.range) hRange *= 1 + heroAccessoryBonuses.range;
+        ctx.beginPath();
+        ctx.arc(htc.x, htc.y, hRange, 0, Math.PI * 2);
+        ctx.strokeStyle = hColor;
+        ctx.globalAlpha = 0.15;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      return;
+    }
 
     // Caltrop placement mode
     if (placingCaltrops) {
@@ -2506,6 +3107,7 @@
       updateHealers(dt);
       updateShieldFlags();
       updateTowers(dt);
+      if (hero) updateHero(dt);
       updateProjectiles(dt);
       updateSplash(dt);
       updateLightning(dt);
@@ -2522,6 +3124,7 @@
     drawCaltrops();
     drawGhostTower();
     drawTowers();
+    drawHero();
     drawEnemies();
     drawProjectiles();
     drawSplash();
@@ -2550,6 +3153,15 @@
       renderInspectPanel();
     }
 
+    // Auto-refresh hero ability bar when cooldowns ticking
+    if (hero && (hero.qCooldown > 0 || hero.wCooldown > 0)) {
+      renderHeroAbilities();
+    }
+    // Auto-refresh hero inspect for buff timers
+    if (inspectedTower && inspectedTower.type === 'hero') {
+      renderInspectPanel();
+    }
+
     if (gameState === 'building' || gameState === 'waving') {
       rafId = requestAnimationFrame(loop);
     } else {
@@ -2558,11 +3170,177 @@
   }
 
   // ── Tower Inspection ─────────────────────────────
+  // ── Hero ability bar rendering ───────────────────
+  function renderHeroAbilities() {
+    var bar = document.getElementById('td-hero-abilities');
+    if (!bar) return;
+    if (!hero || !heroPetId) {
+      bar.classList.add('td-hidden');
+      return;
+    }
+    var def = HERO_DEFS[heroPetId];
+    var petColor = HERO_ACCENT_COLORS[heroPetId];
+    bar.classList.remove('td-hidden');
+    bar.innerHTML = '';
+
+    function makeAbilBtn(key, abil, cooldown, activateFn) {
+      var btn = document.createElement('button');
+      btn.className = 'td-hero-ability-btn';
+      var onCd = cooldown > 0;
+      btn.disabled = onCd;
+      btn.style.borderColor = petColor;
+      if (!onCd) btn.style.color = petColor;
+
+      // Build inner HTML with name + description + cooldown overlay
+      var html = '<span class="td-ability-key">' + key + '</span>';
+      html += '<span class="td-ability-name">' + abil.name + '</span>';
+      html += '<span class="td-ability-desc">' + abil.desc + '</span>';
+      if (onCd) {
+        var totalCd = getHeroAbilityCooldown(abil.cooldown);
+        var pct = Math.min(100, (cooldown / totalCd) * 100);
+        html += '<span class="td-ability-cd">' + Math.ceil(cooldown) + 's</span>';
+        html += '<span class="td-ability-cd-fill" style="width:' + pct + '%;background:' + petColor + '"></span>';
+      } else {
+        html += '<span class="td-ability-ready">READY</span>';
+      }
+      btn.innerHTML = html;
+      btn.addEventListener('click', function () { activateFn(); });
+      return btn;
+    }
+
+    bar.appendChild(makeAbilBtn('Q', def.q, hero.qCooldown, activateHeroQ));
+    bar.appendChild(makeAbilBtn('W', def.w, hero.wCooldown, activateHeroW));
+  }
+
+  function renderHeroInspectPanel(panel, t) {
+    var def = HERO_DEFS[heroPetId];
+    var towerColor = def.color;
+    var dmg = getHeroDmg();
+    var rangeTiles = (getHeroRangePx() / TILE_SIZE).toFixed(1);
+    var petName = heroPetId.charAt(0).toUpperCase() + heroPetId.slice(1);
+
+    var html = '<div class="td-inspect-header" style="border-color:' + towerColor + '">';
+    html += '<span class="td-inspect-name" style="color:' + towerColor + '">' + petName + ' Hero Lv' + heroPetLevel + '</span>';
+    html += '<button class="td-inspect-close" id="td-inspect-close-btn">&times;</button>';
+    html += '</div>';
+
+    html += '<div class="td-inspect-stats">';
+    html += '<span>DMG: ' + dmg + '</span>';
+    html += '<span>Range: ' + rangeTiles + '</span>';
+    html += '<span>Speed: ' + def.speed.toFixed(1) + 's</span>';
+    html += '<span class="td-inspect-kills">\uD83D\uDC80 ' + (t.kills || 0) + '</span>';
+    html += '</div>';
+
+    // Targeting mode
+    html += '<div class="td-inspect-target">';
+    html += '<button class="td-inspect-btn td-inspect-target-btn" id="td-inspect-target-btn">\u25CE ' + TARGET_MODE_LABELS[t.targetMode || 'closest'] + '</button>';
+    html += '</div>';
+
+    // Abilities info
+    html += '<div class="td-inspect-ability">';
+    html += '<div style="font-size:10px;opacity:0.7;margin-bottom:2px">Q: ' + def.q.name + ' \u2014 ' + def.q.desc + '</div>';
+    html += '<div style="font-size:10px;opacity:0.7">W: ' + def.w.name + ' \u2014 ' + def.w.desc + '</div>';
+    html += '</div>';
+
+    // Active buffs
+    var buffs = [];
+    if (t.critHitsRemaining > 0) buffs.push('Crit x' + t.critHitsRemaining);
+    if (t.rageTimer > 0) buffs.push('Rage ' + Math.ceil(t.rageTimer) + 's');
+    if (t.overclockTimer > 0) buffs.push('Overclock ' + Math.ceil(t.overclockTimer) + 's');
+    if (buffs.length > 0) {
+      html += '<div style="padding:3px 8px;font-size:10px;color:' + towerColor + '">' + buffs.join(' | ') + '</div>';
+    }
+
+    // Accessory bonuses
+    var bonusLines = [];
+    var bonusKeys = Object.keys(heroAccessoryBonuses);
+    for (var bi = 0; bi < bonusKeys.length; bi++) {
+      var bk = bonusKeys[bi];
+      // Find the accessory desc for this stat
+      var accKeys = Object.keys(ACCESSORY_HERO_BONUSES);
+      for (var ai = 0; ai < accKeys.length; ai++) {
+        if (ACCESSORY_HERO_BONUSES[accKeys[ai]].stat === bk) {
+          bonusLines.push(ACCESSORY_HERO_BONUSES[accKeys[ai]].desc);
+          break;
+        }
+      }
+    }
+    if (bonusLines.length > 0) {
+      html += '<div style="padding:3px 8px;font-size:9px;color:#ffd700">';
+      for (var li = 0; li < bonusLines.length; li++) {
+        html += '\u2605 ' + bonusLines[li] + '<br>';
+      }
+      html += '</div>';
+    }
+
+    // Move button (building phase only)
+    if (gameState === 'building') {
+      html += '<div class="td-inspect-actions">';
+      html += '<button class="td-inspect-btn" id="td-hero-move-btn" style="border-color:' + towerColor + ';color:' + towerColor + '">Move Hero</button>';
+      html += '</div>';
+    }
+
+    html += '<div class="td-inspect-hint">' + (isMobile ? 'Tap Q/W below' : 'Press Q/W or click below') + '</div>';
+
+    panel.innerHTML = html;
+    panel.classList.remove('td-hidden');
+
+    // Position panel near hero
+    var heroScreenX = t.col * TILE_SIZE * scale;
+    var heroScreenY = t.row * TILE_SIZE * scale;
+    var panelW = isMobile ? 160 : 180;
+    var wrapW = canvasWrap.clientWidth;
+    var wrapH = canvasWrap.clientHeight;
+
+    var left = Math.min(Math.max(4, heroScreenX - panelW / 2 + TILE_SIZE * scale / 2), wrapW - panelW - 4);
+    panel.style.left = left + 'px';
+    panel.style.width = panelW + 'px';
+
+    if (heroScreenY > wrapH / 2) {
+      panel.style.bottom = (wrapH - heroScreenY + 4) + 'px';
+      panel.style.top = 'auto';
+    } else {
+      panel.style.top = (heroScreenY + TILE_SIZE * scale + 4) + 'px';
+      panel.style.bottom = 'auto';
+    }
+
+    // Bind buttons
+    var closeBtn = document.getElementById('td-inspect-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', function (ev) { ev.stopPropagation(); closeInspect(); });
+
+    var targetBtn = document.getElementById('td-inspect-target-btn');
+    if (targetBtn) targetBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      if (!hero) return;
+      var cur = hero.targetMode || 'closest';
+      var idx = TARGET_MODES.indexOf(cur);
+      hero.targetMode = TARGET_MODES[(idx + 1) % TARGET_MODES.length];
+      renderInspectPanel();
+    });
+
+    var moveBtn = document.getElementById('td-hero-move-btn');
+    if (moveBtn) moveBtn.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      closeInspect();
+      heroMoving = true;
+      heroPlacing = false;
+      selectedTower = null;
+      renderTowerBar();
+    });
+  }
+
   function renderInspectPanel() {
     var panel = document.getElementById('td-inspect-panel');
     if (!panel || !inspectedTower) return;
 
     var t = inspectedTower;
+
+    // Hero inspect panel
+    if (t.type === 'hero' && heroPetId) {
+      renderHeroInspectPanel(panel, t);
+      return;
+    }
+
     var def = TOWER_DEFS[t.type];
     var towerColor = def.color || colorAccent;
     var dmg = getEffectiveDmg(t);
@@ -2705,7 +3483,11 @@
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      if (inspectedTower) {
+      if (heroPlacing || heroMoving) {
+        heroPlacing = false;
+        heroMoving = false;
+        renderTowerBar();
+      } else if (inspectedTower) {
         closeInspect();
       } else if (selectedTower) {
         selectedTower = null;
@@ -2715,6 +3497,12 @@
           all[i].classList.remove('td-tower-btn-selected');
         }
       }
+    }
+
+    // Hero ability hotkeys
+    if (gameState === 'waving' && hero) {
+      if (e.key === 'q' || e.key === 'Q') { activateHeroQ(); return; }
+      if (e.key === 'w' || e.key === 'W') { activateHeroW(); return; }
     }
 
     // Tower hotkeys: 1-8
@@ -2757,8 +3545,20 @@
   var touchMoved = false;
   var lastTouchTime = 0;
 
-  canvas.addEventListener('touchstart', function () { touchMoved = false; }, { passive: true });
-  canvas.addEventListener('touchmove', function () { touchMoved = true; }, { passive: true });
+  canvas.addEventListener('touchstart', function (e) {
+    touchMoved = false;
+    if (e.touches.length === 1) {
+      var coords = canvasCoords(e.touches[0]);
+      hoverTile = pixelToTile(coords.x, coords.y);
+    }
+  }, { passive: true });
+  canvas.addEventListener('touchmove', function (e) {
+    touchMoved = true;
+    if (e.touches.length === 1) {
+      var coords = canvasCoords(e.touches[0]);
+      hoverTile = pixelToTile(coords.x, coords.y);
+    }
+  }, { passive: true });
 
   function onCanvasTap(e) {
     if (gameState === 'idle' || gameState === 'gameover') return;
@@ -2772,6 +3572,23 @@
     var coords = canvasCoords(e);
     var tile = pixelToTile(coords.x, coords.y);
 
+    // Hero placement
+    if (heroPlacing && isBuildable(tile.col, tile.row)) {
+      placeHero(tile.col, tile.row);
+      renderTowerBar();
+      renderHeroAbilities();
+      updateTowerBtnStates();
+      return;
+    }
+
+    // Hero movement (building phase only)
+    if (heroMoving && gameState === 'building' && isBuildable(tile.col, tile.row)) {
+      moveHero(tile.col, tile.row);
+      renderTowerBar();
+      updateTowerBtnStates();
+      return;
+    }
+
     // Caltrop placement
     if (placingCaltrops && isPathTile(tile.col, tile.row)) {
       caltropZones.push({ col: tile.col, row: tile.row });
@@ -2780,9 +3597,12 @@
       return;
     }
 
-    // Check for existing tower -> inspect
+    // Check for existing tower/hero -> inspect
     var existingTower = getTowerAt(tile.col, tile.row);
     if (existingTower) {
+      // Cancel hero/tower placement mode on inspect
+      heroPlacing = false;
+      heroMoving = false;
       if (inspectedTower === existingTower) {
         closeInspect();
       } else {
@@ -2807,23 +3627,25 @@
   }
 
   canvas.addEventListener('click', onCanvasTap);
-  canvas.addEventListener('touchend', onCanvasTap, { passive: false });
+  canvas.addEventListener('touchend', function (e) {
+    onCanvasTap(e);
+    hoverTile = null;
+  }, { passive: false });
 
-  if (!isMobile) {
-    canvas.addEventListener('mousemove', function (e) {
-      var coords = canvasCoords(e);
-      hoverTile = pixelToTile(coords.x, coords.y);
-    });
+  canvas.addEventListener('mousemove', function (e) {
+    var coords = canvasCoords(e);
+    hoverTile = pixelToTile(coords.x, coords.y);
+  });
 
-    canvas.addEventListener('mouseleave', function () {
-      hoverTile = null;
-    });
-  }
+  canvas.addEventListener('mouseleave', function () {
+    hoverTile = null;
+  });
 
   // ── Click outside game area → deselect ───────────
   document.addEventListener('click', function (e) {
     if (gameState !== 'building' && gameState !== 'waving') return;
-    if (canvas.contains(e.target) || towerBarEl.contains(e.target) || (crateBarEl && crateBarEl.contains(e.target))) return;
+    var heroAbilBar = document.getElementById('td-hero-abilities');
+    if (canvas.contains(e.target) || towerBarEl.contains(e.target) || (crateBarEl && crateBarEl.contains(e.target)) || (heroAbilBar && heroAbilBar.contains(e.target))) return;
     var panel = document.getElementById('td-inspect-panel');
     if (panel && panel.contains(e.target)) return;
     if (inspectedTower) closeInspect();
@@ -2879,6 +3701,13 @@
     placingCaltrops = false;
     commitCrate();
 
+    // Reset hero state
+    hero = null;
+    heroPlacing = false;
+    heroMoving = false;
+    getHeroPetInfo();
+    getHeroAccessoryBonuses();
+
     rebuildSynergyCache();
     gameState = 'building';
     startOverlay.classList.add('td-hidden');
@@ -2888,6 +3717,7 @@
 
     renderTowerBar();
     renderCrateBar();
+    renderHeroAbilities();
     updateTowerBtnStates();
     updateHUD();
 
@@ -2940,8 +3770,13 @@
     startButtonsEl.classList.remove('td-hidden');
     towerBarEl.classList.add('td-hidden');
     gameoverOverlay.classList.add('td-hidden');
+    var heroAbilBar = document.getElementById('td-hero-abilities');
+    if (heroAbilBar) heroAbilBar.classList.add('td-hidden');
     investedSB = 0;
     selectedTower = 'arrow';
+    hero = null;
+    heroPlacing = false;
+    heroMoving = false;
 
     // Check for saved run
     var save = loadSave();
@@ -2971,7 +3806,52 @@
     renderInvestSection();
     renderTowerBar();
     refreshAllPanels();
+    renderHeroInfo();
     drawIdle();
+    // Re-check scroll fade after content is populated
+    setTimeout(function () {
+      var panels = document.querySelectorAll('.td-tab-panel');
+      for (var i = 0; i < panels.length; i++) {
+        var p = panels[i];
+        if (p.scrollHeight <= p.clientHeight) {
+          p.classList.add('td-scrolled-bottom');
+        } else {
+          p.classList.remove('td-scrolled-bottom');
+        }
+      }
+    }, 50);
+  }
+
+  function renderHeroInfo() {
+    var el = document.getElementById('td-hero-info');
+    if (!el) return;
+    getHeroPetInfo();
+    if (!heroPetId || !HERO_DEFS[heroPetId]) {
+      el.classList.add('td-hidden');
+      return;
+    }
+    var def = HERO_DEFS[heroPetId];
+    var petName = heroPetId.charAt(0).toUpperCase() + heroPetId.slice(1);
+    var color = HERO_ACCENT_COLORS[heroPetId];
+    var evo = getHeroEvolutionScale();
+
+    var html = '<div class="td-hero-info-header" style="color:' + color + '">';
+    html += petName + ' Hero';
+    if (heroPetLevel > 1) html += ' <span style="opacity:0.7">Lv' + heroPetLevel + '</span>';
+    html += '</div>';
+    html += '<div class="td-hero-info-stats">';
+    html += '<span>DMG ' + Math.round(def.dmg * evo.dmg) + '</span>';
+    html += '<span>SPD ' + (def.speed * evo.cd).toFixed(1) + 's</span>';
+    html += '<span>RNG ' + def.range.toFixed(1) + '</span>';
+    html += '</div>';
+    html += '<div class="td-hero-info-abilities">';
+    html += '<span style="color:' + color + '">Q: ' + def.q.name + '</span> ' + def.q.desc;
+    html += '<br><span style="color:' + color + '">W: ' + def.w.name + '</span> ' + def.w.desc;
+    html += '</div>';
+
+    el.innerHTML = html;
+    el.classList.remove('td-hidden');
+    el.style.borderColor = color;
   }
 
   // ── Map selector ─────────────────────────────────
@@ -3091,6 +3971,42 @@
           }
         }
       });
+    }
+
+    // Scroll fade: remove bottom fade when scrolled to end, add when not
+    var pKeys = Object.keys(panels);
+    for (var p = 0; p < pKeys.length; p++) {
+      (function (panel) {
+        if (!panel) return;
+        function checkScroll() {
+          if (panel.scrollHeight <= panel.clientHeight) {
+            panel.classList.add('td-scrolled-bottom');
+          } else if (panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4) {
+            panel.classList.add('td-scrolled-bottom');
+          } else {
+            panel.classList.remove('td-scrolled-bottom');
+          }
+        }
+        panel.addEventListener('scroll', checkScroll);
+        // Initial check after a tick (content may not be rendered yet)
+        setTimeout(checkScroll, 100);
+      })(panels[pKeys[p]]);
+    }
+
+    // Tab bar horizontal scroll fade
+    var tabBar = document.querySelector('.td-tab-bar');
+    if (tabBar) {
+      function checkTabBarScroll() {
+        if (tabBar.scrollWidth <= tabBar.clientWidth) {
+          tabBar.classList.add('td-scrolled-end');
+        } else if (tabBar.scrollLeft + tabBar.clientWidth >= tabBar.scrollWidth - 4) {
+          tabBar.classList.add('td-scrolled-end');
+        } else {
+          tabBar.classList.remove('td-scrolled-end');
+        }
+      }
+      tabBar.addEventListener('scroll', checkTabBarScroll);
+      setTimeout(checkTabBarScroll, 100);
     }
   }
 
@@ -3375,6 +4291,7 @@
   }
 
   // ── Init ──────────────────────────────────────────
+  loadHeroSprites();
   computePath();
   renderTowerBar();
   initTabs();
