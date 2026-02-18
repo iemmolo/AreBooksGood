@@ -130,6 +130,15 @@
     forest2: null,
     forest3: null
   };
+
+  // ── Animated station sprites (processing state) ──────────────
+  var STATION_ANIM = {
+    loom:       { src: FARM_IMG + '/animations/loom.png', frames: 8, frameW: 32, frameH: 32, totalW: 256 },
+    forge:      { src: FARM_IMG + '/animations/forge.png', frames: 4, frameW: 16, frameH: 16, totalW: 64 },
+    smokehouse: { src: FARM_IMG + '/animations/smokehouse.png', frames: 5, frameW: 32, frameH: 32, totalW: 160 },
+    kitchen:    { src: FARM_IMG + '/animations/kitchen.png', frames: 4, frameW: 32, frameH: 32, totalW: 128 }
+  };
+
   var STAGE_NUM = { planted: 1, sprouting: 2, growing: 3, flowering: 4, ready: 5 };
 
   function createFarmImg(src, alt) {
@@ -383,7 +392,21 @@
           cell.appendChild(createFarmImg(FARM_IMG + '/houses/farmhouse-' + fhLevel + '.png', 'Farmhouse'));
         } else if (item.type !== 'crop' && STATION_IMG[item.key]) {
           iconEl.textContent = '';
-          cell.appendChild(createFarmImg(STATION_IMG[item.key], item.name));
+          // Check if station is actively processing and has animation
+          var isProcessing = false;
+          if (item.type === 'processing' && window.FarmResources) {
+            var q = window.FarmResources.getQueue(item.key);
+            isProcessing = q.length > 0 && !q[0].waiting;
+          }
+          if (STATION_ANIM[item.key] && (isProcessing || item.key !== 'kitchen')) {
+            // Use animation div (always for most stations, only when processing for kitchen)
+            var animDiv = document.createElement('div');
+            animDiv.className = 'fp-station-anim fp-station-anim-' + item.key;
+            if (isProcessing) animDiv.classList.add('fp-station-active');
+            cell.appendChild(animDiv);
+          } else {
+            cell.appendChild(createFarmImg(STATION_IMG[item.key], item.name));
+          }
         }
       }
       cell.appendChild(iconEl);
@@ -673,7 +696,11 @@
     var ANIMAL_SOUNDS = {
       chicken: ['cluck!', 'bawk bawk!', 'cluck cluck~', 'bawk!', 'bok bok!', 'cluck?'],
       cow: ['moo~', 'mooo!', 'moo moo!', 'moooo~', '*chewing*', 'moo?'],
-      sheep: ['baa~', 'baaa!', 'baa baa!', 'baaah~', '*munching*', 'baa?']
+      sheep: ['baa~', 'baaa!', 'baa baa!', 'baaah~', '*munching*', 'baa?'],
+      duck: ['quack!', 'quack quack!', 'quaaack~', '*splashing*', 'quack?'],
+      duckSwim: ['quack!', 'quack quack!', '*splash*', '*paddling*', 'quaaack~'],
+      goat: ['meh~', 'baaah!', 'meh meh!', '*nibbling*', 'meeeh?'],
+      pig: ['oink!', 'oink oink!', '*snort*', '*snuffling*', 'oink~']
     };
 
     function showAnimalSpeech(el, animalType) {
@@ -708,6 +735,26 @@
         frameW: 64,
         dirY: { down: 0, left: -64, right: -128, up: -192 },
         frameMs: 200, walkMs: 3000
+      },
+      duck: {
+        frameW: 32,
+        dirY: { down: 0, left: -32, right: -64, up: -96 },
+        frameMs: 150, walkMs: 2000
+      },
+      duckSwim: {
+        frameW: 32,
+        dirY: { down: 0, left: -32, right: -64, up: -96 },
+        frameMs: 250, walkMs: 3000
+      },
+      goat: {
+        frameW: 64,
+        dirY: { down: 0, left: -64, right: -128, up: -192 },
+        frameMs: 200, walkMs: 3000
+      },
+      pig: {
+        frameW: 64,
+        dirY: { down: 0, left: -64, right: -128, up: -192 },
+        frameMs: 180, walkMs: 2500
       }
     };
 
@@ -733,12 +780,12 @@
       el.style.backgroundPosition = '0px ' + walkData.yOff + 'px';
     }
 
-    function spawnWanderingAnimal(className, animalType, baseRow, baseCol, rowSpan, colSpan, w, h, count) {
+    function spawnWanderingAnimal(className, animalType, baseRow, baseCol, rowSpan, colSpan, w, h, count, wanderRows) {
       // Wander zone: area around and below the building (in % of grid)
       var zoneLeft  = baseCol * cellW;
       var zoneRight = (baseCol + (colSpan || 1)) * cellW;
       var zoneTop   = (baseRow + (rowSpan || 1)) * cellH;
-      var zoneBot   = (baseRow + (rowSpan || 1) + 1.0) * cellH;
+      var zoneBot   = (baseRow + (rowSpan || 1) + (wanderRows || 1.0)) * cellH;
 
       var saved = loadAnimalPositions();
       var savedList = saved[animalType] || [];
@@ -832,6 +879,20 @@
     // Sheep Pen: row 5, col 4, 2×2
     if (isCellBuilt({ key: 'sheepPen', type: 'gathering' })) {
       spawnWanderingAnimal('fp-anim-sheep', 'sheep', 5, 4, 2, 2, 64, 64, 2);
+    }
+
+    // ── Ambient wildlife (farmhouse-level gated) ─────
+    // Ducks swimming in fishing pond (row 14, cols 0-3 — below the cliff)
+    if (fhLevel >= 2) {
+      spawnWanderingAnimal('fp-anim-duck-swim', 'duckSwim', 13, 0, 1, 4, 32, 32, 2, 1);
+    }
+    // Goat roaming animal area (row 5-6, col 0-5 — same zone as chicken/cow/sheep)
+    if (fhLevel >= 3) {
+      spawnWanderingAnimal('fp-anim-goat', 'goat', 5, 0, 2, 6, 64, 64, 1);
+    }
+    // Pigs in the crop area (rows 2-4, cols 2-5)
+    if (fhLevel >= 4) {
+      spawnWanderingAnimal('fp-anim-pig', 'pig', 1, 2, 1, 4, 64, 64, 2, 2);
     }
   }
 
@@ -1100,9 +1161,36 @@
             newInd.textContent = formatMsToMinSec(pq[0].remaining || 0);
             pCellEl.appendChild(newInd);
           }
+          // Toggle animation on the station div
+          if (pCellEl && STATION_ANIM[pItem.key]) {
+            var sAnimEl = pCellEl.querySelector('.fp-station-anim');
+            if (sAnimEl) {
+              sAnimEl.classList.add('fp-station-active');
+            } else if (pItem.key === 'kitchen') {
+              // Kitchen: swap static img → animation div
+              var oldImg = pCellEl.querySelector('.fp-sprite-img');
+              if (oldImg) oldImg.parentNode.removeChild(oldImg);
+              var newAnim = document.createElement('div');
+              newAnim.className = 'fp-station-anim fp-station-anim-kitchen fp-station-active';
+              pCellEl.appendChild(newAnim);
+            }
+          }
         } else {
           if (pCellEl) pCellEl.classList.remove('fp-cell-processing-active');
           if (procEl && procEl.parentNode) procEl.parentNode.removeChild(procEl);
+          // Stop animation, keep static frame
+          if (pCellEl && STATION_ANIM[pItem.key]) {
+            var sAnimEl2 = pCellEl.querySelector('.fp-station-anim');
+            if (pItem.key === 'kitchen' && sAnimEl2) {
+              // Kitchen: swap animation div → static img
+              sAnimEl2.parentNode.removeChild(sAnimEl2);
+              if (!pCellEl.querySelector('.fp-sprite-img')) {
+                pCellEl.appendChild(createFarmImg(STATION_IMG[pItem.key], pItem.name));
+              }
+            } else if (sAnimEl2) {
+              sAnimEl2.classList.remove('fp-station-active');
+            }
+          }
         }
       }
     }

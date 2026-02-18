@@ -794,13 +794,7 @@
 /* ── Processing indicators on grid cells ─────────────── */
 
 .fp-cell-processing-indicator {
-  position: relative;
-  z-index: 2;
-  font-size: 0.45rem;
-  color: var(--accent);
-  font-weight: bold;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 3px var(--background), 0 0 6px var(--background);
+  display: none;
 }
 
 /* ── Farm Decorations (animated sprites by farmhouse level) ─── */
@@ -947,6 +941,103 @@
   z-index: 2;
 }
 
+/* ── Station processing animations ──────────────────── */
+/* Pixel-based sizing (like bonfire/animals). Centered in cell. */
+
+.fp-station-anim {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Loom — 8 frames of 32×32, 2× display = 64×64, strip 512×64 */
+.fp-station-anim-loom {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  background-image: url('/images/farm/animations/loom.png');
+  background-size: 512px 64px;
+}
+.fp-station-anim-loom.fp-station-active {
+  animation: fp-anim-loom 1.2s steps(8) infinite;
+}
+@keyframes fp-anim-loom {
+  to { background-position: -512px 0; }
+}
+
+/* Forge — 4 frames of 16×16, 3× display = 48×48, strip 192×48 */
+.fp-station-anim-forge {
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  background-image: url('/images/farm/animations/forge.png');
+  background-size: 192px 48px;
+}
+.fp-station-anim-forge.fp-station-active {
+  animation: fp-anim-forge 0.6s steps(4) infinite;
+}
+@keyframes fp-anim-forge {
+  to { background-position: -192px 0; }
+}
+
+/* Smokehouse — 5 frames of 32×32, 2× display = 64×64, strip 320×64 */
+.fp-station-anim-smokehouse {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  background-image: url('/images/farm/animations/smokehouse.png');
+  background-size: 320px 64px;
+}
+.fp-station-anim-smokehouse.fp-station-active {
+  animation: fp-anim-smokehouse 1s steps(5) infinite;
+}
+@keyframes fp-anim-smokehouse {
+  to { background-position: -320px 0; }
+}
+
+/* Kitchen — 4 frames of 32×32, 2× display = 64×64, strip 256×64 */
+.fp-station-anim-kitchen {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  background-image: url('/images/farm/animations/kitchen.png');
+  background-size: 256px 64px;
+}
+.fp-station-anim-kitchen.fp-station-active {
+  animation: fp-anim-kitchen 0.8s steps(4) infinite;
+}
+@keyframes fp-anim-kitchen {
+  to { background-position: -256px 0; }
+}
+
+/* ── Static station sizing — centered fixed-size to match animated stations ── */
+.fp-cell[data-key="mill"] .fp-sprite-img,
+.fp-cell[data-key="mason"] .fp-sprite-img,
+.fp-cell[data-key="sawmill"] .fp-sprite-img,
+.fp-cell[data-key="mine"] .fp-sprite-img,
+.fp-cell[data-key="deepMine"] .fp-sprite-img,
+.fp-cell[data-key="enchanter"] .fp-sprite-img {
+  inset: auto;
+  width: 48px;
+  height: 48px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.fp-cell[data-key="kitchen"] .fp-sprite-img {
+  inset: auto;
+  width: 64px;
+  height: 64px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 /* ── Farm animals — multi-direction walk animations ──── */
 /* Spritesheets: 4 cols × 4 rows (down, left, right, up) */
 /* Walk frame cycling driven by JS setInterval (background-position shorthand) */
@@ -978,6 +1069,46 @@
   transition: left 3s linear, top 3s linear;
 }
 
+/* Duck walk — 16px native × 2x = 32px display. Sheet: 64×64 → 128×128 at 2× */
+.fp-anim-duck {
+  width: 32px;
+  height: 32px;
+  background-image: url('/images/farm/animations/duck.png');
+  background-repeat: no-repeat;
+  background-size: 128px 128px;
+  transition: left 2s linear, top 2s linear;
+}
+
+/* Duck swim — same size, swim spritesheet (rows 8-11 of Duck Mallad.png) */
+.fp-anim-duck-swim {
+  width: 32px;
+  height: 32px;
+  background-image: url('/images/farm/animations/duck-swim.png');
+  background-repeat: no-repeat;
+  background-size: 128px 128px;
+  transition: left 3s linear, top 3s linear;
+}
+
+/* Goat — 32px native × 2x = 64px display. Sheet: 128×128 → 256×256 at 2× */
+.fp-anim-goat {
+  width: 64px;
+  height: 64px;
+  background-image: url('/images/farm/animations/goat.png');
+  background-repeat: no-repeat;
+  background-size: 256px 256px;
+  transition: left 3s linear, top 3s linear;
+}
+
+/* Pig — 32px native × 2x = 64px display. Sheet: 128×128 → 256×256 at 2× */
+.fp-anim-pig {
+  width: 64px;
+  height: 64px;
+  background-image: url('/images/farm/animations/pig.png');
+  background-repeat: no-repeat;
+  background-size: 256px 256px;
+  transition: left 2.5s linear, top 2.5s linear;
+}
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 600px) {
@@ -1002,7 +1133,7 @@
   }
 
   .fp-cell-processing-indicator {
-    font-size: 0.4rem;
+    display: none;
   }
 
   .fp-lock-img {
