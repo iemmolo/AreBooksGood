@@ -4,7 +4,7 @@ AreBooksGood - Improvement TODO
 ## Critical
 
 - [ ] Add missing front matter to that review: summary, narrator
-- [ ] Clean stale build artifacts (public/reviews/sapiens/, public/reviews/the-road/)
+- [x] Clean stale build artifacts (public/reviews/sapiens/, public/reviews/the-road/)
 - [x] Add ARIA labels to rating partial for screen reader accessibility
 
 ## High Priority
@@ -25,7 +25,7 @@ AreBooksGood - Improvement TODO
 ### High Impact
 - [ ] Add PetSprites.renderPreview() — shop calls it but it's undefined, falls back to ASCII art. ~50 lines reusing box-shadow technique from pet.js
 - [ ] Add level-up animation — evolution completes silently, needs flash/pulse CSS keyframe + JS trigger
-- [ ] Increase fling coin rewards — currently 1-5 coins but evolution costs 2000+. Scale to 5-15 or velocity-based (1-line change in pet.js:507)
+- [x] Increase fling coin rewards — currently 1-5 coins but evolution costs 2000+. Scale to 5-15 or velocity-based (1-line change in pet.js:507)
 
 ### Bug Fixes
 - [x] Fix idle speech interval leak — store setInterval handle, clear on re-entry
@@ -147,7 +147,7 @@ AreBooksGood - Improvement TODO
 - [x] Farm+TD economy balance audit — diminishing JB cashout, boss material drops, farmhouse→TD SB bonus, milestone material rewards, crop price buff, faster deep mine, investment cap raise
 - [ ] Challenge modes — "Arrow only", "No upgrades", "Speed run"
 - [x] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities, cosmetic bonuses
-- [ ] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
+- [x] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
 - [x] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
 - [ ] Phase 4: Sprites, more enemies/maps, sound
 

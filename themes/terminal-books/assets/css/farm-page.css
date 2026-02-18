@@ -1027,3 +1027,8 @@
     max-width: calc(100vw - 16px);
   }
 }
+
+/* ── Blueprint popup hints ────────────────────────── */
+.fp-popup-blueprint { font-size: 11px; margin-top: 2px; }
+.fp-popup-blueprint-earned { color: #4caf50; }
+.fp-popup-blueprint-hint { color: color-mix(in srgb, var(--foreground) 50%, transparent); font-style: italic; }

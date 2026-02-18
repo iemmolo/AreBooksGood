@@ -22,6 +22,69 @@
     enchanter:   { resource: null, rate: 0, built: false }
   };
 
+  // ── TD wave → farm building blueprints ──────────────────
+  var TD_STATS_KEY = 'arebooksgood-td-stats';
+  var FARM_BLUEPRINTS = [
+    { wave: 5,  buildings: ['chickenCoop'] },
+    { wave: 10, buildings: ['cowPasture'] },
+    { wave: 15, buildings: ['smokehouse'] },
+    { wave: 20, buildings: ['mine', 'forge'] },
+    { wave: 25, buildings: ['sheepPen', 'loom'] },
+    { wave: 30, buildings: ['deepMine', 'oldGrowth'] },
+    { wave: 40, buildings: ['enchanter'] }
+  ];
+  var BUILDING_FH_REQS = {
+    chickenCoop: 2, cowPasture: 2, sheepPen: 2,
+    mine: 3, forge: 3, smokehouse: 3, loom: 3,
+    deepMine: 4, oldGrowth: 4, enchanter: 5
+  };
+
+  function getTDHighestWave() {
+    try {
+      var raw = localStorage.getItem(TD_STATS_KEY);
+      if (raw) return (JSON.parse(raw).highestWave || 0);
+    } catch (e) {}
+    return 0;
+  }
+
+  function getBlueprintWave(key) {
+    for (var i = 0; i < FARM_BLUEPRINTS.length; i++) {
+      var bp = FARM_BLUEPRINTS[i];
+      for (var j = 0; j < bp.buildings.length; j++) {
+        if (bp.buildings[j] === key) return bp.wave;
+      }
+    }
+    return 0;
+  }
+
+  function checkBlueprintUnlocks() {
+    var hw = getTDHighestWave();
+    if (hw < 5) return;
+    var fhLevel = (window.FarmAPI && window.FarmAPI.getFarmhouseLevel) ? window.FarmAPI.getFarmhouseLevel() : 1;
+    var changed = false;
+    for (var i = 0; i < FARM_BLUEPRINTS.length; i++) {
+      var bp = FARM_BLUEPRINTS[i];
+      if (hw < bp.wave) continue;
+      for (var j = 0; j < bp.buildings.length; j++) {
+        var key = bp.buildings[j];
+        if (state.stations[key] && state.stations[key].built) continue;
+        var reqFH = BUILDING_FH_REQS[key] || 1;
+        if (fhLevel < reqFH) continue;
+        // Auto-build: TD blueprint earned + FH level met
+        if (state.stations[key]) {
+          state.stations[key].built = true;
+          state.stations[key].level = 1;
+          state.stations[key].lastCollect = Date.now();
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      save();
+      notify();
+    }
+  }
+
   // ── Default state ───────────────────────────────────────
   function defaultState() {
     var stations = {};
@@ -247,6 +310,8 @@
     }
     // Process recipe queues (offline-safe)
     processQueues();
+    // Auto-build TD blueprint-earned buildings
+    checkBlueprintUnlocks();
   }
 
   // Collect on page load
@@ -414,6 +479,15 @@
         result.push(entry);
       }
       return result;
+    },
+
+    hasFarmBlueprint: function (key) {
+      var reqWave = getBlueprintWave(key);
+      return reqWave > 0 && getTDHighestWave() >= reqWave;
+    },
+
+    getFarmBlueprintWave: function (key) {
+      return getBlueprintWave(key);
     },
 
     getActiveProcessing: function () {

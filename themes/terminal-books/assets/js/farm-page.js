@@ -266,6 +266,13 @@
     }
     // Starter buildings (cost 0) are always built
     if (req && req.cost === 0) return true;
+    // TD blueprint earned + FH met → auto-build
+    if (window.FarmResources && window.FarmResources.hasFarmBlueprint && window.FarmResources.hasFarmBlueprint(item.key)) {
+      if (!window.FarmResources.isStationBuilt(item.key)) {
+        window.FarmResources.buildStation(item.key);
+      }
+      return true;
+    }
     // Non-starter stations: check FarmResources built flag
     if (window.FarmResources && window.FarmResources.isStationBuilt) {
       return window.FarmResources.isStationBuilt(item.key);
@@ -1331,8 +1338,27 @@
     }
     stationPopupEl.appendChild(levelRow);
 
-    // JB cost (only for non-free buildings)
-    if (req.cost > 0) {
+    // Blueprint info (TD wave unlock hint)
+    var bpWave = (window.FarmResources && window.FarmResources.getFarmBlueprintWave) ? window.FarmResources.getFarmBlueprintWave(item.key) : 0;
+    var hasBP = (window.FarmResources && window.FarmResources.hasFarmBlueprint) ? window.FarmResources.hasFarmBlueprint(item.key) : false;
+    if (bpWave > 0 && !isCrop) {
+      var bpRow = document.createElement('div');
+      bpRow.className = 'fp-popup-row fp-popup-blueprint';
+      if (hasBP && !meetsLevel) {
+        bpRow.innerHTML = '<span class="fp-popup-blueprint-earned">TD Blueprint: Wave ' + bpWave + ' \u2714 FREE!</span>';
+      } else if (hasBP && meetsLevel) {
+        // Shouldn't happen (auto-built), but safety
+        bpRow.innerHTML = '<span class="fp-popup-blueprint-earned">TD Blueprint earned \u2714</span>';
+      } else {
+        var tdBest = 0;
+        try { var ts = localStorage.getItem('arebooksgood-td-stats'); if (ts) tdBest = JSON.parse(ts).highestWave || 0; } catch (e) {}
+        bpRow.innerHTML = '<span class="fp-popup-blueprint-hint">TD Wave ' + bpWave + ' \u2192 free unlock' + (tdBest > 0 ? ' (best: ' + tdBest + ')' : '') + '</span>';
+      }
+      stationPopupEl.appendChild(bpRow);
+    }
+
+    // JB cost (only for non-free buildings) — skip if blueprint earned
+    if (req.cost > 0 && !hasBP) {
       var costRow = document.createElement('div');
       costRow.className = 'fp-popup-row';
       var costClass = canAfford ? 'fp-has-enough' : 'fp-not-enough';
@@ -1371,11 +1397,14 @@
         stationPopupEl.appendChild(cropBtn);
       }
     } else {
-      var canBuild = meetsLevel && canAfford;
+      // Blueprint earned + FH met = free build button
+      var canBuild = hasBP ? meetsLevel : (meetsLevel && canAfford);
       var btn = document.createElement('button');
       btn.className = 'fp-popup-btn';
       btn.type = 'button';
-      if (req.cost === 0) {
+      if (hasBP && meetsLevel) {
+        btn.textContent = 'Build (Free!)';
+      } else if (req.cost === 0) {
         btn.textContent = 'Unlock';
       } else {
         btn.textContent = 'Build (' + req.cost + ' JB)';
@@ -1387,7 +1416,7 @@
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
         if (!canBuild) return;
-        if (req.cost > 0 && window.JackBucks) {
+        if (!hasBP && req.cost > 0 && window.JackBucks) {
           window.JackBucks.deduct(req.cost);
         }
         if (window.FarmResources && window.FarmResources.buildStation) {

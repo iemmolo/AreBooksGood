@@ -374,6 +374,17 @@
     { wave: 50, bonus: 50 }
   ];
 
+  // ── TD wave → farm building unlocks ─────────────
+  var FARM_BLUEPRINTS = [
+    { wave: 5,  buildings: ['chickenCoop'],           names: ['Chicken Coop'] },
+    { wave: 10, buildings: ['cowPasture'],             names: ['Cow Pasture'] },
+    { wave: 15, buildings: ['smokehouse'],             names: ['Smokehouse'] },
+    { wave: 20, buildings: ['mine', 'forge'],          names: ['Mine', 'Forge'] },
+    { wave: 25, buildings: ['sheepPen', 'loom'],       names: ['Sheep Pen', 'Loom'] },
+    { wave: 30, buildings: ['deepMine', 'oldGrowth'],  names: ['Deep Mine', 'Old Growth'] },
+    { wave: 40, buildings: ['enchanter'],              names: ['Enchanter'] }
+  ];
+
   var MAX_INVEST_SB = 200;
   var INVEST_RATE = 3; // 3 JB per 1 SB
 
@@ -2257,6 +2268,17 @@
       }
     }
 
+    // Detect newly unlocked farm blueprints (before updating highestWave)
+    var farmUnlockNames = [];
+    for (var fi = 0; fi < FARM_BLUEPRINTS.length; fi++) {
+      var fbp = FARM_BLUEPRINTS[fi];
+      if (wave >= fbp.wave && stats.highestWave < fbp.wave) {
+        for (var fn = 0; fn < fbp.names.length; fn++) {
+          farmUnlockNames.push(fbp.names[fn]);
+        }
+      }
+    }
+
     if (wave > stats.highestWave) stats.highestWave = wave;
 
     // Per-map-difficulty record
@@ -2312,6 +2334,17 @@
           matLine.style.display = '';
         } else {
           matLine.style.display = 'none';
+        }
+      }
+
+      // Show farm building unlocks
+      var farmLine = document.getElementById('td-farm-unlocks');
+      if (farmLine) {
+        if (farmUnlockNames.length > 0) {
+          farmLine.textContent = 'Farm unlocks: ' + farmUnlockNames.join(', ');
+          farmLine.style.display = '';
+        } else {
+          farmLine.style.display = 'none';
         }
       }
 
@@ -2513,6 +2546,18 @@
     }
     if (nextMilestone) {
       html += '<div style="font-size:11px;opacity:0.5;margin-top:4px">Next milestone: Wave ' + nextMilestone.wave + ' (+' + nextMilestone.bonus + ' SB)</div>';
+    }
+
+    // Next farm building unlock hint
+    var nextFarmBP = null;
+    for (var fb = 0; fb < FARM_BLUEPRINTS.length; fb++) {
+      if (stats.highestWave < FARM_BLUEPRINTS[fb].wave) {
+        nextFarmBP = FARM_BLUEPRINTS[fb];
+        break;
+      }
+    }
+    if (nextFarmBP) {
+      html += '<div style="font-size:11px;opacity:0.5;margin-top:2px;color:#4caf50">Next farm unlock: Wave ' + nextFarmBP.wave + ' \u2192 ' + nextFarmBP.names.join(', ') + '</div>';
     }
 
     el.innerHTML = html;
