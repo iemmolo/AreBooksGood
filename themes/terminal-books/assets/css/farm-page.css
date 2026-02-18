@@ -1109,6 +1109,24 @@
   transition: left 2.5s linear, top 2.5s linear;
 }
 
+/* Dogs — 32px native × 2x = 64px display. 9 breeds, random per spawn */
+.fp-anim-dog {
+  width: 64px;
+  height: 64px;
+  background-repeat: no-repeat;
+  background-size: 256px 256px;
+  transition: left 2.5s linear, top 2.5s linear;
+}
+.fp-anim-dog1 { background-image: url('/images/farm/animations/dog1.png'); }
+.fp-anim-dog2 { background-image: url('/images/farm/animations/dog2.png'); }
+.fp-anim-dog3 { background-image: url('/images/farm/animations/dog3.png'); }
+.fp-anim-dog4 { background-image: url('/images/farm/animations/dog4.png'); }
+.fp-anim-dog5 { background-image: url('/images/farm/animations/dog5.png'); }
+.fp-anim-dog6 { background-image: url('/images/farm/animations/dog6.png'); }
+.fp-anim-dog7 { background-image: url('/images/farm/animations/dog7.png'); }
+.fp-anim-dog8 { background-image: url('/images/farm/animations/dog8.png'); }
+.fp-anim-dog9 { background-image: url('/images/farm/animations/dog9.png'); }
+
 /* ── Responsive ───────────────────────────────────────── */
 
 @media (max-width: 600px) {

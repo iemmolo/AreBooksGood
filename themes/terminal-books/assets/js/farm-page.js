@@ -700,14 +700,15 @@
       duck: ['quack!', 'quack quack!', 'quaaack~', '*splashing*', 'quack?'],
       duckSwim: ['quack!', 'quack quack!', '*splash*', '*paddling*', 'quaaack~'],
       goat: ['meh~', 'baaah!', 'meh meh!', '*nibbling*', 'meeeh?'],
-      pig: ['oink!', 'oink oink!', '*snort*', '*snuffling*', 'oink~']
+      pig: ['oink!', 'oink oink!', '*snort*', '*snuffling*', 'oink~'],
+      dog: ['woof!', 'woof woof!', 'arf!', '*panting*', 'bark!', 'ruff!', '*tail wagging*']
     };
 
     function showAnimalSpeech(el, animalType) {
       // Don't stack bubbles
       var existing = el.querySelector('.fp-animal-speech');
       if (existing) return;
-      var sounds = ANIMAL_SOUNDS[animalType];
+      var sounds = ANIMAL_SOUNDS[animalType] || ANIMAL_SOUNDS[animalType.replace(/\d+$/, '')];
       if (!sounds) return;
       var bubble = document.createElement('div');
       bubble.className = 'fp-animal-speech';
@@ -755,13 +756,22 @@
         frameW: 64,
         dirY: { down: 0, left: -64, right: -128, up: -192 },
         frameMs: 180, walkMs: 2500
+      },
+      dog: {
+        frameW: 64,
+        dirY: { down: 0, left: -64, right: -128, up: -192 },
+        frameMs: 180, walkMs: 2500
       }
     };
 
     // Start walk frame cycling via setInterval (sets full background-position
     // shorthand so CSS animation cannot override the Y direction offset).
+    function getAnimalInfo(animalType) {
+      return ANIMAL_INFO[animalType] || ANIMAL_INFO[animalType.replace(/\d+$/, '')];
+    }
+
     function startWalk(el, animalType, dir) {
-      var info = ANIMAL_INFO[animalType];
+      var info = getAnimalInfo(animalType);
       var yOff = info.dirY[dir];
       // Set direction immediately (don't wait for first interval tick)
       el.style.backgroundPosition = '0px ' + yOff + 'px';
@@ -803,7 +813,7 @@
         el.style.marginLeft = (-w / 2) + 'px';
         el.style.marginTop = (-h / 2) + 'px';
         // Face saved direction (or down on first visit)
-        var info = ANIMAL_INFO[animalType];
+        var info = getAnimalInfo(animalType);
         var yOff = info.dirY[startDir] || 0;
         el.style.backgroundPosition = '0px ' + yOff + 'px';
         gridEl.appendChild(el);
@@ -818,9 +828,27 @@
       setTimeout(function doWander() {
         if (!el.parentNode) return; // removed by re-render
 
-        // Pick a random target within the wander zone
-        var targetX = zLeft + Math.random() * (zRight - zLeft);
-        var targetY = zTop + Math.random() * (zBot - zTop);
+        // Pick a random target within the wander zone, avoid overlapping others
+        var targetX, targetY;
+        var minDist = 4; // minimum % distance between animals
+        var attempts = 6;
+        for (var att = 0; att < attempts; att++) {
+          targetX = zLeft + Math.random() * (zRight - zLeft);
+          targetY = zTop + Math.random() * (zBot - zTop);
+          if (att === attempts - 1) break; // last attempt, just use it
+          var others = gridEl.querySelectorAll('.fp-anim');
+          var tooClose = false;
+          for (var oi = 0; oi < others.length; oi++) {
+            if (others[oi] === el) continue;
+            var ox = parseFloat(others[oi].style.left) || 0;
+            var oy = parseFloat(others[oi].style.top) || 0;
+            if (Math.abs(targetX - ox) < minDist && Math.abs(targetY - oy) < minDist) {
+              tooClose = true;
+              break;
+            }
+          }
+          if (!tooClose) break;
+        }
 
         // Determine direction from current position
         var curX = parseFloat(el.style.left) || 0;
@@ -844,7 +872,7 @@
         el.style.top = targetY + '%';
 
         // After transition completes, go idle and schedule next wander
-        var walkDuration = ANIMAL_INFO[animalType].walkMs;
+        var walkDuration = getAnimalInfo(animalType).walkMs;
         setTimeout(function () {
           if (!el.parentNode) return;
           stopWalk(el, walkData);
@@ -893,6 +921,12 @@
     // Pigs in the crop area (rows 2-4, cols 2-5)
     if (fhLevel >= 4) {
       spawnWanderingAnimal('fp-anim-pig', 'pig', 1, 2, 1, 4, 64, 64, 2, 2);
+    }
+    // All 9 dog breeds in the crop area (rows 2-4, cols 2-5) — Lv2+
+    if (fhLevel >= 2) {
+      for (var di = 1; di <= 9; di++) {
+        spawnWanderingAnimal('fp-anim-dog fp-anim-dog' + di, 'dog' + di, 1, 2, 1, 4, 64, 64, 1, 2);
+      }
     }
   }
 
