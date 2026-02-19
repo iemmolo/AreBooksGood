@@ -196,7 +196,7 @@
         { key: 'stone', name: 'Stone', icon: '\u26CF' },
         { key: 'fish', name: 'Fish', icon: '\uD83D\uDC1F' },
         { key: 'hardwood', name: 'Hardwood', icon: '\uD83C\uDF33' },
-        { key: 'iron', name: 'Iron', icon: '\u2699' },
+        { key: 'iron', name: 'Iron', icon: '\uD83E\uDEA8' },
         { key: 'gold', name: 'Gold', icon: '\uD83D\uDC8E' }
       ]
     },
@@ -229,7 +229,7 @@
         { key: 'planks', name: 'Planks', icon: '\uD83E\uDE93' },
         { key: 'stoneBricks', name: 'Stone Bricks', icon: '\uD83E\uDDF1' },
         { key: 'bread', name: 'Bread', icon: '\uD83E\uDD56' },
-        { key: 'ironBars', name: 'Iron Bars', icon: '\u2699' },
+        { key: 'ironBars', name: 'Iron Bars', icon: '\uD83D\uDD17' },
         { key: 'rope', name: 'Rope', icon: '\uD83E\uDDF5' },
         { key: 'smokedFish', name: 'Smoked Fish', icon: '\uD83C\uDF56' },
         { key: 'crystalLens', name: 'Crystal Lens', icon: '\uD83D\uDD2E' }
