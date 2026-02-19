@@ -1459,12 +1459,8 @@
     } else if (spaceBelow >= popupHeight) {
       stationPopupEl.style.top = (rect.bottom + 6) + 'px';
     } else {
-      // Neither side fits perfectly — pick whichever has more room
-      if (spaceAbove > spaceBelow) {
-        stationPopupEl.style.top = '8px';
-      } else {
-        stationPopupEl.style.top = (rect.bottom + 6) + 'px';
-      }
+      // Neither side fits perfectly — pin to top with scroll
+      stationPopupEl.style.top = '8px';
     }
 
     stationPopupEl.style.visibility = '';
@@ -1618,11 +1614,7 @@
     } else if (spaceBelow >= popupHeight) {
       stationPopupEl.style.top = (rect.bottom + 6) + 'px';
     } else {
-      if (spaceAbove > spaceBelow) {
-        stationPopupEl.style.top = '8px';
-      } else {
-        stationPopupEl.style.top = (rect.bottom + 6) + 'px';
-      }
+      stationPopupEl.style.top = '8px';
     }
 
     stationPopupEl.style.visibility = '';
