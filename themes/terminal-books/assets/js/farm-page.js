@@ -1971,7 +1971,7 @@
             var have = window.FarmResources.getRaw(rk[i]);
             var need = recipe.inputs.raw[rk[i]];
             var cls = have >= need ? 'fp-has-enough' : 'fp-not-enough';
-            inputParts.push('<span class="' + cls + '">' + need + ' ' + prettyName(rk[i]) + '</span>');
+            inputParts.push('<span class="' + cls + '">' + need + ' ' + prettyName(rk[i]) + ' [' + have + ']</span>');
           }
         }
         if (recipe.inputs.processed) {
@@ -1980,7 +1980,7 @@
             var haveP = window.FarmResources.getProcessed(pk[j]);
             var needP = recipe.inputs.processed[pk[j]];
             var clsP = haveP >= needP ? 'fp-has-enough' : 'fp-not-enough';
-            inputParts.push('<span class="' + clsP + '">' + needP + ' ' + prettyName(pk[j]) + '</span>');
+            inputParts.push('<span class="' + clsP + '">' + needP + ' ' + prettyName(pk[j]) + ' [' + haveP + ']</span>');
           }
         }
 
