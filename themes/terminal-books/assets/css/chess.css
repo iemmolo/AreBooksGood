@@ -618,8 +618,8 @@
   font-size: 0.95em;
 }
 
-/* Responsive */
-@media (max-width: 480px) {
+/* Responsive — stack board + sidebar when viewport is too narrow for side-by-side */
+@media (max-width: 640px) {
   .chess-layout {
     flex-direction: column;
   }
