@@ -717,8 +717,8 @@
       addAnim('fp-anim-fountain', 11, 2, 1, 2, 96, 128);
     }
 
-    // Mill windmill blades — disabled for now
-    // addAnim('fp-anim-mill-blades', 12, 4, 2, 1, 66, 66, { marginTop: (-66 + 5) + 'px', marginLeft: (-50) + 'px' });
+    // Mill windmill blades — always spinning, centered on roof hub
+    addAnim('fp-anim-mill-blades', 9, 2, 2, 2, 160, 160, { marginTop: '-123px' });
 
 
     // ── Farm animals that wander near their buildings ─────

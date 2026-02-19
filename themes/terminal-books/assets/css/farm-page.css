@@ -1032,12 +1032,12 @@
   to { background-position: -94px 0; }
 }
 
-/* Mill windmill blades — 4 frames of 66×66, always spinning */
+/* Mill windmill blades — 4 frames of 160×160 (80×80 native at 2×), always spinning */
 .fp-anim-mill-blades {
-  width: 66px;
-  height: 66px;
+  width: 160px;
+  height: 160px;
   background: url('/images/farm/animations/mill-blades.png') 0 0 no-repeat;
-  background-size: 264px 66px;
+  background-size: 640px 160px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   z-index: 3;
@@ -1045,7 +1045,7 @@
   animation: fp-anim-mill-blades 2s steps(4) infinite;
 }
 @keyframes fp-anim-mill-blades {
-  to { background-position: -264px 0; }
+  to { background-position: -640px 0; }
 }
 
 /* ── Static station sizing — centered fixed-size to match animated stations ── */
