@@ -130,6 +130,10 @@
   background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
+.fp-cell-combo:not(.fp-cell-built) {
+  background: color-mix(in srgb, #4a7c3f 12%, transparent);
+}
+
 /* ── Built cell — clean slate ────────────────────────── */
 
 .fp-cell-built {
@@ -153,11 +157,6 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   z-index: 1;
-}
-
-/* Nudge quarry sprite to top of its cell (away from water edge) */
-.fp-cell[data-key="quarry"] .fp-sprite-img {
-  object-position: center top;
 }
 
 /* Crop sprites: fixed size, flexbox centered, no sub-pixel blur */
@@ -896,37 +895,40 @@
   max-width: none;
 }
 
-/* ── Waterfall animation — 4 frames, percentage-positioned overlay ── */
-.fp-anim-waterfall {
+
+
+/* ── Forest ground decorations ─────────────────────────── */
+.fp-forest-decor {
   position: absolute;
-  left: 0;
-  top: 76.67%;
-  width: 83.33%;
-  height: 23.33%;
-  background: url('/images/farm/animations/waterfall.png') 0 0 no-repeat;
-  background-size: 400% 100%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  z-index: 1;
   pointer-events: none;
-  animation: fp-anim-waterfall 0.8s steps(4) infinite;
-  /* Clip to only the centre waterfall column (grass col 5, rows 23-26).
-     Hides edge tiles (cliff flicker) and static water (pond number flicker). */
-  clip-path: inset(0 40% 42.86% 50%);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  max-width: none;
+}
+.fp-forest-ground {
+  z-index: 2;
+}
+.fp-forest-tree {
+  z-index: 3;
 }
 
-@keyframes fp-anim-waterfall {
-  to { background-position: -400% 0; }
-}
-
-/* ── Water stones — static decoration at waterfall edge ── */
-.fp-anim-water-stones {
-  width: 64px;
-  height: 64px;
-  background: url('/images/farm/stations/waterStones.png') center no-repeat;
-  background-size: contain;
+/* ── Animated rabbit — 4 frames of 16×16, strip 64×16 ── */
+.fp-anim-rabbit {
+  width: 32px;
+  height: 32px;
+  background: url('/images/farm/animations/rabbit.png') 0 0 no-repeat;
+  background-size: 128px 32px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  animation: fp-anim-rabbit 0.8s steps(4) infinite;
+  z-index: 2;
+}
+@keyframes fp-anim-rabbit {
+  to { background-position: -128px 0; }
 }
 
 /* ── Decorative fence row ──────────────────────────────── */
@@ -970,21 +972,6 @@
   to { background-position: -512px 0; }
 }
 
-/* Forge — 4 frames of 16×16, 3× display = 48×48, strip 192×48 */
-.fp-station-anim-forge {
-  width: 48px;
-  height: 48px;
-  margin: -24px 0 0 -24px;
-  background-image: url('/images/farm/animations/forge.png');
-  background-size: 192px 48px;
-}
-.fp-station-anim-forge.fp-station-active {
-  animation: fp-anim-forge 0.6s steps(4) infinite;
-}
-@keyframes fp-anim-forge {
-  to { background-position: -192px 0; }
-}
-
 /* Smokehouse — 5 frames of 32×32, 2× display = 64×64, strip 320×64 */
 .fp-station-anim-smokehouse {
   width: 64px;
@@ -1015,13 +1002,54 @@
   to { background-position: -256px 0; }
 }
 
+/* Deep Mine — 4 frames of 16×16, 3× display = 48×48, strip 192×48 */
+.fp-station-anim-deepMine {
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  background-image: url('/images/farm/animations/deepMine.png');
+  background-size: 192px 48px;
+}
+.fp-station-anim-deepMine.fp-station-active {
+  animation: fp-anim-deepMine 0.6s steps(4) infinite;
+}
+@keyframes fp-anim-deepMine {
+  to { background-position: -192px 0; }
+}
+
+/* Old Growth — 2 frames of 47×48, 1× display, strip 94×48 */
+.fp-station-anim-oldGrowth {
+  width: 47px;
+  height: 48px;
+  margin: -24px 0 0 -23px;
+  background-image: url('/images/farm/animations/oldGrowth.png');
+  background-size: 94px 48px;
+}
+.fp-station-anim-oldGrowth.fp-station-active {
+  animation: fp-anim-oldGrowth 1.5s steps(2) infinite;
+}
+@keyframes fp-anim-oldGrowth {
+  to { background-position: -94px 0; }
+}
+
+/* Mill windmill blades — 4 frames of 66×66, always spinning */
+.fp-anim-mill-blades {
+  width: 66px;
+  height: 66px;
+  background: url('/images/farm/animations/mill-blades.png') 0 0 no-repeat;
+  background-size: 264px 66px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 3;
+  pointer-events: none;
+  animation: fp-anim-mill-blades 2s steps(4) infinite;
+}
+@keyframes fp-anim-mill-blades {
+  to { background-position: -264px 0; }
+}
+
 /* ── Static station sizing — centered fixed-size to match animated stations ── */
-.fp-cell[data-key="mill"] .fp-sprite-img,
-.fp-cell[data-key="mason"] .fp-sprite-img,
-.fp-cell[data-key="sawmill"] .fp-sprite-img,
-.fp-cell[data-key="mine"] .fp-sprite-img,
 .fp-cell[data-key="deepMine"] .fp-sprite-img,
-.fp-cell[data-key="enchanter"] .fp-sprite-img,
 .fp-cell[data-key="dogHouse"] .fp-sprite-img {
   inset: auto;
   width: 48px;
@@ -1038,6 +1066,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
 
 /* ── Farm animals — multi-direction walk animations ──── */
 /* Spritesheets: 4 cols × 4 rows (down, left, right, up) */

@@ -791,6 +791,10 @@
       [7,14,'#6A5ACD'],[8,14,'#7B68EE']
     ]
   };
+  // Combo building sprite aliases (reuse old gathering station sprites)
+  STATION_SPRITES.lumberMill = STATION_SPRITES.lumberYard;
+  STATION_SPRITES.stoneworks = STATION_SPRITES.quarry;
+  STATION_SPRITES.smithy = STATION_SPRITES.mine;
 
   var STATION_BG = {
     chickenCoop: '#228B22',  cowPasture: '#228B22',  sheepPen: '#228B22',
@@ -798,7 +802,9 @@
     deepMine: '#333333',     oldGrowth: '#145214',   fishingPond: '#2E6B9E',
     mill: '#808080',         sawmill: '#8B4513',      mason: '#808080',
     kitchen: '#CD853F',      forge: '#4A4A4A',        loom: '#8B4513',
-    smokehouse: '#5A3A1A',   enchanter: '#6A5ACD'
+    smokehouse: '#5A3A1A',   enchanter: '#6A5ACD',
+    // Combo building aliases
+    lumberMill: '#228B22',   stoneworks: '#696969',   smithy: '#555555'
   };
 
   var TREE_PIXEL = 6;

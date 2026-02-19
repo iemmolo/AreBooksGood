@@ -39,21 +39,20 @@
     { key: 'cowPasture',  name: 'Cow Pasture',   row: 5, col: 2, rowSpan: 2, colSpan: 2, type: 'gathering' },
     { key: 'sheepPen',    name: 'Sheep Pen',     row: 5, col: 4, rowSpan: 2, colSpan: 2, type: 'gathering' },
     // Row 7: empty gap
-    { key: 'lumberYard',  name: 'Lumber Yard',   row: 9,  col: 0, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'quarry',      name: 'Quarry',        row: 12, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'mine',        name: 'Mine',          row: 11, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'deepMine',    name: 'Deep Mine',     row: 11, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    { key: 'oldGrowth',   name: 'Old Growth',    row: 14, col: 5, rowSpan: 1, colSpan: 1, type: 'gathering' },
-    // Row 9: empty gap
-    { key: 'mill',        name: 'Mill',          row: 10, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'sawmill',     name: 'Sawmill',       row: 9,  col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'mason',       name: 'Mason',         row: 10, col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'kitchen',     name: 'Kitchen',       row: 9,  col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
-    { key: 'loom',        name: 'Loom',          row: 9,  col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'forge',       name: 'Forge',         row: 10, col: 5, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'smokehouse',  name: 'Smokehouse',    row: 10, col: 1, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
-    { key: 'enchanter',   name: 'Enchanter',     row: 11, col: 0, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'elite' },
-    { key: 'fishingPond', name: 'Fishing Pond',  row: 13, col: 0, rowSpan: 2, colSpan: 4, type: 'gathering' }
+    // Combo buildings (gathering + processing merged, 2×2)
+    { key: 'lumberMill',  name: 'Lumber Mill',   row: 9,  col: 4, rowSpan: 1, colSpan: 2, type: 'combo' },
+    { key: 'stoneworks',  name: 'Stoneworks',    row: 9,  col: 0, rowSpan: 2, colSpan: 2, type: 'combo' },
+    { key: 'smithy',      name: 'Smithy',        row: 12, col: 0, rowSpan: 2, colSpan: 3, type: 'combo' },
+    // Standalone gathering
+    { key: 'deepMine',    name: 'Deep Mine',     row: 14, col: 3, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    { key: 'oldGrowth',   name: 'Old Growth',    row: 14, col: 4, rowSpan: 1, colSpan: 1, type: 'gathering' },
+    // Standalone processing
+    { key: 'kitchen',     name: 'Kitchen',       row: 13, col: 3, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'basic' },
+    { key: 'loom',        name: 'Loom',          row: 13, col: 4, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'mill',        name: 'Mill',          row: 9,  col: 2, rowSpan: 2, colSpan: 2, type: 'processing', tier: 'basic' },
+    { key: 'smokehouse',  name: 'Smokehouse',    row: 14, col: 2, rowSpan: 1, colSpan: 1, type: 'processing', tier: 'advanced' },
+    { key: 'enchanter',   name: 'Enchanter',     row: 12, col: 5, rowSpan: 3, colSpan: 1, type: 'processing', tier: 'elite' },
+    { key: 'fishingPond', name: 'Fishing Pond',  row: 14, col: 0, rowSpan: 2, colSpan: 2, type: 'gathering' }
   ];
 
   // ── Building requirements (JB cost + farmhouse level gate) ──
@@ -79,20 +78,17 @@
     crop4:       { cost: 100, minFH: 5 },
     crop5:       { cost: 100, minFH: 5 },
     // Starter buildings (free, farmhouse Lv1)
-    lumberYard:  { cost: 0,   minFH: 1 },
-    quarry:      { cost: 0,   minFH: 1 },
+    lumberMill:  { cost: 0,   minFH: 1 },
+    stoneworks:  { cost: 0,   minFH: 1 },
     fishingPond: { cost: 0,   minFH: 1 },
     mill:        { cost: 0,   minFH: 1 },
-    sawmill:     { cost: 0,   minFH: 1 },
-    mason:       { cost: 0,   minFH: 1 },
     kitchen:     { cost: 0,   minFH: 1 },
     // Tier 2 buildings (farmhouse Lv2)
     chickenCoop: { cost: 50,  minFH: 2 },
     cowPasture:  { cost: 75,  minFH: 2 },
     sheepPen:    { cost: 75,  minFH: 2 },
     // Tier 3 buildings (farmhouse Lv3)
-    mine:        { cost: 100, minFH: 3 },
-    forge:       { cost: 150, minFH: 3 },
+    smithy:      { cost: 150, minFH: 3 },
     smokehouse:  { cost: 100, minFH: 3 },
     loom:        { cost: 100, minFH: 3 },
     // Tier 4 buildings (farmhouse Lv4)
@@ -113,35 +109,29 @@
   var FARM_IMG = '/images/farm';
   var STATION_IMG = {
     mill: FARM_IMG + '/stations/mill.png',
-    sawmill: FARM_IMG + '/stations/sawmill.png',
-    mason: FARM_IMG + '/stations/mason.png',
     kitchen: FARM_IMG + '/stations/kitchen.png',
-    forge: FARM_IMG + '/stations/forge.png',
     loom: FARM_IMG + '/stations/loom.png',
     smokehouse: FARM_IMG + '/stations/smokehouse.png',
     enchanter: FARM_IMG + '/stations/enchanter.png',
     chickenCoop: FARM_IMG + '/stations/chickenCoop.png',
     cowPasture: FARM_IMG + '/stations/cowPasture.png',
     sheepPen: FARM_IMG + '/stations/sheepPen.png',
-    lumberYard: FARM_IMG + '/stations/lumberYard.png',
-    quarry: FARM_IMG + '/stations/quarry.png',
-    mine: FARM_IMG + '/stations/mine.png',
+    lumberMill: FARM_IMG + '/stations/lumberMill.png',
+    stoneworks: FARM_IMG + '/stations/stoneworks.png',
+    smithy: FARM_IMG + '/stations/smithy.png',
     deepMine: FARM_IMG + '/stations/deepMine.png',
     oldGrowth: FARM_IMG + '/stations/oldGrowth.png',
     dogHouse: FARM_IMG + '/stations/dogHouse.png',
-    fishingPond: null,  // background-painted
-    forest0: null,      // background-painted
-    forest1: null,
-    forest2: null,
-    forest3: null
+    fishingPond: null  // background-painted
   };
 
   // ── Animated station sprites (processing state) ──────────────
   var STATION_ANIM = {
     loom:       { src: FARM_IMG + '/animations/loom.png', frames: 8, frameW: 32, frameH: 32, totalW: 256 },
-    forge:      { src: FARM_IMG + '/animations/forge.png', frames: 4, frameW: 16, frameH: 16, totalW: 64 },
     smokehouse: { src: FARM_IMG + '/animations/smokehouse.png', frames: 5, frameW: 32, frameH: 32, totalW: 160 },
-    kitchen:    { src: FARM_IMG + '/animations/kitchen.png', frames: 4, frameW: 32, frameH: 32, totalW: 128 }
+    kitchen:    { src: FARM_IMG + '/animations/kitchen.png', frames: 4, frameW: 32, frameH: 32, totalW: 128 },
+    deepMine:   { src: FARM_IMG + '/animations/deepMine.png', frames: 4, frameW: 16, frameH: 16, totalW: 64 },
+    oldGrowth:  { src: FARM_IMG + '/animations/oldGrowth.png', frames: 2, frameW: 47, frameH: 48, totalW: 94 }
   };
 
   var STAGE_NUM = { planted: 1, sprouting: 2, growing: 3, flowering: 4, ready: 5 };
@@ -166,25 +156,20 @@
     crop12: '\uD83C\uDF3E', crop13: '\uD83C\uDF3E',
     crop14: '\uD83C\uDF3E', crop15: '\uD83C\uDF3E',
     mill: '\u2699',        // gear
-    sawmill: '\uD83E\uDE93',   // axe
-    mason: '\u26CF',       // pick
     kitchen: '\uD83C\uDF73',   // cooking
-    forge: '\uD83D\uDD25',     // fire
     loom: '\uD83E\uDDF5',      // thread
     smokehouse: '\uD83C\uDF56', // meat
     enchanter: '\u2728',   // sparkles
     chickenCoop: '\uD83D\uDC14', // chicken
     cowPasture: '\uD83D\uDC04',  // cow
     sheepPen: '\uD83D\uDC11',   // sheep
-    lumberYard: '\uD83E\uDEB5', // wood
-    quarry: '\u26CF',      // pick
-    mine: '\u26CF',        // pick
+    lumberMill: '\uD83E\uDEB5', // wood
+    stoneworks: '\u26CF',  // pick
+    smithy: '\uD83D\uDD25',     // fire
     deepMine: '\uD83D\uDC8E',   // gem
     oldGrowth: '\uD83C\uDF33',  // tree
     dogHouse: '\uD83D\uDC15',    // dog
-    fishingPond: '\uD83C\uDFA3', // fishing
-    forest0: '\uD83C\uDF33', forest1: '\uD83C\uDF33',
-    forest2: '\uD83C\uDF33', forest3: '\uD83C\uDF33'
+    fishingPond: '\uD83C\uDFA3' // fishing
   };
 
   // ── Resource display config ───────────────────────────────
@@ -373,6 +358,8 @@
         cell.classList.add('fp-cell-crop');
       } else if (item.type === 'processing') {
         cell.classList.add('fp-cell-processing');
+      } else if (item.type === 'combo') {
+        cell.classList.add('fp-cell-combo');
       } else if (item.type === 'gathering') {
         cell.classList.add('fp-cell-gathering');
       }
@@ -421,7 +408,7 @@
             // Use animation div (always for most stations, only when processing for kitchen)
             var animDiv = document.createElement('div');
             animDiv.className = 'fp-station-anim fp-station-anim-' + item.key;
-            if (isProcessing) animDiv.classList.add('fp-station-active');
+            if (isProcessing || item.type === 'gathering') animDiv.classList.add('fp-station-active');
             cell.appendChild(animDiv);
           } else {
             cell.appendChild(createFarmImg(STATION_IMG[item.key], item.name));
@@ -439,7 +426,7 @@
       }
 
       // Processing indicator
-      if (built && item.type === 'processing' && window.FarmResources) {
+      if (built && (item.type === 'processing' || item.type === 'combo') && window.FarmResources) {
         var pQueue = window.FarmResources.getQueue(item.key);
         if (pQueue.length > 0 && !pQueue[0].waiting) {
           cell.classList.add('fp-cell-processing-active');
@@ -622,10 +609,9 @@
     var tuftAllowed = {
       '6,2':1, '6,4':1,
       '7,1':1, '7,3':1, '7,4':1,
-      '8,0':1, '8,1':1, '8,2':1, '8,3':1, '8,4':1, '8,5':1,
       '9,2':2, '9,3':2,
       '10,2':2, '10,3':2,
-      '10,4':1, '10,5':1
+      '11,2':1, '11,3':1, '12,1':1, '12,2':1, '12,3':1
     };
     for (var gk in tuftAllowed) {
       if (!tuftAllowed.hasOwnProperty(gk)) continue;
@@ -660,13 +646,53 @@
       }
     }
 
-    // Waterfall — always active (not tied to farmhouse level)
-    var waterfallEl = document.createElement('div');
-    waterfallEl.className = 'fp-anim-waterfall';
-    gridEl.appendChild(waterfallEl);
 
-    // Water stones at waterfall edge — always active
-    addAnim('fp-anim-water-stones', 11, 2, 1, 1, 64, 64);
+    // ── Forest decorations (rows 10-11, cols 4-5) ──
+    // Ground layer — rendered first, behind trees
+    var FOREST_GROUND = [
+      { src: '/images/farm/decorations/mushroom-1.png', w: 18, h: 28, row: 11, col: 4, ox: 0.3, oy: 0.75 },
+      { src: '/images/farm/decorations/mushroom-2.png', w: 16, h: 14, row: 11, col: 5, ox: 0.45, oy: 0.9 },
+      { src: '/images/farm/decorations/stones-1.png', w: 34, h: 16, row: 10, col: 4, ox: 0.5, oy: 0.85 }
+    ];
+    for (var di = 0; di < FOREST_GROUND.length; di++) {
+      var d = FOREST_GROUND[di];
+      var dImg = document.createElement('img');
+      dImg.src = d.src;
+      dImg.className = 'fp-forest-decor fp-forest-ground';
+      dImg.draggable = false;
+      dImg.style.width = d.w + 'px';
+      dImg.style.height = d.h + 'px';
+      dImg.style.left = (d.col * cellW + d.ox * cellW) + '%';
+      dImg.style.top = (d.row * cellH + d.oy * cellH) + '%';
+      gridEl.appendChild(dImg);
+    }
+
+    // Animated rabbit — at base of trunk, behind trees
+    var rabbitEl = document.createElement('div');
+    rabbitEl.className = 'fp-anim fp-anim-rabbit';
+    rabbitEl.style.left = (5 * cellW + 0.2 * cellW) + '%';
+    rabbitEl.style.top = (11 * cellH + 0.7 * cellH) + '%';
+    gridEl.appendChild(rabbitEl);
+
+    // Tree layer — rendered on top of ground elements
+    var FOREST_TREES = [
+      { src: '/images/farm/stations/forest0.png', w: 80, h: 112, row: 10, col: 4, ox: 0.3, oy: -0.4 },
+      { src: '/images/farm/stations/forest1.png', w: 80, h: 112, row: 10, col: 5, ox: 0.0, oy: -0.3 },
+      { src: '/images/farm/stations/forest2.png', w: 80, h: 112, row: 11, col: 4, ox: 0.3, oy: -0.3 },
+      { src: '/images/farm/stations/forest3.png', w: 80, h: 112, row: 11, col: 5, ox: 0.0, oy: -0.4 }
+    ];
+    for (var ti = 0; ti < FOREST_TREES.length; ti++) {
+      var t = FOREST_TREES[ti];
+      var tImg = document.createElement('img');
+      tImg.src = t.src;
+      tImg.className = 'fp-forest-decor fp-forest-tree';
+      tImg.draggable = false;
+      tImg.style.width = t.w + 'px';
+      tImg.style.height = t.h + 'px';
+      tImg.style.left = (t.col * cellW + t.ox * cellW) + '%';
+      tImg.style.top = (t.row * cellH + t.oy * cellH) + '%';
+      gridEl.appendChild(tImg);
+    }
 
     // Lv2: Bonfire + smoke rising above it
     if (fhLevel >= 2) {
@@ -677,8 +703,8 @@
 
     // Lv3: Bubbles in the fishing pond
     if (fhLevel >= 3) {
-      addAnim('fp-anim-bubbles', 14, 2, 1, 1, 32, 32);
-      addAnim('fp-anim-bubbles', 14, 3, 1, 1, 32, 32, { animationDelay: '0.3s' });
+      addAnim('fp-anim-bubbles', 14, 0, 1, 1, 32, 32);
+      addAnim('fp-anim-bubbles', 14, 1, 1, 1, 32, 32, { animationDelay: '0.3s' });
     }
 
     // Lv4: Occasional butterflies drifting across the farm
@@ -688,18 +714,12 @@
 
     // Lv5: Water fountain in gap row
     if (fhLevel >= 5) {
-      addAnim('fp-anim-fountain', 9, 2, 1, 2, 96, 128);
+      addAnim('fp-anim-fountain', 11, 2, 1, 2, 96, 128);
     }
 
-    // ── Decorative fence row above processing buildings (row 9) ─────
-    var fenceEl = document.createElement('div');
-    fenceEl.className = 'fp-fence-row';
-    // Span all 6 columns, positioned at bottom edge of row 8
-    fenceEl.style.left = '0%';
-    fenceEl.style.top = (9 * cellH) + '%';
-    fenceEl.style.width = '100%';
-    fenceEl.style.marginTop = '-32px';
-    gridEl.appendChild(fenceEl);
+    // Mill windmill blades — disabled for now
+    // addAnim('fp-anim-mill-blades', 12, 4, 2, 1, 66, 66, { marginTop: (-66 + 5) + 'px', marginLeft: (-50) + 'px' });
+
 
     // ── Farm animals that wander near their buildings ─────
 
@@ -929,9 +949,9 @@
     }
 
     // ── Ambient wildlife (farmhouse-level gated) ─────
-    // Ducks swimming in fishing pond (row 14, cols 0-3 — below the cliff)
+    // Ducks swimming in background pond (water-only zone: tile cols 1-2, row 28)
     if (fhLevel >= 2) {
-      spawnWanderingAnimal('fp-anim-duck-swim', 'duckSwim', 13, 0, 1, 4, 32, 32, 2, 1);
+      spawnWanderingAnimal('fp-anim-duck-swim', 'duckSwim', 13, 0.5, 1, 1, 32, 32, 2, 0.5);
     }
     // Goat roaming animal area (row 5-6, col 0-5 — same zone as chicken/cow/sheep)
     if (fhLevel >= 3) {
@@ -1199,7 +1219,7 @@
       var curLayout = getActiveLayout();
       for (var pi = 0; pi < curLayout.length; pi++) {
         var pItem = curLayout[pi];
-        if (pItem.type !== 'processing') continue;
+        if (pItem.type !== 'processing' && pItem.type !== 'combo') continue;
         var procEl = document.getElementById('fp-proc-' + pItem.key);
         var pCellEl = gridEl.querySelector('[data-key="' + pItem.key + '"]');
         var pq = window.FarmResources.getQueue(pItem.key);
@@ -1396,7 +1416,9 @@
     stationPopupEl = document.createElement('div');
     stationPopupEl.className = 'fp-station-popup';
 
-    if (item.type === 'gathering') {
+    if (item.type === 'combo') {
+      renderComboPopup(item, stationPopupEl);
+    } else if (item.type === 'gathering') {
       renderGatheringPopup(item, stationPopupEl);
     } else if (item.type === 'crop') {
       renderCropPopup(item, stationPopupEl);
@@ -1408,14 +1430,14 @@
       renderDogHousePopup(item, stationPopupEl);
     }
 
-    // Processing popups and dog house need more width
-    if (item.type === 'processing' || item.key === 'dogHouse') {
+    // Processing/combo popups and dog house need more width
+    if (item.type === 'processing' || item.type === 'combo' || item.key === 'dogHouse') {
       stationPopupEl.classList.add('fp-popup-wide');
     }
 
     // Position via getBoundingClientRect
     var rect = cellEl.getBoundingClientRect();
-    var popupWidth = (item.type === 'processing' || item.key === 'dogHouse') ? 240 : 170;
+    var popupWidth = (item.type === 'processing' || item.type === 'combo' || item.key === 'dogHouse') ? 240 : 170;
     var popupLeft = Math.max(8, Math.min(rect.left + rect.width / 2 - popupWidth / 2, window.innerWidth - popupWidth - 8));
     stationPopupEl.style.left = popupLeft + 'px';
 
@@ -1877,15 +1899,11 @@
     }, 1000);
   }
 
-  function renderProcessingPopup(item, popup) {
+  // ── Shared processing section (used by both processing and combo popups) ──
+  function renderProcessingSection(stationKey, popup, reRenderFn) {
     if (!window.FarmResources) return;
 
-    var header = document.createElement('div');
-    header.className = 'fp-popup-header';
-    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
-    popup.appendChild(header);
-
-    var queue = window.FarmResources.getQueue(item.key);
+    var queue = window.FarmResources.getQueue(stationKey);
 
     // Active job with progress bar
     if (queue.length > 0 && !queue[0].waiting) {
@@ -1916,7 +1934,7 @@
 
     // Waiting queue items
     for (var q = 0; q < queue.length; q++) {
-      if (q === 0 && !queue[q].waiting) continue; // skip active (already shown)
+      if (q === 0 && !queue[q].waiting) continue;
       var waitRow = document.createElement('div');
       waitRow.className = 'fp-queue-item fp-queue-waiting';
       waitRow.textContent = (q + 1) + '. ' + queue[q].name + ' (waiting)';
@@ -1935,10 +1953,10 @@
     popup.appendChild(sep);
 
     // Recipe buttons
-    var recipes = window.FarmResources.getRecipes(item.key);
+    var recipes = window.FarmResources.getRecipes(stationKey);
     for (var r = 0; r < recipes.length; r++) {
       (function (recipe) {
-        var affordable = window.FarmResources.canAfford(item.key, recipe.id);
+        var affordable = window.FarmResources.canAfford(stationKey, recipe.id);
         var queueFull = queue.length >= 5;
         var disabled = !affordable || queueFull;
 
@@ -1946,7 +1964,6 @@
         btn.className = 'fp-recipe-btn' + (disabled ? ' fp-recipe-disabled' : '');
         btn.type = 'button';
 
-        // Input list
         var inputParts = [];
         if (recipe.inputs.raw) {
           var rk = Object.keys(recipe.inputs.raw);
@@ -1976,16 +1993,80 @@
         if (!disabled) {
           btn.addEventListener('click', function (ev) {
             ev.stopPropagation();
-            window.FarmResources.queueRecipe(item.key, recipe.id);
-            // Re-render popup
-            popup.innerHTML = '';
-            renderProcessingPopup(item, popup);
+            window.FarmResources.queueRecipe(stationKey, recipe.id);
+            reRenderFn();
           });
         }
 
         popup.appendChild(btn);
       })(recipes[r]);
     }
+  }
+
+  function renderProcessingPopup(item, popup) {
+    if (!window.FarmResources) return;
+
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
+    popup.appendChild(header);
+
+    renderProcessingSection(item.key, popup, function () {
+      popup.innerHTML = '';
+      renderProcessingPopup(item, popup);
+    });
+  }
+
+  // ── Combo building popup (gathering + processing in one) ──
+  function renderComboPopup(item, popup) {
+    if (!window.FarmResources) return;
+
+    var header = document.createElement('div');
+    header.className = 'fp-popup-header';
+    header.textContent = (ICONS[item.key] || '') + ' ' + item.name;
+    popup.appendChild(header);
+
+    // ── Gathering section ──
+    var stations = window.FarmResources.getStations();
+    var station = stations[item.key];
+    if (station && station.resource) {
+      var count = window.FarmResources.getRaw(station.resource);
+      var row1 = document.createElement('div');
+      row1.className = 'fp-popup-row';
+      row1.innerHTML = prettyName(station.resource) + ': <span class="fp-popup-count">' + count + '</span>';
+      popup.appendChild(row1);
+
+      var rateMin = Math.round(station.rate / 60000);
+      var row2 = document.createElement('div');
+      row2.className = 'fp-popup-row fp-popup-rate';
+      row2.textContent = '+1 every ' + rateMin + 'min';
+      popup.appendChild(row2);
+
+      var now = Date.now();
+      var elapsed = now - station.lastCollect;
+      var remaining = station.rate - elapsed;
+      if (remaining < 0) remaining = 0;
+      var row3 = document.createElement('div');
+      row3.className = 'fp-popup-row fp-popup-next';
+      row3.textContent = 'Next in: ' + formatMsToMinSec(remaining);
+      popup.appendChild(row3);
+    }
+
+    // ── Processing separator ──
+    var procLabel = document.createElement('div');
+    procLabel.className = 'fp-popup-separator';
+    popup.appendChild(procLabel);
+
+    var procHeader = document.createElement('div');
+    procHeader.className = 'fp-popup-row fp-popup-rate';
+    procHeader.textContent = '\u2500\u2500 Processing \u2500\u2500';
+    popup.appendChild(procHeader);
+
+    // ── Processing section (reuses shared helper) ──
+    renderProcessingSection(item.key, popup, function () {
+      popup.innerHTML = '';
+      renderComboPopup(item, popup);
+    });
   }
 
   // ── Dog House popup ─────────────────────────────────────
@@ -2258,20 +2339,20 @@
       dragon: ['*singes wool*', 'warm fuzz', '*nests in fleece*', 'fire-proof wool?'],
       robot: ['WOOL: quality check', 'sheep: accounted', 'fleece: optimal', 'shearing: due']
     },
-    lumberYard: {
-      cat: ['*scratches log*', 'good scratching post!', '*sharpens claws*', 'timber!'],
-      dragon: ['*chars a log*', 'firewood!', '*stacks lumber*', 'need bigger trees'],
-      robot: ['WOOD: catalogued', 'lumber: stacked', 'board feet: noted', 'efficiency: 94%']
+    lumberMill: {
+      cat: ['*scratches log*', 'wood & planks!', '*sharpens claws*', 'timber!', '*watches blade*', 'scary spinny!'],
+      dragon: ['*chars a log*', 'firewood!', '*fire-cuts logs*', 'I do it better', 'need bigger trees'],
+      robot: ['WOOD: catalogued', 'lumber: stacked', 'SAWMILL: active', 'planks: queued', 'efficiency: 94%']
     },
-    quarry: {
-      cat: ['*bats pebble*', 'shiny rocks!', '*digs around*', 'rocky nap spot'],
-      dragon: ['*cracks boulder*', 'gem hunting!', '*hoards stones*', 'my rock pile!'],
-      robot: ['QUARRY: surveyed', 'stone: grade B+', 'extraction: on track', 'mineral scan done']
+    stoneworks: {
+      cat: ['*bats pebble*', 'shiny rocks!', '*bats chisel*', 'clinkity clink', 'rocky nap spot'],
+      dragon: ['*cracks boulder*', 'gem hunting!', '*melts stone*', 'fire masonry!', 'brick by brick'],
+      robot: ['QUARRY: surveyed', 'stone: grade B+', 'MASON: chiseling', 'brick quality: A', 'wall: straight']
     },
-    mine: {
-      cat: ['*peers into dark*', 'spooky tunnel!', '*cautious sniff*', 'echo echo~'],
-      dragon: ['*lights up mine*', 'deep treasures!', '*fire torch*', 'gold below!'],
-      robot: ['MINE: operational', 'depth: 40m', 'iron detected', 'structural: sound']
+    smithy: {
+      cat: ['*backs away*', 'too hot!', '*cautious sniff*', 'echo echo~', '*singed whiskers*'],
+      dragon: ['MY element!', '*breathes into forge*', 'hotter! MORE!', '*fire torch*', '*happy rumble*'],
+      robot: ['FORGE: 1200C', 'iron detected', 'hammering: precise', 'alloy: forming', 'MINE: operational']
     },
     deepMine: {
       cat: ['*shivers*', 'too deep for me!', '*wide eyes*', 'hear something?'],
@@ -2293,25 +2374,10 @@
       dragon: ['*blows the wheel*', 'grind faster!', '*sneezes flour*', 'ACHOO'],
       robot: ['MILL: grinding', 'flour output: steady', 'gears: lubricated', 'RPM: optimal']
     },
-    sawmill: {
-      cat: ['*covers ears*', 'too loud!', '*watches blade*', 'scary spinny!'],
-      dragon: ['*fire-cuts logs*', 'I do it better', '*sparks fly*', 'timber!'],
-      robot: ['SAWMILL: active', 'cut precision: 99%', 'blade: sharp', 'planks: queued']
-    },
-    mason: {
-      cat: ['*bats chisel*', 'clinkity clink', '*naps on stone*', 'cold but nice'],
-      dragon: ['*melts stone*', 'fire masonry!', '*shapes with heat*', 'brick by brick'],
-      robot: ['MASON: chiseling', 'brick quality: A', 'mortar: mixed', 'wall: straight']
-    },
     kitchen: {
       cat: ['*sniffs food*', 'something yummy!', '*begs for scraps*', 'chef cat!'],
       dragon: ['*flame grills*', 'I AM the oven', '*seasons with ash*', 'extra crispy!'],
       robot: ['KITCHEN: active', 'recipe: loaded', 'temp: 180C', 'timer: set']
-    },
-    forge: {
-      cat: ['*backs away*', 'too hot!', '*singed whiskers*', 'fire bad!'],
-      dragon: ['MY element!', '*breathes into forge*', 'hotter! MORE!', '*happy rumble*'],
-      robot: ['FORGE: 1200C', 'metal: malleable', 'hammering: precise', 'alloy: forming']
     },
     loom: {
       cat: ['*tangles in yarn*', 'YARN!', '*bats shuttle*', 'string heaven~'],

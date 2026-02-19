@@ -379,7 +379,7 @@
     { wave: 5,  buildings: ['chickenCoop'],           names: ['Chicken Coop'] },
     { wave: 10, buildings: ['cowPasture'],             names: ['Cow Pasture'] },
     { wave: 15, buildings: ['smokehouse'],             names: ['Smokehouse'] },
-    { wave: 20, buildings: ['mine', 'forge'],          names: ['Mine', 'Forge'] },
+    { wave: 20, buildings: ['smithy'],                   names: ['Smithy'] },
     { wave: 25, buildings: ['sheepPen', 'loom'],       names: ['Sheep Pen', 'Loom'] },
     { wave: 30, buildings: ['deepMine', 'oldGrowth'],  names: ['Deep Mine', 'Old Growth'] },
     { wave: 40, buildings: ['enchanter'],              names: ['Enchanter'] }

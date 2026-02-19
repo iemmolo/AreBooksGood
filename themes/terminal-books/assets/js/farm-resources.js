@@ -6,17 +6,18 @@
 
   // ── Station definitions ─────────────────────────────────
   var STATIONS = {
-    lumberYard:  { resource: 'wood',     rate: 720000,   built: true },   // 12min
-    quarry:      { resource: 'stone',    rate: 1200000,  built: true },   // 20min
+    // Combo buildings (gathering + processing in one)
+    lumberMill:  { resource: 'wood',     rate: 720000,   built: true,  combo: true },  // 12min
+    stoneworks:  { resource: 'stone',    rate: 1200000,  built: true,  combo: true },  // 20min
+    smithy:      { resource: 'iron',     rate: 2400000,  built: false, combo: true },  // 40min
+    // Standalone gathering
     fishingPond: { resource: 'fish',     rate: 600000,   built: true },   // 10min
     chickenCoop: { resource: 'eggs',     rate: 900000,   built: false },
     cowPasture:  { resource: 'milk',     rate: 1800000,  built: false },
     sheepPen:    { resource: 'wool',     rate: 2700000,  built: false },
-    mine:        { resource: 'iron',     rate: 2400000,  built: false },
     deepMine:    { resource: 'gold',     rate: 3600000,  built: false },
     oldGrowth:   { resource: 'hardwood', rate: 2100000,  built: false },
     // Processing stations (no resource — build state only)
-    forge:       { resource: null, rate: 0, built: false },
     loom:        { resource: null, rate: 0, built: false },
     smokehouse:  { resource: null, rate: 0, built: false },
     enchanter:   { resource: null, rate: 0, built: false },
@@ -30,14 +31,14 @@
     { wave: 5,  buildings: ['chickenCoop'] },
     { wave: 10, buildings: ['cowPasture'] },
     { wave: 15, buildings: ['smokehouse'] },
-    { wave: 20, buildings: ['mine', 'forge'] },
+    { wave: 20, buildings: ['smithy'] },
     { wave: 25, buildings: ['sheepPen', 'loom'] },
     { wave: 30, buildings: ['deepMine', 'oldGrowth'] },
     { wave: 40, buildings: ['enchanter'] }
   ];
   var BUILDING_FH_REQS = {
     chickenCoop: 2, cowPasture: 2, sheepPen: 2,
-    mine: 3, forge: 3, smokehouse: 3, loom: 3,
+    smithy: 3, smokehouse: 3, loom: 3,
     deepMine: 4, oldGrowth: 4, enchanter: 5
   };
 
@@ -148,6 +149,38 @@
           processing = {};
         }
 
+        // ── Combo building migration (v2) ────────────────────
+        // Merge old gathering+processing pairs into combo buildings
+        var COMBO_MIGRATION = [
+          { combo: 'lumberMill', gathering: 'lumberYard', processing: 'sawmill' },
+          { combo: 'stoneworks', gathering: 'quarry',     processing: 'mason' },
+          { combo: 'smithy',    gathering: 'mine',        processing: 'forge' }
+        ];
+        for (var mi = 0; mi < COMBO_MIGRATION.length; mi++) {
+          var m = COMBO_MIGRATION[mi];
+          var oldG = saved.stations && saved.stations[m.gathering];
+          var oldP = saved.stations && saved.stations[m.processing];
+          // Skip if already migrated (combo key exists in saved data)
+          if (saved.stations && saved.stations[m.combo]) continue;
+          // Skip if neither old key exists
+          if (!oldG && !oldP) continue;
+          // Merge: take built status from either, lastCollect from gathering
+          var comboBuilt = (oldG && oldG.built) || (oldP && oldP.built);
+          stations[m.combo] = {
+            level: comboBuilt ? 1 : 0,
+            lastCollect: (oldG && oldG.lastCollect) ? oldG.lastCollect : Date.now(),
+            built: comboBuilt
+          };
+          // Move processing queue from old key to combo key
+          if (processing[m.processing] && processing[m.processing].length > 0) {
+            processing[m.combo] = processing[m.processing];
+            delete processing[m.processing];
+          }
+          // Clean up old keys from stations
+          delete stations[m.gathering];
+          delete stations[m.processing];
+        }
+
         return {
           raw: rawRes,
           processed: processed,
@@ -180,16 +213,16 @@
     mill: [
       { id: 'flour', name: 'Flour', inputs: { raw: { wheat: 3 } }, output: { type: 'processed', key: 'flour', qty: 1 }, duration: 300000 }
     ],
-    sawmill: [
+    lumberMill: [
       { id: 'planks', name: 'Planks', inputs: { raw: { wood: 3 } }, output: { type: 'processed', key: 'planks', qty: 1 }, duration: 480000 }
     ],
-    mason: [
+    stoneworks: [
       { id: 'stoneBricks', name: 'Stone Bricks', inputs: { raw: { stone: 4 } }, output: { type: 'processed', key: 'stoneBricks', qty: 1 }, duration: 600000 }
     ],
     kitchen: [
       { id: 'bread', name: 'Bread', inputs: { processed: { flour: 2 }, raw: { eggs: 1 } }, output: { type: 'processed', key: 'bread', qty: 1 }, duration: 600000 }
     ],
-    forge: [
+    smithy: [
       { id: 'ironBars', name: 'Iron Bars', inputs: { raw: { iron: 3, wood: 2 } }, output: { type: 'processed', key: 'ironBars', qty: 1 }, duration: 900000 }
     ],
     loom: [
