@@ -2023,8 +2023,9 @@
         var status = document.createElement('div');
         status.className = 'fp-dog-status';
         if (isAdopted) {
-          status.textContent = '\u2714 Adopted';
-          status.style.color = '#4caf50';
+          status.textContent = 'Remove';
+          status.style.color = '#e57373';
+          status.style.cursor = 'pointer';
         } else {
           status.textContent = 'Adopt';
           status.style.color = 'var(--accent)';
@@ -2032,20 +2033,20 @@
         }
         btn.appendChild(status);
 
-        if (!isAdopted) {
-          btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var dogs = getUnlockedDogs();
-            if (dogs.indexOf(breed) === -1) {
-              dogs.push(breed);
-              setUnlockedDogs(dogs);
-            }
-            renderGrid();
-            // Re-render popup content
-            while (popup.firstChild) popup.removeChild(popup.firstChild);
-            renderDogHousePopup(item, popup);
-          });
-        }
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var dogs = getUnlockedDogs();
+          var idx = dogs.indexOf(breed);
+          if (idx === -1) {
+            dogs.push(breed);
+          } else {
+            dogs.splice(idx, 1);
+          }
+          setUnlockedDogs(dogs);
+          renderGrid();
+          while (popup.firstChild) popup.removeChild(popup.firstChild);
+          renderDogHousePopup(item, popup);
+        });
 
         grid.appendChild(btn);
       })(i);

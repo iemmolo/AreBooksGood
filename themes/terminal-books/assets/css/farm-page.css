@@ -1210,12 +1210,11 @@
 .fp-dog-btn-adopted {
   border-color: #4caf50;
   background: color-mix(in srgb, #4caf50 8%, transparent);
-  cursor: default;
 }
 
 .fp-dog-btn-adopted:hover {
-  border-color: #4caf50;
-  background: color-mix(in srgb, #4caf50 12%, transparent);
+  border-color: #e57373;
+  background: color-mix(in srgb, #e57373 10%, transparent);
 }
 
 .fp-dog-preview {
