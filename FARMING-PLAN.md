@@ -381,46 +381,46 @@ themes/terminal-books/
 
 ## 7. Implementation Phases
 
-### Phase 1: Foundation (Farm MVP)
-1. Create `jackbucks.js` — JB wallet read/write API
-2. Create `farm.js` — plot system, crop growth, localStorage state
-3. Create `farm.css` — plot bar layout, empty/planted/ready states
-4. Create `crops.json` — starter crop definitions (carrot, potato, wheat)
-5. Add farm bar DOM to page (fixed bottom strip, left of dock)
-6. Implement click-to-plant with starter seeds (infinite free seeds)
-7. Implement real-time growth with timestamp math
-8. Implement click-to-harvest → adds JB
-9. Add JB to header wallet widget
-10. Wire up pet visibility toggle to also hide/show farm bar
+### Phase 1: Foundation (Farm MVP) ✅ DONE
+1. ~~Create `jackbucks.js` — JB wallet read/write API~~
+2. ~~Create `farm.js` — plot system, crop growth, localStorage state~~
+3. ~~Create `farm.css` — plot bar layout, empty/planted/ready states~~
+4. ~~Create `crops.json` — starter crop definitions (carrot, potato, wheat)~~
+5. ~~Add farm bar DOM to page (fixed bottom strip, left of dock)~~
+6. ~~Implement click-to-plant with starter seeds (infinite free seeds)~~
+7. ~~Implement real-time growth with timestamp math~~
+8. ~~Implement click-to-harvest → adds JB~~
+9. ~~Add JB to header wallet widget~~
+10. ~~Wire up pet visibility toggle to also hide/show farm bar~~
 
-### Phase 2: Pet Farming AI
-1. Add autonomous walk-to-plot behavior on idle timer
-2. Add pet harvesting interaction (walk → celebrate → collect)
-3. Add per-pet farming bonuses (cat/dragon/robot)
-4. Add farm-specific speech lines
-5. Add harvest particle effects (crop icon floats up)
+### Phase 2: Pet Farming AI ✅ DONE
+1. ~~Add autonomous walk-to-plot behavior on idle timer~~
+2. ~~Add pet harvesting interaction (walk → celebrate → collect)~~
+3. ~~Add per-pet farming bonuses (cat/dragon/robot)~~
+4. ~~Add farm-specific speech lines~~
+5. ~~Add harvest particle effects (crop icon floats up)~~
 
-### Phase 3: Silk Road Store & Farmhouse
-1. Create Silk Road page layout with terminal aesthetic
-2. Implement seed purchasing → inventory system
-3. Implement seed picker UI when clicking empty plot
-4. Add common crops (tomato, corn, pumpkin)
-5. Add plot expansion upgrade
-6. Add merchant dialogue system
-7. Add link in nav + header JB click target
-8. Add Level 1 farmhouse (appears on screen, clickable status panel)
-9. Add farmhouse upgrades to Silk Road store
-10. Create pixel-art sprites for each farmhouse level
-11. Implement farmhouse bonuses (sell price, grow speed, auto-water)
+### Phase 3: Silk Road Store & Farmhouse ✅ DONE
+1. ~~Create Silk Road page layout with terminal aesthetic~~
+2. ~~Implement seed purchasing → inventory system~~
+3. ~~Implement seed picker UI when clicking empty plot~~
+4. ~~Add common crops (tomato, corn, pumpkin)~~
+5. ~~Add plot expansion upgrade~~
+6. ~~Add merchant dialogue system~~
+7. ~~Add link in nav + header JB click target~~
+8. ~~Add Level 1 farmhouse (appears on screen, clickable status panel)~~
+9. ~~Add farmhouse upgrades to Silk Road store~~
+10. ~~Create pixel-art sprites for each farmhouse level~~
+11. ~~Implement farmhouse bonuses (sell price, grow speed, auto-water)~~
 
-### Phase 4: Full Silk Road
-1. Add all upgrades (sprinkler, fertilizer, scarecrow, golden trowel, seed bag)
-2. Add rare crops (golden apple, crystal herb, dragon fruit)
-3. Add exclusive cosmetics (farmer hat, dirt trail, etc.)
-4. Add milestone unlocks for rare seed availability
-5. Withering system
+### Phase 4: Full Silk Road ✅ DONE
+1. ~~Add all upgrades (sprinkler, fertilizer, scarecrow, golden trowel, seed bag)~~
+2. ~~Add rare crops (golden apple, crystal herb, dragon fruit)~~
+3. ~~Add exclusive cosmetics (farmer hat, dirt trail, overgrown theme, harvest moon)~~
+4. ~~Add milestone unlocks for rare seed availability~~
+5. Withering system — not implemented (decided against it)
 
-### Phase 5: Secret Crops & Polish
+### Phase 5: Secret Crops & Polish (Not Started)
 1. Add page-specific exotic crops (binary bloom, lucky clover, book worm truffle)
 2. Add crop collection / compendium tracker
 3. Add farming achievements

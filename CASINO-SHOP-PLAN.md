@@ -248,22 +248,24 @@ themes/terminal-books/
 
 ## 5. Implementation Phases
 
-### Phase 1: Foundation
-1. Create `wallet.js` - shared currency read/write/migrate API
-2. Add wallet widget to header partial
-3. Create `/casino/` hub with tile grid layout
-4. Update `hugo.toml` menu
-5. Move game content under `/casino/` (set up aliases for old URLs)
+### Phase 1: Foundation ✅ DONE
+1. ~~Create `wallet.js` - shared currency read/write/migrate API~~
+2. ~~Add wallet widget to header partial~~
+3. ~~Create `/casino/` hub with tile grid layout~~
+4. ~~Update `hugo.toml` menu~~
+5. ~~Move game content under `/casino/` (set up aliases for old URLs)~~
 
-### Phase 2: Game Integration
-1. Refactor poker.js to use shared wallet
-2. Refactor blackjack.js to use shared wallet
-3. Refactor casino-wars.js to use shared wallet
-4. Add coin rewards to sudoku completions
-5. Add coin rewards to chess puzzle solves
-6. Add casino sub-navigation
+### Phase 2: Game Integration ✅ DONE
+1. ~~Refactor poker.js to use shared wallet~~
+2. ~~Refactor blackjack.js to use shared wallet~~
+3. ~~Refactor casino-wars.js to use shared wallet~~
+4. ~~Add coin rewards to sudoku completions~~
+5. ~~Add coin rewards to chess puzzle solves~~
+6. ~~Add casino sub-navigation~~
 
-### Phase 3: Shop (MVP)
+Also shipped: Slot machine, Flappy Bird, Doodle Jump games
+
+### Phase 3: Shop (MVP) — Not Started
 1. Build shop page layout and UI
 2. Implement effect purchase/ownership system
 3. Build `effects.js` global loader
@@ -271,14 +273,14 @@ themes/terminal-books/
    - Scanlines, Fade In, Subtle Grid, Neon Glow, Link Underline
 5. Wire up buy/toggle/preview in shop UI
 
-### Phase 4: Shop (Full)
+### Phase 4: Shop (Full) — Not Started
 1. Add remaining effects from the table above
 2. Add JS-powered effects (matrix rain, starfield, click sparkles)
 3. Add "My Effects" management panel
 4. Add preview-before-buy functionality
 5. Polish animations and transitions
 
-### Phase 5: Going Broke & Future Games
+### Phase 5: Going Broke & Future Games — Not Started
 1. "Daily allowance" claim system for broke players
 2. Rescue minigame (simple, guaranteed small payout)
 3. Idle incrementer game (long-term)

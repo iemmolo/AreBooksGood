@@ -1,6 +1,8 @@
-# Phase 2.5: Pet Life — Watering & Idle Interactions
+# Phase 2.5: Pet Life — Watering & Idle Interactions ✅ DONE
 
 ## Overview
+
+> **Status: Fully shipped.** All watering and idle interaction features implemented.
 
 Give pets more to do between harvests. Two new behavior systems:
 

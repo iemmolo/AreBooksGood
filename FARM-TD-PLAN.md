@@ -21,40 +21,40 @@
 - [x] JackBucks integration (earnings → real JB balance)
 - [x] Theme switching updates canvas colors immediately
 
-### Phase 1b: Expand Core
-- [ ] Cannon tower (splash damage)
-- [ ] Frost tower (slow effect)
-- [ ] Skeleton enemy, Goblin enemy
-- [ ] Tower upgrade system (Lv1→2→3)
-- [ ] Tower selection/inspection + sell
-- [ ] Boss wave every 10 waves
-- [ ] Wave scaling tuning
+### Phase 1b: Expand Core ✅ DONE
+- [x] Cannon tower (splash damage)
+- [x] Frost tower (slow effect)
+- [x] Skeleton enemy, Goblin enemy
+- [x] Tower upgrade system (Lv1→2→3)
+- [x] Tower selection/inspection + sell
+- [x] Boss wave every 10 waves
+- [x] Wave scaling tuning
 
-### Phase 1c: Pet Hero
-- [ ] Pet sprite on canvas
-- [ ] Click to reposition pet
-- [ ] Auto-attack nearest enemy
-- [ ] Q ability (burst damage) + W ability (heal lives)
-- [ ] Ability buttons + keyboard shortcuts + cooldown timers
+### Phase 1c: Pet Hero ✅ DONE
+- [x] Pet sprite on canvas
+- [x] Click to reposition pet
+- [x] Auto-attack nearest enemy
+- [x] Q ability (burst damage) + W ability (heal lives)
+- [x] Ability buttons + keyboard shortcuts + cooldown timers
 
-### Phase 2: Farm-TD Integration
-- [ ] td-unlocks.js global unlock tracker
-- [ ] Blueprint gating retrofit on farm buildings
-- [ ] Material tower upgrades (Lv2-3 require processed resources)
-- [ ] New material-gated towers (Fire, Wall, Sniper, Gold Mine, Lightning)
-- [ ] Consumables (Bread, Smoked Fish)
+### Phase 2: Farm-TD Integration ✅ DONE
+- [x] td-unlocks.js global unlock tracker
+- [x] Blueprint gating retrofit on farm buildings
+- [x] Material tower upgrades (Lv2-3 require processed resources)
+- [x] New material-gated towers (Fire, Wall, Sniper, Gold Mine, Lightning)
+- [x] Consumables (Bread, Smoked Fish)
 
-### Phase 3: Pet Heroes (Full Differentiation)
-- [ ] Cat hero (fast melee, Pounce, Nine Lives)
-- [ ] Dragon hero (ranged AOE, Inferno, Flame Shield)
-- [ ] Robot hero (long-range laser, EMP Blast, Shield Generator)
+### Phase 3: Pet Heroes (Full Differentiation) ✅ DONE
+- [x] Cat hero (fast melee, Pounce, Nine Lives)
+- [x] Dragon hero (ranged AOE, Inferno, Flame Shield)
+- [x] Robot hero (long-range laser, EMP Blast, Shield Generator)
 
-### Phase 4: Polish & Expansion
+### Phase 4: Polish & Expansion (Partial)
 - [ ] Sprite assets
-- [ ] More enemies + multi-phase boss
-- [ ] Tower targeting options + speed controls
-- [ ] Additional maps
-- [ ] Mobile touch controls
+- [x] More enemies (healer, splitter, shield)
+- [x] Tower targeting options + speed controls
+- [x] Additional maps (3 maps: Valley, Switchback, Spiral)
+- [x] Mobile touch controls
 - [ ] Sound effects
 
 ---
@@ -140,15 +140,17 @@ All use timestamp-based idle accumulation. On page load (any page, since `farm-r
 | Station | Resource | Idle Rate | Unlock |
 |---------|----------|-----------|--------|
 | Crop Plots | Wheat, Carrot, etc. | 5m-24h | Existing |
-| Lumber Yard | Wood | 1 per 12min | Starter |
-| Quarry | Stone | 1 per 20min | Starter |
+| Lumber Mill | Wood (+ processes Planks) | 1 per 12min | Starter (combo) |
+| Stoneworks | Stone (+ processes Stone Bricks) | 1 per 20min | Starter (combo) |
 | Chicken Coop | Eggs | 1 per 15min | TD wave 5 blueprint |
 | Cow Pasture | Milk | 1 per 30min | TD wave 10 blueprint |
 | Sheep Pen | Wool | 1 per 45min | TD wave 25 blueprint |
-| Mine | Iron Ore | 1 per 40min | TD wave 20 blueprint |
+| Smithy | Iron (+ processes Iron Bars) | 1 per 40min | TD wave 20 blueprint (combo) |
 | Deep Mine | Gold Ore | 1 per 90min | TD wave 30 blueprint |
-| Old Growth | Hardwood | 1 per 35min | TD wave 50 blueprint |
+| Old Growth | Hardwood | 1 per 35min | TD wave 30 blueprint |
 | Fishing Pond | Fish | 1 per 10-25min | Starter (idle), interactive for rare |
+
+> **Note (2026-02-19):** Gathering+processing pairs merged into combo buildings: Lumber Yard + Sawmill → Lumber Mill, Quarry + Mason → Stoneworks, Mine + Forge → Smithy. Migration logic in `farm-resources.js` handles existing saves.
 
 Click a station on the farm page → popup shows: resource count, production rate, "Collect" button (if resources ready), upgrade option.
 
@@ -166,10 +168,10 @@ Click a station on the farm page → popup shows: resource count, production rat
 | Station | Tier | Example Recipe | Time | Unlock |
 |---------|------|---------------|------|--------|
 | Mill | Basic | 3 Wheat → Flour | 5min | Starter |
-| Sawmill | Basic | 3 Wood → Planks | 8min | Starter |
-| Mason | Basic | 4 Stone → Stone Bricks | 10min | Starter |
+| Lumber Mill | Basic | 3 Wood → Planks | 8min | Starter (combo) |
+| Stoneworks | Basic | 4 Stone → Stone Bricks | 10min | Starter (combo) |
 | Kitchen | Basic | 2 Flour + 1 Egg → Bread | 10min | Starter |
-| Forge | Advanced | 3 Iron Ore + 2 Wood → Iron Bars | 15min | TD wave 20 blueprint |
+| Smithy | Advanced | 3 Iron Ore + 2 Wood → Iron Bars | 15min | TD wave 20 (combo) |
 | Loom | Advanced | 2 Wool → Rope | 6min | TD wave 25 blueprint |
 | Smokehouse | Advanced | 2 Fish + 1 Wood → Smoked Fish | 8min | TD wave 15 blueprint |
 | Enchanter | Elite | 2 Crystal Herb + 1 Gold Bar → Crystal Lens | 30min | TD wave 40 blueprint |
@@ -283,12 +285,11 @@ Wave: 12  |  Lives: 18/20  |  JB: 1,250  |  Enemies: 8/24
 |------|--------|
 | 5 | Chicken Coop blueprint |
 | 10 | Cow Pasture blueprint |
-| 15 | Smokehouse blueprint + Sniper Tower |
-| 20 | Mine + Forge blueprints |
-| 25 | Sheep Pen + Loom blueprints + Lightning Tower |
-| 30 | Deep Mine blueprint |
+| 15 | Smokehouse blueprint |
+| 20 | Smithy blueprint (replaced Mine + Forge) |
+| 25 | Sheep Pen + Loom blueprints |
+| 30 | Deep Mine + Old Growth blueprints |
 | 40 | Enchanter blueprint |
-| 50 | Old Growth blueprint |
 | Every wave | JB: `5 + wave * 2` |
 | Every 10 waves | Bonus JB: `50 * wave` |
 | Perfect wave (no leaks) | Double JB + chance of rare seed |
@@ -344,40 +345,41 @@ Pet sprite rendered on canvas using `fillRect` per pixel (same approach as flapp
 4. ~~Processing queue UI~~ **DONE**
 5. ~~Additional resource types~~ **DONE** (9 raw crops, 10 gathering resources, 8 processed resources)
 
-### Phase 3: Tower Defense MVP
-1. Canvas game: grid, path rendering, game loop
-2. 3 starter towers (arrow, cannon, frost) - JB cost only
-3. 3 starter enemies (slime, skeleton, goblin)
-4. Wave system with spawning, targeting, projectiles
-5. HUD, start/gameover overlays, stats persistence
-6. JB rewards per wave
+### Phase 3: Tower Defense MVP ✅ DONE
+1. ~~Canvas game: grid, path rendering, game loop~~
+2. ~~3 starter towers (arrow, cannon, frost) - JB cost only~~
+3. ~~3 starter enemies (slime, skeleton, goblin)~~
+4. ~~Wave system with spawning, targeting, projectiles~~
+5. ~~HUD, start/gameover overlays, stats persistence~~
+6. ~~JB rewards per wave~~
 
-### Phase 4: Farm-TD Integration
-1. Material-based tower upgrades (level 2-3 require processed materials)
-2. Wave milestone unlock system (blueprints earned)
-3. Blueprint construction UI on farm page
-4. Remaining towers (fire, wall, gold mine, sniper, lightning)
-5. Remaining enemies (orc, ghost, knight, mage, boss)
-6. Consumables in TD (bread for lives, smoked fish for speed buff)
-7. Advanced processing stations unlock via blueprints (forge, loom, smokehouse, enchanter)
+### Phase 4: Farm-TD Integration ✅ DONE
+1. ~~Material-based tower upgrades (level 2-3 require processed materials)~~
+2. ~~Wave milestone unlock system (blueprints earned)~~
+3. ~~Blueprint construction UI on farm page~~
+4. ~~Remaining towers (fire, wall, gold mine, sniper, lightning)~~
+5. ~~Remaining enemies (orc, ghost, knight, mage, boss)~~
+6. ~~Consumables in TD (bread for lives, smoked fish for speed buff)~~
+7. ~~Advanced processing stations unlock via blueprints (forge, loom, smokehouse, enchanter)~~
 
-### Phase 5: Pet Heroes
-1. Pet sprite rendering on canvas (fillRect pixel art from petsprites.json)
-2. Click-to-move hero control
-3. Auto-attack with per-pet attack styles
-4. Ability buttons below canvas + Q/W keyboard shortcuts
-5. Cooldown system + visual indicators
-6. Hero HP, damage, respawn
+### Phase 5: Pet Heroes ✅ DONE
+1. ~~Pet sprite rendering on canvas (fillRect pixel art from petsprites.json)~~
+2. ~~Click-to-move hero control~~
+3. ~~Auto-attack with per-pet attack styles~~
+4. ~~Ability buttons below canvas + Q/W keyboard shortcuts~~
+5. ~~Cooldown system + visual indicators~~
+6. ~~Hero HP, damage, respawn~~
 
-### Phase 6: Polish
-1. Tower targeting options (nearest, strongest, fastest)
-2. Speed controls (1x, 2x, 3x)
-3. Wave preview panel
-4. Additional TD maps (wave 20, 40 unlocks)
-5. Enchanter recipes (Crystal Lens, Dragon Scale, Golden Core)
-6. Farm page: notification badges, auto-collect toggle
-7. Mobile: touch controls, responsive grid, bottom sheet panels
+### Phase 6: Polish (Partial)
+1. ~~Tower targeting options (nearest, strongest, fastest)~~
+2. ~~Speed controls (1x, 2x)~~
+3. ~~Wave preview panel~~
+4. ~~Additional TD maps (3 maps: Valley, Switchback, Spiral)~~
+5. ~~Enchanter recipes (Crystal Lens, Dragon Scale, Golden Core)~~
+6. ~~Farm page: notification badges, auto-collect toggle~~
+7. ~~Mobile: touch controls, responsive grid, bottom sheet panels~~
 8. Replace simple shapes with pixel art sprites
+- Also shipped beyond original plan: Armory (8 meta-upgrades), Supply Crate (7 consumables), difficulty selection, endless mode, x2 speed toggle, tower special abilities, tower synergies, hotkeys, auto-start waves, JB investment pre-run, save/resume
 
 ---
 

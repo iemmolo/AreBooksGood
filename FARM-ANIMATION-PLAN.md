@@ -94,11 +94,14 @@ Centered fixed-size sprites (pixel-based, matching bonfire/animal pattern) inste
 
 ---
 
-## Phase 3: Animated Trees (future)
+## Phase 3: Animated Trees (partial — forest decorations shipped)
 
+- [x] Forest area converted from grid cells to free-positioned decoration overlays (4 tree images)
+- [x] Added animated rabbit (4-frame idle loop) in forest area
+- [x] Added ground decorations: mushrooms (×2), stones, bushes
 - [ ] Inspect tree animation layout (Birch/Pine from `Farm/Tree/Common/No Shadow/`)
 - [ ] Extract tree sway spritesheet
-- [ ] Add animated tree to farm grid
+- [ ] Add animated tree sway to existing trees
 
 ## Phase 4: Falling Leaf Effects (future, bonus)
 
