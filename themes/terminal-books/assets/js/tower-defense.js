@@ -1601,6 +1601,11 @@
       if (t.abilityCooldown > 0) t.abilityCooldown = Math.max(0, t.abilityCooldown - dt);
       if (t.rallyTimer > 0) t.rallyTimer = Math.max(0, t.rallyTimer - dt);
 
+      // Auto-cast abilities for Lv3+ towers
+      if (mods.specialAbilities && t.level >= 3 && t.abilityCooldown <= 0 && enemies.length > 0) {
+        activateAbility(t);
+      }
+
       // Skip non-attacking towers
       if (t.type === 'watchtower' || t.type === 'goldmine') continue;
 
@@ -2155,6 +2160,10 @@
 
   function endWave() {
     var baseReward = 5 + wave * 2;
+    // Bonus scaling past wave 45
+    if (wave > 45) {
+      baseReward = Math.round(baseReward * (1 + (wave - 45) * 0.05));
+    }
 
     // Boss wave bonus
     var isBoss = (wave % 10 === 0) || (wave > 30 && wave % 5 === 0);
@@ -3507,7 +3516,10 @@
     var abilityBtn = document.getElementById('td-inspect-ability-btn');
     if (abilityBtn) abilityBtn.addEventListener('click', function (ev) {
       ev.stopPropagation();
-      if (inspectedTower) activateAbility(inspectedTower);
+      if (inspectedTower) {
+        activateAbility(inspectedTower);
+        closeInspect();
+      }
     });
   }
 

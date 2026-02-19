@@ -14,7 +14,9 @@
   var DASHBOARD_TILES = [
     { key: 'farmLink', icon: '\u2192', label: 'Farm' },
     { key: 'crops', icon: '\uD83C\uDF3E', label: 'Crops' },
-    { key: 'tdLink', icon: '\uD83D\uDDE1' }
+    { key: 'tdLink', icon: '\uD83D\uDDE1' },
+    { key: 'shopLink', icon: '\uD83D\uDCB0' },
+    { key: 'resourceLink', icon: '\u2692\uFE0F' }
   ];
 
   // ── Crop definitions ────────────────────────────────────
@@ -1143,12 +1145,12 @@
     tile.className = 'farm-dash-tile';
     tile.setAttribute('data-tile', conf.key);
 
-    if (conf.key === 'farmLink' || conf.key === 'tdLink') {
+    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink') {
       tile.classList.add('farm-dash-link');
     }
 
     // Always visible on mobile (not hidden when count=0)
-    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink') {
+    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink') {
       tile.classList.add('farm-dash-always');
     }
 
@@ -1176,6 +1178,19 @@
     if (conf.key === 'tdLink') {
       tile.addEventListener('click', function () {
         window.location.href = '/td/#td-game-area';
+      });
+    } else if (conf.key === 'shopLink') {
+      tile.addEventListener('click', function () {
+        window.location.href = '/shops/';
+      });
+    } else if (conf.key === 'resourceLink') {
+      tile.addEventListener('click', function () {
+        var sidebar = document.getElementById('fp-sidebar');
+        if (sidebar) {
+          sidebar.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.href = '/farm/game/#fp-sidebar';
+        }
       });
     } else {
       tile.addEventListener('click', function () {
@@ -1222,7 +1237,7 @@
   }
 
   function updateDashTile(tile, conf) {
-    if (conf.key === 'farmLink' || conf.key === 'tdLink') return;
+    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink') return;
 
     var countEl = tile.querySelector('.farm-dash-count');
     var count = getDashTileCount(conf);
