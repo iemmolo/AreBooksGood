@@ -106,6 +106,10 @@
 {{- $farmcss := resources.Get "css/farm.css" | minify -}}
 <link rel="stylesheet" href="{{ $farmcss.RelPermalink }}">
 
+{{/* Compendium CSS (global) */}}
+{{- $compcss := resources.Get "css/compendium.css" | minify -}}
+<link rel="stylesheet" href="{{ $compcss.RelPermalink }}">
+
 {{/* Silk Road CSS */}}
 {{ if eq .Type "silk-road" -}}
   {{- $sr := resources.Get "css/silk-road.css" | minify -}}

@@ -135,6 +135,7 @@
   };
 
   var STAGE_NUM = { planted: 1, sprouting: 2, growing: 3, flowering: 4, ready: 5 };
+  var NUM_STAGE = { 1: 'planted', 2: 'sprouting', 3: 'growing', 4: 'flowering', 5: 'ready' };
 
   function createFarmImg(src, alt) {
     var img = document.createElement('img');
@@ -142,6 +143,35 @@
     img.alt = alt || '';
     img.className = 'fp-sprite-img';
     img.draggable = false;
+    return img;
+  }
+
+  // Box-shadow fallback when PNG crop sprite is missing
+  function createBoxShadowSprite(cropKey, stageName) {
+    var api = window.FarmAPI;
+    if (!api || !api.getCropSprite) return null;
+    var pixels = api.getCropSprite(cropKey, stageName);
+    if (!pixels) return null;
+    var el = document.createElement('div');
+    el.className = 'fp-sprite-img fp-sprite-fallback';
+    el.style.width = '48px';
+    el.style.height = '48px';
+    el.style.position = 'static';
+    el.style.imageRendering = 'pixelated';
+    api.renderSprite(el, pixels, 6);
+    return el;
+  }
+
+  function createCropSpriteEl(cropKey, stageNum) {
+    var stageName = NUM_STAGE[stageNum] || 'planted';
+    var pngSrc = FARM_IMG + '/crops/' + cropKey + '-' + stageNum + '.png';
+    var img = createFarmImg(pngSrc, cropKey);
+    img.onerror = function () {
+      var fallback = createBoxShadowSprite(cropKey, stageName);
+      if (fallback && img.parentNode) {
+        img.parentNode.replaceChild(fallback, img);
+      }
+    };
     return img;
   }
 
@@ -444,10 +474,10 @@
         var cropInfo = getCropInfo(plotIdx);
         if (cropInfo && cropInfo.crop) {
           cell.classList.add('fp-cell-built');
-          // Render PNG crop sprite
+          // Render crop sprite (PNG with box-shadow fallback)
           var stageNum = STAGE_NUM[cropInfo.stage] || 1;
           iconEl.textContent = '';
-          cell.appendChild(createFarmImg(FARM_IMG + '/crops/' + cropInfo.crop + '-' + stageNum + '.png', cropInfo.crop));
+          cell.appendChild(createCropSpriteEl(cropInfo.crop, stageNum));
           // Track stage for dirty checking
           prevStages[plotIdx] = cropInfo.stage;
           // Glow ramp class for current stage
@@ -1296,11 +1326,11 @@
         // Stage changed — update sprite and glow class in-place
         if (hasCrop && prevStages[p] !== plots[p].stage) {
           var newStageNum = STAGE_NUM[plots[p].stage] || 1;
-          var newSrc = FARM_IMG + '/crops/' + plots[p].crop + '-' + newStageNum + '.png';
           if (cellEl) {
-            var img = cellEl.querySelector('.fp-sprite-img');
-            if (img) {
-              img.src = newSrc;
+            var oldSprite = cellEl.querySelector('.fp-sprite-img');
+            if (oldSprite) {
+              var newSprite = createCropSpriteEl(plots[p].crop, newStageNum);
+              oldSprite.parentNode.replaceChild(newSprite, oldSprite);
             }
             // Swap stage class
             for (var si = 0; si < stages.length; si++) {

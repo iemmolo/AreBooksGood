@@ -3,7 +3,6 @@ AreBooksGood - Improvement TODO
 
 ## Critical
 
-- [ ] Add missing front matter to that review: summary, narrator
 - [x] Clean stale build artifacts (public/reviews/sapiens/, public/reviews/the-road/)
 - [x] Add ARIA labels to rating partial for screen reader accessibility
 

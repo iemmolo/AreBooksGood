@@ -127,6 +127,47 @@
   color: var(--accent);
 }
 
+/* ── Expandable farm bar ─────────────────── */
+.farm-bar-expand {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width 0.25s ease, opacity 0.25s ease;
+}
+
+.farm-bar-expand.farm-bar-open {
+  max-width: 400px;
+  opacity: 1;
+}
+
+.farm-bar-toggle {
+  width: 24px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 48px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.farm-bar-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
 /* ── Crops notification badge ─────────────── */
 .farm-dash-tile[data-tile="crops"] .farm-dash-count {
   top: -5px;
@@ -645,8 +686,19 @@ body.harvest-moon-active::before {
 
   .farm-bar {
     gap: 4px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-content: flex-end;
+  }
+
+  .farm-bar-expand {
+    gap: 4px;
+  }
+
+  .farm-bar-toggle {
+    width: 20px;
+    height: 32px;
+    font-size: 12px;
+    line-height: 32px;
   }
 
   .farm-dash-tile {

@@ -15,7 +15,17 @@
     "Grade A, organic, totally legitimate.",
     "Golden apples... not from any orchard you'd find on a map.",
     "Crystal herbs. Handle with care. Or don't. I'm not your mother.",
-    "Dragon fruit seeds. Grew these in a volcano. Don't ask which one."
+    "Dragon fruit seeds. Grew these in a volcano. Don't ask which one.",
+    "Strawberries. Sweet enough to make you forget your debts.",
+    "Hot peppers. My last customer hasn't stopped crying.",
+    "Rice paddies in a pot. Don't ask how.",
+    "Sunflower seeds. They follow the money, not the sun.",
+    "Grapes. Fine wine starts with shady deals.",
+    "Watermelon. Heavy, juicy, totally not stolen.",
+    "Melon seeds. Fell off a very expensive truck.",
+    "Binary bloom? It either grows or it doesn't. Fifty-fifty.",
+    "Lucky clovers. Luck sold separately.",
+    "Book worm truffles. Dug up from a library basement."
   ];
 
   // ── Farmhouse level definitions ───────────────────────
@@ -143,6 +153,7 @@
     jb.deduct(cost);
     farm.addSeeds(key, 1);
 
+    document.dispatchEvent(new CustomEvent('silk-road-purchase'));
     rotateMerchant();
     updateBalance();
     flashCard(cardEl);

@@ -176,6 +176,14 @@
   image-rendering: crisp-edges;
 }
 
+/* Box-shadow fallback sprite (div instead of img) */
+.fp-sprite-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: unset;
+}
+
 /* ── Built cell overlays ─────────────────────────────── */
 
 .fp-cell-built .fp-cell-label {

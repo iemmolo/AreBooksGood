@@ -14,6 +14,7 @@
   var DASHBOARD_TILES = [
     { key: 'farmLink', icon: '\u2192', label: 'Farm' },
     { key: 'crops', icon: '\uD83C\uDF3E', label: 'Crops' },
+    { key: 'compendium', icon: '\uD83D\uDCD6' },
     { key: 'tdLink', icon: '\uD83D\uDDE1' },
     { key: 'shopLink', icon: '\uD83D\uDCB0' },
     { key: 'resourceLink', icon: '\u2692\uFE0F' }
@@ -21,15 +22,37 @@
 
   // ── Crop definitions ────────────────────────────────────
   var CROPS = {
-    carrot:       { name: 'Carrot',       growTime: 5 * 60 * 1000,    sell: 2,   seedCost: 0,  icon: 'C', rarity: 'common' },
-    potato:       { name: 'Potato',       growTime: 15 * 60 * 1000,   sell: 5,   seedCost: 0,  icon: 'P', rarity: 'common' },
-    wheat:        { name: 'Wheat',        growTime: 30 * 60 * 1000,   sell: 8,   seedCost: 0,  icon: 'W', rarity: 'common' },
-    tomato:       { name: 'Tomato',       growTime: 60 * 60 * 1000,   sell: 20,  seedCost: 5,  icon: 'T', rarity: 'common' },
-    corn:         { name: 'Corn',         growTime: 120 * 60 * 1000,  sell: 40,  seedCost: 8,  icon: 'K', rarity: 'common' },
-    pumpkin:      { name: 'Pumpkin',      growTime: 240 * 60 * 1000,  sell: 75,  seedCost: 12, icon: 'Q', rarity: 'common' },
-    golden_apple: { name: 'Golden Apple', growTime: 480 * 60 * 1000,  sell: 150, seedCost: 25, icon: 'A', rarity: 'rare' },
-    crystal_herb: { name: 'Crystal Herb', growTime: 720 * 60 * 1000,  sell: 200, seedCost: 40, icon: 'H', rarity: 'rare' },
-    dragon_fruit: { name: 'Dragon Fruit', growTime: 1440 * 60 * 1000, sell: 500, seedCost: 75, icon: 'D', rarity: 'rare' }
+    // Starter (free)
+    carrot:           { name: 'Carrot',           growTime: 5 * 60 * 1000,    sell: 2,   seedCost: 0,  icon: 'C', rarity: 'common', hint: 'The humble orange root' },
+    potato:           { name: 'Potato',           growTime: 15 * 60 * 1000,   sell: 5,   seedCost: 0,  icon: 'P', rarity: 'common', hint: 'Starchy and reliable' },
+    wheat:            { name: 'Wheat',            growTime: 30 * 60 * 1000,   sell: 8,   seedCost: 0,  icon: 'W', rarity: 'common', hint: 'Golden stalks sway in the breeze' },
+    // Common
+    strawberry:       { name: 'Strawberry',       growTime: 10 * 60 * 1000,   sell: 10,  seedCost: 3,  icon: 'S', rarity: 'common', hint: 'A sweet red berry' },
+    tomato:           { name: 'Tomato',           growTime: 60 * 60 * 1000,   sell: 20,  seedCost: 5,  icon: 'T', rarity: 'common', hint: 'Red and juicy, fruit or vegetable?' },
+    hot_pepper:       { name: 'Hot Pepper',       growTime: 45 * 60 * 1000,   sell: 15,  seedCost: 6,  icon: 'J', rarity: 'common', hint: 'A fiery fruit that bites back' },
+    rice:             { name: 'Rice',             growTime: 45 * 60 * 1000,   sell: 18,  seedCost: 7,  icon: 'R', rarity: 'common', hint: 'Paddies of precious grain' },
+    corn:             { name: 'Corn',             growTime: 120 * 60 * 1000,  sell: 40,  seedCost: 8,  icon: 'K', rarity: 'common', hint: 'Tall stalks, golden ears' },
+    pumpkin:          { name: 'Pumpkin',          growTime: 240 * 60 * 1000,  sell: 75,  seedCost: 12, icon: 'Q', rarity: 'common', hint: 'Big, round, and orange' },
+    sunflower:        { name: 'Sunflower',        growTime: 180 * 60 * 1000,  sell: 55,  seedCost: 10, icon: 'F', rarity: 'common', hint: 'Always faces the sun' },
+    // Rare
+    grapes:           { name: 'Grapes',           growTime: 300 * 60 * 1000,  sell: 90,  seedCost: 15, icon: 'G', rarity: 'rare', hint: 'Purple clusters on the vine' },
+    watermelon:       { name: 'Watermelon',       growTime: 360 * 60 * 1000,  sell: 100, seedCost: 18, icon: 'M', rarity: 'rare', hint: 'Green on the outside, red within' },
+    melon:            { name: 'Melon',            growTime: 600 * 60 * 1000,  sell: 175, seedCost: 30, icon: 'E', rarity: 'rare', hint: 'A mysterious honeydew' },
+    golden_apple:     { name: 'Golden Apple',     growTime: 480 * 60 * 1000,  sell: 150, seedCost: 25, icon: 'A', rarity: 'rare', hint: 'Shimmering fruit of legend' },
+    crystal_herb:     { name: 'Crystal Herb',     growTime: 720 * 60 * 1000,  sell: 200, seedCost: 40, icon: 'H', rarity: 'rare', hint: 'Glows faintly in the dark' },
+    dragon_fruit:     { name: 'Dragon Fruit',     growTime: 1440 * 60 * 1000, sell: 500, seedCost: 75, icon: 'D', rarity: 'rare', hint: 'Scales of pink and green' },
+    // Exotic (premium rare)
+    binary_bloom:     { name: 'Binary Bloom',     growTime: 360 * 60 * 1000,  sell: 500, seedCost: 60, icon: 'B', rarity: 'rare', hint: 'Petals of ones and zeros' },
+    lucky_clover:     { name: 'Lucky Clover',     growTime: 240 * 60 * 1000,  sell: 200, seedCost: 35, icon: 'L', rarity: 'rare', hint: 'Four leaves of fortune' },
+    book_worm_truffle: { name: 'Book Worm Truffle', growTime: 180 * 60 * 1000, sell: 150, seedCost: 20, icon: 'O', rarity: 'rare', hint: 'Grows between the pages' }
+  };
+
+  // Crop category lookup for compendium tabs
+  var CROP_CATEGORIES = {
+    starter: ['carrot', 'potato', 'wheat'],
+    common: ['strawberry', 'hot_pepper', 'rice', 'tomato', 'corn', 'pumpkin', 'sunflower'],
+    rare: ['grapes', 'watermelon', 'melon', 'golden_apple', 'crystal_herb', 'dragon_fruit'],
+    exotic: ['binary_bloom', 'lucky_clover', 'book_worm_truffle']
   };
 
   // Growth stages: 0-25% planted, 25-50% sprouting, 50-75% growing, 75-100% flowering, 100% ready
@@ -426,6 +449,435 @@
         [1,3,'#FF1493'],[2,3,'#FF69B4'],[3,3,'#FF69B4'],[4,3,'#FF69B4'],[5,3,'#FF69B4'],[6,3,'#FF1493'],
         [1,4,'#CC3366'],[2,4,'#FF1493'],[3,4,'#FF69B4'],[4,4,'#FF69B4'],[5,4,'#FF1493'],[6,4,'#CC3366'],
         [2,5,'#CC3366'],[3,5,'#FF1493'],[4,5,'#FF1493'],[5,5,'#CC3366'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    strawberry: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [2,1,'#228B22'],[5,1,'#228B22'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [3,3,'#2EA043'],[4,3,'#2EA043'],
+        [3,4,'#CC2222'],[4,4,'#CC2222'],
+        [3,5,'#CC2222'],[4,5,'#CC2222'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,0,'#FFFFFF'],[4,0,'#FFFFFF'],
+        [2,1,'#228B22'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#228B22'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [2,3,'#DD2222'],[3,3,'#FF3333'],[4,3,'#FF3333'],[5,3,'#DD2222'],
+        [2,4,'#DD2222'],[3,4,'#FF4444'],[4,4,'#FF4444'],[5,4,'#DD2222'],
+        [3,5,'#CC2222'],[4,5,'#CC2222'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#FFFFFF'],[4,0,'#FFFFFF'],
+        [2,1,'#33CC33'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#33CC33'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [1,3,'#FF2222'],[2,3,'#FF4444'],[3,3,'#FF4444'],[4,3,'#FF4444'],[5,3,'#FF4444'],[6,3,'#FF2222'],
+        [2,4,'#FF2222'],[3,4,'#FF6666'],[4,4,'#FFFF99'],[5,4,'#FF6666'],
+        [2,5,'#DD2222'],[3,5,'#FF3333'],[4,5,'#FF3333'],[5,5,'#DD2222'],
+        [3,6,'#CC2222'],[4,6,'#CC2222'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    hot_pepper: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [3,1,'#228B22'],[4,1,'#228B22'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [3,3,'#2EA043'],[4,3,'#2EA043'],
+        [3,4,'#CC3300'],[4,4,'#CC3300'],
+        [3,5,'#CC3300'],[4,5,'#CC3300'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,0,'#FFFFFF'],[4,0,'#228B22'],
+        [2,1,'#228B22'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#228B22'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [2,3,'#FF4500'],[3,3,'#FF6600'],[4,3,'#FF4500'],
+        [2,4,'#FF3300'],[3,4,'#FF4500'],[4,4,'#FF3300'],
+        [3,5,'#CC3300'],[4,5,'#CC3300'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#33CC33'],[4,0,'#228B22'],
+        [2,1,'#228B22'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#228B22'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [1,3,'#FF4500'],[2,3,'#FF6600'],[3,3,'#FF6600'],[4,3,'#FF4500'],
+        [1,4,'#FF3300'],[2,4,'#FF4500'],[3,4,'#FF6600'],[4,4,'#FF4500'],
+        [2,5,'#FF3300'],[3,5,'#FF4500'],[4,5,'#FF3300'],
+        [3,6,'#CC2200'],[4,6,'#CC2200'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    rice: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [2,1,'#228B22'],[5,1,'#228B22'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [2,3,'#228B22'],[3,3,'#2EA043'],[4,3,'#2EA043'],[5,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B7355'],[4,5,'#8B7355'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [1,0,'#F5DEB3'],[2,0,'#F5DEB3'],[5,0,'#F5DEB3'],[6,0,'#F5DEB3'],
+        [2,1,'#228B22'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#228B22'],
+        [2,2,'#228B22'],[3,2,'#2EA043'],[4,2,'#2EA043'],[5,2,'#228B22'],
+        [2,3,'#228B22'],[3,3,'#228B22'],[4,3,'#228B22'],[5,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B7355'],[4,5,'#8B7355'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [0,0,'#FFFACD'],[1,0,'#F5DEB3'],[2,0,'#FFFACD'],[5,0,'#FFFACD'],[6,0,'#F5DEB3'],[7,0,'#FFFACD'],
+        [1,1,'#F5DEB3'],[2,1,'#FFFACD'],[5,1,'#FFFACD'],[6,1,'#F5DEB3'],
+        [2,2,'#228B22'],[3,2,'#2EA043'],[4,2,'#2EA043'],[5,2,'#228B22'],
+        [2,3,'#228B22'],[3,3,'#228B22'],[4,3,'#228B22'],[5,3,'#228B22'],
+        [2,4,'#2EA043'],[3,4,'#228B22'],[4,4,'#228B22'],[5,4,'#2EA043'],
+        [3,5,'#8B7355'],[4,5,'#8B7355'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    sunflower: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [3,0,'#228B22'],[4,0,'#228B22'],
+        [3,1,'#228B22'],[4,1,'#2EA043'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [3,3,'#2EA043'],[4,3,'#2EA043'],
+        [3,4,'#228B22'],[4,4,'#228B22'],
+        [3,5,'#228B22'],[4,5,'#228B22'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [2,0,'#FFD700'],[3,0,'#FFD700'],[4,0,'#FFD700'],[5,0,'#FFD700'],
+        [1,1,'#FFD700'],[2,1,'#DAA520'],[3,1,'#8B6914'],[4,1,'#8B6914'],[5,1,'#DAA520'],[6,1,'#FFD700'],
+        [2,2,'#FFD700'],[3,2,'#8B6914'],[4,2,'#8B6914'],[5,2,'#FFD700'],
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#228B22'],[4,4,'#228B22'],
+        [3,5,'#228B22'],[4,5,'#228B22'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [2,0,'#FFD700'],[3,0,'#FFED4A'],[4,0,'#FFED4A'],[5,0,'#FFD700'],
+        [1,1,'#FFD700'],[2,1,'#FFED4A'],[3,1,'#8B6914'],[4,1,'#8B6914'],[5,1,'#FFED4A'],[6,1,'#FFD700'],
+        [1,2,'#FFD700'],[2,2,'#FFED4A'],[3,2,'#6B4513'],[4,2,'#6B4513'],[5,2,'#FFED4A'],[6,2,'#FFD700'],
+        [2,3,'#FFD700'],[3,3,'#FFED4A'],[4,3,'#FFED4A'],[5,3,'#FFD700'],
+        [3,4,'#228B22'],[4,4,'#228B22'],
+        [3,5,'#228B22'],[4,5,'#228B22'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    grapes: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [2,1,'#228B22'],[5,1,'#228B22'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#6B3FA0'],[4,4,'#6B3FA0'],
+        [3,5,'#6B3FA0'],[4,5,'#6B3FA0'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,0,'#33CC33'],[4,0,'#228B22'],
+        [2,1,'#228B22'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#228B22'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [2,3,'#7B52AE'],[3,3,'#8B68BE'],[4,3,'#8B68BE'],[5,3,'#7B52AE'],
+        [2,4,'#6B3FA0'],[3,4,'#7B52AE'],[4,4,'#7B52AE'],[5,4,'#6B3FA0'],
+        [3,5,'#6B3FA0'],[4,5,'#6B3FA0'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#33CC33'],[4,0,'#228B22'],
+        [2,1,'#2EA043'],[3,1,'#33CC33'],[4,1,'#33CC33'],[5,1,'#2EA043'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [2,3,'#8B68BE'],[3,3,'#9B78CE'],[4,3,'#9B78CE'],[5,3,'#8B68BE'],
+        [1,4,'#7B52AE'],[2,4,'#8B68BE'],[3,4,'#9B78CE'],[4,4,'#9B78CE'],[5,4,'#8B68BE'],[6,4,'#7B52AE'],
+        [2,5,'#6B3FA0'],[3,5,'#7B52AE'],[4,5,'#7B52AE'],[5,5,'#6B3FA0'],
+        [3,6,'#6B3FA0'],[4,6,'#6B3FA0'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    watermelon: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [2,1,'#228B22'],[5,1,'#228B22'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [2,4,'#2E8B57'],[3,4,'#3CB371'],[4,4,'#3CB371'],[5,4,'#2E8B57'],
+        [2,5,'#2E8B57'],[3,5,'#3CB371'],[4,5,'#3CB371'],[5,5,'#2E8B57'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,0,'#228B22'],[4,0,'#228B22'],
+        [2,1,'#2EA043'],[3,1,'#228B22'],[4,1,'#228B22'],[5,1,'#2EA043'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [1,3,'#2E8B57'],[2,3,'#3CB371'],[3,3,'#228B22'],[4,3,'#3CB371'],[5,3,'#228B22'],[6,3,'#2E8B57'],
+        [1,4,'#2E8B57'],[2,4,'#3CB371'],[3,4,'#228B22'],[4,4,'#3CB371'],[5,4,'#228B22'],[6,4,'#2E8B57'],
+        [2,5,'#2E8B57'],[3,5,'#3CB371'],[4,5,'#3CB371'],[5,5,'#2E8B57'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#33CC33'],[4,0,'#228B22'],
+        [2,1,'#2EA043'],[3,1,'#33CC33'],[4,1,'#33CC33'],[5,1,'#2EA043'],
+        [1,2,'#2E8B57'],[2,2,'#3CB371'],[3,2,'#228B22'],[4,2,'#3CB371'],[5,2,'#228B22'],[6,2,'#2E8B57'],
+        [1,3,'#2E8B57'],[2,3,'#228B22'],[3,3,'#3CB371'],[4,3,'#228B22'],[5,3,'#3CB371'],[6,3,'#2E8B57'],
+        [1,4,'#2E8B57'],[2,4,'#3CB371'],[3,4,'#228B22'],[4,4,'#3CB371'],[5,4,'#228B22'],[6,4,'#2E8B57'],
+        [2,5,'#2E8B57'],[3,5,'#3CB371'],[4,5,'#3CB371'],[5,5,'#2E8B57'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    melon: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#2EA043'],[4,4,'#2EA043'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [2,1,'#228B22'],[5,1,'#228B22'],
+        [2,2,'#2EA043'],[3,2,'#228B22'],[4,2,'#228B22'],[5,2,'#2EA043'],
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [2,4,'#E8D84A'],[3,4,'#F0E060'],[4,4,'#F0E060'],[5,4,'#E8D84A'],
+        [2,5,'#E8D84A'],[3,5,'#F0E060'],[4,5,'#F0E060'],[5,5,'#E8D84A'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,0,'#228B22'],[4,0,'#228B22'],
+        [2,1,'#2EA043'],[3,1,'#228B22'],[4,1,'#228B22'],[5,1,'#2EA043'],
+        [3,2,'#228B22'],[4,2,'#228B22'],
+        [1,3,'#E8D84A'],[2,3,'#F0E060'],[3,3,'#F5E87A'],[4,3,'#F5E87A'],[5,3,'#F0E060'],[6,3,'#E8D84A'],
+        [1,4,'#E8D84A'],[2,4,'#F0E060'],[3,4,'#F5E87A'],[4,4,'#F5E87A'],[5,4,'#F0E060'],[6,4,'#E8D84A'],
+        [2,5,'#E8D84A'],[3,5,'#F0E060'],[4,5,'#F0E060'],[5,5,'#E8D84A'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#33CC33'],[4,0,'#228B22'],
+        [2,1,'#228B22'],[3,1,'#2EA043'],[4,1,'#2EA043'],[5,1,'#228B22'],
+        [1,2,'#E8D84A'],[2,2,'#F0E060'],[3,2,'#F5E87A'],[4,2,'#F5E87A'],[5,2,'#F0E060'],[6,2,'#E8D84A'],
+        [1,3,'#E8D84A'],[2,3,'#F5E87A'],[3,3,'#FFFFF0'],[4,3,'#FFFFF0'],[5,3,'#F5E87A'],[6,3,'#E8D84A'],
+        [1,4,'#E8D84A'],[2,4,'#F0E060'],[3,4,'#F5E87A'],[4,4,'#F5E87A'],[5,4,'#F0E060'],[6,4,'#E8D84A'],
+        [2,5,'#E8D84A'],[3,5,'#F0E060'],[4,5,'#F0E060'],[5,5,'#E8D84A'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    binary_bloom: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#00CC66'],[4,3,'#00CC66'],
+        [3,4,'#008844'],[4,4,'#008844'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [3,1,'#00FF88'],[4,1,'#00CC66'],
+        [2,2,'#00CC66'],[3,2,'#00FF88'],[4,2,'#00FF88'],[5,2,'#00CC66'],
+        [3,3,'#00CC66'],[4,3,'#00CC66'],
+        [3,4,'#008844'],[4,4,'#008844'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [2,0,'#00FF88'],[3,0,'#00FFAA'],[4,0,'#00FFAA'],[5,0,'#00FF88'],
+        [1,1,'#00CC66'],[2,1,'#00FF88'],[3,1,'#FFFFFF'],[4,1,'#00FFAA'],[5,1,'#00FF88'],[6,1,'#00CC66'],
+        [2,2,'#00CC66'],[3,2,'#00FFAA'],[4,2,'#FFFFFF'],[5,2,'#00CC66'],
+        [3,3,'#00CC66'],[4,3,'#00CC66'],
+        [3,4,'#008844'],[4,4,'#008844'],
+        [3,5,'#008844'],[4,5,'#008844'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [1,0,'#00FF88'],[2,0,'#00FFAA'],[3,0,'#FFFFFF'],[4,0,'#00FFAA'],[5,0,'#FFFFFF'],[6,0,'#00FF88'],
+        [1,1,'#00FF88'],[2,1,'#FFFFFF'],[3,1,'#00FFAA'],[4,1,'#FFFFFF'],[5,1,'#00FFAA'],[6,1,'#00FF88'],
+        [1,2,'#00CC66'],[2,2,'#00FFAA'],[3,2,'#FFFFFF'],[4,2,'#00FFAA'],[5,2,'#FFFFFF'],[6,2,'#00CC66'],
+        [2,3,'#00CC66'],[3,3,'#00FF88'],[4,3,'#00FF88'],[5,3,'#00CC66'],
+        [3,4,'#008844'],[4,4,'#008844'],
+        [3,5,'#008844'],[4,5,'#008844'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    lucky_clover: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [3,4,'#33CC33'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [2,1,'#33CC33'],[3,1,'#228B22'],[4,1,'#228B22'],[5,1,'#33CC33'],
+        [3,2,'#33CC33'],[4,2,'#33CC33'],
+        [2,3,'#33CC33'],[3,3,'#228B22'],[4,3,'#228B22'],[5,3,'#33CC33'],
+        [3,4,'#228B22'],[4,4,'#228B22'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,0,'#FFD700'],
+        [1,1,'#33CC33'],[2,1,'#55DD55'],[4,1,'#55DD55'],[5,1,'#33CC33'],
+        [1,2,'#33CC33'],[2,2,'#55DD55'],[4,2,'#55DD55'],[5,2,'#33CC33'],
+        [3,3,'#228B22'],[4,3,'#228B22'],
+        [1,4,'#33CC33'],[2,4,'#55DD55'],[4,4,'#55DD55'],[5,4,'#33CC33'],
+        [1,5,'#33CC33'],[2,5,'#55DD55'],[4,5,'#55DD55'],[5,5,'#33CC33'],
+        [3,6,'#228B22'],[4,6,'#228B22'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#FFD700'],[4,0,'#FFD700'],
+        [1,1,'#55DD55'],[2,1,'#77FF77'],[4,1,'#77FF77'],[5,1,'#55DD55'],
+        [1,2,'#55DD55'],[2,2,'#77FF77'],[4,2,'#77FF77'],[5,2,'#55DD55'],
+        [3,3,'#33CC33'],[4,3,'#33CC33'],
+        [1,4,'#55DD55'],[2,4,'#77FF77'],[4,4,'#77FF77'],[5,4,'#55DD55'],
+        [1,5,'#55DD55'],[2,5,'#77FF77'],[4,5,'#77FF77'],[5,5,'#55DD55'],
+        [3,6,'#228B22'],[4,6,'#228B22'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ]
+    },
+    book_worm_truffle: {
+      planted: [
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      sprouting: [
+        [3,3,'#8B6914'],[4,3,'#8B6914'],
+        [3,4,'#6B4513'],[4,4,'#6B4513'],
+        [3,5,'#8B4513'],[4,5,'#8B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      growing: [
+        [3,2,'#8B6914'],[4,2,'#8B6914'],
+        [2,3,'#6B4513'],[3,3,'#8B6914'],[4,3,'#8B6914'],[5,3,'#6B4513'],
+        [2,4,'#6B4513'],[3,4,'#8B7355'],[4,4,'#8B7355'],[5,4,'#6B4513'],
+        [3,5,'#6B4513'],[4,5,'#6B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      flowering: [
+        [3,1,'#A0875A'],[4,1,'#A0875A'],
+        [2,2,'#8B6914'],[3,2,'#A0875A'],[4,2,'#A0875A'],[5,2,'#8B6914'],
+        [1,3,'#6B4513'],[2,3,'#8B6914'],[3,3,'#A0875A'],[4,3,'#A0875A'],[5,3,'#8B6914'],[6,3,'#6B4513'],
+        [2,4,'#6B4513'],[3,4,'#8B7355'],[4,4,'#8B7355'],[5,4,'#6B4513'],
+        [3,5,'#6B4513'],[4,5,'#6B4513'],
+        [3,6,'#8B4513'],[4,6,'#8B4513'],
+        [3,7,'#6B3410'],[4,7,'#6B3410']
+      ],
+      ready: [
+        [3,0,'#C4A96A'],[4,0,'#C4A96A'],
+        [2,1,'#A0875A'],[3,1,'#C4A96A'],[4,1,'#C4A96A'],[5,1,'#A0875A'],
+        [1,2,'#8B6914'],[2,2,'#A0875A'],[3,2,'#DCC48A'],[4,2,'#DCC48A'],[5,2,'#A0875A'],[6,2,'#8B6914'],
+        [1,3,'#6B4513'],[2,3,'#8B6914'],[3,3,'#C4A96A'],[4,3,'#C4A96A'],[5,3,'#8B6914'],[6,3,'#6B4513'],
+        [2,4,'#6B4513'],[3,4,'#8B7355'],[4,4,'#8B7355'],[5,4,'#6B4513'],
+        [3,5,'#6B4513'],[4,5,'#6B4513'],
         [3,6,'#8B4513'],[4,6,'#8B4513'],
         [3,7,'#6B3410'],[4,7,'#6B3410']
       ]
@@ -1130,9 +1582,55 @@
     syncVisibility();
   }
 
+  // ── Expandable farm bar state ─────────────────────────
+  var farmBarExpanded = false;
+  var farmBarCollapseTimer = null;
+  var farmBarExpandEl = null;
+  var farmBarToggleEl = null;
+
+  function expandFarmBar() {
+    if (farmBarExpanded) return;
+    farmBarExpanded = true;
+    if (farmBarExpandEl) farmBarExpandEl.classList.add('farm-bar-open');
+    if (farmBarToggleEl) farmBarToggleEl.textContent = '\u2039';
+    clearFarmBarCollapseTimer();
+  }
+
+  function collapseFarmBar() {
+    if (!farmBarExpanded) return;
+    farmBarExpanded = false;
+    if (farmBarExpandEl) farmBarExpandEl.classList.remove('farm-bar-open');
+    if (farmBarToggleEl) farmBarToggleEl.textContent = '\u203A';
+    clearFarmBarCollapseTimer();
+  }
+
+  function clearFarmBarCollapseTimer() {
+    if (farmBarCollapseTimer) {
+      clearTimeout(farmBarCollapseTimer);
+      farmBarCollapseTimer = null;
+    }
+  }
+
+  function startFarmBarCollapseTimer() {
+    clearFarmBarCollapseTimer();
+    farmBarCollapseTimer = setTimeout(function () {
+      collapseFarmBar();
+    }, 5000);
+  }
+
+  var farmBarMouseBound = false;
+
   // ── Dashboard tile creation ──────────────────────────
   function createDashboardTiles() {
     while (farmBarEl.firstChild) farmBarEl.removeChild(farmBarEl.firstChild);
+
+    // Reset expand state on rebuild
+    farmBarExpanded = false;
+    clearFarmBarCollapseTimer();
+
+    // Create expand container for secondary tiles
+    farmBarExpandEl = document.createElement('div');
+    farmBarExpandEl.className = 'farm-bar-expand';
 
     for (var i = 0; i < DASHBOARD_TILES.length; i++) {
       var conf = DASHBOARD_TILES[i];
@@ -1142,7 +1640,46 @@
         continue;
       }
 
-      farmBarEl.appendChild(createDashTile(conf));
+      var tile = createDashTile(conf);
+
+      if (conf.key === 'crops') {
+        // Crops tile stays directly in farm bar
+        farmBarEl.appendChild(tile);
+      } else {
+        // All other tiles go into the expand container
+        farmBarExpandEl.appendChild(tile);
+      }
+    }
+
+    // Add expand container after crops tile
+    farmBarEl.appendChild(farmBarExpandEl);
+
+    // Add toggle button
+    farmBarToggleEl = document.createElement('button');
+    farmBarToggleEl.className = 'farm-bar-toggle';
+    farmBarToggleEl.textContent = '\u203A';
+    farmBarToggleEl.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (farmBarExpanded) {
+        collapseFarmBar();
+      } else {
+        expandFarmBar();
+        startFarmBarCollapseTimer();
+      }
+    });
+    farmBarEl.appendChild(farmBarToggleEl);
+
+    // Auto-collapse on mouse leave (bind once)
+    if (!farmBarMouseBound) {
+      farmBarMouseBound = true;
+      farmBarEl.addEventListener('mouseleave', function () {
+        if (farmBarExpanded) {
+          startFarmBarCollapseTimer();
+        }
+      });
+      farmBarEl.addEventListener('mouseenter', function () {
+        clearFarmBarCollapseTimer();
+      });
     }
   }
 
@@ -1151,12 +1688,12 @@
     tile.className = 'farm-dash-tile';
     tile.setAttribute('data-tile', conf.key);
 
-    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink') {
+    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium') {
       tile.classList.add('farm-dash-link');
     }
 
     // Always visible on mobile (not hidden when count=0)
-    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink') {
+    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium') {
       tile.classList.add('farm-dash-always');
     }
 
@@ -1181,21 +1718,41 @@
     }
 
     // Click handler
-    if (conf.key === 'tdLink') {
+    if (conf.key === 'compendium') {
       tile.addEventListener('click', function () {
+        collapseFarmBar();
+        if (window.CompendiumAPI && window.CompendiumAPI.open) {
+          window.CompendiumAPI.open();
+        }
+      });
+    } else if (conf.key === 'tdLink') {
+      tile.addEventListener('click', function () {
+        collapseFarmBar();
         window.location.href = '/td/#td-game-area';
       });
     } else if (conf.key === 'shopLink') {
       tile.addEventListener('click', function () {
+        collapseFarmBar();
         window.location.href = '/shops/';
       });
     } else if (conf.key === 'resourceLink') {
       tile.addEventListener('click', function () {
+        collapseFarmBar();
         var sidebar = document.getElementById('fp-sidebar');
         if (sidebar) {
           sidebar.scrollIntoView({ behavior: 'smooth' });
         } else {
           window.location.href = '/farm/game/#fp-sidebar';
+        }
+      });
+    } else if (conf.key === 'farmLink') {
+      tile.addEventListener('click', function () {
+        collapseFarmBar();
+        var grid = document.getElementById('fp-grid');
+        if (grid) {
+          grid.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.location.href = '/farm/game/#fp-grid';
         }
       });
     } else {
@@ -1243,7 +1800,7 @@
   }
 
   function updateDashTile(tile, conf) {
-    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink') return;
+    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium') return;
 
     var countEl = tile.querySelector('.farm-dash-count');
     var count = getDashTileCount(conf);
@@ -1883,6 +2440,7 @@
             showSeedFloat(i, cropKey);
           }
 
+          document.dispatchEvent(new CustomEvent('farm-harvest', { detail: { crop: cropKey, amount: val } }));
           farmState.plots[i] = { crop: null, wateredAt: null };
         }
       }
@@ -1976,6 +2534,7 @@
       updatePlots();
       showJBFloat(plotIndex, sellValue);
 
+      document.dispatchEvent(new CustomEvent('farm-harvest', { detail: { crop: cropKey, amount: sellValue } }));
       return { crop: cropKey, amount: sellValue };
     },
 
@@ -1986,6 +2545,7 @@
       if (plot && plot.crop) return false; // already planted
 
       plantSeed(plotIndex, cropKey);
+      document.dispatchEvent(new CustomEvent('farm-plant', { detail: { crop: cropKey } }));
       return true;
     },
 
@@ -2107,6 +2667,7 @@
       applyFarmhouseBonuses();
       renderFarmhouseSprite();
       updatePlots();
+      document.dispatchEvent(new CustomEvent('farm-farmhouse-upgrade', { detail: { level: n } }));
     },
 
     isFreeCrop: function (cropKey) {
@@ -2146,10 +2707,15 @@
           seedCost: CROPS[k].seedCost,
           icon: CROPS[k].icon,
           rarity: CROPS[k].rarity || 'common',
+          hint: CROPS[k].hint || '',
           free: !!FREE_CROPS[k]
         };
       }
       return defs;
+    },
+
+    getCropCategories: function () {
+      return JSON.parse(JSON.stringify(CROP_CATEGORIES));
     },
 
     getEffectiveGrowTime: function (cropKey) {
