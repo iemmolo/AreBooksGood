@@ -603,13 +603,13 @@ a.site-title {
 /* ============================================
    Shops Sub-Nav
    ============================================ */
-.shops-sub-nav {
+.pets-sub-nav {
   border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
   padding-top: 8px;
   margin-top: 8px;
 }
 
-.shops-sub-nav-links {
+.pets-sub-nav-links {
   display: flex;
   align-items: center;
   gap: 1.5em;
@@ -618,23 +618,23 @@ a.site-title {
   padding: 0;
 }
 
-.shops-sub-nav-links li {
+.pets-sub-nav-links li {
   padding: 0;
   margin: 0;
 }
 
-.shops-sub-nav-links li::marker {
+.pets-sub-nav-links li::marker {
   content: none;
 }
 
-.shops-sub-nav-links a {
+.pets-sub-nav-links a {
   color: color-mix(in srgb, var(--foreground) 45%, transparent);
   text-decoration: none;
   font-size: 0.9em;
 }
 
-.shops-sub-nav-links a:hover,
-.shops-sub-nav-links a.active {
+.pets-sub-nav-links a:hover,
+.pets-sub-nav-links a.active {
   color: var(--accent);
 }
 
@@ -777,20 +777,18 @@ a.site-title {
 }
 
 .casino-tile-pet {
-  height: 0;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
 }
 
-.casino-tile-pet-pixel {
-  position: relative;
+.casino-tile-pet-sprite {
   opacity: 0.5;
   transition: opacity 0.2s;
 }
 
-.casino-tile:hover .casino-tile-pet-pixel {
+.casino-tile:hover .casino-tile-pet-sprite {
   opacity: 1;
 }
 
@@ -858,7 +856,7 @@ a.site-title {
   .chess-sub-nav-links,
   .farm-sub-nav-links,
   .games-sub-nav-links,
-  .shops-sub-nav-links {
+  .pets-sub-nav-links {
     flex-wrap: wrap;
     gap: 0.5em 0.8em;
     font-size: 0.85em;

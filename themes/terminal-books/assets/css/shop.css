@@ -29,7 +29,7 @@
 /* ── Shop Grid ─────────────────────────────── */
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -201,15 +201,338 @@
   color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
+/* ── Egg Cards ────────────────────────────── */
+.shop-egg-card {
+  text-align: center;
+}
+
+.shop-egg-preview {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Egg Sprites (items.png row 1) ────────── */
+.egg-sprite {
+  width: 16px;
+  height: 16px;
+  background-image: url('/images/pets/items.png');
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform: scale(3);
+  transform-origin: center;
+}
+.egg-sprite-common    { background-position: 0px 0px; }
+.egg-sprite-rare      { background-position: -16px 0px; }
+.egg-sprite-legendary { background-position: -64px 0px; }
+
+/* ── Owned Pets Grid ─────────────────────── */
+.shop-owned-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.shop-owned-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 10px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.shop-owned-card:hover {
+  border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.shop-owned-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.shop-owned-name {
+  font-size: 0.8em;
+  font-weight: 600;
+}
+
+.shop-owned-level {
+  font-size: 0.7em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.shop-owned-type {
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  font-size: 0.55em;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--background);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  background-image: url('/images/pets/icons.png');
+  background-repeat: no-repeat;
+  background-size: 765px 312px;
+  image-rendering: pixelated;
+  border: none;
+}
+.shop-owned-type.hatch-badge-fire   { background-position: -24px  -168px; }
+.shop-owned-type.hatch-badge-aqua   { background-position: -96px  -168px; }
+.shop-owned-type.hatch-badge-mystic { background-position: -168px -168px; }
+.shop-owned-type.hatch-badge-tech   { background-position: -240px -168px; }
+.shop-owned-type.hatch-badge-nature { background-position: -24px  -216px; }
+.shop-owned-type.hatch-badge-shadow { background-position: -168px -216px; }
+
+.shop-owned-xp {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.shop-owned-active-label {
+  font-size: 0.7em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.shop-owned-btn {
+  font-size: 0.7em;
+  padding: 3px 8px;
+}
+
+/* ── Collection / Pokedex ────────────────── */
+.collection-stats {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.collection-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.collection-filter-btn {
+  background: transparent;
+  background-image: none;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  text-shadow: none;
+  padding: 3px 8px;
+  font: inherit;
+  font-size: 0.75em;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  width: auto;
+  height: auto;
+  line-height: normal;
+}
+
+.collection-filter-btn:hover {
+  border-color: currentColor;
+}
+
+.collection-filter-active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.collection-cell {
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding: 8px 4px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.collection-cell-unknown {
+  opacity: 0.5;
+}
+
+.collection-sprite {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collection-name {
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.collection-level {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.collection-type {
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  font-size: 0.55em;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--background);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  background-image: url('/images/pets/icons.png');
+  background-repeat: no-repeat;
+  background-size: 765px 312px;
+  image-rendering: pixelated;
+  border: none;
+}
+.collection-type.hatch-badge-fire   { background-position: -24px  -168px; }
+.collection-type.hatch-badge-aqua   { background-position: -96px  -168px; }
+.collection-type.hatch-badge-mystic { background-position: -168px -168px; }
+.collection-type.hatch-badge-tech   { background-position: -240px -168px; }
+.collection-type.hatch-badge-nature { background-position: -24px  -216px; }
+.collection-type.hatch-badge-shadow { background-position: -168px -216px; }
+
+/* ── Max Level Indicators ─────────────────── */
+.shop-owned-level-max,
+.collection-level-max,
+.shop-active-level-max { color: #ffd700; font-weight: 600; }
+
+.shop-evo-card-max {
+  border-color: color-mix(in srgb, #ffd700 40%, transparent);
+  background: color-mix(in srgb, #ffd700 5%, transparent);
+}
+.shop-evo-max-label { font-size: 0.85em; color: #ffd700; font-weight: 600; }
+
+/* ── Tier / Rarity Badges ─────────────────── */
+.shop-owned-tier, .collection-tier {
+  font-size: 0.6em; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 1px 5px; margin-bottom: 2px;
+}
+.shop-tier-common, .collection-tier-common { color: color-mix(in srgb, var(--foreground) 60%, transparent); }
+.shop-tier-rare, .collection-tier-rare { color: var(--accent); }
+.shop-tier-legendary, .collection-tier-legendary { color: #ffd700; }
+.shop-owned-card.shop-owned-legendary { border-color: color-mix(in srgb, #ffd700 40%, transparent); }
+.collection-cell.collection-cell-legendary { border-color: color-mix(in srgb, #ffd700 30%, transparent); }
+
+/* ── Passive Descriptions ─────────────────── */
+.shop-active-passive-desc { font-size: 0.8em; color: color-mix(in srgb, var(--foreground) 55%, transparent); display: block; margin-top: 2px; }
+.shop-active-farm-desc { color: #4a9eff; }
+
+/* ── Collection Tier Headers ──────────────── */
+.collection-tier-header {
+  grid-column: 1 / -1;
+  font-size: 0.85em; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; padding: 8px 0 4px; margin-top: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+.collection-tier-header:first-child { margin-top: 0; }
+.collection-tier-header-common { color: color-mix(in srgb, var(--foreground) 70%, transparent); }
+.collection-tier-header-rare { color: var(--accent); }
+.collection-tier-header-legendary { color: #ffd700; }
+
+/* ── Evolution Sprite Previews ────────────── */
+.shop-evo-sprites {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin-bottom: 8px;
+}
+.shop-evo-arrow {
+  font-size: 1.2em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+/* ── Owned Card XP Progress Bar ─────────── */
+.shop-owned-xp-bar {
+  width: 100%; height: 4px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  margin-top: 2px;
+}
+.shop-owned-xp-fill {
+  height: 100%; background: var(--accent); transition: width 0.3s;
+}
+
+/* ── Duplicate Flash ─────────────────────── */
+@keyframes shop-owned-flash-anim {
+  0% { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.6); }
+  50% { border-color: #ffd700; box-shadow: 0 0 16px rgba(255,215,0,0.4); }
+  100% { border-color: color-mix(in srgb, var(--foreground) 20%, transparent); box-shadow: none; }
+}
+.shop-owned-flash { animation: shop-owned-flash-anim 1.2s ease-out forwards; }
+
+/* ── Creature Detail Modal ───────────────── */
+.collection-modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 10010;
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  animation: hatch-fade-in 0.3s ease-out;
+}
+.collection-modal {
+  background: var(--background);
+  border: 2px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  padding: 24px; max-width: 320px; width: 90%;
+  text-align: center; display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+}
+.collection-modal-name { font-weight: 600; font-size: 1.1em; }
+.collection-modal-sprite {
+  width: 96px; height: 96px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 8px 0;
+}
+.collection-modal-tier {
+  font-size: 0.75em; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.collection-modal-stat {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  line-height: 1.4;
+}
+.collection-modal-passive {
+  font-size: 0.8em; color: var(--accent);
+  font-style: italic; line-height: 1.4; margin-top: 4px;
+}
+.collection-modal-close {
+  margin-top: 12px; font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  cursor: pointer;
+}
+.collection-modal-close:hover { color: var(--accent); }
+
 /* ── Responsive ────────────────────────────── */
 @media (max-width: 600px) {
   .shop-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .shop-owned-grid,
+  .collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 400px) {
   .shop-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shop-owned-grid,
+  .collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

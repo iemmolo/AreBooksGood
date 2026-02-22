@@ -117,7 +117,7 @@
 {{- end }}
 
 {{/* Pet Shop CSS */}}
-{{ if eq .Type "pet-shop" -}}
+{{ if or (eq .Type "hatchery") (eq .Type "evolution") (eq .Type "collection") -}}
   {{- $shop := resources.Get "css/shop.css" | minify -}}
   <link rel="stylesheet" href="{{ $shop.RelPermalink }}">
 {{- end }}

@@ -19,7 +19,7 @@
   <script src="{{ $js.RelPermalink }}"></script>
   {{- $wallet := resources.Get "js/wallet.js" | minify -}}
   <script src="{{ $wallet.RelPermalink }}"></script>
-  {{ if and .IsSection (ne .Type "chess") (ne .Section "games") (ne .Section "shops") -}}
+  {{ if and .IsSection (ne .Type "chess") (ne .Section "games") (ne .Section "pets") -}}
     {{- $filter := resources.Get "js/review-filter.js" | minify -}}
     <script src="{{ $filter.RelPermalink }}"></script>
   {{- end }}
@@ -75,7 +75,7 @@
     {{- $sr := resources.Get "js/silk-road.js" | minify -}}
     <script src="{{ $sr.RelPermalink }}"></script>
   {{- end }}
-  {{ if eq .Type "pet-shop" -}}
+  {{ if or (eq .Type "hatchery") (eq .Type "evolution") (eq .Type "collection") -}}
     {{- $shop := resources.Get "js/shop.js" | minify -}}
     <script src="{{ $shop.RelPermalink }}"></script>
   {{- end }}

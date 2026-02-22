@@ -7,52 +7,86 @@
   var IDLE_LOOK_DELAY = 1500; // time pet looks at an element
   var RETURN_DELAY = 500;
 
-  // ── Farm speech lines per pet ───────────────────────
+  // ── Type helper ────────────────────────────────────
+  function getPetType(petId) {
+    if (window.PetSystem && window.PetSystem.getCreatureType) {
+      return window.PetSystem.getCreatureType(petId) || 'nature';
+    }
+    // Fallback for legacy
+    var legacyTypes = { cat: 'nature', dragon: 'fire', robot: 'tech' };
+    return legacyTypes[petId] || 'nature';
+  }
+
+  // ── Farm speech lines per type ────────────────────
   var FARM_SPEECH = {
-    cat:    ['*digs in dirt*', 'fresh catnip?', '*paws at sprout*', 'harvest time!'],
-    dragon: ['*warms the soil*', 'grow faster!', '*smoke fertilizer*', 'FIRE HARVEST'],
-    robot:  ['CROP STATUS: READY', 'harvesting...', 'yield: optimal', 'soil pH: 6.5']
+    fire:   ['*warms the soil*', 'grow faster!', '*smoke fertilizer*', 'FIRE HARVEST'],
+    nature: ['*digs in dirt*', 'fresh catnip?', '*paws at sprout*', 'harvest time!'],
+    tech:   ['CROP STATUS: READY', 'harvesting...', 'yield: optimal', 'soil pH: 6.5'],
+    aqua:   ['*waters crops*', 'rain dance!', '*sprinkles*', 'hydration time'],
+    shadow: ['*lurks in field*', 'dark harvest...', '*shadow grows*', 'night yields'],
+    mystic: ['*enchants soil*', 'grow, little one', '*sparkle dust*', 'magic harvest']
   };
 
   // ── Idle interaction speech per target ───────────────
   var IDLE_SPEECH = {
     wallet: {
-      cat:    ['my coins!', '*counts fish*', 'need more treats', '*taps wallet*'],
-      dragon: ['my hoard!', 'not enough gold', '*guards coins*', 'MINE'],
-      robot:  ['balance: checked', 'funds: noted', 'calculating ROI', 'portfolio: stable']
+      fire:   ['my hoard!', 'not enough gold', '*guards coins*', 'MINE'],
+      nature: ['my coins!', '*counts fish*', 'need more treats', '*taps wallet*'],
+      tech:   ['balance: checked', 'funds: noted', 'calculating ROI', 'portfolio: stable'],
+      aqua:   ['coins flow in~', '*splashes wallet*', 'liquid assets!', 'cashflow!'],
+      shadow: ['*steals a peek*', 'hidden fortune', '*hoards in dark*', 'secret stash'],
+      mystic: ['*conjures coins*', 'enchanted gold~', 'fortune foretold', '*mystical glow*']
     },
     theme: {
-      cat:    ['ooh colors', '*bats at switch*', 'dark mode plz', '*curious paw*'],
-      dragon: ['matrix looks cool', '*smoke changes color*', 'pretty lights', 'fire theme when?'],
-      robot:  ['UI PREFERENCE: noted', 'theme: optimal', 'display calibrated', 'contrast: good']
+      fire:   ['matrix looks cool', '*smoke changes color*', 'pretty lights', 'fire theme when?'],
+      nature: ['ooh colors', '*bats at switch*', 'dark mode plz', '*curious paw*'],
+      tech:   ['UI PREFERENCE: noted', 'theme: optimal', 'display calibrated', 'contrast: good'],
+      aqua:   ['ocean blue plz', '*ripple effect*', 'cool tones~', 'water theme!'],
+      shadow: ['darker...', '*dims the lights*', 'void mode', 'embrace the dark'],
+      mystic: ['*prismatic shift*', 'aurora colors!', 'enchanted palette', '*sparkles*']
     },
     title: {
-      cat:    ['are books good?', 'yes.', '*rubs against logo*', 'I prefer fish books'],
-      dragon: ['nice site name', '*perches on title*', 'books have gold?', 'good domain'],
-      robot:  ['SITE: identified', 'brand: recognized', 'title: verified', 'name: approved']
+      fire:   ['nice site name', '*perches on title*', 'books have gold?', 'good domain'],
+      nature: ['are books good?', 'yes.', '*rubs against logo*', 'I prefer fish books'],
+      tech:   ['SITE: identified', 'brand: recognized', 'title: verified', 'name: approved'],
+      aqua:   ['*splashes title*', 'diving into books!', 'a sea of words~', 'deep reading'],
+      shadow: ['*hides behind logo*', 'dark tales...', 'forbidden books', '*lurks at title*'],
+      mystic: ['*enchants the title*', 'magical words~', 'spellbound!', '*glowing runes*']
     },
     nav: {
-      cat:    ['where does this go?', '*curious sniff*', 'adventure!', '*paws at link*'],
-      dragon: ['treasure map!', '*follows the link*', 'new territory', 'explore!'],
-      robot:  ['LINK: scanning', 'href: analyzed', 'navigation: logged', 'route: mapped']
+      fire:   ['treasure map!', '*follows the link*', 'new territory', 'explore!'],
+      nature: ['where does this go?', '*curious sniff*', 'adventure!', '*paws at link*'],
+      tech:   ['LINK: scanning', 'href: analyzed', 'navigation: logged', 'route: mapped'],
+      aqua:   ['*rides the current*', 'go with the flow!', 'downstream~', '*surfs links*'],
+      shadow: ['*sneaks through link*', 'hidden path...', 'secret passage', '*slips away*'],
+      mystic: ['*opens portal*', 'magic doorway~', 'where does it lead?', '*arcane gateway*']
     },
     emptyPlot: {
-      cat:    ['*digs in dirt*', 'plant something!', '*buries toy*', 'empty...'],
-      dragon: ['needs seeds', '*pokes dirt*', 'barren land', 'plant fire flowers!'],
-      robot:  ['PLOT: vacant', 'soil: idle', 'suggestion: plant crop', 'utilization: 0%']
+      fire:   ['needs seeds', '*pokes dirt*', 'barren land', 'plant fire flowers!'],
+      nature: ['*digs in dirt*', 'plant something!', '*buries toy*', 'empty...'],
+      tech:   ['PLOT: vacant', 'soil: idle', 'suggestion: plant crop', 'utilization: 0%'],
+      aqua:   ['needs water first', '*puddles form*', 'irrigate this!', 'dry soil...'],
+      shadow: ['*buries something*', 'dark seeds...', 'nightshade plot', '*digs in shadow*'],
+      mystic: ['*blesses the soil*', 'enchant & plant~', 'magic seeds!', '*ritual circle*']
     },
     teleporter: {
-      cat:    ['*sniffs pad*', 'beam me up?', 'ooh glowy', '*paws at light*'],
-      dragon: ['*sniffs portal*', 'farm awaits!', 'warp pad!', 'beam energy!'],
-      robot:  ['TELEPORTER: online', 'coordinates locked', 'quantum link: stable', 'transport ready']
+      fire:   ['*sniffs portal*', 'farm awaits!', 'warp pad!', 'beam energy!'],
+      nature: ['*sniffs pad*', 'beam me up?', 'ooh glowy', '*paws at light*'],
+      tech:   ['TELEPORTER: online', 'coordinates locked', 'quantum link: stable', 'transport ready'],
+      aqua:   ['*rides the beam*', 'whirlpool warp!', 'tidal transport~', '*splashes in*'],
+      shadow: ['*shadow steps*', 'void travel...', 'dark warp', '*phases through*'],
+      mystic: ['*casts teleport*', 'arcane gateway~', 'blink!', '*mystical beam*']
     }
   };
 
   // ── Beamed idle speech (mini pet at farm) ───────────
   var BEAMED_IDLE_SPEECH = {
-    cat:    ['*stretches on grass*', 'nice farm~', '*rolls in dirt*', 'comfy here', '*purrs at farmhouse*'],
-    dragon: ['*basks in sun*', 'good land', '*sniffs crops*', 'my domain', '*curls up by house*'],
-    robot:  ['PERIMETER: secure', 'farm status: good', 'idle mode: active', 'all systems nominal', 'scanning crops...']
+    fire:   ['*basks in sun*', 'good land', '*sniffs crops*', 'my domain', '*curls up by house*'],
+    nature: ['*stretches on grass*', 'nice farm~', '*rolls in dirt*', 'comfy here', '*purrs at farmhouse*'],
+    tech:   ['PERIMETER: secure', 'farm status: good', 'idle mode: active', 'all systems nominal', 'scanning crops...'],
+    aqua:   ['*splashes in puddle*', 'well watered~', '*listens to rain*', 'fresh and cool', '*drips contentedly*'],
+    shadow: ['*hides in shade*', 'quiet fields...', '*watches from dark*', 'night shift', '*lurks by fence*'],
+    mystic: ['*meditates on grass*', 'enchanted land~', '*glows softly*', 'magic in the soil', '*hums a spell*']
   };
 
   // ── State ───────────────────────────────────────────
@@ -98,6 +132,7 @@
     var farm = getFarmAPI();
     if (!farm) { busy = false; return; }
 
+    var petType = getPetType(petId);
     var plots = farm.getPlots();
 
     // 50% chance: walk to a random empty plot and comment
@@ -112,7 +147,7 @@
       farm.setMiniPetBusy(true);
 
       farm.walkMiniPetToPlot(pick.index, function () {
-        var lines = IDLE_SPEECH.emptyPlot[petId] || IDLE_SPEECH.emptyPlot.cat;
+        var lines = IDLE_SPEECH.emptyPlot[petType] || IDLE_SPEECH.emptyPlot.nature;
         farm.miniPetSpeak(randomMessage(lines));
 
         setTimeout(function () {
@@ -126,7 +161,7 @@
     }
 
     // Otherwise speak an idle line at home
-    var idleLines = BEAMED_IDLE_SPEECH[petId] || BEAMED_IDLE_SPEECH.cat;
+    var idleLines = BEAMED_IDLE_SPEECH[petType] || BEAMED_IDLE_SPEECH.nature;
     farm.miniPetSpeak(randomMessage(idleLines));
   }
 
@@ -134,6 +169,8 @@
   function idleInteraction(petId) {
     var ps = getPetSystem();
     if (!ps) { busy = false; return; }
+
+    var petType = getPetType(petId);
 
     // Build list of valid targets
     var targets = [];
@@ -193,7 +230,7 @@
         // Speak reaction
         var speechSet = IDLE_SPEECH[target.key];
         if (speechSet) {
-          var lines = speechSet[petId] || speechSet.cat;
+          var lines = speechSet[petType] || speechSet.nature;
           ps.speak(randomMessage(lines));
         }
 
@@ -217,15 +254,20 @@
     if (ps) ps.setFarming(false, null);
   }
 
-  // ── Dragon "Warm Soil" bonus ────────────────────────
-  function applyDragonBonus() {
+  // ── Type-based soil bonus ──────────────────────────
+  function applyTypeBonus() {
     var ps = getPetSystem();
     var farm = getFarmAPI();
     if (!ps || !farm) return;
 
     var state = ps.getState();
-    if (state && state.petId === 'dragon') {
+    if (!state) { farm.setGrowTimeMultiplier(1); return; }
+
+    var petType = getPetType(state.petId);
+    if (petType === 'fire') {
       farm.setGrowTimeMultiplier(0.9);
+    } else if (petType === 'aqua') {
+      farm.setGrowTimeMultiplier(0.95);
     } else {
       farm.setGrowTimeMultiplier(1);
     }
@@ -241,6 +283,7 @@
     if (!state) { scheduleTick(); return; }
 
     var petId = state.petId;
+    var petType = getPetType(petId);
     var beamed = ps.isBeamed && ps.isBeamed();
 
     // ── Beamed mode: use mini pet on farm ──────────
@@ -256,7 +299,7 @@
 
       // Priority 4: 10% chance random farm speech
       if (Math.random() < 0.10) {
-        var bLines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
+        var bLines = FARM_SPEECH[petType] || FARM_SPEECH.nature;
         farm.miniPetSpeak(randomMessage(bLines));
       }
 
@@ -281,7 +324,7 @@
 
     // Priority 4: 10% chance random farm speech
     if (Math.random() < 0.10) {
-      var lines = FARM_SPEECH[petId] || FARM_SPEECH.cat;
+      var lines = FARM_SPEECH[petType] || FARM_SPEECH.nature;
       ps.speak(randomMessage(lines));
     }
 
@@ -293,7 +336,7 @@
     aiTimer = setTimeout(aiTick, randomBetween(AI_TICK_MIN, AI_TICK_MAX));
   }
 
-  // ── Wrap PetSystem.reload for dragon bonus refresh ──
+  // ── Wrap PetSystem.reload for type bonus refresh ────
   function wrapReload() {
     var ps = getPetSystem();
     if (!ps || !ps.reload) return;
@@ -301,8 +344,8 @@
     var origReload = ps.reload;
     ps.reload = function () {
       origReload();
-      // Re-apply dragon bonus after pet switch
-      setTimeout(applyDragonBonus, 100);
+      // Re-apply type bonus after pet switch
+      setTimeout(applyTypeBonus, 100);
     };
   }
 
@@ -323,8 +366,8 @@
     }
     if (!farm) return;
 
-    // Apply dragon bonus on load
-    applyDragonBonus();
+    // Apply type bonus on load
+    applyTypeBonus();
 
     // Wrap reload for pet switches
     wrapReload();

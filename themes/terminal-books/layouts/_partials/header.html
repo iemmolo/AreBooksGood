@@ -38,7 +38,7 @@
   <ul class="farm-sub-nav-links">
     <li><a href="{{ "farm/game/" | relURL }}"{{ if eq .RelPermalink "/farm/game/" }} class="active"{{ end }}>Farm</a></li>
     <li><a href="{{ "farm/tower-defense/" | relURL }}"{{ if eq .RelPermalink "/farm/tower-defense/" }} class="active"{{ end }}>Tower Defense</a></li>
-    <li><a href="{{ "shops/" | relURL }}"{{ if eq .RelPermalink "/shops/" }} class="active"{{ end }}>Shops</a></li>
+    <li><a href="{{ "farm/silk-road/" | relURL }}"{{ if eq .RelPermalink "/farm/silk-road/" }} class="active"{{ end }}>Silk Road</a></li>
   </ul>
 </nav>
 {{ end }}
@@ -57,11 +57,12 @@
   </ul>
 </nav>
 {{ end }}
-{{ if eq .Section "shops" }}
-<nav class="shops-sub-nav">
-  <ul class="shops-sub-nav-links">
-    <li><a href="{{ "shops/pet-shop/" | relURL }}"{{ if eq .RelPermalink "/shops/pet-shop/" }} class="active"{{ end }}>Pet Shop</a></li>
-    <li><a href="{{ "shops/silk-road/" | relURL }}"{{ if eq .RelPermalink "/shops/silk-road/" }} class="active"{{ end }}>Silk Road</a></li>
+{{ if eq .Section "pets" }}
+<nav class="pets-sub-nav">
+  <ul class="pets-sub-nav-links">
+    <li><a href="{{ "pets/hatchery/" | relURL }}"{{ if eq .RelPermalink "/pets/hatchery/" }} class="active"{{ end }}>Hatchery</a></li>
+    <li><a href="{{ "pets/evolution/" | relURL }}"{{ if eq .RelPermalink "/pets/evolution/" }} class="active"{{ end }}>Evolution</a></li>
+    <li><a href="{{ "pets/collection/" | relURL }}"{{ if eq .RelPermalink "/pets/collection/" }} class="active"{{ end }}>Collection</a></li>
   </ul>
 </nav>
 {{ end }}

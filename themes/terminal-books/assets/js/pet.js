@@ -2,14 +2,15 @@
   'use strict';
 
   var PET_STORAGE_KEY = 'arebooksgood-pet';
-  var SPRITE_SIZE = 16;
-  var PIXEL_SCALE = 3;
-  var MOBILE_PIXEL_SCALE = 3;
+  var SPRITE_DISPLAY_SIZE = 48;  // native sprite size (48x48)
   var MOBILE_BREAK = 768;
   var IDLE_TIMEOUT = 30000;     // 30s no mouse → sleep
   var ANIMATION_FPS = 4;        // sprite frame rate
   var FOLLOW_OFFSET_X = 10;
   var FOLLOW_OFFSET_Y = 10;
+
+  // ── Catalog (loaded async) ─────────────────────────
+  var catalog = null;
 
   // ── State ───────────────────────────────────────────
   var petState = null;
@@ -60,14 +61,6 @@
 
   // ── Load sprite data ───────────────────────────────
   function loadSpriteData(callback) {
-    // Try to fetch from Hugo's data directory
-    var script = document.querySelector('script[src*="pet.js"], script[src*="pet.min.js"]');
-    var base = '';
-    if (script) {
-      var src = script.getAttribute('src');
-      base = src.substring(0, src.lastIndexOf('/js/'));
-    }
-
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/data/petsprites.json', true);
     xhr.onload = function () {
@@ -76,7 +69,6 @@
           spriteData = JSON.parse(xhr.responseText);
           callback();
         } catch (e) {
-          // Fallback: inline minimal data
           spriteData = null;
           callback();
         }
@@ -90,6 +82,84 @@
       callback();
     };
     xhr.send();
+  }
+
+  // ── Load catalog ──────────────────────────────────
+  function loadCatalog(callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/data/petcatalog.json', true);
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        try {
+          catalog = JSON.parse(xhr.responseText);
+        } catch (e) {
+          catalog = null;
+        }
+      }
+      callback();
+    };
+    xhr.onerror = function () { callback(); };
+    xhr.send();
+  }
+
+  // ── Get creature type from catalog ────────────────
+  function getCreatureType(petId) {
+    if (!catalog || !catalog.creatures) return null;
+    // Resolve legacy IDs
+    var id = petId;
+    if (catalog.legacyMap && catalog.legacyMap[petId]) {
+      id = catalog.legacyMap[petId];
+    }
+    var creature = catalog.creatures[id];
+    return creature ? creature.type : null;
+  }
+
+  function getCreatureInfo(petId) {
+    if (!catalog || !catalog.creatures) return null;
+    var id = petId;
+    if (catalog.legacyMap && catalog.legacyMap[petId]) {
+      id = catalog.legacyMap[petId];
+    }
+    return catalog.creatures[id] || null;
+  }
+
+  // ── Migrate pet state (legacy IDs + mergeXP) ─────
+  function migratePetState(state) {
+    if (!catalog) return state;
+    if (state._migrated) return state;
+
+    var legacyMap = catalog.legacyMap || {};
+    var newPets = {};
+    var newActive = state.activePet;
+
+    for (var oldId in state.pets) {
+      if (!state.pets.hasOwnProperty(oldId)) continue;
+      var pet = state.pets[oldId];
+      var newId = legacyMap[oldId] || oldId;
+
+      // Add mergeXP field if missing
+      if (typeof pet.mergeXP === 'undefined') {
+        pet.mergeXP = 0;
+      }
+
+      // Cap level to creature's maxLevel
+      var creature = catalog.creatures[newId];
+      if (creature && pet.level > creature.maxLevel) {
+        pet.level = creature.maxLevel;
+      }
+
+      newPets[newId] = pet;
+
+      // Update active pet reference
+      if (state.activePet === oldId) {
+        newActive = newId;
+      }
+    }
+
+    state.pets = newPets;
+    state.activePet = newActive;
+    state._migrated = true;
+    return state;
   }
 
   // ── Pet State Management ────────────────────────────
@@ -154,52 +224,22 @@
     } catch (e) {}
   }
 
-  // ── Sprite Rendering (CSS box-shadow) ───────────────
-  function getScale() {
-    return isMobile ? MOBILE_PIXEL_SCALE : PIXEL_SCALE;
+  // ── Sprite Rendering (sprite sheet) ─────────────────
+  function getSpriteInfo(petId) {
+    if (!spriteData || !petId) return null;
+    // Resolve spriteId from catalog if available
+    var spriteId = petId;
+    if (catalog && catalog.creatures && catalog.creatures[petId]) {
+      spriteId = catalog.creatures[petId].spriteId || petId;
+    }
+    var petData = spriteData[spriteId];
+    if (!petData || !petData.sheet) return null;
+    return petData;
   }
 
-  function resolveFrames(petId, level, anim) {
-    if (!spriteData) return null;
-    var petData = spriteData[petId];
-    if (!petData) return null;
-
-    var levelData = petData[String(level)];
-    if (!levelData) return null;
-
-    var frames = levelData[anim];
-
-    // Handle string references (e.g. "1" means use level 1, "cat.1" means use cat level 1)
-    if (typeof frames === 'string') {
-      if (frames.indexOf('.') !== -1) {
-        var parts = frames.split('.');
-        return resolveFrames(parts[0], parseInt(parts[1], 10), anim);
-      } else {
-        return resolveFrames(petId, parseInt(frames, 10), anim);
-      }
-    }
-
-    return frames;
-  }
-
-  function renderSpriteFrame(pixelGrid) {
-    if (!pixelGrid) return '';
-
-    var scale = getScale();
-    var shadows = [];
-
-    for (var i = 0; i < pixelGrid.length; i++) {
-      if (pixelGrid[i] === 0) continue;
-
-      var px = i % SPRITE_SIZE;
-      var py = Math.floor(i / SPRITE_SIZE);
-      var x = px * scale;
-      var y = py * scale;
-      var color = pixelGrid[i] === 1 ? 'var(--foreground)' : pixelGrid[i] === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-      shadows.push(x + 'px ' + y + 'px 0 0.5px ' + color);
-    }
-
-    return shadows.join(',');
+  function getFrameCount(petId) {
+    var info = getSpriteInfo(petId);
+    return info ? info.frames : 1;
   }
 
   function updateSprite() {
@@ -208,75 +248,43 @@
     var pet = petState.pets[petState.activePet];
     if (!pet) return;
 
-    var frames = resolveFrames(petState.activePet, pet.level, currentAnim);
-    if (!frames || frames.length === 0) {
-      // Fallback to idle
-      frames = resolveFrames(petState.activePet, pet.level, 'idle');
-      if (!frames || frames.length === 0) return;
+    var info = getSpriteInfo(petState.activePet);
+    if (!info) return;
+
+    var frameCount = info.frames || 1;
+    var fw = info.frameWidth || 48;
+
+    // Each frame in the strip is an evolution level, not an animation frame
+    // Clamp to maxLevel from sprite data (prevents blank frames on 2EVO/Uniques)
+    var maxLevel = info.maxLevel || frameCount;
+    var frameOffset = info.frameOffset || 0;
+    var frameIdx = Math.min(frameOffset + (pet.level || 1) - 1, frameCount - 1);
+
+    // Create or reuse sprite image div
+    var imgEl = spriteEl.querySelector('.pet-sprite-img');
+    if (!imgEl) {
+      // Remove any old box-shadow canvas
+      var oldCanvas = spriteEl.querySelector('.pet-pixel-canvas');
+      if (oldCanvas) oldCanvas.remove();
+
+      imgEl = document.createElement('div');
+      imgEl.className = 'pet-sprite-img';
+      imgEl.style.width = SPRITE_DISPLAY_SIZE + 'px';
+      imgEl.style.height = SPRITE_DISPLAY_SIZE + 'px';
+      imgEl.style.backgroundImage = 'url(' + info.sheet + ')';
+      imgEl.style.backgroundSize = (fw * frameCount) + 'px ' + info.frameHeight + 'px';
+      imgEl.style.imageRendering = 'pixelated';
+      spriteEl.appendChild(imgEl);
     }
 
-    var frameIdx = currentFrame % frames.length;
-    var shadow = renderSpriteFrame(frames[frameIdx]);
-
-    var scale = getScale();
-    // The box-shadow pixel element
-    var canvas = spriteEl.querySelector('.pet-pixel-canvas');
-    if (!canvas) {
-      canvas = document.createElement('div');
-      canvas.className = 'pet-pixel-canvas';
-      spriteEl.appendChild(canvas);
-    }
-    canvas.style.width = scale + 'px';
-    canvas.style.height = scale + 'px';
-    canvas.style.boxShadow = shadow;
-
-    // Render accessory overlay
-    renderAccessoryOverlay();
-  }
-
-  function renderAccessoryOverlay() {
-    // Remove existing overlay
-    var existing = spriteEl.querySelector('.pet-accessory-canvas');
-    if (existing) existing.remove();
-
-    if (!petState || !spriteData || !spriteData.accessories) return;
-
-    var equipped = petState.accessories.equipped;
-    var overlayPixels = [];
-
-    var slots = ['head', 'body'];
-    for (var s = 0; s < slots.length; s++) {
-      var slot = slots[s];
-      var accId = equipped[slot];
-      if (!accId || !spriteData.accessories[accId]) continue;
-      var accData = spriteData.accessories[accId];
-      for (var i = 0; i < accData.length; i++) {
-        if (accData[i] !== 0) {
-          overlayPixels.push({ index: i, value: accData[i] });
-        }
-      }
+    // Update background-image if pet changed
+    if (imgEl.getAttribute('data-pet') !== petState.activePet) {
+      imgEl.style.backgroundImage = 'url(' + info.sheet + ')';
+      imgEl.style.backgroundSize = (fw * frameCount) + 'px ' + info.frameHeight + 'px';
+      imgEl.setAttribute('data-pet', petState.activePet);
     }
 
-    if (overlayPixels.length === 0) return;
-
-    var scale = getScale();
-    var shadows = [];
-    for (var p = 0; p < overlayPixels.length; p++) {
-      var px = overlayPixels[p].index % SPRITE_SIZE;
-      var py = Math.floor(overlayPixels[p].index / SPRITE_SIZE);
-      var x = px * scale;
-      var y = py * scale;
-      var color = overlayPixels[p].value === 1 ? 'var(--foreground)' : overlayPixels[p].value === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-      shadows.push(x + 'px ' + y + 'px 0 0.5px ' + color);
-    }
-
-    var overlay = document.createElement('div');
-    overlay.className = 'pet-pixel-canvas pet-accessory-canvas';
-    overlay.style.width = scale + 'px';
-    overlay.style.height = scale + 'px';
-    overlay.style.boxShadow = shadows.join(',');
-    overlay.style.zIndex = '1';
-    spriteEl.appendChild(overlay);
+    imgEl.style.backgroundPosition = '-' + (frameIdx * fw) + 'px 0';
   }
 
   // ── Animation Loop ──────────────────────────────────
@@ -328,8 +336,7 @@
 
   // ── Positioning ─────────────────────────────────────
   function getSpriteSize() {
-    var scale = getScale();
-    return SPRITE_SIZE * scale;
+    return SPRITE_DISPLAY_SIZE;
   }
 
   function moveTo(x, y) {
@@ -807,36 +814,57 @@
     }, 800);
   }
 
-  // ── Speech Bubbles ──────────────────────────────────
+  // ── Speech Bubbles (type-based) ─────────────────────
   var IDLE_MESSAGES = {
-    cat: [
-      '*purrs*', '*stretches*', 'meow?', '*knocks things off table*',
-      '*stares at nothing*', 'feed me.', '*grooming*', '*tail swish*',
-      'I own this site.', '*yawn*'
-    ],
-    dragon: [
+    fire: [
       '*smoke puff*', 'hoard... coins...', '*flaps tiny wings*',
       '*breathes small flame*', 'treasure?', '*scales shimmer*',
       'rawr!', '*guards wallet*', 'more gold!', '*naps on coins*'
     ],
-    robot: [
+    nature: [
+      '*purrs*', '*stretches*', 'meow?', '*knocks things off table*',
+      '*stares at nothing*', 'feed me.', '*grooming*', '*tail swish*',
+      'I own this site.', '*yawn*'
+    ],
+    tech: [
       'BEEP BOOP', 'calculating...', 'odds: favorable',
       'processing...', '01101000 01101001', 'system nominal',
       'probability updated', '*whirrs*', 'data collected',
       'efficiency: optimal'
+    ],
+    aqua: [
+      '*splish splash*', 'tides are turning', '*bubble*',
+      'deep thoughts...', 'go with the flow', '*waves*',
+      'water you doing?', '*drifts*', 'current: calm', 'salty air~'
+    ],
+    shadow: [
+      '*lurks*', 'the shadows whisper', '*vanishes briefly*',
+      'darkness falls...', 'boo.', '*creeps*',
+      'fear the void', '*glowing eyes*', 'unseen...', 'from the dark'
+    ],
+    mystic: [
+      '*sparkles*', 'the stars align', '*glows softly*',
+      'magic in the air', 'foresight...', '*floats*',
+      'enchanting~', '*crystal hum*', 'fate is kind', 'cosmic vibes'
     ]
   };
 
   var WIN_MESSAGES = {
-    cat: ['*happy purr*', 'lucky paws!', '*kneading*', 'more treats!'],
-    dragon: ['*victory roar*', 'to the hoard!', '*fire breath*', 'GOLD!'],
-    robot: ['WIN DETECTED', 'positive outcome', 'as calculated', '+1 to records']
+    fire:   ['*victory roar*', 'to the hoard!', '*fire breath*', 'GOLD!'],
+    nature: ['*happy purr*', 'lucky paws!', '*kneading*', 'more treats!'],
+    tech:   ['WIN DETECTED', 'positive outcome', 'as calculated', '+1 to records'],
+    aqua:   ['*happy splash*', 'tidal win!', 'the current favors us', 'washed in luck!'],
+    shadow: ['*dark laugh*', 'from the shadows!', 'a shadowy gain', 'the void provides'],
+    mystic: ['*radiant glow*', 'the stars aligned!', 'fortune smiles', 'magic!']
   };
 
   var LOSE_MESSAGES = {
-    cat: ['*hisses*', '*sad meow*', '*knocks glass off table*', 'unfair.'],
-    dragon: ['*sad smoke*', 'my hoard...', '*whimper*', 'revenge...'],
-    robot: ['ERROR: loss', 'recalculating...', 'variance detected', 'suboptimal']
+    fire:   ['*sad smoke*', 'my hoard...', '*whimper*', 'revenge...'],
+    nature: ['*hisses*', '*sad meow*', '*knocks glass off table*', 'unfair.'],
+    tech:   ['ERROR: loss', 'recalculating...', 'variance detected', 'suboptimal'],
+    aqua:   ['*drip*', 'washed away...', 'low tide...', 'all dried up'],
+    shadow: ['*fades*', 'the darkness stings', 'shadow of doubt', 'cursed luck'],
+    mystic: ['*dims*', 'stars misaligned', 'the fates are cruel', 'entropy...']
   };
 
   var CONTEXT_MESSAGES = {
@@ -890,7 +918,8 @@
       if (Math.random() > 0.3) return; // 30% chance each tick
 
       var petId = petState.activePet;
-      var messages = IDLE_MESSAGES[petId] || IDLE_MESSAGES.cat;
+      var type = getCreatureType(petId) || 'nature';
+      var messages = IDLE_MESSAGES[type] || IDLE_MESSAGES.nature;
 
       // Context-aware messages
       var path = window.location.pathname;
@@ -934,7 +963,8 @@
       celebrate();
 
       // Speech
-      var winMsgs = WIN_MESSAGES[petState.activePet] || WIN_MESSAGES.cat;
+      var winType = getCreatureType(petState.activePet) || 'nature';
+      var winMsgs = WIN_MESSAGES[winType] || WIN_MESSAGES.nature;
       speak(randomMessage(winMsgs));
 
       // Apply passive
@@ -951,7 +981,8 @@
       showSad();
 
       // Speech
-      var loseMsgs = LOSE_MESSAGES[petState.activePet] || LOSE_MESSAGES.cat;
+      var loseType = getCreatureType(petState.activePet) || 'nature';
+      var loseMsgs = LOSE_MESSAGES[loseType] || LOSE_MESSAGES.nature;
       speak(randomMessage(loseMsgs));
 
       // Apply passive
@@ -988,36 +1019,55 @@
     }, 3000);
   }
 
-  // ── Passive Abilities ───────────────────────────────
+  // ── Passive Abilities (type-based) ──────────────────
   function applyWinPassive(data) {
     if (!petState || !petState.activePet) return null;
 
     var petId = petState.activePet;
     var pet = petState.pets[petId];
     var level = pet.level;
+    var type = getCreatureType(petId);
 
-    // Dragon's Hoard: bonus coins on wins
-    if (petId === 'dragon') {
-      var chance = level === 1 ? 0.05 : level === 2 ? 0.10 : 0.15;
-      var pct = level === 1 ? 0.10 : level === 2 ? 0.15 : 0.20;
-      if (Math.random() < chance) {
-        var bonus = Math.max(1, Math.floor(data.bet * pct));
-        Wallet.add(bonus);
-        speak("Dragon's Hoard! +" + bonus);
-        return { type: 'dragon_hoard', amount: bonus };
-      }
-    }
+    switch (type) {
+      case 'fire': // Bonus coins on wins
+        var chance = level === 1 ? 0.05 : level === 2 ? 0.10 : 0.15;
+        var pct = level === 1 ? 0.10 : level === 2 ? 0.15 : 0.20;
+        if (Math.random() < chance) {
+          var bonus = Math.max(1, Math.floor(data.bet * pct));
+          Wallet.add(bonus);
+          speak("Dragon's Hoard! +" + bonus);
+          return { type: 'fire_hoard', amount: bonus };
+        }
+        break;
 
-    // Robot: Probability Core - recovery per N hands
-    if (petId === 'robot') {
-      var interval = level === 1 ? 10 : level === 2 ? 8 : 5;
-      var recoveryPct = level === 1 ? 0.30 : level === 2 ? 0.40 : 0.50;
-      if (pet.gamesWatched % interval === 0) {
-        var recovery = Math.max(1, Math.floor(data.bet * recoveryPct));
-        Wallet.add(recovery);
-        speak('Insurance: +' + recovery);
-        return { type: 'probability_core', amount: recovery };
-      }
+      case 'tech': // Periodic recovery per N hands
+        var interval = level === 1 ? 10 : level === 2 ? 8 : 5;
+        var recoveryPct = level === 1 ? 0.30 : level === 2 ? 0.40 : 0.50;
+        if (pet.gamesWatched % interval === 0) {
+          var recovery = Math.max(1, Math.floor(data.bet * recoveryPct));
+          Wallet.add(recovery);
+          speak('Insurance: +' + recovery);
+          return { type: 'tech_core', amount: recovery };
+        }
+        break;
+
+      case 'shadow': // Bonus fling coins (win context: small bonus)
+        if (Math.random() < 0.10 * level) {
+          var shadowBonus = Math.max(1, Math.floor(data.bet * 0.05 * level));
+          Wallet.add(shadowBonus);
+          speak('Shadow Stash! +' + shadowBonus);
+          return { type: 'shadow_stash', amount: shadowBonus };
+        }
+        break;
+
+      case 'mystic': // Random bonus roll
+        if (Math.random() < 0.08 * level) {
+          var mysticBonus = Math.max(1, Math.floor(data.bet * (0.05 + Math.random() * 0.20)));
+          Wallet.add(mysticBonus);
+          speak('Arcane Luck! +' + mysticBonus);
+          return { type: 'mystic_luck', amount: mysticBonus };
+        }
+        break;
     }
 
     return null;
@@ -1030,29 +1080,50 @@
     var pet = petState.pets[petId];
     var level = pet.level;
     var streak = petState.milestones.currentLoseStreak;
+    var type = getCreatureType(petId);
 
-    // Cat's Lucky Paws: refund after losing streak
-    if (petId === 'cat') {
-      var threshold = level === 3 ? 2 : 3;
-      var refundPct = level === 1 ? 0.25 : level === 2 ? 0.40 : 0.50;
-      if (streak >= threshold) {
-        var refund = Math.max(1, Math.floor(data.bet * refundPct));
-        Wallet.add(refund);
-        speak('Lucky Paws! +' + refund);
-        return { type: 'lucky_paws', amount: refund };
-      }
-    }
+    switch (type) {
+      case 'nature': // Refund on loss streaks
+        var threshold = level >= 3 ? 2 : 3;
+        var refundPct = level === 1 ? 0.25 : level === 2 ? 0.40 : 0.50;
+        if (streak >= threshold) {
+          var refund = Math.max(1, Math.floor(data.bet * refundPct));
+          Wallet.add(refund);
+          speak('Lucky Paws! +' + refund);
+          return { type: 'nature_paws', amount: refund };
+        }
+        break;
 
-    // Robot: Probability Core also triggers on losses
-    if (petId === 'robot') {
-      var interval = level === 1 ? 10 : level === 2 ? 8 : 5;
-      var recoveryPct = level === 1 ? 0.30 : level === 2 ? 0.40 : 0.50;
-      if (pet.gamesWatched % interval === 0) {
-        var recovery = Math.max(1, Math.floor(data.bet * recoveryPct));
-        Wallet.add(recovery);
-        speak('Insurance: +' + recovery);
-        return { type: 'probability_core', amount: recovery };
-      }
+      case 'aqua': // Refund on loss streaks (variant: smaller threshold, smaller refund)
+        var aquaThreshold = level >= 2 ? 2 : 3;
+        var aquaPct = level === 1 ? 0.20 : level === 2 ? 0.30 : 0.40;
+        if (streak >= aquaThreshold) {
+          var aquaRefund = Math.max(1, Math.floor(data.bet * aquaPct));
+          Wallet.add(aquaRefund);
+          speak('Tidal Grace! +' + aquaRefund);
+          return { type: 'aqua_grace', amount: aquaRefund };
+        }
+        break;
+
+      case 'tech': // Probability Core also triggers on losses
+        var interval = level === 1 ? 10 : level === 2 ? 8 : 5;
+        var recoveryPct = level === 1 ? 0.30 : level === 2 ? 0.40 : 0.50;
+        if (pet.gamesWatched % interval === 0) {
+          var recovery = Math.max(1, Math.floor(data.bet * recoveryPct));
+          Wallet.add(recovery);
+          speak('Insurance: +' + recovery);
+          return { type: 'tech_core', amount: recovery };
+        }
+        break;
+
+      case 'mystic': // Random bonus roll on loss
+        if (Math.random() < 0.06 * level) {
+          var mysticRefund = Math.max(1, Math.floor(data.bet * (0.10 + Math.random() * 0.15)));
+          Wallet.add(mysticRefund);
+          speak('Arcane Luck! +' + mysticRefund);
+          return { type: 'mystic_luck', amount: mysticRefund };
+        }
+        break;
     }
 
     return null;
@@ -1146,27 +1217,59 @@
   function init() {
     petState = loadPetState();
 
-    if (!petState.activePet || !petState.pets[petState.activePet]) {
-      // No pet yet — expose API but don't render
-      exposeAPI();
-      return;
-    }
-
-    isVisible = petState.visible;
-
-    loadSpriteData(function () {
-      createPetDOM();
-      if (!isVisible && container) {
-        container.style.display = 'none';
+    // Load catalog first, then sprites
+    loadCatalog(function () {
+      // Migrate legacy pet IDs
+      if (catalog) {
+        petState = migratePetState(petState);
+        savePetState();
       }
-      exposeAPI();
+
+      // Always load sprite data (needed for shop previews even without a pet)
+      loadSpriteData(function () {
+        if (!petState.activePet || !petState.pets[petState.activePet]) {
+          // No pet yet — expose API but don't render
+          exposeAPI();
+          return;
+        }
+
+        isVisible = petState.visible;
+        createPetDOM();
+        if (!isVisible && container) {
+          container.style.display = 'none';
+        }
+        exposeAPI();
+      });
     });
   }
 
   function exposeAPI() {
+    // Expose catalog globally
+    window.PetCatalog = catalog;
+
     // Global API for game integration
     window.PetEvents = {
       onGameResult: handleGameResult
+    };
+
+    // API for shop sprite previews
+    window.PetSprites = {
+      renderPreview: function (petId, level) {
+        var info = getSpriteInfo(petId);
+        if (!info) return null;
+        var fw = info.frameWidth || 48;
+        // Clamp level to maxLevel from spriteData
+        var frameOffset = info.frameOffset || 0;
+        var frameIdx = Math.min(frameOffset + (level || 1) - 1, (info.frames || 3) - 1);
+        var el = document.createElement('div');
+        el.style.width = '48px';
+        el.style.height = '48px';
+        el.style.backgroundImage = 'url(' + info.sheet + ')';
+        el.style.backgroundSize = (fw * info.frames) + 'px ' + info.frameHeight + 'px';
+        el.style.backgroundPosition = '-' + (frameIdx * fw) + 'px 0';
+        el.style.imageRendering = 'pixelated';
+        return el;
+      }
     };
 
     // API for shop to trigger reload
@@ -1257,14 +1360,17 @@
               if (g) g.remove();
             }
 
-            // Greeting speech
+            // Greeting speech (type-based)
             var greetings = {
-              cat: '*appears* ...meow?',
-              dragon: '*materializes* RAWR!',
-              robot: 'BOOT SEQUENCE COMPLETE'
+              fire: '*materializes* RAWR!',
+              nature: '*appears* ...meow?',
+              tech: 'BOOT SEQUENCE COMPLETE',
+              aqua: '*bubbles up* ...splash!',
+              shadow: '*emerges from darkness*',
+              mystic: '*sparkles into existence*'
             };
-            var petId = petState.activePet;
-            speak(greetings[petId] || 'hello!');
+            var spawnType = getCreatureType(petState.activePet) || 'nature';
+            speak(greetings[spawnType] || 'hello!');
           }, 900);
         });
       },
@@ -1273,6 +1379,8 @@
       celebrate: celebrate,
       showSad: showSad,
       speak: speak,
+      getCreatureType: getCreatureType,
+      getCreatureInfo: getCreatureInfo,
 
       getState: function () {
         if (!petState || !petState.activePet) return null;
@@ -1336,72 +1444,35 @@
         var pet = petState.pets[petState.activePet];
         if (!pet) return;
 
-        var frames = resolveFrames(petState.activePet, pet.level, 'idle');
-        if (!frames || frames.length === 0) return;
-
-        var pixelGrid = frames[0];
-        if (!pixelGrid) return;
+        var info = getSpriteInfo(petState.activePet);
+        if (!info) return;
 
         containerEl.innerHTML = '';
-        var sc = scale || 2;
-        var canvas = document.createElement('div');
-        canvas.className = 'pet-pixel-canvas';
-        canvas.style.width = sc + 'px';
-        canvas.style.height = sc + 'px';
-        canvas.style.position = 'absolute';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
+        var fw = info.frameWidth || 48;
+        var fh = info.frameHeight || 48;
+        var frames = info.frames || 3;
+        // scale param: 2 = 32px display, 3 = 48px (1:1). Ratio from old 16px * scale.
+        var displaySize = 16 * (scale || 2);
+        var ratio = displaySize / fw;
 
-        var shadows = [];
-        for (var i = 0; i < pixelGrid.length; i++) {
-          if (pixelGrid[i] === 0) continue;
-          var px = i % SPRITE_SIZE;
-          var py = Math.floor(i / SPRITE_SIZE);
-          var color = pixelGrid[i] === 1 ? 'var(--foreground)' : pixelGrid[i] === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-          shadows.push((px * sc) + 'px ' + (py * sc) + 'px 0 0.5px ' + color);
-        }
-        canvas.style.boxShadow = shadows.join(',');
-        containerEl.style.width = (SPRITE_SIZE * sc) + 'px';
-        containerEl.style.height = (SPRITE_SIZE * sc) + 'px';
+        var imgEl = document.createElement('div');
+        imgEl.className = 'pet-sprite-img';
+        imgEl.style.width = displaySize + 'px';
+        imgEl.style.height = displaySize + 'px';
+        imgEl.style.backgroundImage = 'url(' + info.sheet + ')';
+        imgEl.style.backgroundSize = (fw * frames * ratio) + 'px ' + (fh * ratio) + 'px';
+        var frameOffset = info.frameOffset || 0;
+        var frameIdx = Math.min(frameOffset + (pet.level || 1) - 1, frames - 1);
+        imgEl.style.backgroundPosition = '-' + (frameIdx * displaySize) + 'px 0';
+        imgEl.style.imageRendering = 'pixelated';
+        imgEl.style.position = 'absolute';
+        imgEl.style.top = '0';
+        imgEl.style.left = '0';
+
+        containerEl.style.width = displaySize + 'px';
+        containerEl.style.height = displaySize + 'px';
         containerEl.style.position = 'relative';
-        containerEl.style.imageRendering = 'pixelated';
-        containerEl.appendChild(canvas);
-
-        // Render accessory overlay on mini sprite
-        if (spriteData.accessories && petState.accessories) {
-          var equipped = petState.accessories.equipped;
-          var overlayPixels = [];
-          var slots = ['head', 'body'];
-          for (var s = 0; s < slots.length; s++) {
-            var accId = equipped[slots[s]];
-            if (!accId || !spriteData.accessories[accId]) continue;
-            var accData = spriteData.accessories[accId];
-            for (var j = 0; j < accData.length; j++) {
-              if (accData[j] !== 0) {
-                overlayPixels.push({ index: j, value: accData[j] });
-              }
-            }
-          }
-          if (overlayPixels.length > 0) {
-            var accShadows = [];
-            for (var p = 0; p < overlayPixels.length; p++) {
-              var ax = overlayPixels[p].index % SPRITE_SIZE;
-              var ay = Math.floor(overlayPixels[p].index / SPRITE_SIZE);
-              var ac = overlayPixels[p].value === 1 ? 'var(--foreground)' : overlayPixels[p].value === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-              accShadows.push((ax * sc) + 'px ' + (ay * sc) + 'px 0 0.5px ' + ac);
-            }
-            var overlay = document.createElement('div');
-            overlay.className = 'pet-pixel-canvas pet-accessory-canvas';
-            overlay.style.width = sc + 'px';
-            overlay.style.height = sc + 'px';
-            overlay.style.position = 'absolute';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.zIndex = '1';
-            overlay.style.boxShadow = accShadows.join(',');
-            containerEl.appendChild(overlay);
-          }
-        }
+        containerEl.appendChild(imgEl);
       }
     };
   }

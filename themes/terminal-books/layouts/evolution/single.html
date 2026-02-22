@@ -1,0 +1,22 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="shop-intro">
+    {{ .Content }}
+  </div>
+
+  <div class="shop-balance">
+    Balance: <span id="shop-balance">0</span>
+  </div>
+
+  <!-- Active Pet Section -->
+  <section class="shop-section" id="shop-active-pet" style="display:none;">
+    <h2 class="shop-section-title">> active pet</h2>
+    <div id="shop-active-pet-info" class="shop-active-info"></div>
+  </section>
+
+  <!-- Evolution Section -->
+  <section class="shop-section" id="shop-evolution-section" style="display:none;">
+    <h2 class="shop-section-title">> evolution</h2>
+    <div id="shop-evolution"></div>
+  </section>
+{{ end }}

@@ -2373,12 +2373,22 @@
       } catch (e) {}
       if (petState && petState.activePet) {
         var petId = petState.activePet;
-        if (petId === 'dragon') {
+        var petType = null;
+        if (window.PetSystem && window.PetSystem.getCreatureType) {
+          petType = window.PetSystem.getCreatureType(petId);
+        }
+        if (petType === 'fire') {
           coinReward = Math.floor(coinReward * 1.15);
-        } else if (petId === 'cat' && dist < 50) {
+        } else if (petType === 'nature' && dist < 50) {
           coinReward = Math.max(coinReward, Math.floor(coinReward * 1.2));
-        } else if (petId === 'robot') {
+        } else if (petType === 'tech') {
           coinReward = Math.max(coinReward, 10);
+        } else if (petType === 'shadow') {
+          coinReward = Math.floor(coinReward * 1.20);
+        } else if (petType === 'aqua') {
+          coinReward += 5;
+        } else if (petType === 'mystic') {
+          coinReward += Math.floor(Math.random() * 15);
         }
       }
     }

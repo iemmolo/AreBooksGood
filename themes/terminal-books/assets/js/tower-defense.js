@@ -80,18 +80,27 @@
 
   // ── Hero Definitions ─────────────────────────────
   var HERO_DEFS = {
-    cat:    { dmg: 8,  speed: 0.8, range: 2.5, color: '#f9c', symbol: 'C',
-              q: { name: 'Pounce',     cooldown: 12, desc: 'Instant 3x damage to closest enemy' },
-              w: { name: 'Nine Lives',  cooldown: 25, desc: 'Next 5 attacks crit for 2x damage' } },
-    dragon: { dmg: 7,  speed: 1.0, range: 2.5, color: '#f84', symbol: 'D',
+    fire:   { dmg: 7,  speed: 1.0, range: 2.5, color: '#f84', symbol: 'F',
               q: { name: 'Fire Breath', cooldown: 18, desc: 'Damage + fire DOT to all in range' },
               w: { name: 'Dragon Rage', cooldown: 28, desc: '2x attack speed + fire DOT for 8s' } },
-    robot:  { dmg: 6,  speed: 1.2, range: 2.5, color: '#4cf', symbol: 'R',
+    nature: { dmg: 8,  speed: 0.8, range: 2.5, color: '#f9c', symbol: 'N',
+              q: { name: 'Pounce',     cooldown: 12, desc: 'Instant 3x damage to closest enemy' },
+              w: { name: 'Nine Lives',  cooldown: 25, desc: 'Next 5 attacks crit for 2x damage' } },
+    tech:   { dmg: 6,  speed: 1.2, range: 2.5, color: '#4cf', symbol: 'T',
               q: { name: 'EMP Blast',   cooldown: 20, desc: 'Stun all enemies in range for 2s' },
-              w: { name: 'Overclock',   cooldown: 30, desc: '+30% attack speed to towers in range for 8s' } }
+              w: { name: 'Overclock',   cooldown: 30, desc: '+30% attack speed to towers in range for 8s' } },
+    aqua:   { dmg: 6,  speed: 1.0, range: 3.0, color: '#4af', symbol: 'A',
+              q: { name: 'Tidal Wave',  cooldown: 16, desc: 'Knockback + slow all enemies in range' },
+              w: { name: 'Whirlpool',   cooldown: 26, desc: 'Slow zone for 6s at hero position' } },
+    shadow: { dmg: 9,  speed: 0.7, range: 2.0, color: '#a6f', symbol: 'S',
+              q: { name: 'Backstab',    cooldown: 10, desc: 'Instant 4x damage to weakest enemy' },
+              w: { name: 'Cloak',       cooldown: 30, desc: 'Invisible for 5s, next hit crits 3x' } },
+    mystic: { dmg: 5,  speed: 1.1, range: 3.0, color: '#f6a', symbol: 'M',
+              q: { name: 'Arcane Bolt', cooldown: 14, desc: 'Chain lightning hits 3 enemies' },
+              w: { name: 'Enchant',     cooldown: 28, desc: 'Towers in range get +25% damage for 8s' } }
   };
 
-  var HERO_ACCENT_COLORS = { cat: '#f9c', dragon: '#f84', robot: '#4cf' };
+  var HERO_ACCENT_COLORS = { fire: '#f84', nature: '#f9c', tech: '#4cf', aqua: '#4af', shadow: '#a6f', mystic: '#f6a' };
 
   var ACCESSORY_HERO_BONUSES = {
     partyhat:  { desc: '+5% hero attack speed',     stat: 'atkSpeed',   value: 0.05 },
@@ -103,51 +112,77 @@
     cape:      { desc: '+15% ability damage',        stat: 'abilityDmg',value: 0.15 }
   };
 
-  // Hero sprite rendering
+  // Hero sprite rendering (sprite sheet)
   var heroSpriteData = null;
-  var HERO_PIXEL_SIZE = 2;
+  var heroPetCatalog = null;
+  var heroSpriteSheet = null;
+  var heroSpriteFrameCount = 0;
+  var heroSpriteMaxLevel = 3;
+  var heroSpriteFrameOffset = 0;
   var heroAnimTimer = 0;
   var heroAnimFrame = 0;
+  var HERO_DRAW_SIZE = 32; // display size on canvas
 
   function loadHeroSprites() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/data/petsprites.json', true);
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        try { heroSpriteData = JSON.parse(xhr.responseText); } catch (e) {}
+    // Load catalog first to resolve spriteId, then load sprites
+    var catXhr = new XMLHttpRequest();
+    catXhr.open('GET', '/data/petcatalog.json', true);
+    catXhr.onload = function () {
+      if (catXhr.status === 200) {
+        try { heroPetCatalog = JSON.parse(catXhr.responseText); } catch (e) {}
       }
+      loadSprites();
     };
-    xhr.send();
-  }
+    catXhr.onerror = function () { loadSprites(); };
+    catXhr.send();
 
-  function resolveHeroFrames(petId, level, anim) {
-    if (!heroSpriteData) return null;
-    var pet = heroSpriteData[petId];
-    if (!pet) return null;
-    var lv = pet[String(level)];
-    if (!lv) return null;
-    var frames = lv[anim];
-    if (!frames) return null;
-    // frames is either array of arrays (multi-frame) or flat array (single frame)
-    if (Array.isArray(frames[0])) return frames;
-    return [frames];
-  }
-
-  function drawHeroSprite(cx, cy, frame, petId) {
-    if (!frame) return;
-    var ps = HERO_PIXEL_SIZE;
-    var offset = 8 * ps; // center 16px sprite
-    var heroColor = HERO_ACCENT_COLORS[petId] || colorAccent;
-    for (var i = 0; i < 256; i++) {
-      var val = frame[i];
-      if (val === 0) continue;
-      var px = (i % 16) * ps + cx - offset;
-      var py = Math.floor(i / 16) * ps + cy - offset;
-      if (val === 1) ctx.fillStyle = colorFg;
-      else if (val === 2) ctx.fillStyle = colorAccent;
-      else ctx.fillStyle = heroColor;
-      ctx.fillRect(px, py, ps, ps);
+    function loadSprites() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/data/petsprites.json', true);
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          try {
+            heroSpriteData = JSON.parse(xhr.responseText);
+            if (heroPetId) loadHeroSheet(heroPetId);
+          } catch (e) {}
+        }
+      };
+      xhr.send();
     }
+  }
+
+  function loadHeroSheet(petId) {
+    heroSpriteSheet = null;
+    heroSpriteFrameCount = 0;
+    heroSpriteMaxLevel = 3;
+    heroSpriteFrameOffset = 0;
+    if (!heroSpriteData || !petId) return;
+    // Resolve spriteId via catalog (e.g. golem → robot)
+    var lookupId = petId;
+    if (heroPetCatalog) {
+      var legacy = heroPetCatalog.legacyMap && heroPetCatalog.legacyMap[petId];
+      var cid = legacy || petId;
+      if (heroPetCatalog.creatures && heroPetCatalog.creatures[cid] && heroPetCatalog.creatures[cid].spriteId) {
+        lookupId = heroPetCatalog.creatures[cid].spriteId;
+      }
+    }
+    var pd = heroSpriteData[lookupId];
+    if (!pd || !pd.sheet) return;
+    heroSpriteFrameCount = pd.frames || 3;
+    heroSpriteMaxLevel = pd.maxLevel || 3;
+    heroSpriteFrameOffset = pd.frameOffset || 0;
+    var img = new Image();
+    img.onload = function () { heroSpriteSheet = img; };
+    img.src = pd.sheet;
+  }
+
+  function drawHeroSprite(cx, cy, frameIdx) {
+    if (!heroSpriteSheet) return;
+    var half = HERO_DRAW_SIZE / 2;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(heroSpriteSheet,
+      frameIdx * 48, 0, 48, 48,
+      cx - half, cy - half, HERO_DRAW_SIZE, HERO_DRAW_SIZE);
   }
 
   var synergyCache = {};
@@ -602,6 +637,7 @@
   var heroPlacing = false;
   var heroMoving = false;
   var heroPetId = null;
+  var heroPetType = null;
   var heroPetLevel = 1;
   var heroAccessoryBonuses = {};
 
@@ -1289,12 +1325,19 @@
   // ── Hero functions ───────────────────────────────
   function getHeroPetInfo() {
     heroPetId = null;
+    heroPetType = null;
     heroPetLevel = 1;
     if (typeof window.PetSystem === 'undefined' || !window.PetSystem.getState) return;
     var state = window.PetSystem.getState();
     if (!state || !state.petId) return;
     heroPetId = state.petId;
+    heroPetType = (window.PetSystem && window.PetSystem.getCreatureType) ? window.PetSystem.getCreatureType(heroPetId) : null;
+    if (!heroPetType) {
+      var legacyTypes = { cat: 'nature', dragon: 'fire', robot: 'tech' };
+      heroPetType = legacyTypes[heroPetId] || 'nature';
+    }
     heroPetLevel = state.level || 1;
+    if (heroSpriteData) loadHeroSheet(heroPetId);
   }
 
   function getHeroAccessoryBonuses() {
@@ -1317,9 +1360,9 @@
   }
 
   function placeHero(col, row) {
-    if (!heroPetId || !HERO_DEFS[heroPetId]) return false;
+    if (!heroPetType || !HERO_DEFS[heroPetType]) return false;
     if (!isBuildable(col, row)) return false;
-    var def = HERO_DEFS[heroPetId];
+    var def = HERO_DEFS[heroPetType];
     hero = {
       col: col, row: row, type: 'hero', petId: heroPetId,
       cooldown: 0, qCooldown: 0, wCooldown: 0,
@@ -1339,7 +1382,7 @@
     hero.col = col;
     hero.row = row;
     var tc = tileCenter(col, row);
-    spawnParticle(tc.x, tc.y, 'Hero moved!', HERO_DEFS[heroPetId] ? HERO_DEFS[heroPetId].color : colorAccent);
+    spawnParticle(tc.x, tc.y, 'Hero moved!', HERO_DEFS[heroPetType] ? HERO_DEFS[heroPetType].color : colorAccent);
     heroMoving = false;
     return true;
   }
@@ -1351,8 +1394,8 @@
   }
 
   function getHeroDmg() {
-    if (!hero || !heroPetId) return 0;
-    var def = HERO_DEFS[heroPetId];
+    if (!hero || !heroPetType) return 0;
+    var def = HERO_DEFS[heroPetType];
     var evo = getHeroEvolutionScale();
     var dmg = def.dmg * evo.dmg;
     if (heroAccessoryBonuses.damage) dmg *= 1 + heroAccessoryBonuses.damage;
@@ -1361,8 +1404,8 @@
   }
 
   function getHeroRangePx() {
-    if (!hero || !heroPetId) return 0;
-    var def = HERO_DEFS[heroPetId];
+    if (!hero || !heroPetType) return 0;
+    var def = HERO_DEFS[heroPetType];
     var range = def.range * TILE_SIZE;
     if (heroAccessoryBonuses.range) range *= 1 + heroAccessoryBonuses.range;
     return range;
@@ -1412,8 +1455,8 @@
   }
 
   function updateHero(dt) {
-    if (!hero || !heroPetId) return;
-    var def = HERO_DEFS[heroPetId];
+    if (!hero || !heroPetType) return;
+    var def = HERO_DEFS[heroPetType];
 
     // Tick ability cooldowns
     if (hero.qCooldown > 0) hero.qCooldown = Math.max(0, hero.qCooldown - dt);
@@ -1427,7 +1470,7 @@
     }
 
     // Robot Overclock: buff towers in hero range
-    if (heroPetId === 'robot' && hero.overclockTimer > 0) {
+    if (heroPetType === 'tech' && hero.overclockTimer > 0) {
       // Applied in updateTowers via overclockActive check
     }
 
@@ -1456,7 +1499,7 @@
         x: tc.x, y: tc.y, target: target, dmg: dmg,
         speed: PROJECTILE_SPEED * TILE_SIZE,
         towerType: 'hero', megaBlast: false, sourceTower: hero,
-        heroPetId: heroPetId
+        heroPetId: heroPetId, heroPetType: heroPetType
       });
       hero.cooldown = def.speed;
       hero.attackFlash = 0.15;
@@ -1467,15 +1510,15 @@
   }
 
   function activateHeroQ() {
-    if (!hero || !heroPetId) return;
+    if (!hero || !heroPetType) return;
     if (hero.qCooldown > 0) return;
-    var def = HERO_DEFS[heroPetId];
+    var def = HERO_DEFS[heroPetType];
     var tc = tileCenter(hero.col, hero.row);
     var rangePx = getHeroRangePx();
     var evo = getHeroEvolutionScale();
 
-    switch (heroPetId) {
-      case 'cat': // Pounce — 3x damage to closest enemy
+    switch (heroPetType) {
+      case 'nature': // Pounce — 3x damage to closest enemy
         var target = findHeroTarget();
         if (!target) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
         var dmg = Math.round(getHeroDmg() * 3);
@@ -1487,7 +1530,7 @@
         spawnParticle(tc.x, tc.y - 10, 'POUNCE!', '#f9c');
         break;
 
-      case 'dragon': // Fire Breath — damage + DOT to all in range
+      case 'fire': // Fire Breath — damage + DOT to all in range
         var hitCount = 0;
         var breathDmg = Math.round(getHeroDmg() * 1.5);
         if (heroAccessoryBonuses.abilityDmg) breathDmg = Math.round(breathDmg * (1 + heroAccessoryBonuses.abilityDmg));
@@ -1507,7 +1550,7 @@
         spawnParticle(tc.x, tc.y - 10, 'FIRE BREATH!', '#f84');
         break;
 
-      case 'robot': // EMP Blast — stun all in range
+      case 'tech': // EMP Blast — stun all in range
         var hitCount = 0;
         var stunDur = heroPetLevel >= 3 ? 3 : 2;
         for (var i = 0; i < enemies.length; i++) {
@@ -1525,6 +1568,69 @@
         splashEffects.push({ x: tc.x, y: tc.y, radius: 0, maxRadius: rangePx, life: 0.4, color: '#4cf' });
         spawnParticle(tc.x, tc.y - 10, 'EMP BLAST!', '#4cf');
         break;
+
+      case 'aqua': // Tidal Wave — knockback + slow all in range
+        var hitCount = 0;
+        var waveDmg = Math.round(getHeroDmg() * 1.2);
+        if (heroAccessoryBonuses.abilityDmg) waveDmg = Math.round(waveDmg * (1 + heroAccessoryBonuses.abilityDmg));
+        var slowDur = heroPetLevel >= 3 ? 4 : 2.5;
+        for (var i = 0; i < enemies.length; i++) {
+          var e = enemies[i];
+          if (!e.alive) continue;
+          var ep = getPathPos(e.dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
+            damageEnemy(e, waveDmg, hero);
+            if (e.alive) {
+              e.slow = { remaining: slowDur, factor: 0.4 };
+              e.dist = Math.max(0, e.dist - 15);
+            }
+            hitCount++;
+          }
+        }
+        if (hitCount === 0) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
+        splashEffects.push({ x: tc.x, y: tc.y, radius: 0, maxRadius: rangePx, life: 0.4, color: '#4af' });
+        spawnParticle(tc.x, tc.y - 10, 'TIDAL WAVE!', '#4af');
+        break;
+
+      case 'shadow': // Backstab — 4x damage to weakest enemy
+        var weakest = null;
+        var weakHp = Infinity;
+        for (var i = 0; i < enemies.length; i++) {
+          var e = enemies[i];
+          if (!e.alive) continue;
+          var ep = getPathPos(e.dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx && e.hp < weakHp) {
+            weakest = e;
+            weakHp = e.hp;
+          }
+        }
+        if (!weakest) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
+        var stabDmg = Math.round(getHeroDmg() * 4);
+        if (heroAccessoryBonuses.abilityDmg) stabDmg = Math.round(stabDmg * (1 + heroAccessoryBonuses.abilityDmg));
+        damageEnemy(weakest, stabDmg, hero);
+        spawnParticle(tc.x, tc.y - 10, 'BACKSTAB!', '#a6f');
+        break;
+
+      case 'mystic': // Arcane Bolt — chain lightning hits 3 enemies
+        var chainTargets = [];
+        for (var i = 0; i < enemies.length; i++) {
+          var e = enemies[i];
+          if (!e.alive) continue;
+          var ep = getPathPos(e.dist);
+          var dx = ep.x - tc.x, dy = ep.y - tc.y;
+          if (Math.sqrt(dx * dx + dy * dy) <= rangePx) chainTargets.push(e);
+        }
+        if (chainTargets.length === 0) { spawnParticle(tc.x, tc.y, 'No targets!', '#e55'); return; }
+        var chainCount = heroPetLevel >= 3 ? 5 : 3;
+        var boltDmg = Math.round(getHeroDmg() * 2);
+        if (heroAccessoryBonuses.abilityDmg) boltDmg = Math.round(boltDmg * (1 + heroAccessoryBonuses.abilityDmg));
+        for (var i = 0; i < Math.min(chainCount, chainTargets.length); i++) {
+          damageEnemy(chainTargets[i], boltDmg, hero);
+        }
+        spawnParticle(tc.x, tc.y - 10, 'ARCANE BOLT!', '#f6a');
+        break;
     }
 
     hero.qCooldown = getHeroAbilityCooldown(def.q.cooldown);
@@ -1532,25 +1638,41 @@
   }
 
   function activateHeroW() {
-    if (!hero || !heroPetId) return;
+    if (!hero || !heroPetType) return;
     if (hero.wCooldown > 0) return;
-    var def = HERO_DEFS[heroPetId];
+    var def = HERO_DEFS[heroPetType];
     var tc = tileCenter(hero.col, hero.row);
 
-    switch (heroPetId) {
-      case 'cat': // Nine Lives — next N attacks crit
+    switch (heroPetType) {
+      case 'nature': // Nine Lives — next N attacks crit
         hero.critHitsRemaining = heroPetLevel >= 3 ? 8 : 5;
         spawnParticle(tc.x, tc.y - 10, 'NINE LIVES!', '#ffd700');
         break;
 
-      case 'dragon': // Dragon Rage — 2x speed + DOT on hits
+      case 'fire': // Dragon Rage — 2x speed + DOT on hits
         hero.rageTimer = heroPetLevel >= 3 ? 10 : 8;
         spawnParticle(tc.x, tc.y - 10, 'DRAGON RAGE!', '#f84');
         break;
 
-      case 'robot': // Overclock — buff towers in range
+      case 'tech': // Overclock — buff towers in range
         hero.overclockTimer = heroPetLevel >= 3 ? 12 : 8;
         spawnParticle(tc.x, tc.y - 10, 'OVERCLOCK!', '#4cf');
+        break;
+
+      case 'aqua': // Whirlpool — slow zone at hero position
+        hero.whirlpoolTimer = heroPetLevel >= 3 ? 8 : 6;
+        spawnParticle(tc.x, tc.y - 10, 'WHIRLPOOL!', '#4af');
+        break;
+
+      case 'shadow': // Cloak — invisible, next hit crits 3x
+        hero.cloakTimer = heroPetLevel >= 3 ? 7 : 5;
+        hero.cloakCrit = true;
+        spawnParticle(tc.x, tc.y - 10, 'CLOAK!', '#a6f');
+        break;
+
+      case 'mystic': // Enchant — buff towers in range
+        hero.enchantTimer = heroPetLevel >= 3 ? 12 : 8;
+        spawnParticle(tc.x, tc.y - 10, 'ENCHANT!', '#f6a');
         break;
     }
 
@@ -1615,7 +1737,7 @@
         var crossfire = hasSynergy(t, 'crossfire');
         if (crossfire) cdRate *= 1 + 0.15 * getSynergyMultiplier(crossfire.stacks);
         // Robot Overclock: +30% attack speed to towers in hero range
-        if (hero && heroPetId === 'robot' && hero.overclockTimer > 0) {
+        if (hero && heroPetType === 'tech' && hero.overclockTimer > 0) {
           var htc = tileCenter(hero.col, hero.row);
           var ttc = tileCenter(t.col, t.row);
           var hdx = ttc.x - htc.x, hdy = ttc.y - htc.y;
@@ -1921,7 +2043,7 @@
         // Hero projectile effects
         if (p.towerType === 'hero' && p.target.alive) {
           // Dragon Rage: attacks apply fire DOT
-          if (p.heroPetId === 'dragon' && hero && hero.rageTimer > 0) {
+          if (p.heroPetType === 'fire' && hero && hero.rageTimer > 0) {
             p.target.dot = { dmg: 3, remaining: 3, tickTimer: 0 };
           }
           // Farmer Hat: attacks slow enemies
@@ -1943,7 +2065,7 @@
       var p = projectiles[i];
       var col = colorFg;
       var r = 3;
-      if (p.towerType === 'hero') { col = HERO_ACCENT_COLORS[p.heroPetId] || colorAccent; r = 3; }
+      if (p.towerType === 'hero') { col = HERO_ACCENT_COLORS[p.heroPetType] || colorAccent; r = 3; }
       else if (p.towerType === 'fire') col = '#f84';
       else if (p.towerType === 'sniper') { col = '#8cf'; r = 4; }
       else if (p.towerType === 'frost') col = '#4cf';
@@ -2413,6 +2535,7 @@
         difficulty: currentDifficulty,
         hero: hero ? { col: hero.col, row: hero.row, kills: hero.kills || 0, targetMode: hero.targetMode || 'closest', qCooldown: hero.qCooldown || 0, wCooldown: hero.wCooldown || 0 } : null,
         heroPetId: heroPetId,
+        heroPetType: heroPetType,
         heroPetLevel: heroPetLevel
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -2477,6 +2600,7 @@
     heroPlacing = false;
     heroMoving = false;
     heroPetId = save.heroPetId || null;
+    heroPetType = save.heroPetType || null;
     heroPetLevel = save.heroPetLevel || 1;
     getHeroAccessoryBonuses();
     if (save.hero && heroPetId) {
@@ -2676,8 +2800,8 @@
     towerBarEl.innerHTML = '';
 
     // Hero button (first in bar)
-    if (heroPetId && HERO_DEFS[heroPetId]) {
-      var heroDef = HERO_DEFS[heroPetId];
+    if (heroPetType && HERO_DEFS[heroPetType]) {
+      var heroDef = HERO_DEFS[heroPetType];
       var hBtn = document.createElement('button');
       hBtn.className = 'td-tower-btn td-hero-btn';
       if (heroPlacing || heroMoving) hBtn.className += ' td-tower-btn-selected';
@@ -2962,8 +3086,8 @@
 
   // ── Hero drawing ─────────────────────────────────
   function drawHero() {
-    if (!hero || !heroPetId) return;
-    var def = HERO_DEFS[heroPetId];
+    if (!hero || !heroPetType) return;
+    var def = HERO_DEFS[heroPetType];
     var tc = tileCenter(hero.col, hero.row);
     var isInspected = inspectedTower === hero;
 
@@ -2984,10 +3108,9 @@
     }
 
     // Sprite or fallback
-    var frames = resolveHeroFrames(heroPetId, heroPetLevel, 'idle');
-    if (frames && frames.length > 0) {
-      var frame = frames[heroAnimFrame % frames.length];
-      drawHeroSprite(tc.x, tc.y, frame, heroPetId);
+    if (heroSpriteSheet && heroSpriteFrameCount > 0) {
+      var heroFrame = Math.min(heroSpriteFrameOffset + (heroPetLevel || 1) - 1, heroSpriteFrameCount - 1);
+      drawHeroSprite(tc.x, tc.y, heroFrame);
     } else {
       // Fallback: colored square with symbol
       var half = TILE_SIZE * 0.35;
@@ -3071,7 +3194,7 @@
       var hc = hoverTile.col;
       var hr = hoverTile.row;
       var hBuildable = isBuildable(hc, hr);
-      var hDef = heroPetId ? HERO_DEFS[heroPetId] : null;
+      var hDef = heroPetType ? HERO_DEFS[heroPetType] : null;
       var hColor = hDef ? hDef.color : colorAccent;
       var htc = tileCenter(hc, hr);
 
@@ -3228,12 +3351,12 @@
   function renderHeroAbilities() {
     var bar = document.getElementById('td-hero-abilities');
     if (!bar) return;
-    if (!hero || !heroPetId) {
+    if (!hero || !heroPetType) {
       bar.classList.add('td-hidden');
       return;
     }
-    var def = HERO_DEFS[heroPetId];
-    var petColor = HERO_ACCENT_COLORS[heroPetId];
+    var def = HERO_DEFS[heroPetType];
+    var petColor = HERO_ACCENT_COLORS[heroPetType];
     bar.classList.remove('td-hidden');
     bar.innerHTML = '';
 
@@ -3267,11 +3390,11 @@
   }
 
   function renderHeroInspectPanel(panel, t) {
-    var def = HERO_DEFS[heroPetId];
+    var def = HERO_DEFS[heroPetType];
     var towerColor = def.color;
     var dmg = getHeroDmg();
     var rangeTiles = (getHeroRangePx() / TILE_SIZE).toFixed(1);
-    var petName = heroPetId.charAt(0).toUpperCase() + heroPetId.slice(1);
+    var petName = heroPetType.charAt(0).toUpperCase() + heroPetType.slice(1);
 
     var html = '<div class="td-inspect-header" style="border-color:' + towerColor + '">';
     html += '<span class="td-inspect-name" style="color:' + towerColor + '">' + petName + ' Hero Lv' + heroPetLevel + '</span>';
@@ -3390,7 +3513,7 @@
     var t = inspectedTower;
 
     // Hero inspect panel
-    if (t.type === 'hero' && heroPetId) {
+    if (t.type === 'hero' && heroPetType) {
       renderHeroInspectPanel(panel, t);
       return;
     }
@@ -3883,13 +4006,13 @@
     var el = document.getElementById('td-hero-info');
     if (!el) return;
     getHeroPetInfo();
-    if (!heroPetId || !HERO_DEFS[heroPetId]) {
+    if (!heroPetType || !HERO_DEFS[heroPetType]) {
       el.classList.add('td-hidden');
       return;
     }
-    var def = HERO_DEFS[heroPetId];
-    var petName = heroPetId.charAt(0).toUpperCase() + heroPetId.slice(1);
-    var color = HERO_ACCENT_COLORS[heroPetId];
+    var def = HERO_DEFS[heroPetType];
+    var petName = heroPetType.charAt(0).toUpperCase() + heroPetType.slice(1);
+    var color = HERO_ACCENT_COLORS[heroPetType];
     var evo = getHeroEvolutionScale();
 
     var html = '<div class="td-hero-info-header" style="color:' + color + '">';

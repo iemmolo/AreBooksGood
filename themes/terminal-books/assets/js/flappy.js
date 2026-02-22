@@ -2,9 +2,7 @@
   'use strict';
 
   // ── Constants ─────────────────────────────────────
-  var SPRITE_SIZE = 16;
-  var PIXEL_SCALE = 3;
-  var RENDER_SIZE = SPRITE_SIZE * PIXEL_SCALE; // 48
+  var RENDER_SIZE = 48; // native sprite size
   var ANIMATION_FPS = 4;
 
   var GRAVITY = 0.28;
@@ -137,11 +135,15 @@
     buildSpriteCanvases();
   }
 
-  // ── Pet sprite on canvas ──────────────────────────
+  // ── Pet sprite on canvas (sprite sheet) ─────────────
   var spriteData = null;
+  var petCatalog = null;
   var petId = null;
   var petLevel = 1;
-  var spriteFrames = []; // offscreen canvases
+  var spriteSheet = null;    // Image object
+  var spriteFrameCount = 0;
+  var spriteMaxLevel = 3;
+  var spriteFrameOffset = 0;
 
   function loadPetInfo() {
     try {
@@ -160,73 +162,73 @@
   }
 
   function loadSpriteData(cb) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/data/petsprites.json', true);
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        try { spriteData = JSON.parse(xhr.responseText); } catch (e) { spriteData = null; }
+    // Load catalog first to resolve spriteId, then load sprites
+    var catXhr = new XMLHttpRequest();
+    catXhr.open('GET', '/data/petcatalog.json', true);
+    catXhr.onload = function () {
+      if (catXhr.status === 200) {
+        try { petCatalog = JSON.parse(catXhr.responseText); } catch (e) {}
       }
-      cb();
+      loadSprites();
     };
-    xhr.onerror = function () { spriteData = null; cb(); };
-    xhr.send();
-  }
+    catXhr.onerror = function () { loadSprites(); };
+    catXhr.send();
 
-  function resolveFrames(pid, level, anim) {
-    if (!spriteData) return null;
-    var pd = spriteData[pid];
-    if (!pd) return null;
-    var ld = pd[String(level)];
-    if (!ld) return null;
-    var frames = ld[anim];
-    if (typeof frames === 'string') {
-      if (frames.indexOf('.') !== -1) {
-        var parts = frames.split('.');
-        return resolveFrames(parts[0], parseInt(parts[1], 10), anim);
-      }
-      return resolveFrames(pid, parseInt(frames, 10), anim);
+    function loadSprites() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/data/petsprites.json', true);
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          try { spriteData = JSON.parse(xhr.responseText); } catch (e) { spriteData = null; }
+        }
+        cb();
+      };
+      xhr.onerror = function () { spriteData = null; cb(); };
+      xhr.send();
     }
-    return frames;
   }
 
   function buildSpriteCanvases() {
-    spriteFrames = [];
+    spriteSheet = null;
+    spriteFrameCount = 0;
+    spriteMaxLevel = 3;
+    spriteFrameOffset = 0;
     if (!petId || !spriteData) return;
-
-    var frames = resolveFrames(petId, petLevel, 'idle');
-    if (!frames || frames.length === 0) return;
-
-    for (var f = 0; f < frames.length; f++) {
-      var grid = frames[f];
-      var oc = document.createElement('canvas');
-      oc.width = RENDER_SIZE;
-      oc.height = RENDER_SIZE;
-      var octx = oc.getContext('2d');
-
-      for (var i = 0; i < grid.length; i++) {
-        if (grid[i] === 0) continue;
-        var px = i % SPRITE_SIZE;
-        var py = Math.floor(i / SPRITE_SIZE);
-        var c = grid[i] === 1 ? colorFg : grid[i] === 3 ? colorPetAccessory : colorAccent;
-        octx.fillStyle = c;
-        octx.fillRect(px * PIXEL_SCALE, py * PIXEL_SCALE, PIXEL_SCALE, PIXEL_SCALE);
+    // Resolve spriteId via catalog (e.g. golem → robot)
+    var lookupId = petId;
+    if (petCatalog) {
+      var legacy = petCatalog.legacyMap && petCatalog.legacyMap[petId];
+      var cid = legacy || petId;
+      if (petCatalog.creatures && petCatalog.creatures[cid] && petCatalog.creatures[cid].spriteId) {
+        lookupId = petCatalog.creatures[cid].spriteId;
       }
-      spriteFrames.push(oc);
     }
+    var pd = spriteData[lookupId];
+    if (!pd || !pd.sheet) return;
+
+    spriteFrameCount = pd.frames || 3;
+    spriteMaxLevel = pd.maxLevel || 3;
+    spriteFrameOffset = pd.frameOffset || 0;
+    var img = new Image();
+    img.onload = function () {
+      spriteSheet = img;
+      renderPetPreview();
+    };
+    img.src = pd.sheet;
   }
 
   function renderPetPreview() {
     if (!petPreview) return;
     petPreview.innerHTML = '';
-    if (spriteFrames.length > 0) {
-      var img = spriteFrames[0];
+    if (spriteSheet) {
       var el = document.createElement('canvas');
       el.width = RENDER_SIZE;
       el.height = RENDER_SIZE;
       el.style.width = RENDER_SIZE + 'px';
       el.style.height = RENDER_SIZE + 'px';
       el.style.imageRendering = 'pixelated';
-      el.getContext('2d').drawImage(img, 0, 0);
+      var previewFrame = Math.min(spriteFrameOffset + (petLevel || 1) - 1, spriteFrameCount - 1);
+      el.getContext('2d').drawImage(spriteSheet, previewFrame * RENDER_SIZE, 0, RENDER_SIZE, RENDER_SIZE, 0, 0, RENDER_SIZE, RENDER_SIZE);
       petPreview.appendChild(el);
     } else {
       petPreview.textContent = '>';
@@ -693,10 +695,9 @@
     ctx.translate(cx, cy);
     ctx.rotate(rot);
 
-    if (spriteFrames.length > 0) {
-      var fi = animFrame % spriteFrames.length;
-      var spr = spriteFrames[fi];
-      ctx.drawImage(spr, -RENDER_SIZE / 2, -RENDER_SIZE / 2, RENDER_SIZE, RENDER_SIZE);
+    if (spriteSheet && spriteFrameCount > 0) {
+      var fi = Math.min(spriteFrameOffset + (petLevel || 1) - 1, spriteFrameCount - 1);
+      ctx.drawImage(spriteSheet, fi * RENDER_SIZE, 0, RENDER_SIZE, RENDER_SIZE, -RENDER_SIZE / 2, -RENDER_SIZE / 2, RENDER_SIZE, RENDER_SIZE);
     } else {
       // Fallback arrow shape
       ctx.fillStyle = colorFg;

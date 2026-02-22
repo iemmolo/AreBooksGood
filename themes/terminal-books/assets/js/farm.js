@@ -1733,7 +1733,7 @@
     } else if (conf.key === 'shopLink') {
       tile.addEventListener('click', function () {
         collapseFarmBar();
-        window.location.href = '/shops/';
+        window.location.href = '/farm/silk-road/';
       });
     } else if (conf.key === 'resourceLink') {
       tile.addEventListener('click', function () {
@@ -2251,21 +2251,26 @@
     if (!window.PetSystem || !window.PetSystem.getState) return null;
     var ps = window.PetSystem.getState();
     if (!ps) return null;
-    var id = ps.petId;
+    var type = (window.PetSystem.getCreatureType && window.PetSystem.getCreatureType(ps.petId)) || null;
+    if (!type) return null;
     var lv = ps.level;
-    if (id === 'cat') {
-      return 'Cat: Green Paw (15% auto-replant)';
+    switch (type) {
+      case 'fire':
+        var pct = lv === 1 ? 10 : lv === 2 ? 15 : 20;
+        return 'Fire: Warm Soil (' + pct + '% faster growth)';
+      case 'nature':
+        return 'Nature: Green Paw (15% auto-replant)';
+      case 'tech':
+        return 'Tech: Auto-Harvest (on page load)';
+      case 'aqua':
+        return 'Aqua: Rain Dance (auto-water crops)';
+      case 'shadow':
+        return 'Shadow: Black Market (+15% sell price)';
+      case 'mystic':
+        return 'Mystic: Mystic Growth (rare seed drops)';
+      default:
+        return null;
     }
-    if (id === 'dragon') {
-      var pct = lv === 1 ? 10 : lv === 2 ? 15 : 20;
-      return 'Dragon: ' + pct + '% win bonus';
-    }
-    if (id === 'robot') {
-      var every = lv === 1 ? 10 : lv === 2 ? 8 : 5;
-      var pct = lv === 1 ? 30 : lv === 2 ? 40 : 50;
-      return 'Robot: ' + pct + '% every ' + every + ' games';
-    }
-    return null;
   }
 
   function openFarmhousePanel() {

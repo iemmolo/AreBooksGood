@@ -1,0 +1,103 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="casino-intro">
+    {{ .Content }}
+  </div>
+
+  <div class="casino-tile-grid">
+    <a href="{{ "pets/hatchery/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        🥚 🔮<br>⭐
+      </div>
+      <div class="casino-tile-pet"></div>
+      <span class="casino-tile-label">> hatchery</span>
+    </a>
+
+    <a href="{{ "pets/evolution/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        ⬆️ ✨<br>🌟
+      </div>
+      <div class="casino-tile-pet"></div>
+      <span class="casino-tile-label">> evolution</span>
+    </a>
+
+    <a href="{{ "pets/collection/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        📋 🔍<br>🏆
+      </div>
+      <div class="casino-tile-pet"></div>
+      <span class="casino-tile-label">> collection</span>
+    </a>
+  </div>
+
+  <script>
+  (function () {
+    var PET_KEY = 'arebooksgood-pet';
+    var DISPLAY_SIZE = 32;
+
+    try {
+      var raw = localStorage.getItem(PET_KEY);
+      if (!raw) return;
+      var ps = JSON.parse(raw);
+      if (!ps.activePet || !ps.pets || !ps.pets[ps.activePet]) return;
+      var petId = ps.activePet;
+      var level = ps.pets[ps.activePet].level || 1;
+
+      var spriteId = petId;
+      var catXhr = new XMLHttpRequest();
+      catXhr.open('GET', '/data/petcatalog.json', true);
+      catXhr.onload = function () {
+        if (catXhr.status === 200) {
+          try {
+            var cat = JSON.parse(catXhr.responseText);
+            if (cat.creatures && cat.creatures[petId]) {
+              spriteId = cat.creatures[petId].spriteId || petId;
+            }
+          } catch (e) {}
+        }
+        loadSprites();
+      };
+      catXhr.onerror = function () { loadSprites(); };
+      catXhr.send();
+
+      function loadSprites() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/data/petsprites.json', true);
+        xhr.onload = function () {
+          if (xhr.status !== 200) return;
+          var data;
+          try { data = JSON.parse(xhr.responseText); } catch (e) { return; }
+
+          var pd = data[spriteId];
+          if (!pd || !pd.sheet) return;
+
+          var containers = document.querySelectorAll('.casino-tile-pet');
+          for (var i = 0; i < containers.length; i++) {
+            renderSprite(containers[i], pd, level);
+          }
+        };
+        xhr.send();
+      }
+    } catch (e) {}
+
+    function renderSprite(container, pd, level) {
+      var fw = pd.frameWidth || 48;
+      var fh = pd.frameHeight || 48;
+      var frames = pd.frames || 3;
+      var frameOffset = pd.frameOffset || 0;
+      var frameIdx = Math.min(frameOffset + (level || 1) - 1, frames - 1);
+      var scale = DISPLAY_SIZE / fw;
+
+      var el = document.createElement('div');
+      el.className = 'casino-tile-pet-sprite';
+      el.style.width = DISPLAY_SIZE + 'px';
+      el.style.height = DISPLAY_SIZE + 'px';
+      el.style.backgroundImage = 'url(' + pd.sheet + ')';
+      el.style.backgroundSize = (fw * frames * scale) + 'px ' + (fh * scale) + 'px';
+      el.style.backgroundPosition = '-' + (frameIdx * fw * scale) + 'px 0';
+      el.style.imageRendering = 'pixelated';
+      container.appendChild(el);
+    }
+  })();
+  </script>
+{{ end }}

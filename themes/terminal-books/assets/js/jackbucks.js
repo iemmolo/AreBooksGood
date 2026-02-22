@@ -99,7 +99,7 @@
     balanceEl.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      window.location.href = '/shops/silk-road/';
+      window.location.href = '/farm/silk-road/';
     });
   }
 })();

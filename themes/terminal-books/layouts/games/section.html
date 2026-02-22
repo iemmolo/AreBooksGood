@@ -79,8 +79,7 @@
   <script>
   (function () {
     var PET_KEY = 'arebooksgood-pet';
-    var SPRITE_SIZE = 16;
-    var SCALE = 2;
+    var DISPLAY_SIZE = 32;
 
     try {
       var raw = localStorage.getItem(PET_KEY);
@@ -90,55 +89,57 @@
       var petId = ps.activePet;
       var level = ps.pets[ps.activePet].level || 1;
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', '/data/petsprites.json', true);
-      xhr.onload = function () {
-        if (xhr.status !== 200) return;
-        var data;
-        try { data = JSON.parse(xhr.responseText); } catch (e) { return; }
-
-        var frames = resolveFrames(data, petId, level, 'idle');
-        if (!frames || !frames.length) return;
-        var grid = frames[0];
-
-        var containers = document.querySelectorAll('.casino-tile-pet');
-        for (var i = 0; i < containers.length; i++) {
-          renderSprite(containers[i], grid);
+      var spriteId = petId;
+      var catXhr = new XMLHttpRequest();
+      catXhr.open('GET', '/data/petcatalog.json', true);
+      catXhr.onload = function () {
+        if (catXhr.status === 200) {
+          try {
+            var cat = JSON.parse(catXhr.responseText);
+            if (cat.creatures && cat.creatures[petId]) spriteId = cat.creatures[petId].spriteId || petId;
+          } catch (e) {}
         }
+        loadSprites();
       };
-      xhr.send();
+      catXhr.onerror = function () { loadSprites(); };
+      catXhr.send();
+
+      function loadSprites() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/data/petsprites.json', true);
+        xhr.onload = function () {
+          if (xhr.status !== 200) return;
+          var data;
+          try { data = JSON.parse(xhr.responseText); } catch (e) { return; }
+
+          var pd = data[spriteId];
+          if (!pd || !pd.sheet) return;
+
+          var containers = document.querySelectorAll('.casino-tile-pet');
+          for (var i = 0; i < containers.length; i++) {
+            renderSprite(containers[i], pd, level);
+          }
+        };
+        xhr.send();
+      }
     } catch (e) {}
 
-    function resolveFrames(data, pid, lvl, anim) {
-      var pd = data[pid];
-      if (!pd) return null;
-      var ld = pd[String(lvl)];
-      if (!ld) return null;
-      var f = ld[anim];
-      if (typeof f === 'string') {
-        if (f.indexOf('.') !== -1) {
-          var p = f.split('.');
-          return resolveFrames(data, p[0], parseInt(p[1], 10), anim);
-        }
-        return resolveFrames(data, pid, parseInt(f, 10), anim);
-      }
-      return f;
-    }
+    function renderSprite(container, pd, level) {
+      var fw = pd.frameWidth || 48;
+      var fh = pd.frameHeight || 48;
+      var frames = pd.frames || 3;
+      var frameOffset = pd.frameOffset || 0;
+      var frameIdx = Math.min(frameOffset + (level || 1) - 1, frames - 1);
+      var scale = DISPLAY_SIZE / fw;
 
-    function renderSprite(container, grid) {
-      var shadows = [];
-      for (var i = 0; i < grid.length; i++) {
-        if (grid[i] === 0) continue;
-        var px = i % SPRITE_SIZE;
-        var py = Math.floor(i / SPRITE_SIZE);
-        var color = grid[i] === 1 ? 'var(--foreground)' : grid[i] === 3 ? 'var(--pet-accessory)' : 'var(--accent)';
-        shadows.push((px * SCALE) + 'px ' + (py * SCALE) + 'px 0 0.5px ' + color);
-      }
       var el = document.createElement('div');
-      el.className = 'casino-tile-pet-pixel';
-      el.style.width = SCALE + 'px';
-      el.style.height = SCALE + 'px';
-      el.style.boxShadow = shadows.join(',');
+      el.className = 'casino-tile-pet-sprite';
+      el.style.width = DISPLAY_SIZE + 'px';
+      el.style.height = DISPLAY_SIZE + 'px';
+      el.style.backgroundImage = 'url(' + pd.sheet + ')';
+      el.style.backgroundSize = (fw * frames * scale) + 'px ' + (fh * scale) + 'px';
+      el.style.backgroundPosition = '-' + (frameIdx * fw * scale) + 'px 0';
+      el.style.imageRendering = 'pixelated';
       container.appendChild(el);
     }
   })();

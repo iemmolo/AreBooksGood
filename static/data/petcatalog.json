@@ -1,0 +1,68 @@
+{
+  "types": {
+    "fire":   { "casinoPassive": "Bonus coins on wins", "farmBonus": "Faster crop growth", "passiveName": "Dragon's Hoard", "farmBonusName": "Warm Soil" },
+    "nature": { "casinoPassive": "Refund on loss streaks", "farmBonus": "Auto-replant chance", "passiveName": "Lucky Paws", "farmBonusName": "Green Paw" },
+    "tech":   { "casinoPassive": "Periodic recovery", "farmBonus": "Auto-harvest on load", "passiveName": "Probability Core", "farmBonusName": "Auto-Harvest" },
+    "aqua":   { "casinoPassive": "Refund on loss streaks", "farmBonus": "Auto-water crops", "passiveName": "Tidal Grace", "farmBonusName": "Rain Dance" },
+    "shadow": { "casinoPassive": "Bonus fling coins", "farmBonus": "Better sell prices", "passiveName": "Shadow Stash", "farmBonusName": "Black Market" },
+    "mystic": { "casinoPassive": "Random bonus roll", "farmBonus": "Rare seed drops", "passiveName": "Arcane Luck", "farmBonusName": "Mystic Growth" }
+  },
+  "eggs": {
+    "common":    { "currency": "coins", "cost": 300,  "pool": "2evo",    "dupMergeXP": 25, "poolSize": 10 },
+    "rare":      { "currency": "coins", "cost": 1500, "pool": "3evo",    "dupMergeXP": 50, "poolSize": 22 },
+    "legendary": { "currency": "jb",    "cost": 50,   "pool": "uniques", "dupRefund": 150, "dupMergeXP": 100, "poolSize": 8 }
+  },
+  "evolution": {
+    "2": { "xpRequired": 100, "gamesRequired": 50,  "coinCost": 500 },
+    "3": { "xpRequired": 300, "gamesRequired": 200, "coinCost": 2000 }
+  },
+  "creatures": {
+    "cat":      { "name": "Cat",      "type": "nature", "tier": "common",    "maxLevel": 2, "spriteId": "cat" },
+    "ferret":   { "name": "Ferret",   "type": "nature", "tier": "common",    "maxLevel": 2, "spriteId": "ferret" },
+    "yak":      { "name": "Yak",      "type": "fire",   "tier": "common",    "maxLevel": 2, "spriteId": "yak" },
+    "turtle":   { "name": "Turtle",   "type": "aqua",   "tier": "common",    "maxLevel": 2, "spriteId": "turtle" },
+    "vampire":  { "name": "Vampire",  "type": "shadow", "tier": "common",    "maxLevel": 2, "spriteId": "vampire" },
+    "puppy":    { "name": "Puppy",    "type": "fire",   "tier": "common",    "maxLevel": 2, "spriteId": "puppy" },
+    "eel":      { "name": "Eel",      "type": "aqua",   "tier": "common",    "maxLevel": 2, "spriteId": "eel" },
+    "gremlin":  { "name": "Gremlin",  "type": "tech",   "tier": "common",    "maxLevel": 2, "spriteId": "gremlin" },
+    "gargoyle": { "name": "Gargoyle", "type": "tech",   "tier": "common",    "maxLevel": 2, "spriteId": "gargoyle" },
+    "mouse":    { "name": "Mouse",    "type": "tech",   "tier": "common",    "maxLevel": 2, "spriteId": "mouse" },
+
+    "pixie":    { "name": "Pixie",    "type": "mystic", "tier": "rare",      "maxLevel": 3, "spriteId": "pixie" },
+    "golem":    { "name": "Golem",    "type": "tech",   "tier": "rare",      "maxLevel": 3, "spriteId": "robot" },
+    "panda":    { "name": "Panda",    "type": "nature", "tier": "rare",      "maxLevel": 3, "spriteId": "panda" },
+    "tiger":    { "name": "Tiger",    "type": "fire",   "tier": "rare",      "maxLevel": 3, "spriteId": "tiger" },
+    "moth":     { "name": "Moth",     "type": "mystic", "tier": "rare",      "maxLevel": 3, "spriteId": "moth" },
+    "dove":     { "name": "Dove",     "type": "mystic", "tier": "rare",      "maxLevel": 3, "spriteId": "dove" },
+    "shade":    { "name": "Shade",    "type": "shadow", "tier": "rare",      "maxLevel": 3, "spriteId": "shade" },
+    "fox":      { "name": "Fox",      "type": "nature", "tier": "rare",      "maxLevel": 3, "spriteId": "fox" },
+    "drake":    { "name": "Drake",    "type": "fire",   "tier": "rare",      "maxLevel": 3, "spriteId": "drake" },
+    "angler":   { "name": "Angler",   "type": "aqua",   "tier": "rare",      "maxLevel": 3, "spriteId": "angler" },
+    "imp":      { "name": "Imp",      "type": "shadow", "tier": "rare",      "maxLevel": 3, "spriteId": "imp" },
+    "fungus":   { "name": "Fungus",   "type": "mystic", "tier": "rare",      "maxLevel": 3, "spriteId": "fungus" },
+    "tanuki":   { "name": "Tanuki",   "type": "tech",   "tier": "rare",      "maxLevel": 3, "spriteId": "tanuki" },
+    "wraith":   { "name": "Wraith",   "type": "shadow", "tier": "rare",      "maxLevel": 3, "spriteId": "wraith" },
+    "wyvern":   { "name": "Wyvern",   "type": "fire",   "tier": "rare",      "maxLevel": 3, "spriteId": "wyvern" },
+    "crow":     { "name": "Crow",     "type": "shadow", "tier": "rare",      "maxLevel": 3, "spriteId": "crow" },
+    "bunny":    { "name": "Bunny",    "type": "aqua",   "tier": "rare",      "maxLevel": 3, "spriteId": "bunny" },
+    "yeti":     { "name": "Yeti",     "type": "aqua",   "tier": "rare",      "maxLevel": 3, "spriteId": "yeti" },
+    "scarab":   { "name": "Scarab",   "type": "tech",   "tier": "rare",      "maxLevel": 3, "spriteId": "scarab" },
+    "hound":    { "name": "Hound",    "type": "aqua",   "tier": "rare",      "maxLevel": 3, "spriteId": "hound" },
+    "unicorn":  { "name": "Unicorn",  "type": "mystic", "tier": "rare",      "maxLevel": 3, "spriteId": "unicorn" },
+    "raptor":   { "name": "Raptor",   "type": "nature", "tier": "rare",      "maxLevel": 3, "spriteId": "raptor" },
+
+    "sylph":    { "name": "Sylph",    "type": "mystic", "tier": "legendary", "maxLevel": 1, "spriteId": "sylph" },
+    "hydra":    { "name": "Hydra",    "type": "nature", "tier": "legendary", "maxLevel": 1, "spriteId": "hydra" },
+    "stag":     { "name": "Stag",     "type": "mystic", "tier": "legendary", "maxLevel": 1, "spriteId": "stag" },
+    "chimera":  { "name": "Chimera",  "type": "shadow", "tier": "legendary", "maxLevel": 1, "spriteId": "chimera" },
+    "cerberus": { "name": "Cerberus", "type": "fire",   "tier": "legendary", "maxLevel": 1, "spriteId": "cerberus" },
+    "dragon":   { "name": "Dragon",   "type": "fire",   "tier": "legendary", "maxLevel": 1, "spriteId": "dragon" },
+    "reaper":   { "name": "Reaper",   "type": "shadow", "tier": "legendary", "maxLevel": 1, "spriteId": "reaper" },
+    "sage":     { "name": "Sage",     "type": "tech",   "tier": "legendary", "maxLevel": 1, "spriteId": "sage" }
+  },
+  "legacyMap": {
+    "cat": "cat",
+    "dragon": "dragon",
+    "robot": "golem"
+  }
+}
