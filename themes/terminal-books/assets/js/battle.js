@@ -512,6 +512,19 @@
     img.src = '/images/pets/battle_vfx.png';
   }
 
+  // Dark overlay box for banner/countdown text
+  function drawDialogBox(x, y, w, h) {
+    var s = uiScale();
+    var r = Math.round(6 * s);
+    // Dark fill
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.beginPath(); roundRect(x, y, w, h, r); ctx.fill();
+    // Subtle border
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = Math.round(2 * s);
+    ctx.beginPath(); roundRect(x, y, w, h, r); ctx.stroke();
+  }
+
   // ── Gear stat aggregation ─────────────────────────
   function calcEquippedGearStats(creatureId) {
     var gs = { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 };
@@ -768,11 +781,22 @@
     ctx.font = 'bold ' + Math.round(7 * s) + 'px monospace';
     var tw = ctx.measureText(text.toUpperCase()).width + Math.round(6 * s);
     var badgeH = Math.round(12 * s);
+    // Badge background
     ctx.fillStyle = color + '30';
     ctx.beginPath(); roundRect(x, y, tw, badgeH, Math.round(2 * s)); ctx.fill();
-    ctx.fillStyle = color;
+    // Badge border
+    ctx.strokeStyle = color + '50';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); roundRect(x, y, tw, badgeH, Math.round(2 * s)); ctx.stroke();
+    // Type text with dark outline
+    var tx = x + Math.round(3 * s);
+    var ty = y + Math.round(9 * s);
     ctx.textAlign = 'left';
-    ctx.fillText(text.toUpperCase(), x + Math.round(3 * s), y + Math.round(9 * s));
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = Math.round(2 * s);
+    ctx.strokeText(text.toUpperCase(), tx, ty);
+    ctx.fillStyle = color;
+    ctx.fillText(text.toUpperCase(), tx, ty);
   }
 
   function drawStatusIcons(fighter, x, y) {
@@ -803,6 +827,15 @@
   var floatingTexts = [];
 
   function addFloatingText(text, x, y, color, scale) {
+    // Push above any nearby existing texts to prevent overlap
+    var s = uiScale();
+    var textH = Math.round(14 * s * (scale || 1));
+    for (var j = 0; j < floatingTexts.length; j++) {
+      var other = floatingTexts[j];
+      if (Math.abs(other.x - x) < 60 * s && other.y - y < textH && other.y - y > -textH) {
+        y = other.y - textH;
+      }
+    }
     floatingTexts.push({ text: text, x: x, y: y, color: color || themeColors.fg, life: 40, maxLife: 40, scale: scale || 1 });
   }
 
@@ -819,10 +852,15 @@
     for (var i = 0; i < floatingTexts.length; i++) {
       var ft = floatingTexts[i];
       var alpha = Math.min(1, ft.life / 15);
+      var s = uiScale();
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = ft.color;
-      ctx.font = 'bold ' + Math.round(12 * uiScale() * (ft.scale || 1)) + 'px monospace';
+      ctx.font = 'bold ' + Math.round(12 * s * (ft.scale || 1)) + 'px monospace';
       ctx.textAlign = 'center';
+      // Dark outline for readability
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.lineWidth = 3 * s;
+      ctx.strokeText(ft.text, ft.x, ft.y);
+      ctx.fillStyle = ft.color;
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.globalAlpha = 1;
     }
@@ -934,6 +972,13 @@
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     ctx.fillStyle = themeColors.bg;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    // Gradient overlay for depth
+    var bgGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    bgGrad.addColorStop(0, 'rgba(255,255,255,0.04)');
+    bgGrad.addColorStop(0.5, 'rgba(0,0,0,0)');
+    bgGrad.addColorStop(1, 'rgba(0,0,0,0.12)');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
     // Divider line
     ctx.strokeStyle = themeColors.fg + '10';
@@ -983,6 +1028,14 @@
         ctx.stroke();
         ctx.restore();
       }
+      // Platform shadow
+      ctx.save();
+      ctx.globalAlpha = 0.25 * (fighter.opacity || 1);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath();
+      ctx.ellipse(px + pos.size / 2, py + pos.size + Math.round(2 * s), pos.size * 0.45, pos.size * 0.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       drawPlayerSprite(fighter, px, py, pos.size);
       // Name
       ctx.fillStyle = themeColors.fg;
@@ -1023,6 +1076,14 @@
         ctx.stroke();
         ctx.restore();
       }
+      // Platform shadow
+      ctx.save();
+      ctx.globalAlpha = 0.25 * (enemy.opacity || 1);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath();
+      ctx.ellipse(ex + epos.size / 2, ey + epos.size + Math.round(2 * s), epos.size * 0.45, epos.size * 0.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       drawEnemySprite(enemy, ex, ey, epos.size, enemyAnimFrame);
       // Name
       ctx.fillStyle = themeColors.fg;
@@ -1081,22 +1142,54 @@
       }
     }
 
-    // Canvas banner (WAVE CLEAR / countdown)
+    // Canvas banner (WAVE CLEAR / countdown) — dialog box overlay
     if (bannerText && bannerTimer > 0) {
       var bAlpha = Math.min(1, bannerTimer / (bannerMaxTimer * 0.3));
+      var bS = uiScale();
       ctx.globalAlpha = bAlpha;
-      ctx.fillStyle = themeColors.accent;
-      ctx.font = 'bold ' + Math.round(28 * uiScale()) + 'px monospace';
+      // Dark scrim
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      // Dialog box frame
+      var bFontSize = Math.round(28 * bS);
+      ctx.font = 'bold ' + bFontSize + 'px monospace';
+      var bannerTW = ctx.measureText(bannerText).width;
+      var bBoxW = bannerTW + Math.round(60 * bS);
+      var bBoxH = Math.round(56 * bS);
+      var bBoxX = (CANVAS_W - bBoxW) / 2;
+      var bBoxY = (CANVAS_H - bBoxH) / 2;
+      drawDialogBox(bBoxX, bBoxY, bBoxW, bBoxH);
+      // Text centered inside box
+      ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
-      ctx.fillText(bannerText, CANVAS_W / 2, CANVAS_H / 2);
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(bannerText, CANVAS_W / 2, bBoxY + bBoxH / 2 + bFontSize * 0.35);
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
 
     if (countdownText) {
-      ctx.fillStyle = themeColors.accent;
-      ctx.font = 'bold ' + Math.round(36 * uiScale()) + 'px monospace';
+      var cS = uiScale();
+      // Dark scrim
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      // Dialog box frame
+      var cFontSize = Math.round(36 * cS);
+      ctx.font = 'bold ' + cFontSize + 'px monospace';
+      var cdTW = ctx.measureText(countdownText).width;
+      var cdBoxW = Math.max(cdTW + Math.round(60 * cS), Math.round(80 * cS));
+      var cdBoxH = Math.round(64 * cS);
+      var cdBoxX = (CANVAS_W - cdBoxW) / 2;
+      var cdBoxY = (CANVAS_H - cdBoxH) / 2;
+      drawDialogBox(cdBoxX, cdBoxY, cdBoxW, cdBoxH);
+      // Text centered inside box
+      ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
-      ctx.fillText(countdownText, CANVAS_W / 2, CANVAS_H / 2);
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(countdownText, CANVAS_W / 2, cdBoxY + cdBoxH / 2 + cFontSize * 0.35);
+      ctx.shadowBlur = 0;
     }
   }
 
@@ -2810,6 +2903,7 @@
     if (spritesToLoad.length === 0) afterSpritesLoaded();
 
     function afterSpritesLoaded() {
+      // Fire-and-forget: preload UI assets in parallel
       preloadVFX(function () {
         showScreen('battle');
         sizeCanvas();
