@@ -252,6 +252,7 @@
     var creature = catalog.creatures[id];
     if (!creature) return;
 
+    var oldLevel = pet.level;
     var nextLevel = pet.level + 1;
     if (nextLevel > creature.maxLevel) return;
 
@@ -268,11 +269,142 @@
     shopState.totalShopSpent += req.coinCost;
     saveShopState(shopState);
 
-    renderAll();
+    playEvolveAnimation(id, oldLevel, nextLevel, function () {
+      renderAll();
+      if (window.PetSystem && window.PetSystem.reload) {
+        window.PetSystem.reload();
+      }
+    });
+  }
 
-    if (window.PetSystem && window.PetSystem.reload) {
-      window.PetSystem.reload();
+  // ── Evolution Animation ─────────────────────────────
+  function playEvolveAnimation(id, oldLevel, newLevel, callback) {
+    var creature = catalog.creatures[id];
+    if (!creature) { if (callback) callback(); return; }
+
+    var pet = petState.pets[id];
+    var skin = pet ? (pet.skin || 'default') : 'default';
+    var isMaxLevel = newLevel >= creature.maxLevel;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'evo-overlay' + (isMaxLevel ? ' evo-overlay-gold' : '');
+
+    var stage = document.createElement('div');
+    stage.className = 'evo-stage';
+
+    // Old-form sprite at 2x
+    var oldWrap = document.createElement('div');
+    oldWrap.className = 'evo-creature-old';
+    var oldSpr = renderSpritePreview(id, oldLevel, skin);
+    if (oldSpr) {
+      oldSpr.style.transform = 'scale(2)';
+      oldSpr.style.transformOrigin = 'center';
+      oldWrap.appendChild(oldSpr);
     }
+    stage.appendChild(oldWrap);
+
+    // Gather particles (fly inward toward center)
+    var gatherCount = 16;
+    for (var i = 0; i < gatherCount; i++) {
+      var gp = document.createElement('div');
+      gp.className = 'evo-particle evo-particle-gather';
+      var angle = (i / gatherCount) * Math.PI * 2;
+      var dist = 60 + Math.random() * 40;
+      gp.style.setProperty('--hx', Math.round(Math.cos(angle) * dist) + 'px');
+      gp.style.setProperty('--hy', Math.round(Math.sin(angle) * dist) + 'px');
+      gp.style.left = '50%';
+      gp.style.top = '50%';
+      gp.style.animationDelay = (0.3 + Math.random() * 0.5) + 's';
+      stage.appendChild(gp);
+    }
+
+    // Flash element
+    var flashEl = document.createElement('div');
+    flashEl.className = 'evo-flash-el';
+    flashEl.style.animationDelay = '1.4s';
+    flashEl.style.opacity = '0';
+    stage.appendChild(flashEl);
+
+    // VFX burst (reuse battle_vfx.png)
+    var vfx = document.createElement('div');
+    vfx.className = 'evo-vfx';
+    vfx.style.animationDelay = '1.4s';
+    stage.appendChild(vfx);
+
+    // New-form sprite at 2x (emerges after flash)
+    var newWrap = document.createElement('div');
+    newWrap.className = 'evo-creature-new';
+    var newSpr = renderSpritePreview(id, newLevel, skin);
+    if (newSpr) {
+      newSpr.style.transform = 'scale(2)';
+      newSpr.style.transformOrigin = 'center';
+      newWrap.appendChild(newSpr);
+    }
+    // Sparkle overlay for max-level
+    if (isMaxLevel) {
+      var sparkle = document.createElement('div');
+      sparkle.className = 'evo-sparkle';
+      newWrap.appendChild(sparkle);
+    }
+    stage.appendChild(newWrap);
+
+    // Burst particles (fly outward after new form)
+    var burstCount = isMaxLevel ? 24 : 14;
+    for (var j = 0; j < burstCount; j++) {
+      var bp = document.createElement('div');
+      bp.className = 'evo-particle evo-particle-burst';
+      if (isMaxLevel) {
+        bp.style.background = '#ffd700';
+        bp.style.boxShadow = '0 0 4px #ffd700';
+      }
+      var bAngle = (j / burstCount) * Math.PI * 2;
+      var bDist = 50 + Math.random() * 40;
+      bp.style.setProperty('--hx', Math.round(Math.cos(bAngle) * bDist) + 'px');
+      bp.style.setProperty('--hy', Math.round(Math.sin(bAngle) * bDist) + 'px');
+      bp.style.left = '50%';
+      bp.style.top = '50%';
+      bp.style.animationDelay = (1.7 + Math.random() * 0.3) + 's';
+      stage.appendChild(bp);
+    }
+
+    // Level label
+    var label = document.createElement('div');
+    label.className = 'evo-label' + (isMaxLevel ? ' evo-label-gold' : '');
+    label.textContent = 'Level ' + newLevel + (isMaxLevel ? ' MAX!' : '!');
+    stage.appendChild(label);
+
+    // Creature name
+    var nameEl = document.createElement('div');
+    nameEl.className = 'evo-name';
+    nameEl.textContent = creature.name;
+    stage.appendChild(nameEl);
+
+    overlay.appendChild(stage);
+
+    // Dismiss text
+    var dismiss = document.createElement('div');
+    dismiss.className = 'evo-dismiss';
+    dismiss.textContent = '[click to continue]';
+    overlay.appendChild(dismiss);
+
+    document.body.appendChild(overlay);
+
+    // Allow dismiss after reveal completes
+    var dismissed = false;
+    function onDismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 0.3s';
+      setTimeout(function () {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        if (callback) callback();
+      }, 300);
+    }
+
+    setTimeout(function () {
+      overlay.addEventListener('click', onDismiss);
+    }, 2400);
   }
 
   // ── Gacha Egg System ───────────────────────────────
@@ -879,28 +1011,118 @@
     }
   }
 
+  // Track active evolution filter
+  var evoActiveFilter = 'hide-max';
+
+  function applyEvoFilter(filter) {
+    evoActiveFilter = filter;
+    var cards = dom.evolution.querySelectorAll('.shop-evo-card');
+    for (var i = 0; i < cards.length; i++) {
+      var status = cards[i].getAttribute('data-evo-status');
+      if (filter === 'all') {
+        cards[i].style.display = '';
+      } else if (filter === 'ready') {
+        cards[i].style.display = status === 'ready' ? '' : 'none';
+      } else if (filter === 'hide-max') {
+        cards[i].style.display = status === 'max' ? 'none' : '';
+      }
+    }
+
+    // Update filter button active states
+    var filterBar = document.getElementById('evo-filters');
+    if (filterBar) {
+      var btns = filterBar.querySelectorAll('.evo-filter-btn');
+      for (var j = 0; j < btns.length; j++) {
+        if (btns[j].getAttribute('data-filter') === filter) {
+          btns[j].classList.add('evo-filter-active');
+        } else {
+          btns[j].classList.remove('evo-filter-active');
+        }
+      }
+    }
+  }
+
+  function initEvoFilters() {
+    var filterBar = document.getElementById('evo-filters');
+    if (!filterBar) return;
+    var btns = filterBar.querySelectorAll('.evo-filter-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', (function (btn) {
+        return function () {
+          applyEvoFilter(btn.getAttribute('data-filter'));
+        };
+      })(btns[i]));
+    }
+  }
+
+  var evoFiltersInited = false;
+
   function renderEvolution() {
     if (!dom.evolutionSection || !dom.evolution) return;
     if (!hasAnyPet() || !catalog) {
       dom.evolutionSection.style.display = 'none';
+      var fb = document.getElementById('evo-filters');
+      if (fb) fb.style.display = 'none';
       return;
     }
     dom.evolutionSection.style.display = '';
     dom.evolution.innerHTML = '';
 
+    // Show filter bar
+    var filterBar = document.getElementById('evo-filters');
+    if (filterBar) filterBar.style.display = '';
+
+    // Init filter click handlers once
+    if (!evoFiltersInited) {
+      initEvoFilters();
+      evoFiltersInited = true;
+    }
+
+    // Collect all evo entries with status
+    var entries = [];
     for (var id in petState.pets) {
       if (!petState.pets.hasOwnProperty(id)) continue;
       var pet = petState.pets[id];
       var creature = catalog.creatures[id];
       if (!creature) continue;
 
-      if (pet.level >= creature.maxLevel) {
+      var isMax = pet.level >= creature.maxLevel;
+      var status;
+      if (isMax) {
+        status = 'max';
+      } else {
+        var nextLevel = pet.level + 1;
+        var req = catalog.evolution[String(nextLevel)];
+        if (!req) continue;
+        var canEvolve = Wallet.getBalance() >= req.coinCost &&
+                        (pet.mergeXP || 0) >= req.xpRequired;
+        status = canEvolve ? 'ready' : 'progress';
+      }
+      entries.push({ id: id, pet: pet, creature: creature, status: status });
+    }
+
+    // Sort: ready first, then progress, then max
+    var statusOrder = { ready: 0, progress: 1, max: 2 };
+    entries.sort(function (a, b) {
+      var sa = statusOrder[a.status] !== undefined ? statusOrder[a.status] : 3;
+      var sb = statusOrder[b.status] !== undefined ? statusOrder[b.status] : 3;
+      if (sa !== sb) return sa - sb;
+      return a.creature.name.localeCompare(b.creature.name);
+    });
+
+    for (var ei = 0; ei < entries.length; ei++) {
+      var entry = entries[ei];
+      var ePet = entry.pet;
+      var eCreature = entry.creature;
+      var eId = entry.id;
+
+      if (entry.status === 'max') {
         // Fully evolved card
         var maxCard = document.createElement('div');
         maxCard.className = 'shop-evo-card shop-evo-card-max';
+        maxCard.setAttribute('data-evo-status', 'max');
 
-        // Max-level sprite centered
-        var maxSpr = renderSpritePreview(id, pet.level, pet.skin || 'default');
+        var maxSpr = renderSpritePreview(eId, ePet.level, ePet.skin || 'default');
         if (maxSpr) {
           maxSpr.style.margin = '0 auto 8px';
           maxCard.appendChild(maxSpr);
@@ -908,7 +1130,7 @@
 
         var maxTitle = document.createElement('div');
         maxTitle.className = 'shop-evo-title';
-        maxTitle.textContent = creature.name;
+        maxTitle.textContent = eCreature.name;
         maxCard.appendChild(maxTitle);
 
         var maxLabel = document.createElement('div');
@@ -918,51 +1140,52 @@
 
         var maxDesc = document.createElement('div');
         maxDesc.className = 'shop-evo-req shop-evo-req-met';
-        maxDesc.textContent = 'Fully evolved! Lv.' + pet.level + '/' + creature.maxLevel;
+        maxDesc.textContent = 'Fully evolved! Lv.' + ePet.level + '/' + eCreature.maxLevel;
         maxCard.appendChild(maxDesc);
 
         dom.evolution.appendChild(maxCard);
         continue;
       }
 
-      var nextLevel = pet.level + 1;
-      var req = catalog.evolution[String(nextLevel)];
-      if (!req) continue;
+      var eNextLevel = ePet.level + 1;
+      var eReq = catalog.evolution[String(eNextLevel)];
+      if (!eReq) continue;
 
       var card = document.createElement('div');
       card.className = 'shop-evo-card';
+      card.setAttribute('data-evo-status', entry.status);
 
       // Before/after sprite comparison
       var evoSprites = document.createElement('div');
       evoSprites.className = 'shop-evo-sprites';
-      var evoSkin = pet.skin || 'default';
-      var evoSprBefore = renderSpritePreview(id, pet.level, evoSkin);
+      var evoSkin = ePet.skin || 'default';
+      var evoSprBefore = renderSpritePreview(eId, ePet.level, evoSkin);
       if (evoSprBefore) evoSprites.appendChild(evoSprBefore);
       var evoArrow = document.createElement('span');
       evoArrow.className = 'shop-evo-arrow';
       evoArrow.textContent = '\u2192';
       evoSprites.appendChild(evoArrow);
-      var evoSprAfter = renderSpritePreview(id, nextLevel, evoSkin);
+      var evoSprAfter = renderSpritePreview(eId, eNextLevel, evoSkin);
       if (evoSprAfter) evoSprites.appendChild(evoSprAfter);
       card.appendChild(evoSprites);
 
       var title = document.createElement('div');
       title.className = 'shop-evo-title';
-      title.textContent = creature.name + ' \u2192 Level ' + nextLevel;
+      title.textContent = eCreature.name + ' \u2192 Level ' + eNextLevel;
       card.appendChild(title);
 
       // Cost requirement
       var costReq = document.createElement('div');
       costReq.className = 'shop-evo-req';
-      if (Wallet.getBalance() >= req.coinCost) costReq.classList.add('shop-evo-req-met');
-      costReq.textContent = 'Cost: ' + req.coinCost + ' coins';
+      if (Wallet.getBalance() >= eReq.coinCost) costReq.classList.add('shop-evo-req-met');
+      costReq.textContent = 'Cost: ' + eReq.coinCost + ' coins';
       card.appendChild(costReq);
 
       // Merge XP requirement
       var xpReq = document.createElement('div');
       xpReq.className = 'shop-evo-req';
-      if ((pet.mergeXP || 0) >= req.xpRequired) xpReq.classList.add('shop-evo-req-met');
-      xpReq.textContent = 'Merge XP: ' + (pet.mergeXP || 0) + ' / ' + req.xpRequired;
+      if ((ePet.mergeXP || 0) >= eReq.xpRequired) xpReq.classList.add('shop-evo-req-met');
+      xpReq.textContent = 'Merge XP: ' + (ePet.mergeXP || 0) + ' / ' + eReq.xpRequired;
       card.appendChild(xpReq);
 
       // Progress bar (merge XP)
@@ -970,21 +1193,20 @@
       bar.className = 'shop-evo-bar';
       var fill = document.createElement('div');
       fill.className = 'shop-evo-bar-fill';
-      var pct = req.xpRequired > 0 ? Math.min(100, Math.floor(((pet.mergeXP || 0) / req.xpRequired) * 100)) : 100;
+      var pct = eReq.xpRequired > 0 ? Math.min(100, Math.floor(((ePet.mergeXP || 0) / eReq.xpRequired) * 100)) : 100;
       fill.style.width = pct + '%';
       bar.appendChild(fill);
       card.appendChild(bar);
 
       // Evolve button
-      var canEvolve = Wallet.getBalance() >= req.coinCost &&
-                      (pet.mergeXP || 0) >= req.xpRequired;
+      var eCanEvolve = entry.status === 'ready';
       var evoBtn = document.createElement('button');
       evoBtn.className = 'shop-btn';
       evoBtn.textContent = 'Evolve';
-      evoBtn.disabled = !canEvolve;
+      evoBtn.disabled = !eCanEvolve;
       evoBtn.addEventListener('click', (function (pid) {
         return function () { evolvePet(pid); };
-      })(id));
+      })(eId));
       card.appendChild(evoBtn);
 
       dom.evolution.appendChild(card);
@@ -992,6 +1214,10 @@
 
     if (dom.evolution.children.length === 0) {
       dom.evolutionSection.style.display = 'none';
+      if (filterBar) filterBar.style.display = 'none';
+    } else {
+      // Apply current filter
+      applyEvoFilter(evoActiveFilter);
     }
   }
 

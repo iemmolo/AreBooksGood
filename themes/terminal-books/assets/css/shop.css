@@ -158,11 +158,47 @@
   color: var(--accent);
 }
 
+/* ── Evolution Filters ─────────────────────── */
+.evo-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.evo-filter-btn {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 0.8em;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.evo-filter-btn:hover {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.evo-filter-active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ── Evolution Panel ───────────────────────── */
+#shop-evolution {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .shop-evo-card {
   border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
   padding: 16px;
-  margin-bottom: 12px;
 }
 
 .shop-evo-title {
@@ -582,6 +618,9 @@
 @media (max-width: 600px) {
   .shop-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #shop-evolution {
+    grid-template-columns: 1fr;
   }
   .shop-owned-grid,
   .collection-grid {
