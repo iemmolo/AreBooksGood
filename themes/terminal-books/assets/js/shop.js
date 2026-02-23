@@ -517,15 +517,19 @@
     var stage = document.createElement('div');
     stage.className = 'hatch-stage';
 
+    // Focal area — fixed size container where egg/creature/VFX overlap at center
+    var focal = document.createElement('div');
+    focal.className = 'hatch-focal';
+
     // Egg sprite with colour cycle animation
     var eggEl = document.createElement('div');
     eggEl.className = 'hatch-egg-sprite hatch-egg-sprite-' + tier;
-    stage.appendChild(eggEl);
+    focal.appendChild(eggEl);
 
     // VFX burst effect on crack
     var crack = document.createElement('div');
     crack.className = 'hatch-vfx hatch-vfx-' + tier;
-    stage.appendChild(crack);
+    focal.appendChild(crack);
 
     // Particles (tier-dependent count)
     var particleCount = tier === 'legendary' ? 24 : tier === 'rare' ? 16 : 12;
@@ -543,7 +547,7 @@
       p.style.left = '50%';
       p.style.top = '50%';
       p.style.animationDelay = (1.5 + Math.random() * 0.3) + 's';
-      stage.appendChild(p);
+      focal.appendChild(p);
     }
 
     // Creature sprite — emerges from the crack
@@ -551,12 +555,11 @@
     creatureWrap.className = 'hatch-creature';
     var spritePreview = renderSpritePreview(creatureId, 1);
     if (spritePreview) {
-      spritePreview.style.margin = '0 auto';
       spritePreview.style.transform = 'scale(2)';
       spritePreview.style.transformOrigin = 'center';
       creatureWrap.appendChild(spritePreview);
     }
-    stage.appendChild(creatureWrap);
+    focal.appendChild(creatureWrap);
 
     // Sparkle overlay for legendary
     if (tier === 'legendary') {
@@ -564,6 +567,8 @@
       sparkle.className = 'hatch-sparkle';
       creatureWrap.appendChild(sparkle);
     }
+
+    stage.appendChild(focal);
 
     // Info panel (name, badge, label) — fades in after creature
     var reveal = document.createElement('div');

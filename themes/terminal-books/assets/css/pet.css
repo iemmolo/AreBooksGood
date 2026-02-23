@@ -374,17 +374,24 @@
 .hatch-stage {
   text-align: center;
   pointer-events: none;
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 120px;
-  min-height: 120px;
-  justify-content: center;
+}
+
+/* Fixed-size area where egg, creature, VFX, and particles all overlap */
+.hatch-focal {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
 }
 
 /* ── Hatch Egg Sprite (replaces emoji) ───── */
 .hatch-egg-sprite {
+  position: absolute;
+  top: 50%; left: 50%;
+  margin: -40px 0 0 -40px;
   width: 80px;
   height: 80px;
   background-image: url('/images/pets/items.png');
@@ -392,7 +399,6 @@
   background-size: calc(80px / 16px * 80px) auto;
   background-size: 400px auto;
   image-rendering: pixelated;
-  display: block;
   animation: hatch-wobble 1.5s ease-in-out,
              hatch-color-cycle 1.5s steps(1) forwards;
 }
@@ -511,17 +517,18 @@
 
 /* ── Creature emerges from crack ─────────── */
 .hatch-creature {
-  position: relative;
+  position: absolute;
+  top: 50%; left: 50%;
   opacity: 0;
   animation: hatch-creature-emerge 0.6s 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes hatch-creature-emerge {
-  0%   { opacity: 0; transform: scale(0); filter: brightness(4); }
-  30%  { opacity: 1; transform: scale(1.3); filter: brightness(2.5); }
-  60%  { transform: scale(0.9); filter: brightness(1.3); }
-  80%  { transform: scale(1.05); filter: brightness(1); }
-  100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0); filter: brightness(4); }
+  30%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3); filter: brightness(2.5); }
+  60%  { transform: translate(-50%, -50%) scale(0.9); filter: brightness(1.3); }
+  80%  { transform: translate(-50%, -50%) scale(1.05); filter: brightness(1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
 }
 
 /* ── Info text fades in after creature ───── */
