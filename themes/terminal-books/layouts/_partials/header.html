@@ -57,13 +57,13 @@
   </ul>
 </nav>
 {{ end }}
-{{ if or (eq .Section "pets") (eq .RelPermalink "/games/battle/") }}
+{{ if eq .Section "pets" }}
 <nav class="pets-sub-nav">
   <ul class="pets-sub-nav-links">
     <li><a href="{{ "pets/hatchery/" | relURL }}"{{ if eq .RelPermalink "/pets/hatchery/" }} class="active"{{ end }}>Hatchery</a></li>
     <li><a href="{{ "pets/evolution/" | relURL }}"{{ if eq .RelPermalink "/pets/evolution/" }} class="active"{{ end }}>Evolution</a></li>
     <li><a href="{{ "pets/collection/" | relURL }}"{{ if eq .RelPermalink "/pets/collection/" }} class="active"{{ end }}>Collection</a></li>
-    <li><a href="{{ "games/battle/" | relURL }}"{{ if eq .RelPermalink "/games/battle/" }} class="active"{{ end }}>Battle</a></li>
+    <li><a href="{{ "pets/battle/" | relURL }}"{{ if eq .RelPermalink "/pets/battle/" }} class="active"{{ end }}>Battle</a></li>
   </ul>
 </nav>
 {{ end }}
