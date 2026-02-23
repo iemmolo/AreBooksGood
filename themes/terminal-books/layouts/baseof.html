@@ -121,5 +121,10 @@
   {{ if not hugo.IsServer }}
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ec14089dd8b94cf180a0ea764726ff5d"}'></script>
   {{ end }}
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+  </script>
 </body>
 </html>
