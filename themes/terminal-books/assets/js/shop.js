@@ -532,13 +532,15 @@
     focal.appendChild(crack);
 
     // Particles (tier-dependent count)
-    var particleCount = tier === 'legendary' ? 24 : tier === 'rare' ? 16 : 12;
+    var particleCount = tier === 'legendary' ? 24 : tier === 'rare' ? 18 : 12;
     for (var i = 0; i < particleCount; i++) {
       var p = document.createElement('div');
       p.className = 'hatch-particle';
       if (tier === 'legendary') {
         p.style.background = '#ffd700';
         p.style.boxShadow = '0 0 4px #ffd700';
+      } else if (tier === 'rare') {
+        p.style.boxShadow = '0 0 4px var(--accent)';
       }
       var angle = (i / particleCount) * Math.PI * 2;
       var dist = 40 + Math.random() * 30;
@@ -548,6 +550,16 @@
       p.style.top = '50%';
       p.style.animationDelay = (1.5 + Math.random() * 0.3) + 's';
       focal.appendChild(p);
+    }
+
+    // Rare: expanding ring waves from crack point
+    if (tier === 'rare') {
+      for (var ri = 0; ri < 3; ri++) {
+        var ring = document.createElement('div');
+        ring.className = 'hatch-rare-ring';
+        ring.style.animationDelay = (1.4 + ri * 0.25) + 's';
+        focal.appendChild(ring);
+      }
     }
 
     // Creature sprite — emerges from the crack
@@ -566,6 +578,13 @@
       var sparkle = document.createElement('div');
       sparkle.className = 'hatch-sparkle';
       creatureWrap.appendChild(sparkle);
+    }
+
+    // Shimmer overlay for rare
+    if (tier === 'rare') {
+      var shimmer = document.createElement('div');
+      shimmer.className = 'hatch-rare-shimmer';
+      creatureWrap.appendChild(shimmer);
     }
 
     stage.appendChild(focal);
@@ -611,7 +630,7 @@
     document.body.appendChild(overlay);
 
     // Hide egg after animation, creature emerges via CSS
-    var eggHideDelay = tier === 'legendary' ? 2000 : 1600;
+    var eggHideDelay = tier === 'legendary' ? 2000 : tier === 'rare' ? 1800 : 1600;
     setTimeout(function () {
       eggEl.style.display = 'none';
     }, eggHideDelay);
@@ -629,7 +648,7 @@
       }, 300);
     }
 
-    var dismissDelay = tier === 'legendary' ? 3000 : 2200;
+    var dismissDelay = tier === 'legendary' ? 3000 : tier === 'rare' ? 2600 : 2200;
     setTimeout(function () {
       overlay.addEventListener('click', onDismiss);
     }, dismissDelay);

@@ -599,6 +599,52 @@
   color: color-mix(in srgb, var(--foreground) 60%, transparent);
 }
 
+/* ── Rare Overlay Background Flash ──────────── */
+.hatch-overlay-rare {
+  animation: hatch-fade-in 0.3s ease-out, hatch-rare-bg-flash 2s 0.3s ease-out;
+}
+@keyframes hatch-rare-bg-flash {
+  0%   { background-color: color-mix(in srgb, var(--background) 85%, transparent); }
+  25%  { background-color: color-mix(in srgb, var(--accent) 10%, var(--background)); }
+  55%  { background-color: color-mix(in srgb, var(--background) 85%, transparent); }
+  100% { background-color: color-mix(in srgb, var(--background) 85%, transparent); }
+}
+
+/* Rare expanding ring waves from crack point */
+.hatch-rare-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 20px; height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: hatch-rare-ring-expand 0.8s ease-out forwards;
+}
+
+@keyframes hatch-rare-ring-expand {
+  0%   { opacity: 0.7; transform: scale(1); box-shadow: 0 0 8px var(--accent); }
+  60%  { opacity: 0.3; transform: scale(5); }
+  100% { opacity: 0; transform: scale(8); box-shadow: 0 0 0 transparent; }
+}
+
+/* Rare shimmer (accent-tinted sparkle overlay) */
+.hatch-rare-shimmer {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 48px; height: 48px;
+  margin: -24px 0 0 -24px;
+  background-image: url('/images/pets/battle_vfx.png');
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  transform: scale(3);
+  transform-origin: center;
+  pointer-events: none;
+  filter: hue-rotate(0deg) brightness(1.2);
+  animation: hatch-sparkle-play 1s 1.8s steps(5) both;
+}
+
 /* ── Legendary Overlay Background Flash ───── */
 .hatch-overlay-legendary {
   animation: hatch-fade-in 0.3s ease-out, hatch-legendary-bg-flash 2.5s 0.3s ease-out;
