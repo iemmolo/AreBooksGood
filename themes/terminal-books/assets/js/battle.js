@@ -166,6 +166,20 @@
       enemies: [['slime-green','slime-blue','slime-pink'],['myconid-red','goblin-spear','spike'],['slime-black','myconid-purple','goblin-bomb'],['goblin-archer','myconid-green','slime-golden'],['myconid-pink','slime-purple','spike'],['slime-golden-big','goblin-bomb','goblin-archer'],['slime-black-big','venom-bloom','myconid-purple'],['slime-pink-big','mimic','slime-blue-big']] }
   ];
 
+  // ── Dungeon backgrounds ─────────────────────────────
+  var DUNGEON_BG = {
+    1: '/images/pets/backgrounds/bg-1.png',
+    2: '/images/pets/backgrounds/bg-2.png',
+    3: '/images/pets/backgrounds/bg-3.png',
+    4: '/images/pets/backgrounds/bg-4.png',
+    5: '/images/pets/backgrounds/bg-5.png',
+    6: '/images/pets/backgrounds/bg-6.png',
+    7: '/images/pets/backgrounds/bg-7.png',
+    8: '/images/pets/backgrounds/bg-8.png'
+  };
+  var bgPattern = null;
+  var bgImage = null;
+
   // ── DOM refs ──────────────────────────────────────
   var canvas = document.getElementById('bt-canvas');
   if (!canvas) return;
@@ -775,31 +789,31 @@
     ctx.fillText(Math.ceil(displayHp) + '/' + maxHp, x + w / 2, y + barH - Math.round(1 * s));
   }
 
-  function drawTypeBadge(text, x, y) {
+  function drawTypeBadge(text, cx, y) {
     var s = uiScale();
     var color = TYPE_COLORS[text] || themeColors.fg;
     ctx.font = 'bold ' + Math.round(7 * s) + 'px monospace';
     var tw = ctx.measureText(text.toUpperCase()).width + Math.round(6 * s);
     var badgeH = Math.round(12 * s);
+    var bx = cx - tw / 2;
     // Badge background
     ctx.fillStyle = color + '30';
-    ctx.beginPath(); roundRect(x, y, tw, badgeH, Math.round(2 * s)); ctx.fill();
+    ctx.beginPath(); roundRect(bx, y, tw, badgeH, Math.round(2 * s)); ctx.fill();
     // Badge border
     ctx.strokeStyle = color + '50';
     ctx.lineWidth = 1;
-    ctx.beginPath(); roundRect(x, y, tw, badgeH, Math.round(2 * s)); ctx.stroke();
+    ctx.beginPath(); roundRect(bx, y, tw, badgeH, Math.round(2 * s)); ctx.stroke();
     // Type text with dark outline
-    var tx = x + Math.round(3 * s);
+    ctx.textAlign = 'center';
     var ty = y + Math.round(9 * s);
-    ctx.textAlign = 'left';
     ctx.strokeStyle = 'rgba(0,0,0,0.5)';
     ctx.lineWidth = Math.round(2 * s);
-    ctx.strokeText(text.toUpperCase(), tx, ty);
+    ctx.strokeText(text.toUpperCase(), cx, ty);
     ctx.fillStyle = color;
-    ctx.fillText(text.toUpperCase(), tx, ty);
+    ctx.fillText(text.toUpperCase(), cx, ty);
   }
 
-  function drawStatusIcons(fighter, x, y) {
+  function drawStatusIcons(fighter, cx, y) {
     var s = uiScale();
     var icons = [];
     if (fighter.status.burn > 0) icons.push({ label: 'BRN', color: '#ff6b35' });
@@ -808,60 +822,178 @@
     if (fighter.status.slow > 0) icons.push({ label: 'SLW', color: '#29b6f6' });
     if (fighter.status.dodge) icons.push({ label: 'EVD', color: '#4caf50' });
     if (fighter.status.atkUp > 0) icons.push({ label: 'ATK+', color: '#f44336' });
+    if (icons.length === 0) return;
     ctx.font = 'bold ' + Math.round(6 * s) + 'px monospace';
     var iconW = Math.round(26 * s);
     var iconBoxW = Math.round(24 * s);
     var iconH = Math.round(10 * s);
+    var totalW = icons.length * iconW - (iconW - iconBoxW);
+    var startX = cx - totalW / 2;
     for (var i = 0; i < icons.length; i++) {
       var icon = icons[i];
-      var ix = x + i * iconW;
+      var ix = startX + i * iconW;
       ctx.fillStyle = icon.color + '30';
       ctx.beginPath(); roundRect(ix, y, iconBoxW, iconH, Math.round(2 * s)); ctx.fill();
       ctx.fillStyle = icon.color;
-      ctx.textAlign = 'left';
-      ctx.fillText(icon.label, ix + Math.round(2 * s), y + Math.round(8 * s));
+      ctx.textAlign = 'center';
+      ctx.fillText(icon.label, ix + iconBoxW / 2, y + Math.round(8 * s));
     }
   }
 
   // ── Floating text particles ───────────────────────
   var floatingTexts = [];
 
+  // Floating text style categories
+  var FT_STYLE_DAMAGE = 'damage';
+  var FT_STYLE_HEAL = 'heal';
+  var FT_STYLE_STATUS = 'status';
+  var FT_STYLE_EFFECTIVE = 'effective';
+  var FT_STYLE_CRIT = 'crit';
+
+  function classifyFloatStyle(text) {
+    if (text === 'CRIT!') return FT_STYLE_CRIT;
+    if (text === 'DODGE!' || text.charAt(0) === '+') return FT_STYLE_HEAL;
+    if (text === 'Super effective!' || text === 'Not very effective...') return FT_STYLE_EFFECTIVE;
+    if (text === 'BRN' || text === 'CRS' || text === 'STN' || text === 'SLW') return FT_STYLE_STATUS;
+    if (text.charAt(0) === '-') return FT_STYLE_DAMAGE;
+    return FT_STYLE_DAMAGE;
+  }
+
   function addFloatingText(text, x, y, color, scale) {
     // Push above any nearby existing texts to prevent overlap
     var s = uiScale();
-    var textH = Math.round(14 * s * (scale || 1));
+    var textH = Math.round(16 * s * (scale || 1));
     for (var j = 0; j < floatingTexts.length; j++) {
       var other = floatingTexts[j];
       if (Math.abs(other.x - x) < 60 * s && other.y - y < textH && other.y - y > -textH) {
         y = other.y - textH;
       }
     }
-    floatingTexts.push({ text: text, x: x, y: y, color: color || themeColors.fg, life: 40, maxLife: 40, scale: scale || 1 });
+    var style = classifyFloatStyle(text);
+    floatingTexts.push({ text: text, x: x, y: y, color: color || themeColors.fg, life: 45, maxLife: 45, scale: scale || 1, style: style });
   }
 
   function updateFloatingTexts() {
     for (var i = floatingTexts.length - 1; i >= 0; i--) {
       var ft = floatingTexts[i];
-      ft.y -= 0.8;
+      ft.y -= 0.7;
       ft.life--;
       if (ft.life <= 0) floatingTexts.splice(i, 1);
     }
   }
 
+  function drawFloatPill(cx, cy, text, fontSize, color, alpha, padX, padY, radius) {
+    var tw = ctx.measureText(text).width;
+    var pw = tw + padX * 2;
+    var ph = fontSize + padY * 2;
+    var px = cx - pw / 2;
+    var py = cy - fontSize * 0.75 - padY;
+    // Shadow
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.4;
+    ctx.fillStyle = 'rgba(0,0,0,0.9)';
+    ctx.beginPath(); roundRect(px + 1, py + 2, pw, ph, radius); ctx.fill();
+    ctx.restore();
+    // Background
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.85;
+    ctx.fillStyle = color + '30';
+    ctx.beginPath(); roundRect(px, py, pw, ph, radius); ctx.fill();
+    // Border
+    ctx.strokeStyle = color + '60';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); roundRect(px, py, pw, ph, radius); ctx.stroke();
+    ctx.restore();
+  }
+
   function drawFloatingTexts() {
+    var s = uiScale();
     for (var i = 0; i < floatingTexts.length; i++) {
       var ft = floatingTexts[i];
-      var alpha = Math.min(1, ft.life / 15);
-      var s = uiScale();
-      ctx.globalAlpha = alpha;
-      ctx.font = 'bold ' + Math.round(12 * s * (ft.scale || 1)) + 'px monospace';
+      var alpha = Math.min(1, ft.life / 12);
+      var entryPop = ft.life > ft.maxLife - 5 ? 1 + (ft.maxLife - ft.life) * 0.02 : 1;
+      var fontSize = Math.round(12 * s * (ft.scale || 1) * entryPop);
+      ctx.font = 'bold ' + fontSize + 'px monospace';
       ctx.textAlign = 'center';
-      // Dark outline for readability
-      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-      ctx.lineWidth = 3 * s;
-      ctx.strokeText(ft.text, ft.x, ft.y);
-      ctx.fillStyle = ft.color;
-      ctx.fillText(ft.text, ft.x, ft.y);
+
+      if (ft.style === FT_STYLE_DAMAGE) {
+        // Damage: bold number with dark pill
+        ctx.globalAlpha = alpha;
+        drawFloatPill(ft.x, ft.y, ft.text, fontSize, ft.color, alpha, Math.round(6 * s), Math.round(3 * s), Math.round(4 * s));
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        ctx.lineWidth = Math.round(3 * s);
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+
+      } else if (ft.style === FT_STYLE_CRIT) {
+        // CRIT: gold glow + larger pill
+        ctx.globalAlpha = alpha;
+        drawFloatPill(ft.x, ft.y, ft.text, fontSize, '#ffd54f', alpha, Math.round(10 * s), Math.round(4 * s), Math.round(5 * s));
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        ctx.shadowColor = '#ffd54f';
+        ctx.shadowBlur = Math.round(8 * s);
+        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        ctx.lineWidth = Math.round(3 * s);
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.shadowBlur = 0;
+
+      } else if (ft.style === FT_STYLE_HEAL) {
+        // Heal / Dodge: green pill
+        ctx.globalAlpha = alpha;
+        drawFloatPill(ft.x, ft.y, ft.text, fontSize, ft.color, alpha, Math.round(6 * s), Math.round(3 * s), Math.round(4 * s));
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = Math.round(2 * s);
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+
+      } else if (ft.style === FT_STYLE_STATUS) {
+        // Status (BRN, STN, CRS, SLW): compact colored pill badge
+        ctx.globalAlpha = alpha;
+        drawFloatPill(ft.x, ft.y, ft.text, fontSize, ft.color, alpha, Math.round(8 * s), Math.round(3 * s), Math.round(3 * s));
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+        ctx.lineWidth = Math.round(2 * s);
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+
+      } else if (ft.style === FT_STYLE_EFFECTIVE) {
+        // Super effective / Not very effective: wide pill banner
+        var isSuper = ft.text.indexOf('Super') === 0;
+        ctx.globalAlpha = alpha;
+        drawFloatPill(ft.x, ft.y, ft.text, fontSize, ft.color, alpha, Math.round(10 * s), Math.round(4 * s), Math.round(5 * s));
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        if (isSuper) {
+          ctx.shadowColor = ft.color;
+          ctx.shadowBlur = Math.round(4 * s);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = Math.round(2 * s);
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.shadowBlur = 0;
+
+      } else {
+        // Fallback
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = 3 * s;
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+      }
       ctx.globalAlpha = 1;
     }
   }
@@ -943,25 +1075,25 @@
     var positions = [];
     var spriteSize = getSpriteSize();
     var bossSize = getBossSpriteSize();
-    var leftX = CANVAS_W * 0.10;
-    var rightX = CANVAS_W * 0.56;
     var startY = CANVAS_H * 0.10;
     var spacingY = CANVAS_H * 0.29;
 
-    // Player positions (left side, top to bottom)
+    // Player positions — centered at 25% of canvas width
     for (var i = 0; i < 3; i++) {
       positions.push({
         side: 'player', idx: i,
-        x: leftX, y: startY + i * spacingY,
+        x: CANVAS_W * 0.25 - spriteSize / 2,
+        y: startY + i * spacingY,
         size: spriteSize
       });
     }
-    // Enemy positions (right side, top to bottom)
+    // Enemy positions — centered at 75% of canvas width
     for (var j = 0; j < 3; j++) {
       var eSize = (enemies[j] && enemies[j].isBoss) ? bossSize : spriteSize;
       positions.push({
         side: 'enemy', idx: j,
-        x: rightX, y: startY + j * spacingY,
+        x: CANVAS_W * 0.75 - eSize / 2,
+        y: startY + j * spacingY,
         size: eSize
       });
     }
@@ -972,6 +1104,15 @@
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     ctx.fillStyle = themeColors.bg;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    // Tiled dungeon background texture
+    if (bgPattern) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = bgPattern;
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.restore();
+    }
     // Gradient overlay for depth
     var bgGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
     bgGrad.addColorStop(0, 'rgba(255,255,255,0.04)');
@@ -1043,13 +1184,13 @@
       ctx.textAlign = 'center';
       var nameX = px + pos.size / 2;
       ctx.fillText(fighter.name, nameX, py - Math.round(2 * s));
-      // HP bar
+      // HP bar (centered under sprite)
       var hpBarW = pos.size + Math.round(8 * s);
-      drawHPBar(px - Math.round(4 * s), py + pos.size + Math.round(3 * s), hpBarW, fighter.hp, fighter.maxHp, fighter.displayHp);
-      // Type badge
-      drawTypeBadge(fighter.type, px, py + pos.size + Math.round(14 * s));
-      // Status icons
-      drawStatusIcons(fighter, px, py + pos.size + Math.round(27 * s));
+      drawHPBar(px + pos.size / 2 - hpBarW / 2, py + pos.size + Math.round(3 * s), hpBarW, fighter.hp, fighter.maxHp, fighter.displayHp);
+      // Type badge (centered under sprite)
+      drawTypeBadge(fighter.type, px + pos.size / 2, py + pos.size + Math.round(14 * s));
+      // Status icons (centered under sprite)
+      drawStatusIcons(fighter, px + pos.size / 2, py + pos.size + Math.round(27 * s));
     }
 
     // Draw enemies
@@ -1091,13 +1232,13 @@
       ctx.textAlign = 'center';
       var enameX = ex + epos.size / 2;
       ctx.fillText(enemy.name, enameX, ey - Math.round(2 * s));
-      // HP bar
+      // HP bar (centered under sprite)
       var eHpBarW = epos.size + Math.round(8 * s);
-      drawHPBar(ex - Math.round(4 * s), ey + epos.size + Math.round(3 * s), eHpBarW, enemy.hp, enemy.maxHp, enemy.displayHp);
-      // Type badge
-      drawTypeBadge(enemy.type, ex, ey + epos.size + Math.round(14 * s));
-      // Status icons
-      drawStatusIcons(enemy, ex, ey + epos.size + Math.round(27 * s));
+      drawHPBar(ex + epos.size / 2 - eHpBarW / 2, ey + epos.size + Math.round(3 * s), eHpBarW, enemy.hp, enemy.maxHp, enemy.displayHp);
+      // Type badge (centered under sprite)
+      drawTypeBadge(enemy.type, ex + epos.size / 2, ey + epos.size + Math.round(14 * s));
+      // Status icons (centered under sprite)
+      drawStatusIcons(enemy, ex + epos.size / 2, ey + epos.size + Math.round(27 * s));
     }
 
     // Flash
@@ -2726,12 +2867,19 @@
     renderCreatureFilters();
 
     var petIds = Object.keys(petState.pets);
-    // Sort by type order then alphabetically
+    // Sort: eligible creatures first (matching type lock), then by type order, then alphabetically
     var typeOrder = { fire: 0, nature: 1, tech: 2, aqua: 3, shadow: 4, mystic: 5 };
+    var typeLock = selectedDungeon ? selectedDungeon.typeLock : null;
     petIds.sort(function (a, b) {
       var ca = catalog ? catalog.creatures[a] : null;
       var cb = catalog ? catalog.creatures[b] : null;
       if (!ca || !cb) return 0;
+      // Eligible (matching type lock) creatures sort first
+      if (typeLock) {
+        var aOk = ca.type === typeLock ? 0 : 1;
+        var bOk = cb.type === typeLock ? 0 : 1;
+        if (aOk !== bOk) return aOk - bOk;
+      }
       var ta = typeOrder[ca.type] !== undefined ? typeOrder[ca.type] : 99;
       var tb = typeOrder[cb.type] !== undefined ? typeOrder[cb.type] : 99;
       if (ta !== tb) return ta - tb;
@@ -2903,6 +3051,20 @@
     if (spritesToLoad.length === 0) afterSpritesLoaded();
 
     function afterSpritesLoaded() {
+      // Preload dungeon background tile
+      var bgSrc = DUNGEON_BG[selectedDungeon.id];
+      if (bgSrc) {
+        var bgImg = new Image();
+        bgImg.onload = function () {
+          bgImage = bgImg;
+          bgPattern = ctx.createPattern(bgImg, 'repeat');
+          renderBattle();
+        };
+        bgImg.src = bgSrc;
+      } else {
+        bgImage = null;
+        bgPattern = null;
+      }
       // Fire-and-forget: preload UI assets in parallel
       preloadVFX(function () {
         showScreen('battle');
@@ -3475,6 +3637,8 @@
 
   if (backToDungeonsBtn) {
     backToDungeonsBtn.addEventListener('click', function () {
+      bgPattern = null;
+      bgImage = null;
       showScreen('dungeon-select');
     });
   }
@@ -3534,6 +3698,8 @@
   if (resultsContinueBtn) {
     resultsContinueBtn.addEventListener('click', function () {
       resultsOverlay.classList.add('bt-hidden');
+      bgPattern = null;
+      bgImage = null;
       showScreen('dungeon-select');
     });
   }
