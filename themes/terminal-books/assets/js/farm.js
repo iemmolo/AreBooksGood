@@ -2733,6 +2733,21 @@
       return formatTime(ms);
     },
 
+    getSellMultiplier: function () {
+      return sellMultiplier;
+    },
+
+    getEffectiveSellValue: function (cropKey) {
+      var crop = CROPS[cropKey];
+      if (!crop) return 0;
+      var val = Math.round(crop.sell * sellMultiplier);
+      var scarecrowLevel = farmState.upgrades ? farmState.upgrades.scarecrow : 0;
+      if (scarecrowLevel > 0) {
+        val = Math.round(val * (1 + FARM_UPGRADES.scarecrow.effects[scarecrowLevel - 1].bonus));
+      }
+      return val;
+    },
+
     // ── Upgrade API ──────────────────────────────────────────
     getUpgrades: function () {
       if (!farmState || !farmState.upgrades) return { sprinkler: 0, fertilizer: 0, scarecrow: 0, goldenTrowel: 0, seedBag: 0 };

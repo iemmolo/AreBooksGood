@@ -112,9 +112,55 @@
         name.className = 'sr-card-name';
         name.textContent = crop.rarity === 'rare' ? '\u2605 ' + crop.name : crop.name;
 
+        var effectiveGrow = farm.getEffectiveGrowTime(key);
+        var effectiveSell = farm.getEffectiveSellValue(key);
+        var hasGrowBonus = effectiveGrow < crop.growTime;
+        var hasSellBonus = effectiveSell > crop.sell;
+
         var info = document.createElement('div');
         info.className = 'sr-card-info';
-        info.textContent = 'Grow: ' + formatTime(crop.growTime) + ' | Sell: ' + crop.sell + ' JB';
+
+        if (hasGrowBonus || hasSellBonus) {
+          info.innerHTML = '';
+          // Grow section
+          var growSpan = document.createElement('span');
+          if (hasGrowBonus) {
+            var oldGrow = document.createElement('span');
+            oldGrow.className = 'sr-val-old';
+            oldGrow.textContent = formatTime(crop.growTime);
+            var newGrow = document.createElement('span');
+            newGrow.className = 'sr-val-new';
+            newGrow.textContent = formatTime(effectiveGrow);
+            growSpan.appendChild(document.createTextNode('Grow: '));
+            growSpan.appendChild(oldGrow);
+            growSpan.appendChild(document.createTextNode(' '));
+            growSpan.appendChild(newGrow);
+          } else {
+            growSpan.textContent = 'Grow: ' + formatTime(crop.growTime);
+          }
+          info.appendChild(growSpan);
+          info.appendChild(document.createTextNode(' | '));
+          // Sell section
+          var sellSpan = document.createElement('span');
+          if (hasSellBonus) {
+            var oldSell = document.createElement('span');
+            oldSell.className = 'sr-val-old';
+            oldSell.textContent = crop.sell;
+            var newSell = document.createElement('span');
+            newSell.className = 'sr-val-new';
+            newSell.textContent = effectiveSell;
+            sellSpan.appendChild(document.createTextNode('Sell: '));
+            sellSpan.appendChild(oldSell);
+            sellSpan.appendChild(document.createTextNode(' '));
+            sellSpan.appendChild(newSell);
+            sellSpan.appendChild(document.createTextNode(' JB'));
+          } else {
+            sellSpan.textContent = 'Sell: ' + crop.sell + ' JB';
+          }
+          info.appendChild(sellSpan);
+        } else {
+          info.textContent = 'Grow: ' + formatTime(crop.growTime) + ' | Sell: ' + crop.sell + ' JB';
+        }
 
         var price = document.createElement('div');
         price.className = 'sr-card-price';
@@ -387,6 +433,7 @@
     updateBalance();
     flashCard(cardEl);
     renderTools();
+    renderSeeds(); // Sell/grow values may change from trowel/scarecrow
   }
 
   function buyFertilizer(cardEl) {

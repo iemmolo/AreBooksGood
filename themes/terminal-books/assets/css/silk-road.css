@@ -173,6 +173,17 @@
   padding: 8px 0;
 }
 
+/* ── Upgrade comparison values ────────────────── */
+.sr-val-old {
+  text-decoration: line-through;
+  opacity: 0.45;
+}
+
+.sr-val-new {
+  color: var(--accent);
+  font-weight: bold;
+}
+
 /* ── Rare card styling ───────────────────────── */
 .sr-card-rare {
   border-color: #DAA520;
