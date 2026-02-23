@@ -57,7 +57,7 @@
   </ul>
 </nav>
 {{ end }}
-{{ if eq .Section "pets" }}
+{{ if or (eq .Section "pets") (eq .RelPermalink "/games/battle/") }}
 <nav class="pets-sub-nav">
   <ul class="pets-sub-nav-links">
     <li><a href="{{ "pets/hatchery/" | relURL }}"{{ if eq .RelPermalink "/pets/hatchery/" }} class="active"{{ end }}>Hatchery</a></li>

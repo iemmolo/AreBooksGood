@@ -216,6 +216,7 @@
   var dpr = window.devicePixelRatio || 1;
 
   function sizeCanvas() {
+    if (!gameArea) return;
     var containerW = gameArea.parentElement.clientWidth || 400;
     var w = containerW;
     var h = Math.round(w * CANVAS_RATIO);
@@ -1246,7 +1247,7 @@
       }
 
       // Secondary effects
-      if (move.effect && move.effectChance) {
+      if (move.effect && move.effectChance && target.hp > 0) {
         if (Math.random() < move.effectChance) {
           switch (move.effect) {
             case 'burn':
@@ -1568,7 +1569,7 @@
   function updateWaveHUD() {
     if (waveLabel) waveLabel.textContent = 'Wave ' + currentWave + '/' + totalWaves;
     if (dungeonLabel) dungeonLabel.textContent = selectedDungeon ? selectedDungeon.name : '';
-    if (waveBar) waveBar.style.width = (totalWaves > 0 ? ((currentWave - 1) / totalWaves * 100) : 0) + '%';
+    if (waveBar) waveBar.style.width = (totalWaves > 0 ? (currentWave / totalWaves * 100) : 0) + '%';
   }
 
   // ── Gear Drop Generation ─────────────────────────
@@ -2968,7 +2969,6 @@
 
     // Step 2: Greedily assign best gear per slot per creature
     var assigned = {};
-    var changed = false;
 
     for (var ti = 0; ti < teamSlots.length; ti++) {
       var creatureId = teamSlots[ti];
@@ -3018,7 +3018,6 @@
           eq[slotKey] = bestGear.id;
           bestGear.equippedBy = creatureId;
           assigned[bestGear.id] = true;
-          changed = true;
         }
       }
     }
