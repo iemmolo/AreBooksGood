@@ -540,6 +540,39 @@
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
+  position: relative;
+}
+
+/* ── Scroll indicator ───────────────────── */
+.bt-results-panel {
+  position: relative;
+}
+.bt-scroll-hint {
+  position: sticky;
+  bottom: -28px;
+  left: 0;
+  right: 0;
+  margin: 0 -28px;
+  padding: 24px 0 8px;
+  background: linear-gradient(to bottom, transparent, var(--background) 60%);
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 1;
+}
+.bt-scroll-hint-arrow {
+  display: inline-block;
+  color: var(--accent);
+  font-size: 1.2em;
+  animation: bt-scroll-bounce 1.2s ease-in-out infinite;
+  opacity: 0.8;
+}
+.bt-scroll-hint.bt-scrolled-bottom {
+  opacity: 0;
+}
+@keyframes bt-scroll-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
 }
 
 .bt-overlay-title {

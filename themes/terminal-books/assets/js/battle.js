@@ -372,6 +372,184 @@
     try { localStorage.setItem(DUNGEON_KEY, JSON.stringify(dungeonProgress)); } catch (e) {}
   }
 
+  // ── Save / Resume Mid-Run ─────────────────────────
+  var RUN_KEY = 'arebooksgood-dungeon-run';
+
+  function saveRun() {
+    try {
+      if (!selectedDungeon || gameMode !== 'dungeon') return;
+      var teamSnap = [];
+      for (var i = 0; i < team.length; i++) {
+        var f = team[i];
+        var s = f.stats || {};
+        teamSnap.push({
+          id: f.id, spriteId: f.spriteId, spriteKey: f.spriteKey,
+          name: f.name, level: f.level, type: f.type,
+          stats: { hp: s.hp, atk: s.atk, def: s.def, spd: s.spd, cri: s.cri },
+          gearStats: f.gearStats || { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 },
+          hp: f.hp, maxHp: f.maxHp, isPlayer: true
+        });
+      }
+      var run = {
+        dungeonId: selectedDungeon.id,
+        difficulty: selectedDifficulty,
+        wave: currentWave,
+        totalWaves: totalWaves,
+        wavesCleared: wavesCleared,
+        team: teamSnap,
+        teamSlots: teamSlots.slice(),
+        ts: Date.now()
+      };
+      localStorage.setItem(RUN_KEY, JSON.stringify(run));
+      console.log('[saveRun] saved wave ' + run.wave + '/' + run.totalWaves);
+    } catch (e) { console.warn('[saveRun] failed:', e); }
+  }
+
+  function loadSavedRun() {
+    try {
+      var raw = localStorage.getItem(RUN_KEY);
+      if (!raw) return null;
+      var run = JSON.parse(raw);
+      // Expire after 24 hours
+      if (Date.now() - run.ts > 86400000) { clearSavedRun(); return null; }
+      // Verify dungeon still exists
+      var found = false;
+      for (var i = 0; i < DUNGEONS.length; i++) {
+        if (DUNGEONS[i].id === run.dungeonId) { found = true; break; }
+      }
+      if (!found) { clearSavedRun(); return null; }
+      return run;
+    } catch (e) { return null; }
+  }
+
+  function clearSavedRun() {
+    try { localStorage.removeItem(RUN_KEY); } catch (e) {}
+    var bar = document.getElementById('bt-resume-bar');
+    if (bar) { bar.innerHTML = ''; bar.classList.add('bt-hidden'); }
+  }
+
+  function renderResumeBar() {
+    var bar = document.getElementById('bt-resume-bar');
+    if (!bar) { console.warn('[resume] no bt-resume-bar element'); return; }
+    var run = loadSavedRun();
+    console.log('[resume] loadSavedRun:', run);
+    if (!run) { bar.innerHTML = ''; bar.classList.add('bt-hidden'); return; }
+    var dungeon = null;
+    for (var i = 0; i < DUNGEONS.length; i++) {
+      if (DUNGEONS[i].id === run.dungeonId) { dungeon = DUNGEONS[i]; break; }
+    }
+    if (!dungeon) { clearSavedRun(); return; }
+    bar.classList.remove('bt-hidden');
+    bar.innerHTML = '';
+    var btn = document.createElement('button');
+    btn.className = 'bt-resume-btn';
+    var alive = 0;
+    for (var t = 0; t < run.team.length; t++) { if (run.team[t].hp > 0) alive++; }
+    btn.innerHTML = '<span class="bt-resume-meta">' +
+      dungeon.name + ' · ' + run.difficulty.charAt(0).toUpperCase() + run.difficulty.slice(1) +
+      ' · Wave ' + run.wave + '/' + run.totalWaves +
+      ' · ' + alive + '/' + run.team.length + ' alive</span>';
+    btn.addEventListener('click', function () { resumeRun(run); });
+    bar.appendChild(btn);
+
+    var dismissBtn = document.createElement('button');
+    dismissBtn.className = 'bt-resume-btn';
+    dismissBtn.style.cssText = 'margin-top:4px;opacity:0.6;font-size:0.8em;padding:6px 10px;';
+    dismissBtn.textContent = 'Abandon Run';
+    dismissBtn.addEventListener('click', function () { clearSavedRun(); });
+    bar.appendChild(dismissBtn);
+  }
+
+  function resumeRun(run) {
+    var dungeon = null;
+    for (var i = 0; i < DUNGEONS.length; i++) {
+      if (DUNGEONS[i].id === run.dungeonId) { dungeon = DUNGEONS[i]; break; }
+    }
+    if (!dungeon) return;
+    selectedDungeon = dungeon;
+    selectedDifficulty = run.difficulty;
+    gameMode = 'dungeon';
+    teamSlots = run.teamSlots || [];
+    currentWave = run.wave;
+    totalWaves = run.totalWaves;
+    wavesCleared = run.wavesCleared;
+    battleRunning = true;
+    battleSpeed = 1;
+    skipWave = false;
+    floatingTexts = [];
+    activeVFX = [];
+    animQueue = [];
+    currentTurnOrder = null;
+    currentTurnIdx = 0;
+    bannerText = null;
+    bannerTimer = 0;
+    countdownText = null;
+
+    // Restore team fighters
+    team = [];
+    for (var t = 0; t < run.team.length; t++) {
+      var snap = run.team[t];
+      var f = createPlayerFighter(snap.id, snap.level);
+      if (f) {
+        f.hp = snap.hp;
+        f.displayHp = snap.hp;
+        f.maxHp = snap.maxHp || f.maxHp;
+        f.spriteKey = snap.spriteKey || f.spriteKey;
+        if (snap.hp <= 0) { f.hp = 0; f.displayHp = 0; f.fainted = true; }
+        team.push(f);
+      }
+    }
+    if (team.length === 0) { clearSavedRun(); return; }
+
+    // Preload sprites then enter battle
+    var spritesToLoad = [];
+    for (var s = 0; s < team.length; s++) {
+      spritesToLoad.push(team[s].spriteKey || team[s].spriteId);
+    }
+    var loaded = 0;
+    function onLoad() {
+      loaded++;
+      if (loaded >= spritesToLoad.length) afterLoad();
+    }
+    for (var sl = 0; sl < spritesToLoad.length; sl++) {
+      preloadSprite(spritesToLoad[sl], onLoad);
+    }
+    if (spritesToLoad.length === 0) afterLoad();
+
+    function afterLoad() {
+      var bgSrc = DUNGEON_BG[selectedDungeon.id];
+      if (bgSrc) {
+        var bgImg = new Image();
+        bgImg.onload = function () {
+          bgImage = bgImg;
+          bgPattern = ctx.createPattern(bgImg, 'repeat');
+          renderBattle();
+        };
+        bgImg.src = bgSrc;
+      } else { bgImage = null; bgPattern = null; }
+      preloadVFX(function () {
+        showScreen('battle');
+        sizeCanvas();
+        clearLog();
+        updateWaveHUD();
+        updateSpeedBtn();
+        logMessage('--- Resuming ' + selectedDungeon.name + ' ---', 'bt-log-wave');
+        logMessage('--- Wave ' + currentWave + '/' + totalWaves + ' ---', 'bt-log-wave');
+        generateWaveEnemies(currentWave - 1, function () {
+          startEnemyAnimLoop();
+          renderBattle();
+          countdownText = 'RESUME';
+          renderBattle();
+          autoTimer = setTimeout(function () {
+            countdownText = null;
+            renderBattle();
+            autoTimer = setTimeout(runAutoBattle, 200);
+          }, 800);
+        });
+      });
+    }
+  }
+
   function isDungeonCleared(dungeonId, difficulty) {
     var d = dungeonProgress.difficulties[dungeonId];
     if (!d) return false;
@@ -1898,6 +2076,7 @@
       currentWave++;
       logMessage('--- Wave ' + currentWave + '/' + totalWaves + ' ---', 'bt-log-wave');
       updateWaveHUD();
+      saveRun();
 
       // Clear status effects on player creatures between waves
       for (var i = 0; i < team.length; i++) {
@@ -2007,6 +2186,7 @@
   function endDungeon(victory) {
     // Guard against double-fire (e.g. retreat during wave transition)
     if (resultsOverlay && !resultsOverlay.classList.contains('bt-hidden')) return;
+    clearSavedRun();
     battleRunning = false;
     currentTurnOrder = null;
     currentTurnIdx = 0;
@@ -2345,6 +2525,24 @@
     if (waveBar) waveBar.style.width = (wavesCleared / totalWaves * 100) + '%';
 
     resultsOverlay.classList.remove('bt-hidden');
+
+    // Scroll hint
+    var panel = resultsOverlay.querySelector('.bt-results-panel');
+    if (panel) {
+      var oldHint = panel.querySelector('.bt-scroll-hint');
+      if (oldHint) oldHint.parentNode.removeChild(oldHint);
+      var hint = document.createElement('div');
+      hint.className = 'bt-scroll-hint';
+      hint.innerHTML = '<span class="bt-scroll-hint-arrow">&#9660; scroll &#9660;</span>';
+      panel.appendChild(hint);
+      var checkScroll = function () {
+        var atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 20;
+        hint.classList.toggle('bt-scrolled-bottom', atBottom);
+      };
+      panel.addEventListener('scroll', checkScroll);
+      setTimeout(checkScroll, 50);
+    }
+
     renderStats();
 
     // Enhanced first clear celebration
@@ -2483,6 +2681,7 @@
         dungeonSelectScreen.classList.remove('bt-hidden');
         dungeonStatsEl.classList.remove('bt-hidden');
         renderModeTabs();
+        renderResumeBar();
         renderDungeonGrid();
         break;
       case 'team-builder':
@@ -3162,6 +3361,7 @@
                   if (!battleRunning) return;
                   countdownText = null;
                   renderBattle();
+                  saveRun();
                   autoTimer = setTimeout(runAutoBattle, 200);
                 }, 500);
               }, 500);
