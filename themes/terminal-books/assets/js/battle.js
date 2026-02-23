@@ -304,6 +304,10 @@
   var animTimer = null;
   var autoTimer = null;
   var activeIntervals = []; // track HP lerp / faint intervals for cleanup
+  var currentTurnOrder = null; // sorted fighters for current round
+  var currentTurnIdx = 0;
+  var creatureFilter = 'all'; // 'all', 'fire', 'nature', etc.
+  var creatureLevelFilter = 'all'; // 'all', 'max', 'leveling'
   var inventoryFilterSlot = 'all';
   var inventoryOpen = false;
   var gearModalItem = null;
@@ -798,8 +802,8 @@
   // ── Floating text particles ───────────────────────
   var floatingTexts = [];
 
-  function addFloatingText(text, x, y, color) {
-    floatingTexts.push({ text: text, x: x, y: y, color: color || themeColors.fg, life: 40, maxLife: 40 });
+  function addFloatingText(text, x, y, color, scale) {
+    floatingTexts.push({ text: text, x: x, y: y, color: color || themeColors.fg, life: 40, maxLife: 40, scale: scale || 1 });
   }
 
   function updateFloatingTexts() {
@@ -817,7 +821,7 @@
       var alpha = Math.min(1, ft.life / 15);
       ctx.globalAlpha = alpha;
       ctx.fillStyle = ft.color;
-      ctx.font = 'bold ' + Math.round(12 * uiScale()) + 'px monospace';
+      ctx.font = 'bold ' + Math.round(12 * uiScale() * (ft.scale || 1)) + 'px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.globalAlpha = 1;
@@ -825,6 +829,14 @@
   }
 
   // ── Shake & flash effects ─────────────────────────
+  // ── Canvas banner (wave clear / countdown) ──────
+  var bannerText = null;
+  var bannerTimer = 0;
+  var bannerMaxTimer = 0;
+
+  // ── Countdown state ─────────────────────────────
+  var countdownText = null;
+
   var shakeTargetIdx = -1; // index into allFighters
   var shakeTicks = 0;
   var shakeIntensity = 4;
@@ -1017,6 +1029,49 @@
     // Floating texts
     updateFloatingTexts();
     drawFloatingTexts();
+
+    // Turn order pips
+    if (currentTurnOrder && currentTurnOrder.length > 0 && battleRunning) {
+      var pipS = uiScale();
+      var pipR = Math.round(5 * pipS);
+      var pipGap = Math.round(4 * pipS);
+      var totalPipW = currentTurnOrder.length * (pipR * 2 + pipGap) - pipGap;
+      var pipStartX = (CANVAS_W - totalPipW) / 2;
+      var pipY = CANVAS_H - Math.round(30 * pipS);
+      for (var pi = 0; pi < currentTurnOrder.length; pi++) {
+        var pf = currentTurnOrder[pi];
+        var pipX = pipStartX + pi * (pipR * 2 + pipGap) + pipR;
+        ctx.beginPath();
+        ctx.arc(pipX, pipY, pipR, 0, Math.PI * 2);
+        ctx.globalAlpha = pf.hp <= 0 ? 0.25 : (pi === currentTurnIdx ? 1 : 0.6);
+        ctx.fillStyle = pf.isPlayer ? themeColors.accent : '#f44336';
+        ctx.fill();
+        if (pi === currentTurnIdx) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = Math.round(2 * pipS);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Canvas banner (WAVE CLEAR / countdown)
+    if (bannerText && bannerTimer > 0) {
+      var bAlpha = Math.min(1, bannerTimer / (bannerMaxTimer * 0.3));
+      ctx.globalAlpha = bAlpha;
+      ctx.fillStyle = themeColors.accent;
+      ctx.font = 'bold ' + Math.round(28 * uiScale()) + 'px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(bannerText, CANVAS_W / 2, CANVAS_H / 2);
+      ctx.globalAlpha = 1;
+    }
+
+    if (countdownText) {
+      ctx.fillStyle = themeColors.accent;
+      ctx.font = 'bold ' + Math.round(36 * uiScale()) + 'px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(countdownText, CANVAS_W / 2, CANVAS_H / 2);
+    }
   }
 
   // ── Log system ────────────────────────────────────
@@ -1201,11 +1256,19 @@
     animQueue.push({ type: 'lunge', fighter: fighter, dx: lungeDist * lungeDir, dy: 0 });
 
     animQueue.push({ type: 'check', callback: function () {
+      // Attacker or target died before this attack resolved — abort
+      if (fighter.hp <= 0 || target.hp <= 0) {
+        animQueue.push({ type: 'lunge-back', fighter: fighter });
+        return;
+      }
       if (target.status.dodge) {
         target.status.dodge = false;
         if (Math.random() < 0.75) {
+          // Sidestep animation: target moves perpendicular
+          animQueue.push({ type: 'lunge', fighter: target, dx: 0, dy: -15 });
+          animQueue.push({ type: 'lunge-back', fighter: target });
           var tpos = getFighterPos(target);
-          animQueue.push({ type: 'floatText', text: 'DODGE!', x: tpos.x, y: tpos.y - 20, color: '#4caf50' });
+          animQueue.push({ type: 'floatText', text: 'DODGE!', x: tpos.x, y: tpos.y - 20, color: '#4caf50', scale: 1.2 });
           animQueue.push({ type: 'log', text: target.name + ' dodged!' });
           animQueue.push({ type: 'lunge-back', fighter: fighter });
           return;
@@ -1234,33 +1297,56 @@
       animQueue.push({ type: 'vfx', moveType: move.type, x: tpos2.x, y: tpos2.y });
       animQueue.push({ type: 'lunge-back', fighter: fighter });
       animQueue.push({ type: 'hpLerp', fighter: target });
-      animQueue.push({ type: 'floatText', text: '-' + dmg, x: tpos2.x, y: tpos2.y - 20, color: isCrit ? '#ffd54f' : '#f44336' });
+      var dmgScale = isCrit ? 1.4 : (typeMult > 1 ? 1.2 : (typeMult < 1 ? 0.85 : 1));
+      animQueue.push({ type: 'floatText', text: '-' + dmg, x: tpos2.x, y: tpos2.y - 20, color: isCrit ? '#ffd54f' : '#f44336', scale: dmgScale });
       if (isCrit) {
-        animQueue.push({ type: 'floatText', text: 'CRIT!', x: tpos2.x, y: tpos2.y - 35, color: '#ffd54f' });
+        animQueue.push({ type: 'floatText', text: 'CRIT!', x: tpos2.x, y: tpos2.y - 35, color: '#ffd54f', scale: 1.4 });
         animQueue.push({ type: 'log', text: 'Critical hit!', cls: 'bt-log-crit' });
       }
 
       if (typeMult > 1) {
+        animQueue.push({ type: 'floatText', text: 'Super effective!', x: tpos2.x, y: tpos2.y - (isCrit ? 50 : 35), color: '#4caf50', scale: 1.2 });
         animQueue.push({ type: 'log', text: 'Super effective!', cls: 'bt-log-effective' });
       } else if (typeMult < 1) {
+        animQueue.push({ type: 'floatText', text: 'Not very effective...', x: tpos2.x, y: tpos2.y - 35, color: '#ff9800', scale: 0.85 });
         animQueue.push({ type: 'log', text: 'Not very effective...', cls: 'bt-log-weak' });
       }
 
       // Secondary effects
       if (move.effect && move.effectChance && target.hp > 0) {
         if (Math.random() < move.effectChance) {
+          var statusTpos = getFighterPos(target);
+          var statusShakeIdx = target.isEnemy ? 100 + enemies.indexOf(target) : team.indexOf(target);
           switch (move.effect) {
             case 'burn':
-              if (target.status.burn <= 0) { target.status.burn = 3; animQueue.push({ type: 'log', text: target.name + ' was burned!', cls: 'bt-log-crit' }); }
+              if (target.status.burn <= 0) {
+                target.status.burn = 3;
+                animQueue.push({ type: 'shake', targetIdx: statusShakeIdx, ticks: 5 });
+                animQueue.push({ type: 'floatText', text: 'BRN', x: statusTpos.x, y: statusTpos.y - 20, color: '#ff6b35', scale: 1.1 });
+                animQueue.push({ type: 'log', text: target.name + ' was burned!', cls: 'bt-log-crit' });
+              }
               break;
             case 'curse':
-              if (target.status.curse <= 0) { target.status.curse = 3; animQueue.push({ type: 'log', text: target.name + ' was cursed!', cls: 'bt-log-crit' }); }
+              if (target.status.curse <= 0) {
+                target.status.curse = 3;
+                animQueue.push({ type: 'shake', targetIdx: statusShakeIdx, ticks: 5 });
+                animQueue.push({ type: 'floatText', text: 'CRS', x: statusTpos.x, y: statusTpos.y - 20, color: '#ab47bc', scale: 1.1 });
+                animQueue.push({ type: 'log', text: target.name + ' was cursed!', cls: 'bt-log-crit' });
+              }
               break;
             case 'stun':
-              target.status.stun = true; animQueue.push({ type: 'log', text: target.name + ' was stunned!', cls: 'bt-log-crit' });
+              target.status.stun = true;
+              animQueue.push({ type: 'shake', targetIdx: statusShakeIdx, ticks: 5 });
+              animQueue.push({ type: 'floatText', text: 'STN', x: statusTpos.x, y: statusTpos.y - 20, color: '#ffd54f', scale: 1.1 });
+              animQueue.push({ type: 'log', text: target.name + ' was stunned!', cls: 'bt-log-crit' });
               break;
             case 'slow':
-              if (target.status.slow <= 0) { target.status.slow = 3; animQueue.push({ type: 'log', text: target.name + ' was slowed!', cls: 'bt-log-crit' }); }
+              if (target.status.slow <= 0) {
+                target.status.slow = 3;
+                animQueue.push({ type: 'shake', targetIdx: statusShakeIdx, ticks: 5 });
+                animQueue.push({ type: 'floatText', text: 'SLW', x: statusTpos.x, y: statusTpos.y - 20, color: '#29b6f6', scale: 1.1 });
+                animQueue.push({ type: 'log', text: target.name + ' was slowed!', cls: 'bt-log-crit' });
+              }
               break;
           }
         }
@@ -1322,7 +1408,7 @@
           }
           break;
         case 'floatText':
-          addFloatingText(item.text, item.x, item.y, item.color);
+          addFloatingText(item.text, item.x, item.y, item.color, item.scale);
           renderBattle();
           animTimer = setTimeout(next, 50 * speedMult);
           break;
@@ -1402,21 +1488,39 @@
         case 'faint':
           var f = item.fighter;
           if (f && !skipWave) {
-            var faintSteps = 8;
-            var faintStep = 0;
-            var faintIv = setInterval(function () {
-              faintStep++;
-              f.opacity = 1 - (faintStep / faintSteps);
-              renderBattle();
-              if (faintStep >= faintSteps) {
-                f.opacity = 0;
-                clearInterval(faintIv);
-                var fIdx = activeIntervals.indexOf(faintIv);
-                if (fIdx !== -1) activeIntervals.splice(fIdx, 1);
-                animTimer = setTimeout(next, 150 * speedMult);
-              }
-            }, 30);
-            activeIntervals.push(faintIv);
+            // Brief red flash before fade
+            var faintShakeIdx = f.isEnemy ? 100 + enemies.indexOf(f) : team.indexOf(f);
+            shakeTargetIdx = faintShakeIdx;
+            shakeTicks = 4;
+            flashColor = '#f44336';
+            flashTicks = 3;
+            renderBattle();
+            animTimer = setTimeout(function () {
+              if (!battleRunning) return;
+              shakeTargetIdx = -1;
+              shakeTicks = 0;
+              // Slower faint: 16 steps with ease-out + downward drop
+              var faintSteps = 16;
+              var faintStep = 0;
+              var faintIv = setInterval(function () {
+                faintStep++;
+                var progress = faintStep / faintSteps;
+                // Ease-out opacity: fast at start, slow at end
+                f.opacity = Math.pow(1 - progress, 2);
+                // Slight downward drift
+                f.offsetY = progress * 10;
+                renderBattle();
+                if (faintStep >= faintSteps) {
+                  f.opacity = 0;
+                  f.offsetY = 0;
+                  clearInterval(faintIv);
+                  var fIdx = activeIntervals.indexOf(faintIv);
+                  if (fIdx !== -1) activeIntervals.splice(fIdx, 1);
+                  animTimer = setTimeout(next, 150 * speedMult);
+                }
+              }, 30);
+              activeIntervals.push(faintIv);
+            }, 120);
           } else {
             if (f) f.opacity = 0;
             renderBattle();
@@ -1470,10 +1574,15 @@
 
     animQueue = [];
 
+    // Store turn order for pip display
+    currentTurnOrder = allLiving.slice();
+    currentTurnIdx = 0;
+
     // Execute each turn
     for (var t = 0; t < allLiving.length; t++) {
-      (function (fighter) {
+      (function (fighter, turnIdx) {
         animQueue.push({ type: 'check', callback: function () {
+          currentTurnIdx = turnIdx;
           if (fighter.hp <= 0) return;
           var target = pickTarget(fighter);
           if (!target) return;
@@ -1481,7 +1590,7 @@
           var moveId = pickAIMove(fighter, targetList);
           executeAction(fighter, target, moveId);
         }});
-      })(allLiving[t]);
+      })(allLiving[t], t);
     }
 
     // Status ticks at end of round
@@ -1520,23 +1629,49 @@
 
   // ── Wave transition ───────────────────────────────
   function transitionToNextWave() {
-    currentWave++;
-    logMessage('--- Wave ' + currentWave + '/' + totalWaves + ' ---', 'bt-log-wave');
-    updateWaveHUD();
-
-    // Clear status effects on player creatures between waves
-    for (var i = 0; i < team.length; i++) {
-      team[i].status = { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 };
+    // Show WAVE CLEAR banner
+    if (!skipWave) {
+      bannerText = 'WAVE CLEAR!';
+      bannerTimer = 30;
+      bannerMaxTimer = 30;
+      if (skipWaveBtn) skipWaveBtn.classList.remove('bt-skip-active');
+      var bannerIv = setInterval(function () {
+        if (!battleRunning) { clearInterval(bannerIv); bannerText = null; return; }
+        bannerTimer--;
+        renderBattle();
+        if (bannerTimer <= 0) {
+          clearInterval(bannerIv);
+          var bIdx = activeIntervals.indexOf(bannerIv);
+          if (bIdx !== -1) activeIntervals.splice(bIdx, 1);
+          bannerText = null;
+          doNextWave();
+        }
+      }, 30);
+      activeIntervals.push(bannerIv);
+    } else {
+      doNextWave();
     }
 
-    // Generate new enemies
-    generateWaveEnemies(currentWave - 1, function () {
-      renderBattle();
-      var delay = battleSpeed === 2 ? 400 : 800;
-      if (skipWave) delay = 30;
-      skipWave = false; // reset skip for new wave
-      autoTimer = setTimeout(runAutoBattle, delay);
-    });
+    function doNextWave() {
+      currentWave++;
+      logMessage('--- Wave ' + currentWave + '/' + totalWaves + ' ---', 'bt-log-wave');
+      updateWaveHUD();
+
+      // Clear status effects on player creatures between waves
+      for (var i = 0; i < team.length; i++) {
+        team[i].status = { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 };
+      }
+
+      // Generate new enemies
+      generateWaveEnemies(currentWave - 1, function () {
+        renderBattle();
+        var delay = battleSpeed === 2 ? 400 : 800;
+        if (skipWave) delay = 30;
+        skipWave = false; // reset skip for new wave
+        if (skipWaveBtn) skipWaveBtn.classList.remove('bt-skip-active');
+        autoTimer = setTimeout(runAutoBattle, delay);
+      });
+    }
   }
 
   function generateWaveEnemies(waveIdx, callback) {
@@ -1725,6 +1860,10 @@
     // Guard against double-fire (e.g. retreat during wave transition)
     if (resultsOverlay && !resultsOverlay.classList.contains('bt-hidden')) return;
     battleRunning = false;
+    currentTurnOrder = null;
+    currentTurnIdx = 0;
+    bannerText = null;
+    countdownText = null;
     stopEnemyAnimLoop();
     if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
     if (animTimer) { clearTimeout(animTimer); animTimer = null; }
@@ -2176,6 +2315,8 @@
             selectedDungeon = dungeon;
             selectedDifficulty = 'normal';
             teamSlots = [null, null, null];
+            creatureFilter = 'all';
+            creatureLevelFilter = 'all';
             showScreen('team-builder');
           });
         }
@@ -2218,12 +2359,22 @@
         var unlocked = isDifficultyUnlocked(dungeonId, diff);
         if (!unlocked) btn.classList.add('bt-diff-locked');
         btn.disabled = !unlocked;
-        btn.textContent = labels[diff];
+        var labelSpan = document.createElement('span');
+        labelSpan.textContent = labels[diff];
+        btn.appendChild(labelSpan);
         if (isDungeonCleared(dungeonId, diff)) {
           var check = document.createElement('span');
           check.className = 'bt-diff-check';
           check.textContent = ' *';
           btn.appendChild(check);
+        }
+        // Multiplier subtitle
+        if (gearData && gearData.difficulty && gearData.difficulty[diff]) {
+          var dd = gearData.difficulty[diff];
+          var subtitle = document.createElement('span');
+          subtitle.className = 'bt-diff-subtitle';
+          subtitle.textContent = 'x' + (dd.hpMult || 1) + ' HP / x' + (dd.atkMult || 1) + ' ATK';
+          btn.appendChild(subtitle);
         }
         btn.addEventListener('click', function () {
           if (!unlocked) return;
@@ -2338,6 +2489,84 @@
     }
   }
 
+  function renderCreatureFilters() {
+    var bar = document.getElementById('bt-creature-filters');
+    if (!bar) return;
+    bar.innerHTML = '';
+    if (!petState || !petState.pets) return;
+
+    var petIds = Object.keys(petState.pets);
+    if (petIds.length < 2) return;
+
+    // ── Type filter row ──
+    var ownedTypes = {};
+    var hasMaxLv = false;
+    var hasLeveling = false;
+    for (var i = 0; i < petIds.length; i++) {
+      var c = catalog ? catalog.creatures[petIds[i]] : null;
+      if (!c) continue;
+      ownedTypes[c.type] = true;
+      var pet = petState.pets[petIds[i]];
+      var lvl = pet ? pet.level || 1 : 1;
+      if (lvl >= (c.maxLevel || 1)) hasMaxLv = true;
+      else hasLeveling = true;
+    }
+    var typeKeys = Object.keys(ownedTypes);
+
+    // Type filter (only if 2+ types owned)
+    if (typeKeys.length > 1) {
+      var typeRow = document.createElement('div');
+      typeRow.className = 'bt-filter-row';
+      var filters = [{ key: 'all', label: 'All' }];
+      var typeOrder = ['fire', 'nature', 'tech', 'aqua', 'shadow', 'mystic'];
+      for (var t = 0; t < typeOrder.length; t++) {
+        if (ownedTypes[typeOrder[t]]) {
+          filters.push({ key: typeOrder[t], label: typeOrder[t].charAt(0).toUpperCase() + typeOrder[t].slice(1) });
+        }
+      }
+      for (var fi = 0; fi < filters.length; fi++) {
+        (function (f) {
+          var btn = document.createElement('button');
+          btn.className = 'bt-inv-filter-btn';
+          if (creatureFilter === f.key) btn.classList.add('bt-inv-filter-active');
+          if (f.key !== 'all') btn.classList.add('bt-type-' + f.key);
+          btn.textContent = f.label;
+          btn.addEventListener('click', function () {
+            creatureFilter = f.key;
+            renderCreaturePicker();
+          });
+          typeRow.appendChild(btn);
+        })(filters[fi]);
+      }
+      bar.appendChild(typeRow);
+    }
+
+    // ── Level filter row (only if both max-level and leveling creatures exist) ──
+    if (hasMaxLv && hasLeveling) {
+      var lvlRow = document.createElement('div');
+      lvlRow.className = 'bt-filter-row';
+      var lvlFilters = [
+        { key: 'all', label: 'Any Lv' },
+        { key: 'max', label: 'Max Lv' },
+        { key: 'leveling', label: 'Needs XP' }
+      ];
+      for (var li = 0; li < lvlFilters.length; li++) {
+        (function (f) {
+          var btn = document.createElement('button');
+          btn.className = 'bt-inv-filter-btn';
+          if (creatureLevelFilter === f.key) btn.classList.add('bt-inv-filter-active');
+          btn.textContent = f.label;
+          btn.addEventListener('click', function () {
+            creatureLevelFilter = f.key;
+            renderCreaturePicker();
+          });
+          lvlRow.appendChild(btn);
+        })(lvlFilters[li]);
+      }
+      bar.appendChild(lvlRow);
+    }
+  }
+
   function renderCreaturePicker() {
     creaturePicker.innerHTML = '';
     loadPetState();
@@ -2350,6 +2579,7 @@
 
     noPetsMsg.classList.add('bt-hidden');
     creaturePicker.classList.remove('bt-hidden');
+    renderCreatureFilters();
 
     var petIds = Object.keys(petState.pets);
     for (var i = 0; i < petIds.length; i++) {
@@ -2357,6 +2587,17 @@
         var pet = petState.pets[petId];
         var creature = catalog ? catalog.creatures[petId] : null;
         if (!creature) return;
+
+        // Apply creature type filter
+        if (creatureFilter !== 'all' && creature.type !== creatureFilter) return;
+
+        // Apply creature level filter
+        if (creatureLevelFilter !== 'all') {
+          var petLvl = pet.level || 1;
+          var maxLvl = creature.maxLevel || 1;
+          if (creatureLevelFilter === 'max' && petLvl < maxLvl) return;
+          if (creatureLevelFilter === 'leveling' && petLvl >= maxLvl) return;
+        }
 
         var card = document.createElement('div');
         card.className = 'bt-creature-card';
@@ -2481,6 +2722,11 @@
     floatingTexts = [];
     activeVFX = [];
     animQueue = [];
+    currentTurnOrder = null;
+    currentTurnIdx = 0;
+    bannerText = null;
+    bannerTimer = 0;
+    countdownText = null;
 
     // Preload all team sprites (using spriteKey for alt skin support)
     var spritesToLoad = [];
@@ -2515,7 +2761,30 @@
         generateWaveEnemies(0, function () {
           startEnemyAnimLoop();
           renderBattle();
-          autoTimer = setTimeout(runAutoBattle, 1000);
+          // Countdown: 3... 2... 1... FIGHT!
+          countdownText = '3';
+          renderBattle();
+          autoTimer = setTimeout(function () {
+            if (!battleRunning) return;
+            countdownText = '2';
+            renderBattle();
+            autoTimer = setTimeout(function () {
+              if (!battleRunning) return;
+              countdownText = '1';
+              renderBattle();
+              autoTimer = setTimeout(function () {
+                if (!battleRunning) return;
+                countdownText = 'FIGHT!';
+                renderBattle();
+                autoTimer = setTimeout(function () {
+                  if (!battleRunning) return;
+                  countdownText = null;
+                  renderBattle();
+                  autoTimer = setTimeout(runAutoBattle, 200);
+                }, 500);
+              }, 500);
+            }, 500);
+          }, 500);
         });
       });
     }
@@ -3063,15 +3332,45 @@
   if (skipWaveBtn) {
     skipWaveBtn.addEventListener('click', function () {
       skipWave = true;
+      skipWaveBtn.classList.add('bt-skip-active');
     });
   }
 
   if (retreatBtn) {
     retreatBtn.addEventListener('click', function () {
       if (!battleRunning) return;
-      // Retreat = fail with waves cleared so far
-      wavesCleared = currentWave - 1;
-      endDungeon(false);
+      // Guard against stacking dialogs
+      if (document.querySelector('.bt-retreat-overlay')) return;
+      // Show confirmation overlay
+      var overlay = document.createElement('div');
+      overlay.className = 'bt-overlay bt-retreat-overlay';
+      var inner = document.createElement('div');
+      inner.className = 'bt-overlay-inner';
+      var title = document.createElement('h3');
+      title.className = 'bt-overlay-title bt-defeat-title';
+      title.textContent = 'Retreat?';
+      inner.appendChild(title);
+      var desc = document.createElement('p');
+      desc.style.marginBottom = '16px';
+      desc.style.fontSize = '0.9em';
+      desc.textContent = 'You will lose remaining wave progress.';
+      inner.appendChild(desc);
+      var confirmBtn = document.createElement('button');
+      confirmBtn.className = 'bt-btn bt-btn-danger bt-btn-small';
+      confirmBtn.textContent = 'Retreat';
+      confirmBtn.addEventListener('click', function () {
+        overlay.remove();
+        wavesCleared = currentWave - 1;
+        endDungeon(false);
+      });
+      inner.appendChild(confirmBtn);
+      var cancelBtn = document.createElement('button');
+      cancelBtn.className = 'bt-btn bt-btn-secondary bt-btn-small';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', function () { overlay.remove(); });
+      inner.appendChild(cancelBtn);
+      overlay.appendChild(inner);
+      document.body.appendChild(overlay);
     });
   }
 

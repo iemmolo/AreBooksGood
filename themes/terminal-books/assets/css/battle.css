@@ -199,6 +199,20 @@
   color: var(--foreground);
 }
 
+/* ── Creature filter bar ─────────────────── */
+.bt-creature-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.bt-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* Creature picker grid (reuses creature card style) */
 .bt-creature-grid {
   display: grid;
@@ -323,7 +337,8 @@
   background: color-mix(in srgb, var(--accent) 10%, var(--background));
 }
 
-.bt-speed-btn.bt-speed-active {
+.bt-speed-btn.bt-speed-active,
+.bt-speed-btn.bt-skip-active {
   color: var(--background);
   background: var(--accent);
   border-color: var(--accent);
@@ -742,6 +757,16 @@
 
 .bt-diff-check {
   color: inherit;
+}
+
+.bt-diff-subtitle {
+  display: block;
+  font-size: 0.65em;
+  opacity: 0.7;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: 2px;
 }
 
 /* ── Creature Card Stats ─────────────────── */
