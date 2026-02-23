@@ -381,6 +381,38 @@
   image-rendering: pixelated;
 }
 
+/* ── Boss Wave Banner ────────────────────── */
+.bt-boss-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.3);
+  font-size: 2em;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f44336;
+  text-shadow: 0 0 20px color-mix(in srgb, #f44336 60%, transparent), 0 0 40px color-mix(in srgb, #ffd54f 30%, transparent);
+  z-index: 20;
+  pointer-events: none;
+  animation: bt-boss-appear 0.4s ease-out forwards;
+}
+
+@keyframes bt-boss-appear {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  60%  { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.bt-boss-banner-out {
+  animation: bt-boss-fade 0.4s ease-in forwards;
+}
+
+@keyframes bt-boss-fade {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
+}
+
 /* ── Battle controls ─────────────────────── */
 .bt-battle-controls {
   display: flex;
@@ -502,6 +534,51 @@
   font-size: 0.95em;
 }
 
+/* ── First Clear Celebration ────────────── */
+.bt-first-clear-flash {
+  position: fixed;
+  inset: 0;
+  background: #ffd54f;
+  z-index: 10060;
+  pointer-events: none;
+  animation: bt-fc-flash 0.6s ease-out forwards;
+}
+
+@keyframes bt-fc-flash {
+  0%   { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+.bt-first-clear-text {
+  font-size: 1.6em;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #ffd54f;
+  text-shadow: 0 0 12px color-mix(in srgb, #ffd54f 50%, transparent);
+  margin-bottom: 8px;
+  animation: bt-fc-text 0.5s ease-out;
+}
+
+@keyframes bt-fc-text {
+  0%   { transform: scale(0.3); opacity: 0; }
+  60%  { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.bt-confetti {
+  position: absolute;
+  top: -8px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: bt-confetti-fall linear forwards;
+}
+
+@keyframes bt-confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(85vh) rotate(720deg); opacity: 0; }
+}
+
 .bt-creature-xp-list {
   display: flex;
   flex-wrap: wrap;
@@ -542,6 +619,65 @@
   opacity: 0.5;
 }
 
+/* ── Per-Creature Battle Stats ──────────── */
+.bt-battle-stats-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.bt-battle-stat-card {
+  position: relative;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 6px;
+  font-size: 0.78em;
+  min-width: 80px;
+  text-align: center;
+}
+
+.bt-battle-stat-name {
+  font-weight: 700;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.bt-battle-stat-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 8px;
+  font-size: 0.88em;
+}
+
+.bt-bsg-label {
+  text-align: left;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.bt-bsg-value {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.bt-mvp-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  padding: 1px 6px;
+  font-size: 0.62em;
+  font-weight: 700;
+  color: #1a1a1a;
+  background: #ffd54f;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 1px 4px color-mix(in srgb, #ffd54f 40%, transparent);
+}
+
 .bt-gear-drops {
   margin-bottom: 14px;
 }
@@ -561,6 +697,14 @@
 
 .bt-results-actions {
   margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bt-rematch-btn {
+  border-color: var(--accent);
 }
 
 /* ── Buttons ─────────────────────────────── */
@@ -672,6 +816,25 @@
 
 .bt-select-header .bt-section-title {
   margin-bottom: 0;
+}
+
+/* ── Dungeon Type Badges ────────────────── */
+.bt-dungeon-type-badges {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.bt-type-pill {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 0.6em;
+  font-weight: 700;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
 }
 
 /* ── Difficulty Badges (dungeon cards) ───── */
@@ -951,6 +1114,14 @@
   color: var(--background);
   background: var(--accent);
   border-color: var(--accent);
+}
+
+/* ── Bulk Sell Bar ───────────────────────── */
+.bt-bulk-sell-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .bt-inventory-grid {

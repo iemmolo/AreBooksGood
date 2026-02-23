@@ -4,7 +4,20 @@
       "Bash(hugo version:*)",
       "Bash(brew install:*)",
       "Bash(hugo new:*)",
-      "Bash(hugo:*)"
+      "Bash(hugo:*)",
+      "Bash(node -e:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(file:*)",
+      "Bash(find:*)",
+      "Bash(sips:*)",
+      "Bash(python3:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:rpgmaker.fandom.com)",
+      "WebFetch(domain:rpgmakerofficial.com)",
+      "WebFetch(domain:developer.rpgmakerweb.com)",
+      "Bash(curl:*)"
     ]
   }
 }

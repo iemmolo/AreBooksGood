@@ -676,7 +676,8 @@
       spriteId: sid,
       spriteKey: useAlt ? sid + '-alt' : sid,
       isPlayer: true, isEnemy: false,
-      status: { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 }
+      status: { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 },
+      battleStats: { damageDealt: 0, damageTaken: 0, kills: 0 }
     };
   }
 
@@ -699,7 +700,8 @@
       moveset: moveset, opacity: 1, offsetX: 0, offsetY: 0,
       enemyId: enemyId, isBoss: e.isBoss || false,
       isPlayer: false, isEnemy: true,
-      status: { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 }
+      status: { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 },
+      battleStats: { damageDealt: 0, damageTaken: 0, kills: 0 }
     };
   }
 
@@ -1484,6 +1486,10 @@
     }
 
     animQueue.push({ type: 'log', text: fighter.name + ' used ' + move.name + '!' });
+    // Show move name above attacker
+    var movePos = getFighterPos(fighter);
+    var moveColor = TYPE_COLORS[move.type] || themeColors.accent;
+    animQueue.push({ type: 'floatText', text: move.name, x: movePos.x, y: movePos.y - 30, color: moveColor, scale: 0.85 });
     animQueue.push({ type: 'delay', ms: 150 });
 
     // Status moves
@@ -1545,7 +1551,12 @@
       var isCrit = dmgResult.isCrit;
       var typeMult = getTypeMultiplier(move.type, target.type);
 
-      animQueue.push({ type: 'check', callback: function () { target.hp = Math.max(0, target.hp - dmg); } });
+      animQueue.push({ type: 'check', callback: function () {
+        target.hp = Math.max(0, target.hp - dmg);
+        if (fighter.battleStats) fighter.battleStats.damageDealt += dmg;
+        if (target.battleStats) target.battleStats.damageTaken += dmg;
+        if (target.hp <= 0 && fighter.battleStats) fighter.battleStats.kills++;
+      } });
 
       // Shake + VFX
       if (target.isEnemy) {
@@ -1950,12 +1961,40 @@
       // Generate new enemies
       generateWaveEnemies(currentWave - 1, function () {
         renderBattle();
+        var wasSkipping = skipWave;
         var delay = battleSpeed === 2 ? 400 : 800;
         if (skipWave) delay = 30;
         skipWave = false; // reset skip for new wave
         if (skipWaveBtn) skipWaveBtn.classList.remove('bt-skip-active');
-        autoTimer = setTimeout(runAutoBattle, delay);
+
+        // Boss wave announcement on final wave
+        if (currentWave === totalWaves && !wasSkipping) {
+          showBossBanner(function () {
+            autoTimer = setTimeout(runAutoBattle, delay);
+          });
+        } else {
+          autoTimer = setTimeout(runAutoBattle, delay);
+        }
       });
+    }
+  }
+
+  function showBossBanner(callback) {
+    var banner = document.createElement('div');
+    banner.className = 'bt-boss-banner';
+    banner.textContent = 'BOSS WAVE';
+    var wrap = document.querySelector('.bt-canvas-wrap');
+    if (wrap) {
+      wrap.appendChild(banner);
+      setTimeout(function () {
+        banner.classList.add('bt-boss-banner-out');
+        setTimeout(function () {
+          if (banner.parentNode) banner.parentNode.removeChild(banner);
+          if (callback) callback();
+        }, 400);
+      }, 1200);
+    } else {
+      if (callback) callback();
     }
   }
 
@@ -2313,6 +2352,48 @@
       firstClearEl.classList.add('bt-hidden');
     }
 
+    // Per-creature battle stats + MVP
+    var statsContainer = document.getElementById('bt-creature-battle-stats');
+    if (!statsContainer) {
+      statsContainer = document.createElement('div');
+      statsContainer.id = 'bt-creature-battle-stats';
+      creatureXPList.parentNode.insertBefore(statsContainer, creatureXPList.nextSibling);
+    }
+    statsContainer.innerHTML = '';
+    if (team.length > 0) {
+      var mvpIdx = 0;
+      var mvpDmg = 0;
+      for (var si = 0; si < team.length; si++) {
+        var bs = team[si].battleStats || { damageDealt: 0, damageTaken: 0, kills: 0 };
+        if (bs.damageDealt > mvpDmg) { mvpDmg = bs.damageDealt; mvpIdx = si; }
+      }
+      var statsRow = document.createElement('div');
+      statsRow.className = 'bt-battle-stats-row';
+      for (var si2 = 0; si2 < team.length; si2++) {
+        var bs2 = team[si2].battleStats || { damageDealt: 0, damageTaken: 0, kills: 0 };
+        var statCard = document.createElement('div');
+        statCard.className = 'bt-battle-stat-card';
+        if (si2 === mvpIdx && mvpDmg > 0) {
+          var mvpBadge = document.createElement('div');
+          mvpBadge.className = 'bt-mvp-badge';
+          mvpBadge.textContent = 'MVP';
+          statCard.appendChild(mvpBadge);
+        }
+        var scName = document.createElement('div');
+        scName.className = 'bt-battle-stat-name';
+        scName.textContent = team[si2].name;
+        statCard.appendChild(scName);
+        var scGrid = document.createElement('div');
+        scGrid.className = 'bt-battle-stat-grid';
+        scGrid.innerHTML = '<span class="bt-bsg-label">DMG</span><span class="bt-bsg-value">' + bs2.damageDealt +
+          '</span><span class="bt-bsg-label">Taken</span><span class="bt-bsg-value">' + bs2.damageTaken +
+          '</span><span class="bt-bsg-label">Kills</span><span class="bt-bsg-value">' + bs2.kills + '</span>';
+        statCard.appendChild(scGrid);
+        statsRow.appendChild(statCard);
+      }
+      statsContainer.appendChild(statsRow);
+    }
+
     // Skin unlock check — Brutal first clear rewards alt skin
     var skinReward = null;
     var isBrutalFirstClear = isFirstClear && selectedDifficulty === 'brutal';
@@ -2419,6 +2500,67 @@
 
     resultsOverlay.classList.remove('bt-hidden');
     renderStats();
+
+    // Enhanced first clear celebration
+    if (isFirstClear) {
+      triggerFirstClearCelebration();
+    }
+  }
+
+  function cleanupCelebration() {
+    if (!resultsOverlay) return;
+    var oldText = resultsOverlay.querySelector('.bt-first-clear-text');
+    if (oldText) oldText.parentNode.removeChild(oldText);
+    var oldFlash = resultsOverlay.querySelector('.bt-first-clear-flash');
+    if (oldFlash) oldFlash.parentNode.removeChild(oldFlash);
+    var bits = resultsOverlay.querySelectorAll('.bt-confetti');
+    for (var i = 0; i < bits.length; i++) {
+      if (bits[i].parentNode) bits[i].parentNode.removeChild(bits[i]);
+    }
+  }
+
+  function triggerFirstClearCelebration() {
+    var overlay = resultsOverlay;
+    if (!overlay) return;
+    var inner = overlay.querySelector('.bt-overlay-inner');
+    if (!inner) return;
+
+    // Clean up any previous celebration elements
+    cleanupCelebration();
+
+    // Screen flash
+    var flash = document.createElement('div');
+    flash.className = 'bt-first-clear-flash';
+    overlay.appendChild(flash);
+    setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 600);
+
+    // "FIRST CLEAR!" text with scale animation
+    var fcText = document.createElement('div');
+    fcText.className = 'bt-first-clear-text';
+    fcText.textContent = 'FIRST CLEAR!';
+    inner.insertBefore(fcText, inner.firstChild);
+
+    // Confetti particles
+    var colors = ['#ffd54f', '#ff6b35', '#4caf50', '#29b6f6', '#ab47bc', '#f44336'];
+    for (var i = 0; i < 30; i++) {
+      var p = document.createElement('div');
+      p.className = 'bt-confetti';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDelay = (Math.random() * 0.5) + 's';
+      p.style.animationDuration = (1.5 + Math.random() * 1) + 's';
+      var size = 4 + Math.floor(Math.random() * 4);
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      overlay.appendChild(p);
+    }
+    // Cleanup confetti after animation
+    setTimeout(function () {
+      var bits = overlay.querySelectorAll('.bt-confetti');
+      for (var j = 0; j < bits.length; j++) {
+        if (bits[j].parentNode) bits[j].parentNode.removeChild(bits[j]);
+      }
+    }, 3000);
   }
 
   function renderGearDropCard(gear) {
@@ -2574,6 +2716,34 @@
             badgesEl.appendChild(badge);
           }
           card.appendChild(badgesEl);
+        }
+
+        // Enemy element type preview
+        if (isUnlocked && enemyData) {
+          var seenTypes = {};
+          for (var wi = 0; wi < dungeon.enemies.length; wi++) {
+            var wave = dungeon.enemies[wi];
+            for (var ei = 0; ei < wave.length; ei++) {
+              var ed = enemyData[wave[ei]];
+              if (ed && ed.type) seenTypes[ed.type] = true;
+            }
+          }
+          var typeKeys2 = Object.keys(seenTypes);
+          if (typeKeys2.length > 0) {
+            var typeBadges = document.createElement('div');
+            typeBadges.className = 'bt-dungeon-type-badges';
+            var typeOrder2 = ['fire', 'nature', 'tech', 'aqua', 'shadow', 'mystic'];
+            for (var ti = 0; ti < typeOrder2.length; ti++) {
+              if (seenTypes[typeOrder2[ti]]) {
+                var pill = document.createElement('span');
+                pill.className = 'bt-type-pill bt-type-' + typeOrder2[ti];
+                pill.textContent = typeOrder2[ti].charAt(0).toUpperCase() + typeOrder2[ti].slice(1, 3);
+                pill.title = typeOrder2[ti];
+                typeBadges.appendChild(pill);
+              }
+            }
+            card.appendChild(typeBadges);
+          }
         }
 
         // Skin reward hint
@@ -3142,6 +3312,9 @@
     // Filter buttons
     renderInventoryFilters();
 
+    // Bulk sell bar (only in browse mode, not equip picker)
+    renderBulkSellBar(!asEquipPicker);
+
     var filtered = inventory.filter(function (g) {
       if (inventoryFilterSlot === 'all') return true;
       return g.slot === inventoryFilterSlot;
@@ -3231,6 +3404,69 @@
 
         grid.appendChild(card);
       })(filtered[i]);
+    }
+  }
+
+  function renderBulkSellBar(show) {
+    var existing = document.getElementById('bt-bulk-sell-bar');
+    if (existing) existing.remove();
+    if (!show || inventory.length === 0) return;
+
+    var filtersEl = document.getElementById('bt-inventory-filters');
+    if (!filtersEl) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'bt-bulk-sell-bar';
+    bar.className = 'bt-bulk-sell-bar';
+
+    // Sell All Common
+    var commonItems = inventory.filter(function (g) { return g.rarity === 'common' && !g.equippedBy; });
+    if (commonItems.length > 0) {
+      var commonPrice = gearData ? gearData.sellPrices.common || 5 : 5;
+      var commonTotal = commonItems.length * commonPrice;
+      var commonBtn = document.createElement('button');
+      commonBtn.className = 'bt-btn bt-btn-small bt-btn-danger';
+      commonBtn.textContent = 'Sell Common (' + commonItems.length + ') +' + commonTotal + 'c';
+      commonBtn.addEventListener('click', function () {
+        if (!confirm('Sell ' + commonItems.length + ' common gear for ' + commonTotal + ' coins?')) return;
+        for (var i = inventory.length - 1; i >= 0; i--) {
+          if (inventory[i].rarity === 'common' && !inventory[i].equippedBy) {
+            inventory.splice(i, 1);
+          }
+        }
+        saveInventory();
+        if (typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(commonTotal);
+        renderInventoryPanel(false);
+      });
+      bar.appendChild(commonBtn);
+    }
+
+    // Sell All Unequipped
+    var unequipped = inventory.filter(function (g) { return !g.equippedBy; });
+    if (unequipped.length > 1) {
+      var uTotal = 0;
+      for (var i = 0; i < unequipped.length; i++) {
+        uTotal += gearData ? gearData.sellPrices[unequipped[i].rarity] || 5 : 5;
+      }
+      var uBtn = document.createElement('button');
+      uBtn.className = 'bt-btn bt-btn-small bt-btn-danger';
+      uBtn.textContent = 'Sell Unequipped (' + unequipped.length + ') +' + uTotal + 'c';
+      uBtn.addEventListener('click', function () {
+        if (!confirm('Sell ALL ' + unequipped.length + ' unequipped gear for ' + uTotal + ' coins?')) return;
+        for (var j = inventory.length - 1; j >= 0; j--) {
+          if (!inventory[j].equippedBy) {
+            inventory.splice(j, 1);
+          }
+        }
+        saveInventory();
+        if (typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(uTotal);
+        renderInventoryPanel(false);
+      });
+      bar.appendChild(uBtn);
+    }
+
+    if (bar.children.length > 0) {
+      filtersEl.parentNode.insertBefore(bar, filtersEl.nextSibling);
     }
   }
 
@@ -3697,12 +3933,29 @@
 
   if (resultsContinueBtn) {
     resultsContinueBtn.addEventListener('click', function () {
+      cleanupCelebration();
       resultsOverlay.classList.add('bt-hidden');
       bgPattern = null;
       bgImage = null;
       showScreen('dungeon-select');
     });
   }
+
+  // Rematch button (added dynamically next to Continue)
+  var rematchBtn = document.createElement('button');
+  rematchBtn.className = 'bt-btn bt-btn-secondary bt-rematch-btn';
+  rematchBtn.textContent = 'Rematch';
+  rematchBtn.addEventListener('click', function () {
+    if (!selectedDungeon) return;
+    cleanupCelebration();
+    resultsOverlay.classList.add('bt-hidden');
+    bgPattern = null;
+    bgImage = null;
+    showScreen('team-builder');
+    renderTeamBuilder();
+  });
+  var resultsActions = resultsContinueBtn ? resultsContinueBtn.parentNode : null;
+  if (resultsActions) resultsActions.appendChild(rematchBtn);
 
   if (resetStatsBtn) {
     resetStatsBtn.addEventListener('click', function () {
