@@ -2,13 +2,15 @@
   "difficulty": {
     "normal": { "hpMult": 1.0, "atkMult": 1.0, "levelBonus": 0, "rewardMult": 1.0 },
     "hard":   { "hpMult": 1.5, "atkMult": 1.3, "levelBonus": 2, "rewardMult": 1.5 },
-    "brutal": { "hpMult": 2.0, "atkMult": 1.6, "levelBonus": 4, "rewardMult": 2.5 }
+    "brutal":    { "hpMult": 2.0, "atkMult": 1.6, "levelBonus": 4, "rewardMult": 2.5 },
+    "nightmare": { "hpMult": 3.0, "atkMult": 2.2, "levelBonus": 6, "rewardMult": 4.0 }
   },
-  "difficultyOrder": ["normal", "hard", "brutal"],
+  "difficultyOrder": ["normal", "hard", "brutal", "nightmare"],
   "dropRates": {
-    "normal": { "minDrops": 0, "maxDrops": 1, "weights": { "common": 60, "uncommon": 30, "rare": 10, "epic": 0 } },
-    "hard":   { "minDrops": 1, "maxDrops": 2, "weights": { "common": 30, "uncommon": 45, "rare": 20, "epic": 5 } },
-    "brutal": { "minDrops": 1, "maxDrops": 3, "weights": { "common": 0, "uncommon": 30, "rare": 45, "epic": 25 } }
+    "normal":    { "minDrops": 0, "maxDrops": 1, "weights": { "common": 60, "uncommon": 30, "rare": 10, "epic": 0 } },
+    "hard":      { "minDrops": 1, "maxDrops": 2, "weights": { "common": 30, "uncommon": 45, "rare": 20, "epic": 5 } },
+    "brutal":    { "minDrops": 1, "maxDrops": 3, "weights": { "common": 0, "uncommon": 30, "rare": 45, "epic": 25 } },
+    "nightmare": { "minDrops": 2, "maxDrops": 4, "weights": { "uncommon": 10, "rare": 40, "epic": 40, "legendary": 10 } }
   },
   "rarityOrder": ["common", "uncommon", "rare", "epic", "legendary"],
   "rarityColors": {
@@ -105,7 +107,8 @@
   "tierDropsByDifficulty": {
     "normal": [1],
     "hard":   [1, 2],
-    "brutal": [2, 3]
+    "brutal":    [2, 3],
+    "nightmare": [3]
   },
   "bossLoot": {
     "slime-green-big": {
@@ -174,12 +177,109 @@
         { "stat": "spd", "value": 3 }, { "stat": "cri", "value": 2 }
       ],
       "special": "Hungers for more treasure"
+    },
+    "frogger-boss": {
+      "name": "Marsh Tongue", "slot": "weapon", "mainStat": "atk", "mainValue": 26,
+      "spriteRow": 0, "spriteIcon": 8, "tier": 3,
+      "subStats": [
+        { "stat": "def", "value": 3 }, { "stat": "hp", "value": 15 },
+        { "stat": "spd", "value": 3 }, { "stat": "cri", "value": 2 }
+      ],
+      "special": "Drips with marsh venom"
+    },
+    "iron-golem": {
+      "name": "Forge Plate", "slot": "armor", "mainStat": "def", "mainValue": 20,
+      "secondaryStat": "hp", "secondaryValue": 65,
+      "spriteRow": 1, "spriteIcon": 0, "tier": 3,
+      "subStats": [
+        { "stat": "atk", "value": 3 }, { "stat": "hp", "value": 14 },
+        { "stat": "spd", "value": 2 }, { "stat": "cri", "value": 2 }
+      ],
+      "special": "Tempered in molten gold"
+    },
+    "void-mimic": {
+      "name": "Void Lens", "slot": "accessory", "mainStat": "spd", "mainValue": 16,
+      "secondaryStat": "cri", "secondaryValue": 7,
+      "spriteRow": 2, "spriteIcon": 5, "tier": 3,
+      "subStats": [
+        { "stat": "atk", "value": 3 }, { "stat": "def", "value": 3 },
+        { "stat": "hp", "value": 12 }, { "stat": "cri", "value": 2 }
+      ],
+      "special": "Sees through dimensions"
+    },
+    "skeleton-knight": {
+      "name": "Bone Blade", "slot": "weapon", "mainStat": "atk", "mainValue": 24,
+      "spriteRow": 0, "spriteIcon": 2, "tier": 3,
+      "subStats": [
+        { "stat": "def", "value": 3 }, { "stat": "hp", "value": 12 },
+        { "stat": "spd", "value": 2 }, { "stat": "cri", "value": 3 }
+      ],
+      "special": "Carved from ancient bone"
+    },
+    "flying-eye": {
+      "name": "Eye Amulet", "slot": "accessory", "mainStat": "spd", "mainValue": 14,
+      "secondaryStat": "cri", "secondaryValue": 6,
+      "spriteRow": 2, "spriteIcon": 9, "tier": 3,
+      "subStats": [
+        { "stat": "atk", "value": 3 }, { "stat": "def", "value": 2 },
+        { "stat": "hp", "value": 10 }, { "stat": "cri", "value": 3 }
+      ],
+      "special": "Sees all weaknesses"
+    },
+    "samurai-boss": {
+      "name": "Ronin Katana", "slot": "weapon", "mainStat": "atk", "mainValue": 28,
+      "spriteRow": 0, "spriteIcon": 2, "tier": 3,
+      "subStats": [
+        { "stat": "def", "value": 2 }, { "stat": "hp", "value": 10 },
+        { "stat": "spd", "value": 4 }, { "stat": "cri", "value": 3 }
+      ],
+      "special": "The way of the blade"
+    },
+    "demon-slime-boss": {
+      "name": "Demon Core", "slot": "accessory", "mainStat": "spd", "mainValue": 12,
+      "secondaryStat": "cri", "secondaryValue": 5,
+      "spriteRow": 2, "spriteIcon": 10, "tier": 3,
+      "subStats": [
+        { "stat": "atk", "value": 5 }, { "stat": "def", "value": 2 },
+        { "stat": "hp", "value": 8 }, { "stat": "cri", "value": 2 }
+      ],
+      "special": "Pulses with demon fire"
+    },
+    "cursed-spirit-boss": {
+      "name": "Spirit Flame", "slot": "weapon", "mainStat": "atk", "mainValue": 26,
+      "spriteRow": 0, "spriteIcon": 4, "tier": 3,
+      "subStats": [
+        { "stat": "def", "value": 2 }, { "stat": "hp", "value": 14 },
+        { "stat": "spd", "value": 3 }, { "stat": "cri", "value": 3 }
+      ],
+      "special": "Burns with spirit fire"
+    },
+    "pumpkin-boss": {
+      "name": "Vine Crown", "slot": "armor", "mainStat": "def", "mainValue": 20,
+      "secondaryStat": "hp", "secondaryValue": 60,
+      "spriteRow": 1, "spriteIcon": 0, "tier": 3,
+      "subStats": [
+        { "stat": "atk", "value": 2 }, { "stat": "hp", "value": 16 },
+        { "stat": "spd", "value": 2 }, { "stat": "cri", "value": 2 }
+      ],
+      "special": "Grown from enchanted vines"
+    },
+    "cloud-boss": {
+      "name": "Storm Orb", "slot": "accessory", "mainStat": "spd", "mainValue": 16,
+      "secondaryStat": "cri", "secondaryValue": 5,
+      "spriteRow": 2, "spriteIcon": 11, "tier": 3,
+      "subStats": [
+        { "stat": "atk", "value": 3 }, { "stat": "def", "value": 3 },
+        { "stat": "hp", "value": 10 }, { "stat": "cri", "value": 2 }
+      ],
+      "special": "Crackles with lightning"
     }
   },
   "bossDropChance": {
-    "brutal":  { "firstClear": 100, "repeat": 10 },
-    "hard":    { "firstClear": 50,  "repeat": 5 },
-    "normal":  { "firstClear": 20,  "repeat": 0 }
+    "nightmare": { "firstClear": 100, "repeat": 25 },
+    "brutal":    { "firstClear": 100, "repeat": 10 },
+    "hard":      { "firstClear": 50,  "repeat": 5 },
+    "normal":    { "firstClear": 20,  "repeat": 0 }
   },
   "upgrade": {
     "maxLevelByRarity": {
@@ -197,6 +297,48 @@
       "cri": { "common": [1, 1], "uncommon": [1, 1], "rare": [1, 2], "epic": [1, 2], "legendary": [1, 3] }
     }
   },
+  "titanSprites": {
+    "demon-slime": {
+      "sheet": "/images/pets/titans/demon-slime-king.png",
+      "frameWidth": 288, "frameHeight": 160, "cols": 22,
+      "anims": {
+        "idle":   { "row": 0, "frames": 6, "speed": 150 },
+        "attack": { "row": 2, "frames": 12, "speed": 80 },
+        "hit":    { "row": 3, "frames": 5, "speed": 100 },
+        "death":  { "row": 4, "frames": 15, "speed": 100 }
+      }
+    },
+    "cursed-spirit": {
+      "sheet": "/images/pets/titans/cursed-spirit.png",
+      "frameWidth": 224, "frameHeight": 112, "cols": 7,
+      "anims": {
+        "idle":   { "row": 0, "frames": 4, "speed": 180 },
+        "attack": { "row": 1, "frames": 7, "speed": 90 },
+        "hit":    { "row": 3, "frames": 5, "speed": 100 },
+        "death":  { "row": 4, "frames": 7, "speed": 110 }
+      }
+    },
+    "pumpkin": {
+      "sheet": "/images/pets/titans/ancient-pumpkin.png",
+      "frameWidth": 224, "frameHeight": 96, "cols": 7,
+      "anims": {
+        "idle":   { "row": 0, "frames": 4, "speed": 200 },
+        "attack": { "row": 2, "frames": 6, "speed": 90 },
+        "hit":    { "row": 4, "frames": 5, "speed": 100 },
+        "death":  { "row": 6, "frames": 7, "speed": 110 }
+      }
+    },
+    "cloud-monster": {
+      "sheet": "/images/pets/titans/storm-colossus.png",
+      "frameWidth": 192, "frameHeight": 112, "cols": 7,
+      "anims": {
+        "idle":   { "row": 0, "frames": 4, "speed": 200 },
+        "attack": { "row": 1, "frames": 7, "speed": 80 },
+        "hit":    { "row": 4, "frames": 5, "speed": 100 },
+        "death":  { "row": 6, "frames": 6, "speed": 120 }
+      }
+    }
+  },
   "skinRewards": {
     "1": { "creatureId": "fox",     "name": "Fox Alt",     "desc": "A wild forest variant" },
     "2": { "creatureId": "drake",   "name": "Drake Alt",   "desc": "Forged in ember depths" },
@@ -205,7 +347,19 @@
     "5": { "creatureId": "scarab",  "name": "Scarab Alt",  "desc": "Upgraded in the vault" },
     "6": { "creatureId": "raptor",  "name": "Raptor Alt",  "desc": "Ancient grove guardian" },
     "7": { "creatureId": "unicorn", "name": "Unicorn Alt", "desc": "Mystic spire ascended" },
-    "8": { "creatureId": "dragon",  "name": "Dragon Alt",  "desc": "Abyssal rift survivor" }
+    "8":  { "creatureId": "dragon",  "name": "Dragon Alt",  "desc": "Abyssal rift survivor" },
+    "9":  { "creatureId": "turtle",  "name": "Turtle Alt",  "desc": "Hardened in the marsh" },
+    "10": { "creatureId": "gremlin", "name": "Gremlin Alt", "desc": "Forged in iron fire" },
+    "11": { "creatureId": "sage",    "name": "Sage Alt",    "desc": "Void-touched oracle" },
+    "12": { "creatureId": "chimera", "name": "Chimera Alt", "desc": "Gauntlet champion" },
+    "13": { "creatureId": "phoenix", "name": "Phoenix Alt", "desc": "Risen from the bone yard" },
+    "14": { "creatureId": "sprite",  "name": "Sprite Alt",  "desc": "Fungal depths survivor" },
+    "15": { "creatureId": "beetle",  "name": "Beetle Alt",  "desc": "Tempered in golem fire" },
+    "16": { "creatureId": "fox",     "name": "Inferno Fox",  "desc": "Bathed in hellfire" },
+    "17": { "creatureId": "penguin", "name": "Penguin Alt", "desc": "Storm peak wanderer" },
+    "18": { "creatureId": "wolf",    "name": "Wolf Alt",    "desc": "Ronin's loyal companion" },
+    "19": { "creatureId": "serpent", "name": "Serpent Alt", "desc": "Cathedral's curse bearer" },
+    "20": { "creatureId": "hydra",   "name": "Hydra Alt",   "desc": "Abyss conqueror" }
   },
   "sets": {
     "Slime Conqueror": {
@@ -220,6 +374,27 @@
       "bonuses": {
         "2": { "spd": 3 },
         "3": { "atk": 8, "def": 3 }
+      }
+    },
+    "Marsh Dweller": {
+      "pieces": ["Marsh Tongue", "Forge Plate", "Void Lens"],
+      "bonuses": {
+        "2": { "def": 5 },
+        "3": { "hp": 20, "spd": 3 }
+      }
+    },
+    "Bone Collector": {
+      "pieces": ["Bone Blade", "Eye Amulet", "Ronin Katana"],
+      "bonuses": {
+        "2": { "atk": 5 },
+        "3": { "hp": 15, "cri": 3 }
+      }
+    },
+    "Elemental Fury": {
+      "pieces": ["Demon Core", "Spirit Flame", "Storm Orb"],
+      "bonuses": {
+        "2": { "spd": 4 },
+        "3": { "atk": 8, "cri": 5 }
       }
     }
   }

@@ -154,5 +154,101 @@
     "sprite": "/images/pets/enemies/mimic.png",
     "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
     "type": "shadow", "hpBase": 140, "atkBase": 17, "defBase": 7, "spdBase": 11, "criBase": 12, "isBoss": true
+  },
+  "frogger-boss": {
+    "name": "Marsh Frogger",
+    "sprite": "/images/pets/enemies/frogger-boss.png",
+    "frameWidth": 128, "frameHeight": 128, "frames": 5, "row": 0,
+    "type": "aqua", "hpBase": 160, "atkBase": 18, "defBase": 12, "spdBase": 10, "criBase": 10, "isBoss": true
+  },
+  "iron-golem": {
+    "name": "Iron Golem",
+    "sprite": "/images/pets/enemies/slime-golden-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 150, "atkBase": 18, "defBase": 14, "spdBase": 4, "criBase": 6, "isBoss": true
+  },
+  "void-mimic": {
+    "name": "Void Mimic",
+    "sprite": "/images/pets/enemies/mimic.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "mystic", "hpBase": 170, "atkBase": 19, "defBase": 9, "spdBase": 13, "criBase": 14, "isBoss": true
+  },
+  "flying-eye": {
+    "name": "Flying Eye",
+    "sprite": "/images/pets/enemies/flying-eye.png",
+    "frameWidth": 150, "frameHeight": 150, "frames": 8, "row": 0,
+    "type": "shadow", "hpBase": 155, "atkBase": 18, "defBase": 8, "spdBase": 14, "criBase": 12, "isBoss": true
+  },
+  "fantasy-goblin": {
+    "name": "Goblin Warrior",
+    "sprite": "/images/pets/enemies/fantasy-goblin.png",
+    "frameWidth": 150, "frameHeight": 150, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 70, "atkBase": 14, "defBase": 7, "spdBase": 11, "criBase": 5, "isBoss": false
+  },
+  "mushroom-warrior": {
+    "name": "Mushroom Brute",
+    "sprite": "/images/pets/enemies/mushroom-warrior.png",
+    "frameWidth": 150, "frameHeight": 150, "frames": 4, "row": 0,
+    "type": "nature", "hpBase": 85, "atkBase": 12, "defBase": 11, "spdBase": 6, "criBase": 4, "isBoss": false
+  },
+  "skeleton-knight": {
+    "name": "Skeleton Knight",
+    "sprite": "/images/pets/enemies/skeleton-knight.png",
+    "frameWidth": 150, "frameHeight": 150, "frames": 4, "row": 0,
+    "type": "shadow", "hpBase": 165, "atkBase": 19, "defBase": 12, "spdBase": 9, "criBase": 10, "isBoss": true
+  },
+  "golem-blue": {
+    "name": "Frost Golem",
+    "sprite": "/images/pets/enemies/golem-blue.png",
+    "frameWidth": 90, "frameHeight": 64, "frames": 8, "row": 0,
+    "type": "aqua", "hpBase": 65, "atkBase": 11, "defBase": 10, "spdBase": 5, "criBase": 3, "isBoss": false
+  },
+  "golem-orange": {
+    "name": "Magma Golem",
+    "sprite": "/images/pets/enemies/golem-orange.png",
+    "frameWidth": 90, "frameHeight": 64, "frames": 8, "row": 0,
+    "type": "fire", "hpBase": 65, "atkBase": 13, "defBase": 9, "spdBase": 5, "criBase": 4, "isBoss": false
+  },
+  "dark-bat": {
+    "name": "Shadow Bat",
+    "sprite": "/images/pets/enemies/dark-bat.png",
+    "frameWidth": 64, "frameHeight": 64, "frames": 9, "row": 0,
+    "type": "shadow", "hpBase": 42, "atkBase": 11, "defBase": 4, "spdBase": 14, "criBase": 6, "isBoss": false
+  },
+  "forest-flyer": {
+    "name": "Forest Flyer",
+    "sprite": "/images/pets/enemies/forest-flyer.png",
+    "frameWidth": 64, "frameHeight": 64, "frames": 8, "row": 0,
+    "type": "nature", "hpBase": 48, "atkBase": 10, "defBase": 5, "spdBase": 13, "criBase": 5, "isBoss": false
+  },
+  "samurai-boss": {
+    "name": "Ronin Samurai",
+    "sprite": "/images/pets/enemies/samurai-boss.png",
+    "frameWidth": 96, "frameHeight": 96, "frames": 10, "row": 0,
+    "type": "mystic", "hpBase": 180, "atkBase": 22, "defBase": 11, "spdBase": 13, "criBase": 13, "isBoss": true
+  },
+  "demon-slime-boss": {
+    "name": "Demon Slime",
+    "sprite": "/images/pets/titans/demon-slime-king.png",
+    "frameWidth": 288, "frameHeight": 160, "frames": 6, "row": 0,
+    "type": "fire", "hpBase": 190, "atkBase": 22, "defBase": 13, "spdBase": 8, "criBase": 10, "isBoss": true
+  },
+  "cursed-spirit-boss": {
+    "name": "Cursed Spirit",
+    "sprite": "/images/pets/titans/cursed-spirit.png",
+    "frameWidth": 224, "frameHeight": 112, "frames": 4, "row": 0,
+    "type": "fire", "hpBase": 175, "atkBase": 20, "defBase": 10, "spdBase": 12, "criBase": 11, "isBoss": true
+  },
+  "pumpkin-boss": {
+    "name": "Pumpkin Knight",
+    "sprite": "/images/pets/titans/ancient-pumpkin.png",
+    "frameWidth": 224, "frameHeight": 96, "frames": 4, "row": 0,
+    "type": "nature", "hpBase": 170, "atkBase": 19, "defBase": 13, "spdBase": 10, "criBase": 9, "isBoss": true
+  },
+  "cloud-boss": {
+    "name": "Storm Cloud",
+    "sprite": "/images/pets/titans/storm-colossus.png",
+    "frameWidth": 192, "frameHeight": 112, "frames": 4, "row": 0,
+    "type": "aqua", "hpBase": 175, "atkBase": 18, "defBase": 14, "spdBase": 9, "criBase": 8, "isBoss": true
   }
 }

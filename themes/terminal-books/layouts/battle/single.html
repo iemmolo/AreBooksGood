@@ -5,6 +5,11 @@
   </div>
 
   <div id="battle-app">
+    <!-- Mode Tabs -->
+    <div id="bt-mode-tabs" class="bt-mode-tabs">
+      <!-- Filled by JS -->
+    </div>
+
     <!-- Screen 1: Dungeon Select -->
     <div id="bt-dungeon-select" class="bt-screen">
       <div class="bt-select-header">
@@ -12,9 +17,30 @@
         <a href="/pets/gear/" class="bt-btn bt-btn-small bt-btn-secondary">Gear Vault</a>
         <button id="bt-inventory-btn" class="bt-btn bt-btn-small">Inventory</button>
       </div>
+      <div id="bt-resume-bar" class="bt-resume-bar bt-hidden"></div>
       <div id="bt-dungeon-grid" class="bt-dungeon-grid">
         <!-- Filled by JS -->
       </div>
+    </div>
+
+    <!-- Screen: Daily Challenge -->
+    <div id="bt-daily-screen" class="bt-screen bt-hidden">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- Screen: The Spire (Endless Tower) -->
+    <div id="bt-spire-screen" class="bt-screen bt-hidden">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- Screen: World Boss (Titan) -->
+    <div id="bt-titan-screen" class="bt-screen bt-hidden">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- Screen: Faction Wars -->
+    <div id="bt-faction-screen" class="bt-screen bt-hidden">
+      <!-- Filled by JS -->
     </div>
 
     <!-- Screen 2: Team Builder -->
@@ -108,6 +134,9 @@
           <span class="bt-result-label">XP Earned</span><span id="bt-result-xp" class="bt-result-value">0</span>
           <span class="bt-result-label">Coins</span><span id="bt-result-coins" class="bt-result-value">0</span>
           <span class="bt-result-label">JB Bonus</span><span id="bt-result-jb" class="bt-result-value">0</span>
+        </div>
+        <div id="bt-score-breakdown" class="bt-score-breakdown bt-hidden">
+          <!-- Speed run score filled by JS -->
         </div>
         <div id="bt-first-clear" class="bt-first-clear bt-hidden">
           First Clear Bonus!

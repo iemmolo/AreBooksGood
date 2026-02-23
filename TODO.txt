@@ -165,6 +165,15 @@ AreBooksGood - Improvement TODO
 - [x] Toggle UI in buy-back section (JackBucks / Coins buttons)
 - [ ] Consider fluctuating daily prices (Option B polish) after bridge is working
 
+## Battle / Dungeon UI
+
+- [ ] Visual indicator when all difficulties of a dungeon are cleared (e.g. gold border, checkmark, crown icon on card)
+- [ ] Per-difficulty completion badges on dungeon cards — show which difficulties (Normal/Hard/Brutal/Nightmare) have been beaten
+
+## Pet UI
+
+- [ ] Side menu slide-out hot pet swap menu — grid of pet sprites, small loop animation when scrolled into view
+
 ## Future Ideas
 
 - [x] Add pet sprite previews to casino tile cards

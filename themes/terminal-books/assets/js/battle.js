@@ -135,6 +135,8 @@
     var critMult = isCrit ? 1.5 : 1.0;
     var variance = 0.85 + Math.random() * 0.15;
     var dmg = Math.floor(power * ratio * stab * typeMult * atkBuff * critMult * variance);
+    // Daily glass-cannon modifier: double all damage
+    if (isDailyModActive('glass-cannon')) dmg = dmg * 2;
     return { damage: Math.max(1, dmg), isCrit: isCrit };
   }
 
@@ -162,7 +164,31 @@
     { id: 7, name: 'Mystic Spire',  typeLock: 'mystic', waves: 6, stars: 4,
       enemies: [['myconid-pink','slime-purple','myconid-blue'],['slime-purple','myconid-pink','slime-purple'],['myconid-blue','myconid-pink','slime-purple'],['myconid-pink','myconid-pink','myconid-blue'],['slime-purple','myconid-pink','myconid-pink'],['mimic','myconid-pink','slime-purple']] },
     { id: 8, name: 'Abyssal Rift',  typeLock: null,     waves: 8, stars: 5,
-      enemies: [['slime-green','slime-blue','slime-pink'],['myconid-red','goblin-spear','spike'],['slime-black','myconid-purple','goblin-bomb'],['goblin-archer','myconid-green','slime-golden'],['myconid-pink','slime-purple','spike'],['slime-golden-big','goblin-bomb','goblin-archer'],['slime-black-big','venom-bloom','myconid-purple'],['slime-pink-big','mimic','slime-blue-big']] }
+      enemies: [['slime-green','slime-blue','slime-pink'],['myconid-red','goblin-spear','spike'],['slime-black','myconid-purple','goblin-bomb'],['goblin-archer','myconid-green','slime-golden'],['myconid-pink','slime-purple','spike'],['slime-golden-big','goblin-bomb','goblin-archer'],['slime-black-big','venom-bloom','myconid-purple'],['slime-pink-big','mimic','slime-blue-big']] },
+    { id: 9, name: 'Poison Marsh',  typeLock: 'nature', waves: 5, stars: 3,
+      enemies: [['sprout-blue','myconid-green','sprout-pink'],['myconid-green','sprout-purple','sprout-blue'],['sprout-pink','myconid-green','myconid-green'],['venom-bloom','sprout-blue','myconid-green'],['frogger-boss','myconid-green','sprout-purple']] },
+    { id: 10, name: 'Iron Forge',   typeLock: 'tech',   waves: 6, stars: 4,
+      enemies: [['goblin-spear','slime-golden','goblin-archer'],['goblin-bomb','goblin-spear','slime-golden'],['slime-golden','goblin-archer','goblin-bomb'],['goblin-spear','goblin-bomb','goblin-archer'],['slime-golden-big','goblin-bomb','goblin-spear'],['iron-golem','goblin-archer','goblin-bomb']] },
+    { id: 11, name: 'Void Sanctum', typeLock: 'mystic', waves: 6, stars: 4,
+      enemies: [['myconid-pink','slime-purple','myconid-pink'],['slime-purple','myconid-pink','slime-purple'],['myconid-pink','myconid-blue','slime-purple'],['mimic','myconid-pink','slime-purple'],['slime-purple','mimic','myconid-pink'],['void-mimic','myconid-pink','slime-purple']] },
+    { id: 12, name: 'The Gauntlet', typeLock: null,     waves: 8, stars: 5,
+      enemies: [['slime-green','slime-blue','slime-pink'],['myconid-red','goblin-spear','spike'],['slime-black','myconid-purple','goblin-bomb'],['goblin-archer','myconid-green','slime-golden'],['venom-bloom','myconid-pink','spike'],['frogger-boss','goblin-bomb','myconid-purple'],['iron-golem','mimic','slime-golden-big'],['void-mimic','frogger-boss','iron-golem']] },
+    { id: 13, name: 'Bone Yard',    typeLock: 'shadow', waves: 5, stars: 3,
+      enemies: [['dark-bat','dark-bat','sprout-purple'],['dark-bat','spike','sprout-purple'],['spike','dark-bat','dark-bat'],['dark-bat','spike','spike'],['skeleton-knight','dark-bat','spike']] },
+    { id: 14, name: 'Fungal Depths', typeLock: 'nature', waves: 6, stars: 4,
+      enemies: [['forest-flyer','myconid-green','sprout-blue'],['mushroom-warrior','forest-flyer','myconid-green'],['forest-flyer','forest-flyer','mushroom-warrior'],['mushroom-warrior','myconid-green','forest-flyer'],['forest-flyer','mushroom-warrior','forest-flyer'],['pumpkin-boss','mushroom-warrior','forest-flyer']] },
+    { id: 15, name: 'Golem Forge',  typeLock: null,     waves: 6, stars: 4,
+      enemies: [['golem-blue','golem-orange','fantasy-goblin'],['fantasy-goblin','golem-blue','golem-orange'],['golem-orange','golem-orange','fantasy-goblin'],['fantasy-goblin','golem-blue','golem-blue'],['golem-orange','fantasy-goblin','golem-blue'],['flying-eye','golem-orange','golem-blue']] },
+    { id: 16, name: 'Inferno Pit',  typeLock: 'fire',   waves: 6, stars: 4,
+      enemies: [['golem-orange','slime-pink','myconid-red'],['myconid-red','golem-orange','slime-pink'],['golem-orange','golem-orange','myconid-red'],['slime-pink','golem-orange','myconid-red'],['cursed-spirit-boss','golem-orange','slime-pink'],['demon-slime-boss','golem-orange','myconid-red']] },
+    { id: 17, name: 'Storm Peaks',  typeLock: 'aqua',   waves: 7, stars: 4,
+      enemies: [['golem-blue','slime-blue','slime-light-blue'],['golem-blue','myconid-blue','slime-blue'],['dark-bat','golem-blue','slime-blue'],['golem-blue','golem-blue','dark-bat'],['dark-bat','golem-blue','myconid-blue'],['golem-blue','dark-bat','golem-blue'],['cloud-boss','golem-blue','dark-bat']] },
+    { id: 18, name: "Ronin's Keep", typeLock: 'mystic', waves: 7, stars: 5,
+      enemies: [['myconid-pink','slime-purple','dark-bat'],['fantasy-goblin','myconid-pink','dark-bat'],['mushroom-warrior','slime-purple','myconid-pink'],['dark-bat','fantasy-goblin','myconid-pink'],['skeleton-knight','myconid-pink','dark-bat'],['flying-eye','fantasy-goblin','slime-purple'],['samurai-boss','skeleton-knight','flying-eye']] },
+    { id: 19, name: 'Cursed Cathedral', typeLock: null,  waves: 8, stars: 5,
+      enemies: [['dark-bat','forest-flyer','golem-blue'],['fantasy-goblin','golem-orange','dark-bat'],['mushroom-warrior','forest-flyer','fantasy-goblin'],['golem-blue','golem-orange','dark-bat'],['skeleton-knight','fantasy-goblin','mushroom-warrior'],['flying-eye','dark-bat','forest-flyer'],['pumpkin-boss','skeleton-knight','golem-orange'],['samurai-boss','demon-slime-boss','flying-eye']] },
+    { id: 20, name: 'The Abyss',    typeLock: null,     waves: 10, stars: 5,
+      enemies: [['slime-green','slime-blue','slime-pink'],['dark-bat','forest-flyer','golem-blue'],['fantasy-goblin','mushroom-warrior','golem-orange'],['skeleton-knight','dark-bat','dark-bat'],['flying-eye','fantasy-goblin','mushroom-warrior'],['cursed-spirit-boss','golem-orange','golem-blue'],['pumpkin-boss','forest-flyer','dark-bat'],['cloud-boss','skeleton-knight','fantasy-goblin'],['demon-slime-boss','mushroom-warrior','flying-eye'],['samurai-boss','skeleton-knight','demon-slime-boss']] }
   ];
 
   // ── Dungeon backgrounds ─────────────────────────────
@@ -174,7 +200,19 @@
     5: '/images/pets/backgrounds/bg-5.png',
     6: '/images/pets/backgrounds/bg-6.png',
     7: '/images/pets/backgrounds/bg-7.png',
-    8: '/images/pets/backgrounds/bg-8.png'
+    8: '/images/pets/backgrounds/bg-8.png',
+    9: '/images/pets/backgrounds/bg-9.png',
+    10: '/images/pets/backgrounds/bg-10.png',
+    11: '/images/pets/backgrounds/bg-11.png',
+    12: '/images/pets/backgrounds/bg-12.png',
+    13: '/images/pets/backgrounds/bg-13.png',
+    14: '/images/pets/backgrounds/bg-14.png',
+    15: '/images/pets/backgrounds/bg-15.png',
+    16: '/images/pets/backgrounds/bg-16.png',
+    17: '/images/pets/backgrounds/bg-17.png',
+    18: '/images/pets/backgrounds/bg-18.png',
+    19: '/images/pets/backgrounds/bg-19.png',
+    20: '/images/pets/backgrounds/bg-20.png'
   };
   var bgPattern = null;
   var bgImage = null;
@@ -188,6 +226,11 @@
   var teamScreen = document.getElementById('bt-team-screen');
   var battleScreen = document.getElementById('bt-battle-screen');
   var resultsOverlay = document.getElementById('bt-results-overlay');
+  var dailyScreen = document.getElementById('bt-daily-screen');
+  var spireScreen = document.getElementById('bt-spire-screen');
+  var titanScreen = document.getElementById('bt-titan-screen');
+  var factionScreen = document.getElementById('bt-faction-screen');
+  var modeTabsEl = document.getElementById('bt-mode-tabs');
 
   var dungeonGrid = document.getElementById('bt-dungeon-grid');
   var dungeonNameEl = document.getElementById('bt-dungeon-name');
@@ -274,6 +317,7 @@
 
   // ── State ─────────────────────────────────────────
   var currentScreen = 'dungeon-select';
+  var gameMode = 'dungeon'; // 'dungeon', 'daily', 'spire', 'titan', 'faction'
   var selectedDungeon = null;
   var selectedDifficulty = 'normal';
   var teamSlots = [null, null, null]; // creature IDs
@@ -337,13 +381,14 @@
   function isDungeonClearedAny(dungeonId) {
     var d = dungeonProgress.difficulties[dungeonId];
     if (!d) return false;
-    return d.normal || d.hard || d.brutal;
+    return d.normal || d.hard || d.brutal || d.nightmare;
   }
 
   function isDifficultyUnlocked(dungeonId, difficulty) {
     if (difficulty === 'normal') return true;
     if (difficulty === 'hard') return isDungeonCleared(dungeonId, 'normal');
     if (difficulty === 'brutal') return isDungeonCleared(dungeonId, 'hard');
+    if (difficulty === 'nightmare') return isDungeonCleared(dungeonId, 'brutal');
     return false;
   }
 
@@ -367,7 +412,7 @@
 
   function markDungeonCleared(dungeonId, difficulty) {
     if (!dungeonProgress.difficulties[dungeonId]) {
-      dungeonProgress.difficulties[dungeonId] = { normal: false, hard: false, brutal: false };
+      dungeonProgress.difficulties[dungeonId] = { normal: false, hard: false, brutal: false, nightmare: false };
     }
     dungeonProgress.difficulties[dungeonId][difficulty] = true;
   }
@@ -589,6 +634,11 @@
   }
 
   function drawEnemySprite(fighter, x, y, size, animFrame) {
+    // Titan check: use TitanAnimator for animated titan sprites
+    if (fighter.isTitan && titanAnim.config) {
+      titanAnimDraw(fighter, x, y, size);
+      return;
+    }
     var img = enemyImages[fighter.enemyId];
     var ed = enemyData ? enemyData[fighter.enemyId] : null;
     if (!img || !ed) {
@@ -922,6 +972,8 @@
     if (enemyAnimTimer) clearInterval(enemyAnimTimer);
     enemyAnimTimer = setInterval(function () {
       enemyAnimFrame++;
+      // Update titan animator if active
+      if (titanAnim.config) titanAnimUpdate(200);
       if (animQueue.length === 0) renderBattle();
     }, 200);
   }
@@ -1123,6 +1175,9 @@
     // Floating texts
     updateFloatingTexts();
     drawFloatingTexts();
+
+    // Titan phase transition text overlay
+    titanAnimDrawPhaseText();
 
     // Turn order pips
     if (currentTurnOrder && currentTurnOrder.length > 0 && battleRunning) {
@@ -1363,6 +1418,11 @@
       return;
     }
     if (move.effect === 'heal' && move.power === 0) {
+      // Daily no-heal modifier blocks healing
+      if (isDailyModActive('no-heal')) {
+        animQueue.push({ type: 'log', text: fighter.name + ' tried to heal but it was blocked!' });
+        return;
+      }
       var healAmt = Math.floor(fighter.maxHp * 0.25);
       animQueue.push({ type: 'check', callback: function () {
         fighter.hp = Math.min(fighter.maxHp, fighter.hp + healAmt);
@@ -1420,6 +1480,8 @@
         if (fighter.battleStats) fighter.battleStats.damageDealt += dmg;
         if (target.battleStats) target.battleStats.damageTaken += dmg;
         if (target.hp <= 0 && fighter.battleStats) fighter.battleStats.kills++;
+        // Titan phase transition check
+        if (target.isTitan && target.hp > 0) checkTitanPhaseTransition(target);
       } });
 
       // Shake + VFX
@@ -1522,6 +1584,11 @@
         case 'shake':
           shakeTargetIdx = item.targetIdx;
           shakeTicks = item.ticks || 8;
+          // If a titan is being hit, play hit anim
+          if (item.targetIdx >= 100) {
+            var shakeEnemy = enemies[item.targetIdx - 100];
+            if (shakeEnemy && shakeEnemy.isTitan && titanAnim.config) titanAnimSetAnim('hit');
+          }
           renderBattle();
           animTimer = setTimeout(function () { shakeTargetIdx = -1; shakeTicks = 0; next(); }, 150 * speedMult);
           break;
@@ -1554,6 +1621,7 @@
           break;
         case 'lunge':
           // Attacker slides toward target over several frames
+          if (item.fighter && item.fighter.isTitan && titanAnim.config) titanAnimSetAnim('attack');
           if (skipWave) {
             next();
           } else {
@@ -1625,6 +1693,7 @@
           break;
         case 'faint':
           var f = item.fighter;
+          if (f && f.isTitan && titanAnim.config) titanAnimSetAnim('death');
           if (f && !skipWave) {
             // Brief red flash before fade
             var faintShakeIdx = f.isEnemy ? 100 + enemies.indexOf(f) : team.indexOf(f);
@@ -1682,12 +1751,25 @@
 
     // Check end conditions
     if (livingPlayers.length === 0) {
+      // Titan mode: save damage before ending
+      if (gameMode === 'titan' && activeTitan) {
+        endTitanAttempt(activeTitan);
+      }
+      // Spire mode: end run
+      if (gameMode === 'spire') {
+        endSpire();
+      }
       endDungeon(false);
       return;
     }
     if (livingEnemies.length === 0) {
       // Wave cleared
       wavesCleared = currentWave;
+      // Spire mode: advance floor instead of ending
+      if (gameMode === 'spire') {
+        spireNextFloor();
+        return;
+      }
       if (currentWave >= totalWaves) {
         endDungeon(true);
       } else {
@@ -1824,6 +1906,14 @@
 
       // Generate new enemies
       generateWaveEnemies(currentWave - 1, function () {
+        // Nightmare enrage: +5% ATK per wave
+        if (selectedDifficulty === 'nightmare') {
+          var enrageMult = 1 + 0.05 * (currentWave - 1);
+          for (var ei = 0; ei < enemies.length; ei++) {
+            enemies[ei].stats.atk = Math.floor(enemies[ei].stats.atk * enrageMult);
+          }
+          if (currentWave > 1) logMessage('Enemies enraged! (+' + Math.round((enrageMult - 1) * 100) + '% ATK)', 'bt-log-status');
+        }
         renderBattle();
         var wasSkipping = skipWave;
         var delay = battleSpeed === 2 ? 400 : 800;
@@ -2044,6 +2134,35 @@
         dungeonProgress.unlocked.push(nextId);
       }
       saveDungeonProgress();
+    }
+
+    // Daily challenge completion
+    if (victory && gameMode === 'daily' && !dailyState.completed) {
+      dailyState.completed = true;
+      dailyState.streak++;
+      dailyState.totalCompleted++;
+      var streakReward = getDailyStreakReward(dailyState.streak);
+      if (streakReward.coins > 0 && typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(streakReward.coins);
+      if (streakReward.jb > 0 && typeof JackBucks !== 'undefined' && JackBucks.add) JackBucks.add(streakReward.jb);
+      saveDailyState();
+    }
+
+    // Faction Wars marks
+    if (victory && gameMode === 'faction' && selectedDungeon && selectedDungeon.factionId) {
+      var factionMarks = { normal: 10, hard: 20, brutal: 40, nightmare: 80 };
+      var marksEarned = factionMarks[selectedDifficulty] || 10;
+      loadFactionState();
+      factionState.marks += marksEarned;
+      if (!factionState.completed[selectedDungeon.factionId]) {
+        factionState.completed[selectedDungeon.factionId] = {};
+      }
+      factionState.completed[selectedDungeon.factionId][selectedDifficulty] = true;
+      saveFactionState();
+    }
+
+    // Titan mode end
+    if (victory && gameMode === 'titan' && activeTitan) {
+      endTitanAttempt(activeTitan);
     }
 
     if (victory) stats.clears++;
@@ -2342,12 +2461,20 @@
   // renderGearIcon → GearSystem.renderGearIcon
 
   // ── Screen transitions ────────────────────────────
-  function showScreen(screen) {
-    currentScreen = screen;
+  function hideAllScreens() {
     dungeonSelectScreen.classList.add('bt-hidden');
     teamScreen.classList.add('bt-hidden');
     battleScreen.classList.add('bt-hidden');
     resultsOverlay.classList.add('bt-hidden');
+    if (dailyScreen) dailyScreen.classList.add('bt-hidden');
+    if (spireScreen) spireScreen.classList.add('bt-hidden');
+    if (titanScreen) titanScreen.classList.add('bt-hidden');
+    if (factionScreen) factionScreen.classList.add('bt-hidden');
+  }
+
+  function showScreen(screen) {
+    currentScreen = screen;
+    hideAllScreens();
     closeInventory();
     closeGearModal();
 
@@ -2355,6 +2482,7 @@
       case 'dungeon-select':
         dungeonSelectScreen.classList.remove('bt-hidden');
         dungeonStatsEl.classList.remove('bt-hidden');
+        renderModeTabs();
         renderDungeonGrid();
         break;
       case 'team-builder':
@@ -2366,6 +2494,56 @@
         battleScreen.classList.remove('bt-hidden');
         dungeonStatsEl.classList.add('bt-hidden');
         break;
+      case 'daily-screen':
+        if (dailyScreen) dailyScreen.classList.remove('bt-hidden');
+        dungeonStatsEl.classList.add('bt-hidden');
+        renderModeTabs();
+        showDailyScreen();
+        break;
+      case 'spire-screen':
+        if (spireScreen) spireScreen.classList.remove('bt-hidden');
+        dungeonStatsEl.classList.add('bt-hidden');
+        renderModeTabs();
+        showSpireScreen();
+        break;
+      case 'titan-screen':
+        if (titanScreen) titanScreen.classList.remove('bt-hidden');
+        dungeonStatsEl.classList.add('bt-hidden');
+        renderModeTabs();
+        showTitanScreen();
+        break;
+      case 'faction-screen':
+        if (factionScreen) factionScreen.classList.remove('bt-hidden');
+        dungeonStatsEl.classList.add('bt-hidden');
+        renderModeTabs();
+        showFactionScreen();
+        break;
+    }
+  }
+
+  // ── Mode Tabs ──────────────────────────────────────
+  function renderModeTabs() {
+    if (!modeTabsEl) return;
+    modeTabsEl.innerHTML = '';
+    var tabs = [
+      { id: 'dungeon', label: 'Dungeons', screen: 'dungeon-select' },
+      { id: 'daily', label: 'Daily', screen: 'daily-screen' },
+      { id: 'spire', label: 'Spire', screen: 'spire-screen' },
+      { id: 'titan', label: 'Titan', screen: 'titan-screen' },
+      { id: 'faction', label: 'Faction', screen: 'faction-screen' }
+    ];
+    for (var i = 0; i < tabs.length; i++) {
+      (function (tab) {
+        var btn = document.createElement('button');
+        btn.className = 'bt-mode-tab';
+        if (gameMode === tab.id) btn.classList.add('bt-mode-active');
+        btn.textContent = tab.label;
+        btn.addEventListener('click', function () {
+          gameMode = tab.id;
+          showScreen(tab.screen);
+        });
+        modeTabsEl.appendChild(btn);
+      })(tabs[i]);
     }
   }
 
@@ -2419,7 +2597,7 @@
         if (isUnlocked) {
           var badgesEl = document.createElement('div');
           badgesEl.className = 'bt-diff-badges';
-          var diffs = ['normal', 'hard', 'brutal'];
+          var diffs = ['normal', 'hard', 'brutal', 'nightmare'];
           for (var di = 0; di < diffs.length; di++) {
             var badge = document.createElement('span');
             badge.className = 'bt-diff-badge bt-diff-' + diffs[di];
@@ -2516,8 +2694,8 @@
     var container = document.getElementById('bt-difficulty-picker');
     if (!container) return;
     container.innerHTML = '';
-    var diffs = ['normal', 'hard', 'brutal'];
-    var labels = { normal: 'Normal', hard: 'Hard', brutal: 'Brutal' };
+    var diffs = ['normal', 'hard', 'brutal', 'nightmare'];
+    var labels = { normal: 'Normal', hard: 'Hard', brutal: 'Brutal', nightmare: 'Nightmare' };
     var dungeonId = selectedDungeon ? selectedDungeon.id : 0;
     for (var i = 0; i < diffs.length; i++) {
       (function (diff) {
@@ -2954,7 +3132,15 @@
         logMessage('--- Entering ' + selectedDungeon.name + ' ---', 'bt-log-wave');
         logMessage('--- Wave 1/' + totalWaves + ' ---', 'bt-log-wave');
 
+        // Titan mode: override enemies with titan fighter
+        if (gameMode === 'titan' && activeTitan) {
+          titanAnimInit(activeTitan.titanId);
+        }
         generateWaveEnemies(0, function () {
+          // In titan mode, replace generated enemies with the titan
+          if (gameMode === 'titan' && activeTitan) {
+            enemies = [activeTitan];
+          }
           startEnemyAnimLoop();
           renderBattle();
           // Countdown: 3... 2... 1... FIGHT!
@@ -3511,7 +3697,12 @@
       resultsOverlay.classList.add('bt-hidden');
       bgPattern = null;
       bgImage = null;
-      showScreen('dungeon-select');
+      // Return to the appropriate mode screen
+      if (gameMode === 'faction') { showScreen('faction-screen'); }
+      else if (gameMode === 'daily') { showScreen('daily-screen'); }
+      else if (gameMode === 'spire') { showScreen('spire-screen'); }
+      else if (gameMode === 'titan') { showScreen('titan-screen'); }
+      else { showScreen('dungeon-select'); }
     });
   }
 
@@ -3612,9 +3803,601 @@
     }
   });
 
+  // ── Daily Challenge Mode ──────────────────────────
+  var DAILY_MODIFIERS = [
+    { id: 'glass-cannon', name: 'Glass Cannon', desc: 'All damage dealt x2 (both sides)', apply: function (dmg) { return dmg * 2; } },
+    { id: 'no-heal', name: 'No Healing', desc: 'Healing moves have no effect', blockHeal: true },
+    { id: 'type-shuffle', name: 'Type Shuffle', desc: 'Enemy types are randomized', shuffleTypes: true },
+    { id: 'speed-demon', name: 'Speed Demon', desc: 'All SPD doubled', spdMult: 2 },
+    { id: 'armor-break', name: 'Armor Break', desc: 'All DEF halved', defMult: 0.5 },
+    { id: 'crit-frenzy', name: 'Crit Frenzy', desc: 'Crit chance +25% for everyone', criBonus: 25 }
+  ];
+
+  var dailyState = { lastDate: null, completed: false, streak: 0, totalCompleted: 0 };
+
+  function getDailyDate() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function getDailySeed(dateStr) {
+    var hash = 0;
+    for (var i = 0; i < dateStr.length; i++) {
+      hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  }
+
+  function loadDailyState() {
+    try {
+      var raw = localStorage.getItem('arebooksgood-daily');
+      if (raw) {
+        var s = JSON.parse(raw);
+        dailyState.lastDate = s.lastDate || null;
+        dailyState.completed = s.completed || false;
+        dailyState.streak = s.streak || 0;
+        dailyState.totalCompleted = s.totalCompleted || 0;
+      }
+    } catch (e) {}
+    // Reset if new day
+    var today = getDailyDate();
+    if (dailyState.lastDate !== today) {
+      // Check if yesterday was completed for streak
+      if (dailyState.completed) {
+        var yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        var yStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+        if (dailyState.lastDate !== yStr) dailyState.streak = 0;
+      } else {
+        dailyState.streak = 0;
+      }
+      dailyState.completed = false;
+      dailyState.lastDate = today;
+      saveDailyState();
+    }
+  }
+
+  function saveDailyState() {
+    try { localStorage.setItem('arebooksgood-daily', JSON.stringify(dailyState)); } catch (e) {}
+  }
+
+  function isDailyModActive(modId) {
+    if (gameMode !== 'daily') return false;
+    var today = getDailyDate();
+    var seed = getDailySeed(today);
+    var modIdx = seed % DAILY_MODIFIERS.length;
+    return DAILY_MODIFIERS[modIdx].id === modId;
+  }
+
+  function getDailyStreakReward(streak) {
+    if (streak >= 30) return { coins: 500, jb: 20 };
+    if (streak >= 14) return { coins: 200, jb: 10 };
+    if (streak >= 7) return { coins: 100, jb: 5 };
+    if (streak >= 3) return { coins: 50, jb: 2 };
+    return { coins: 0, jb: 0 };
+  }
+
+  function showDailyScreen() {
+    if (!dailyScreen) return;
+    loadDailyState();
+    var today = getDailyDate();
+    var seed = getDailySeed(today);
+    var modIdx = seed % DAILY_MODIFIERS.length;
+    var mod = DAILY_MODIFIERS[modIdx];
+    var dungeonIdx = seed % DUNGEONS.length;
+    var dungeon = DUNGEONS[dungeonIdx];
+
+    dailyScreen.innerHTML = '<h2 class="bt-section-title">> daily challenge</h2>' +
+      '<div class="bt-daily-card">' +
+      '<div class="bt-daily-dungeon">' + dungeon.name + '</div>' +
+      '<div class="bt-daily-modifier">' +
+      '<strong>' + mod.name + '</strong><br><span style="opacity:0.7">' + mod.desc + '</span>' +
+      '</div>' +
+      '<div class="bt-daily-streak">Streak: ' + dailyState.streak + ' days</div>' +
+      (dailyState.completed ?
+        '<div class="bt-daily-done">Completed today!</div>' :
+        '<button id="bt-daily-start" class="bt-btn">Start Challenge</button>') +
+      '</div>';
+
+    var startBtn = document.getElementById('bt-daily-start');
+    if (startBtn) {
+      startBtn.addEventListener('click', function () {
+        startDailyChallenge(dungeon);
+      });
+    }
+  }
+
+  function startDailyChallenge(dungeon) {
+    gameMode = 'daily';
+    selectedDungeon = dungeon;
+    selectedDifficulty = 'hard';
+    teamSlots = [null, null, null];
+    creatureFilter = 'all';
+    creatureLevelFilter = 'all';
+    showScreen('team-builder');
+  }
+
+  // ── Spire / Endless Tower Mode ───────────────────
+  var spireState = { bestFloor: 0, currentFloor: 0, inRun: false };
+
+  function loadSpireState() {
+    try {
+      var raw = localStorage.getItem('arebooksgood-spire');
+      if (raw) {
+        var s = JSON.parse(raw);
+        spireState.bestFloor = s.bestFloor || 0;
+        spireState.currentFloor = s.currentFloor || 0;
+        spireState.inRun = s.inRun || false;
+      }
+    } catch (e) {}
+  }
+
+  function saveSpireState() {
+    try { localStorage.setItem('arebooksgood-spire', JSON.stringify(spireState)); } catch (e) {}
+  }
+
+  function showSpireScreen() {
+    if (!spireScreen) return;
+    loadSpireState();
+    spireScreen.innerHTML = '<h2 class="bt-section-title">> the spire</h2>' +
+      '<div class="bt-spire-info">' +
+      '<div class="bt-spire-best">Best Floor: ' + spireState.bestFloor + '</div>' +
+      '<p style="opacity:0.7;margin:8px 0">Climb an endless tower of increasingly powerful enemies. HP carries between floors — no healing between fights.</p>' +
+      '<button id="bt-spire-start" class="bt-btn">Start Run</button>' +
+      '</div>';
+
+    var startBtn = document.getElementById('bt-spire-start');
+    if (startBtn) {
+      startBtn.addEventListener('click', function () {
+        startSpireRun();
+      });
+    }
+  }
+
+  function startSpireRun() {
+    gameMode = 'spire';
+    spireState.currentFloor = 0;
+    spireState.inRun = true;
+    saveSpireState();
+    // Use first dungeon as template, will generate enemies dynamically
+    selectedDungeon = { id: 0, name: 'The Spire', typeLock: null, waves: 1, stars: 1,
+      enemies: [['slime-green', 'slime-green', 'slime-blue']] };
+    selectedDifficulty = 'normal';
+    teamSlots = [null, null, null];
+    creatureFilter = 'all';
+    creatureLevelFilter = 'all';
+    showScreen('team-builder');
+  }
+
+  function spireNextFloor() {
+    spireState.currentFloor++;
+    if (spireState.currentFloor > spireState.bestFloor) {
+      spireState.bestFloor = spireState.currentFloor;
+    }
+    saveSpireState();
+
+    var floor = spireState.currentFloor;
+    var scaleMult = 1 + 0.1 * floor;
+
+    // Pick 3 random enemies, scaling with floor
+    var allEnemyIds = enemyData ? Object.keys(enemyData) : ['slime-green'];
+    var regularEnemies = allEnemyIds.filter(function (eid) {
+      return enemyData[eid] && !enemyData[eid].isBoss;
+    });
+    var bossEnemies = allEnemyIds.filter(function (eid) {
+      return enemyData[eid] && enemyData[eid].isBoss;
+    });
+
+    enemies = [];
+    var isBossFloor = floor % 5 === 0;
+    var pool = isBossFloor ? bossEnemies : regularEnemies;
+    if (pool.length === 0) pool = regularEnemies.length > 0 ? regularEnemies : allEnemyIds;
+
+    var loaded = 0;
+    var needed = 3;
+    for (var i = 0; i < 3; i++) {
+      var eid = pool[Math.floor(Math.random() * pool.length)];
+      var fighter = createEnemyFighter(eid, Math.min(5, 1 + Math.floor(floor / 5)), 'normal');
+      if (fighter) {
+        fighter.stats.hp = Math.floor(fighter.stats.hp * scaleMult);
+        fighter.hp = fighter.stats.hp;
+        fighter.maxHp = fighter.stats.hp;
+        fighter.displayHp = fighter.stats.hp;
+        fighter.stats.atk = Math.floor(fighter.stats.atk * scaleMult);
+        fighter.stats.def = Math.floor(fighter.stats.def * scaleMult);
+        enemies.push(fighter);
+      }
+      preloadEnemySprite(eid, function () {
+        loaded++;
+        if (loaded >= needed) {
+          currentWave = 1;
+          totalWaves = 1;
+          wavesCleared = 0;
+          logMessage('--- Spire Floor ' + floor + ' ---', 'bt-log-wave');
+          updateWaveHUD();
+          if (waveLabel) waveLabel.textContent = 'Floor ' + floor;
+          renderBattle();
+          autoTimer = setTimeout(runAutoBattle, 500);
+        }
+      });
+    }
+  }
+
+  function endSpire() {
+    spireState.inRun = false;
+    saveSpireState();
+    var xpReward = spireState.currentFloor * 5;
+    var coinReward = spireState.currentFloor * 10;
+    if (coinReward > 0 && typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(coinReward);
+  }
+
+  // ── World Boss / Titan Mode ──────────────────────
+  var titanState = { attemptsToday: 3, lastAttemptDate: null, totalDamage: 0, kills: 0 };
+  var activeTitan = null;
+
+  function loadTitanState() {
+    try {
+      var raw = localStorage.getItem('arebooksgood-titan');
+      if (raw) {
+        var s = JSON.parse(raw);
+        titanState.attemptsToday = s.attemptsToday != null ? s.attemptsToday : 3;
+        titanState.lastAttemptDate = s.lastAttemptDate || null;
+        titanState.totalDamage = s.totalDamage || 0;
+        titanState.kills = s.kills || 0;
+      }
+    } catch (e) {}
+    // Reset attempts if new day
+    var today = getDailyDate();
+    if (titanState.lastAttemptDate !== today) {
+      titanState.attemptsToday = 3;
+      titanState.lastAttemptDate = today;
+      saveTitanState();
+    }
+  }
+
+  function saveTitanState() {
+    try { localStorage.setItem('arebooksgood-titan', JSON.stringify(titanState)); } catch (e) {}
+  }
+
+  function showTitanScreen() {
+    if (!titanScreen) return;
+    loadTitanState();
+    // Pick this week's titan from titanSprites config
+    var titanIds = gearData && gearData.titanSprites ? Object.keys(gearData.titanSprites) : [];
+    var weekSeed = Math.floor(Date.now() / (7 * 86400000));
+    var titanIdx = titanIds.length > 0 ? weekSeed % titanIds.length : 0;
+    var titanId = titanIds[titanIdx] || 'demon-slime';
+    var titanCfg = gearData && gearData.titanSprites ? gearData.titanSprites[titanId] : null;
+    var titanName = titanId.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+
+    titanScreen.innerHTML = '<h2 class="bt-section-title">> world boss</h2>' +
+      '<div class="bt-titan-info">' +
+      '<div class="bt-titan-name">' + titanName + '</div>' +
+      '<div class="bt-titan-attempts">Attempts: ' + titanState.attemptsToday + '/3</div>' +
+      '<div class="bt-titan-kills">Total Kills: ' + titanState.kills + '</div>' +
+      '<div class="bt-titan-damage">Total Damage: ' + titanState.totalDamage + '</div>' +
+      (titanState.attemptsToday > 0 ?
+        '<button id="bt-titan-start" class="bt-btn">Challenge Boss</button>' :
+        '<div class="bt-titan-done">No attempts remaining today</div>') +
+      '</div>';
+
+    var startBtn = document.getElementById('bt-titan-start');
+    if (startBtn) {
+      startBtn.addEventListener('click', function () {
+        startTitanMode(titanId);
+      });
+    }
+  }
+
+  function createTitanFighter(titanId) {
+    var titanCfg = gearData && gearData.titanSprites ? gearData.titanSprites[titanId] : null;
+    var titanName = titanId.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    var types = ['fire', 'nature', 'aqua', 'shadow', 'mystic', 'tech'];
+    var titanType = types[Math.abs(titanId.length) % types.length];
+    return {
+      id: 'titan-' + titanId, name: titanName, type: titanType, tier: 'legendary',
+      level: 10,
+      hp: 10000, maxHp: 10000, displayHp: 10000,
+      stats: { hp: 10000, atk: 35, def: 20, spd: 6, cri: 8 },
+      gearStats: { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 },
+      moveset: getMovesetForEnemy(titanType), opacity: 1, offsetX: 0, offsetY: 0,
+      enemyId: 'titan-' + titanId, isBoss: true, isTitan: true,
+      titanId: titanId, titanPhase: 0,
+      isPlayer: false, isEnemy: true,
+      status: { burn: 0, curse: 0, stun: false, slow: 0, dodge: false, atkUp: 0 },
+      battleStats: { damageDealt: 0, damageTaken: 0, kills: 0 }
+    };
+  }
+
+  function startTitanMode(titanId) {
+    gameMode = 'titan';
+    loadTitanState();
+    if (titanState.attemptsToday <= 0) return;
+    titanState.attemptsToday--;
+    saveTitanState();
+
+    activeTitan = createTitanFighter(titanId);
+    selectedDungeon = { id: 0, name: activeTitan.name, typeLock: null, waves: 1, stars: 5,
+      enemies: [['slime-green']] }; // placeholder, titan replaces enemies
+    selectedDifficulty = 'brutal';
+    teamSlots = [null, null, null];
+    creatureFilter = 'all';
+    creatureLevelFilter = 'all';
+    showScreen('team-builder');
+  }
+
+  function checkTitanPhaseTransition(titan) {
+    if (!titan || !titan.isTitan) return;
+    var pct = titan.hp / titan.maxHp;
+    var newPhase = 0;
+    if (pct <= 0.25) newPhase = 3;
+    else if (pct <= 0.50) newPhase = 2;
+    else if (pct <= 0.75) newPhase = 1;
+
+    if (newPhase > titan.titanPhase) {
+      titan.titanPhase = newPhase;
+      // Buff titan stats on phase transition
+      titan.stats.atk = Math.floor(titan.stats.atk * 1.15);
+      var phaseNames = ['', 'Enraged!', 'Furious!', 'Berserk!'];
+      logMessage(titan.name + ' enters phase: ' + phaseNames[newPhase], 'bt-log-status');
+      titanAnimPhaseTransition(phaseNames[newPhase]);
+    }
+  }
+
+  function endTitanAttempt(titan) {
+    if (!titan) return;
+    var damageDealt = titan.maxHp - Math.max(0, titan.hp);
+    titanState.totalDamage += damageDealt;
+    if (titan.hp <= 0) titanState.kills++;
+    saveTitanState();
+    activeTitan = null;
+  }
+
+  // ── TitanAnimator ────────────────────────────────
+  var titanAnim = {
+    titanId: null, sheet: null, config: null,
+    currentAnim: 'idle', frame: 0, timer: 0, loop: true,
+    phaseText: null, phaseTimer: 0
+  };
+  var titanSheetImg = null;
+
+  function titanAnimInit(titanId) {
+    titanAnim.titanId = titanId;
+    titanAnim.frame = 0;
+    titanAnim.timer = 0;
+    titanAnim.currentAnim = 'idle';
+    titanAnim.loop = true;
+    titanAnim.phaseText = null;
+    titanAnim.phaseTimer = 0;
+    var cfg = gearData && gearData.titanSprites ? gearData.titanSprites[titanId] : null;
+    titanAnim.config = cfg;
+    if (cfg && cfg.sheet) {
+      titanAnim.sheet = cfg.sheet;
+      var img = new Image();
+      img.onload = function () { titanSheetImg = img; };
+      img.src = cfg.sheet;
+    }
+  }
+
+  function titanAnimSetAnim(name) {
+    if (!titanAnim.config || !titanAnim.config.anims[name]) return;
+    titanAnim.currentAnim = name;
+    titanAnim.frame = 0;
+    titanAnim.timer = 0;
+    titanAnim.loop = (name === 'idle');
+  }
+
+  function titanAnimUpdate(dt) {
+    if (!titanAnim.config) return;
+    var anim = titanAnim.config.anims[titanAnim.currentAnim];
+    if (!anim) return;
+    titanAnim.timer += dt;
+    var speed = anim.speed || 150;
+    if (titanAnim.timer >= speed) {
+      titanAnim.timer -= speed;
+      titanAnim.frame++;
+      if (titanAnim.frame >= anim.frames) {
+        if (titanAnim.loop) {
+          titanAnim.frame = 0;
+        } else {
+          titanAnim.frame = anim.frames - 1;
+          if (titanAnim.currentAnim !== 'death') titanAnimSetAnim('idle');
+        }
+      }
+    }
+    if (titanAnim.phaseTimer > 0) titanAnim.phaseTimer--;
+  }
+
+  function titanAnimDraw(fighter, x, y, size) {
+    if (!titanSheetImg || !titanAnim.config) {
+      drawFallbackCircle(fighter, x, y, size);
+      return;
+    }
+    var cfg = titanAnim.config;
+    var anim = cfg.anims[titanAnim.currentAnim];
+    if (!anim) { drawFallbackCircle(fighter, x, y, size); return; }
+    var fw = cfg.frameWidth;
+    var fh = cfg.frameHeight;
+    var row = anim.row || 0;
+    var frame = titanAnim.frame;
+    // Calculate columns from sheet or config
+    var cols = cfg.cols || Math.floor(titanSheetImg.width / fw);
+    var sx = (frame % cols) * fw;
+    var sy = (row + Math.floor(frame / cols)) * fh;
+    var aspect = fw / fh;
+    var drawW = size * Math.min(1.5, aspect);
+    var drawH = drawW / aspect;
+    var drawX = x + (size - drawW) / 2;
+    var drawY = y + (size - drawH);
+    ctx.save();
+    ctx.globalAlpha = fighter.opacity;
+    ctx.drawImage(titanSheetImg, sx, sy, fw, fh, drawX, drawY, drawW, drawH);
+    ctx.restore();
+  }
+
+  function titanAnimPhaseTransition(phaseDesc) {
+    titanAnim.phaseText = phaseDesc;
+    titanAnim.phaseTimer = 60;
+    // Trigger CSS shake
+    var wrap = document.querySelector('.bt-canvas-wrap');
+    if (wrap) {
+      wrap.classList.add('bt-phase-shake');
+      setTimeout(function () { wrap.classList.remove('bt-phase-shake'); }, 500);
+    }
+  }
+
+  function titanAnimDrawPhaseText() {
+    if (!titanAnim.phaseText || titanAnim.phaseTimer <= 0) return;
+    var s = uiScale();
+    var alpha = Math.min(1, titanAnim.phaseTimer / 15);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold ' + Math.round(24 * s) + 'px monospace';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = Math.round(4 * s);
+    ctx.strokeText(titanAnim.phaseText, CANVAS_W / 2, CANVAS_H / 2);
+    ctx.fillStyle = '#ff4444';
+    ctx.fillText(titanAnim.phaseText, CANVAS_W / 2, CANVAS_H / 2);
+    ctx.restore();
+  }
+
+  // ── Faction Wars Mode ────────────────────────────
+  var FACTION_CHALLENGES = [
+    { id: 'fire-trial', name: 'Trial of Flame', type: 'fire', desc: 'Fire-type creatures only',
+      enemies: [['slime-pink','myconid-red','slime-pink'],['myconid-red','slime-pink','myconid-red'],['golem-orange','myconid-red','slime-pink'],['slime-pink-big','golem-orange','myconid-red']] },
+    { id: 'nature-trial', name: 'Trial of Growth', type: 'nature', desc: 'Nature-type creatures only',
+      enemies: [['myconid-green','sprout-blue','sprout-pink'],['mushroom-warrior','forest-flyer','myconid-green'],['forest-flyer','mushroom-warrior','myconid-green'],['venom-bloom','mushroom-warrior','forest-flyer']] },
+    { id: 'aqua-trial', name: 'Trial of Tides', type: 'aqua', desc: 'Aqua-type creatures only',
+      enemies: [['slime-blue','slime-light-blue','myconid-blue'],['golem-blue','slime-blue','myconid-blue'],['golem-blue','golem-blue','myconid-blue'],['frogger-boss','golem-blue','slime-blue']] },
+    { id: 'shadow-trial', name: 'Trial of Shadows', type: 'shadow', desc: 'Shadow-type creatures only',
+      enemies: [['slime-black','sprout-purple','myconid-purple'],['dark-bat','spike','slime-black'],['dark-bat','spike','myconid-purple'],['skeleton-knight','dark-bat','spike']] },
+    { id: 'tech-trial', name: 'Trial of Steel', type: 'tech', desc: 'Tech-type creatures only',
+      enemies: [['slime-golden','goblin-spear','goblin-archer'],['goblin-bomb','goblin-spear','slime-golden'],['fantasy-goblin','goblin-bomb','goblin-archer'],['iron-golem','fantasy-goblin','goblin-bomb']] },
+    { id: 'mystic-trial', name: 'Trial of Stars', type: 'mystic', desc: 'Mystic-type creatures only',
+      enemies: [['myconid-pink','slime-purple','myconid-pink'],['slime-purple','myconid-pink','slime-purple'],['mimic','myconid-pink','slime-purple'],['samurai-boss','mimic','myconid-pink']] }
+  ];
+
+  var factionState = { marks: 0, completed: {}, weekKey: null };
+
+  function getFactionWeekKey() {
+    var now = new Date();
+    var start = new Date(now.getFullYear(), 0, 1);
+    var weekNum = Math.ceil((((now - start) / 86400000) + start.getDay() + 1) / 7);
+    return now.getFullYear() + '-W' + weekNum;
+  }
+
+  function getActiveFactions() {
+    var weekKey = getFactionWeekKey();
+    var seed = getDailySeed(weekKey);
+    var indices = [];
+    var available = [];
+    for (var i = 0; i < FACTION_CHALLENGES.length; i++) available.push(i);
+    // Pick 3 from 6
+    for (var j = 0; j < 3 && available.length > 0; j++) {
+      var pick = (seed + j * 17) % available.length;
+      indices.push(available[pick]);
+      available.splice(pick, 1);
+    }
+    return indices;
+  }
+
+  function loadFactionState() {
+    try {
+      var raw = localStorage.getItem('arebooksgood-faction');
+      if (raw) {
+        var s = JSON.parse(raw);
+        factionState.marks = s.marks || 0;
+        factionState.completed = s.completed || {};
+        factionState.weekKey = s.weekKey || null;
+      }
+    } catch (e) {}
+    // Reset if new week
+    var currentWeek = getFactionWeekKey();
+    if (factionState.weekKey !== currentWeek) {
+      factionState.completed = {};
+      factionState.weekKey = currentWeek;
+      saveFactionState();
+    }
+  }
+
+  function saveFactionState() {
+    try { localStorage.setItem('arebooksgood-faction', JSON.stringify(factionState)); } catch (e) {}
+  }
+
+  function showFactionScreen() {
+    if (!factionScreen) return;
+    loadFactionState();
+    var activeIndices = getActiveFactions();
+
+    var html = '<h2 class="bt-section-title">> faction wars</h2>' +
+      '<div class="bt-faction-marks">Marks: ' + factionState.marks + '</div>' +
+      '<div class="bt-faction-grid">';
+
+    for (var i = 0; i < FACTION_CHALLENGES.length; i++) {
+      var fc = FACTION_CHALLENGES[i];
+      var isActive = activeIndices.indexOf(i) !== -1;
+      var diffs = ['normal', 'hard', 'brutal', 'nightmare'];
+      var completedDiffs = factionState.completed[fc.id] || {};
+
+      html += '<div class="bt-faction-card' + (isActive ? '' : ' bt-faction-locked') + ' bt-type-' + fc.type + '">' +
+        '<div class="bt-faction-card-name">' + fc.name + '</div>' +
+        '<div class="bt-faction-card-desc">' + fc.desc + '</div>';
+
+      if (isActive) {
+        html += '<div class="bt-diff-badges">';
+        for (var di = 0; di < diffs.length; di++) {
+          var cleared = completedDiffs[diffs[di]];
+          html += '<span class="bt-diff-badge bt-diff-' + diffs[di] + (cleared ? ' bt-diff-cleared' : '') + '">' +
+            diffs[di].charAt(0).toUpperCase() + '</span>';
+        }
+        html += '</div>';
+        html += '<button class="bt-btn bt-btn-small bt-faction-start" data-idx="' + i + '">Fight</button>';
+      } else {
+        html += '<div class="bt-faction-locked-label">Not active this week</div>';
+      }
+
+      html += '</div>';
+    }
+
+    html += '</div>';
+    factionScreen.innerHTML = html;
+
+    // Bind fight buttons
+    var fightBtns = factionScreen.querySelectorAll('.bt-faction-start');
+    for (var b = 0; b < fightBtns.length; b++) {
+      fightBtns[b].addEventListener('click', function () {
+        var idx = parseInt(this.getAttribute('data-idx'));
+        startFactionChallenge(idx);
+      });
+    }
+  }
+
+  function startFactionChallenge(challengeIdx) {
+    var fc = FACTION_CHALLENGES[challengeIdx];
+    if (!fc) return;
+    gameMode = 'faction';
+    selectedDungeon = {
+      id: 0, name: fc.name, typeLock: fc.type,
+      waves: fc.enemies.length, stars: 3,
+      enemies: fc.enemies,
+      factionId: fc.id
+    };
+    selectedDifficulty = 'normal';
+    teamSlots = [null, null, null];
+    creatureFilter = 'all';
+    creatureLevelFilter = 'all';
+    showScreen('team-builder');
+  }
+
   // ── Init ──────────────────────────────────────────
   loadStats();
   loadDungeonProgress();
+  loadDailyState();
+  loadSpireState();
+  loadTitanState();
+  loadFactionState();
   GearSystem.loadInventory();
   GearSystem.loadEquipMap();
   renderStats();
