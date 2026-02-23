@@ -825,6 +825,13 @@
 
 /* ── Farm Decorations (animated sprites by farmhouse level) ─── */
 
+.fp-animal-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .fp-anim {
   position: absolute;
   pointer-events: none;

@@ -341,10 +341,30 @@
   }
 
   // ── Render the grid ───────────────────────────────────────
+  var animalLayerEl = null; // persistent layer for animals, never cleared by renderGrid
+
   function renderGrid() {
     // Detach farm pet before clearing grid so it survives re-render
     if (fpPetEl && fpPetEl.parentNode === gridEl) {
       gridEl.removeChild(fpPetEl);
+    }
+    // Freeze animal positions at their current computed values before detaching.
+    // Without this, mid-transition animals snap to target (inline style holds
+    // the destination, not the current visual position).
+    if (animalLayerEl && animalLayerEl.parentNode === gridEl) {
+      var layerRect = animalLayerEl.getBoundingClientRect();
+      var anims = animalLayerEl.querySelectorAll('.fp-anim');
+      for (var ai = 0; ai < anims.length; ai++) {
+        var cs = getComputedStyle(anims[ai]);
+        anims[ai].style.transition = 'none';
+        if (layerRect.width > 0) {
+          anims[ai].style.left = (parseFloat(cs.left) / layerRect.width * 100) + '%';
+        }
+        if (layerRect.height > 0) {
+          anims[ai].style.top = (parseFloat(cs.top) / layerRect.height * 100) + '%';
+        }
+      }
+      gridEl.removeChild(animalLayerEl);
     }
     gridEl.innerHTML = '';
 
@@ -539,6 +559,19 @@
         empty.style.gridColumn = (c + 1) + '';
         gridEl.appendChild(empty);
       }
+    }
+
+    // Ensure animal layer exists before decorations spawn animals into it
+    if (!animalLayerEl) {
+      animalLayerEl = document.createElement('div');
+      animalLayerEl.className = 'fp-animal-layer';
+    }
+    gridEl.appendChild(animalLayerEl);
+    // Force reflow to commit frozen positions, then restore transitions
+    animalLayerEl.offsetHeight;
+    var anims = animalLayerEl.querySelectorAll('.fp-anim');
+    for (var ai = 0; ai < anims.length; ai++) {
+      anims[ai].style.transition = '';
     }
 
     // Add animated decorations based on farmhouse level
@@ -860,6 +893,9 @@
     }
 
     function spawnWanderingAnimal(className, animalType, baseRow, baseCol, rowSpan, colSpan, w, h, count, wanderRows) {
+      // Skip if these animals already exist in the persistent layer
+      if (animalLayerEl && animalLayerEl.querySelectorAll('[data-animal="' + animalType + '"]').length >= count) return;
+
       // Wander zone: area around and below the building (in % of grid)
       var zoneLeft  = baseCol * cellW;
       var zoneRight = (baseCol + (colSpan || 1)) * cellW;
@@ -872,6 +908,7 @@
       for (var a = 0; a < count; a++) {
         var el = document.createElement('div');
         el.className = 'fp-anim ' + className;
+        el.setAttribute('data-animal', animalType);
         // Restore saved position or pick random within zone
         var s = savedList[a];
         var startX = (s && s.x >= zoneLeft && s.x <= zoneRight) ? s.x : zoneLeft + Math.random() * (zoneRight - zoneLeft);
@@ -885,7 +922,7 @@
         var info = getAnimalInfo(animalType);
         var yOff = info.dirY[startDir] || 0;
         el.style.backgroundPosition = '0px ' + yOff + 'px';
-        gridEl.appendChild(el);
+        animalLayerEl.appendChild(el);
 
         // Start wander loop
         scheduleWander(el, animalType, a, zoneLeft, zoneRight, zoneTop, zoneBot, w, h);
@@ -905,7 +942,7 @@
           targetX = zLeft + Math.random() * (zRight - zLeft);
           targetY = zTop + Math.random() * (zBot - zTop);
           if (att === attempts - 1) break; // last attempt, just use it
-          var others = gridEl.querySelectorAll('.fp-anim');
+          var others = animalLayerEl ? animalLayerEl.querySelectorAll('.fp-anim') : [];
           var tooClose = false;
           for (var oi = 0; oi < others.length; oi++) {
             if (others[oi] === el) continue;
