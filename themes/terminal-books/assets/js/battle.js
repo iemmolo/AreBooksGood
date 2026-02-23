@@ -401,8 +401,7 @@
         ts: Date.now()
       };
       localStorage.setItem(RUN_KEY, JSON.stringify(run));
-      console.log('[saveRun] saved wave ' + run.wave + '/' + run.totalWaves);
-    } catch (e) { console.warn('[saveRun] failed:', e); }
+    } catch (e) {}
   }
 
   function loadSavedRun() {
@@ -430,9 +429,8 @@
 
   function renderResumeBar() {
     var bar = document.getElementById('bt-resume-bar');
-    if (!bar) { console.warn('[resume] no bt-resume-bar element'); return; }
+    if (!bar) return;
     var run = loadSavedRun();
-    console.log('[resume] loadSavedRun:', run);
     if (!run) { bar.innerHTML = ''; bar.classList.add('bt-hidden'); return; }
     var dungeon = null;
     for (var i = 0; i < DUNGEONS.length; i++) {
@@ -445,17 +443,19 @@
     btn.className = 'bt-resume-btn';
     var alive = 0;
     for (var t = 0; t < run.team.length; t++) { if (run.team[t].hp > 0) alive++; }
-    btn.innerHTML = '<span class="bt-resume-meta">' +
-      dungeon.name + ' · ' + run.difficulty.charAt(0).toUpperCase() + run.difficulty.slice(1) +
+    btn.innerHTML = '<span class="bt-resume-pulse"></span>' +
+      '<span class="bt-resume-info">' +
+      '<span class="bt-resume-title">Resume: ' + dungeon.name + '</span><br>' +
+      '<span class="bt-resume-meta">' +
+      run.difficulty.charAt(0).toUpperCase() + run.difficulty.slice(1) +
       ' · Wave ' + run.wave + '/' + run.totalWaves +
-      ' · ' + alive + '/' + run.team.length + ' alive</span>';
+      ' · ' + alive + '/' + run.team.length + ' alive</span></span>';
     btn.addEventListener('click', function () { resumeRun(run); });
     bar.appendChild(btn);
 
     var dismissBtn = document.createElement('button');
-    dismissBtn.className = 'bt-resume-btn';
-    dismissBtn.style.cssText = 'margin-top:4px;opacity:0.6;font-size:0.8em;padding:6px 10px;';
-    dismissBtn.textContent = 'Abandon Run';
+    dismissBtn.className = 'bt-resume-abandon';
+    dismissBtn.textContent = 'Abandon';
     dismissBtn.addEventListener('click', function () { clearSavedRun(); });
     bar.appendChild(dismissBtn);
   }
@@ -2526,21 +2526,24 @@
 
     resultsOverlay.classList.remove('bt-hidden');
 
-    // Scroll hint
+    // Scroll hint — only show if content overflows
     var panel = resultsOverlay.querySelector('.bt-results-panel');
     if (panel) {
       var oldHint = panel.querySelector('.bt-scroll-hint');
       if (oldHint) oldHint.parentNode.removeChild(oldHint);
-      var hint = document.createElement('div');
-      hint.className = 'bt-scroll-hint';
-      hint.innerHTML = '<span class="bt-scroll-hint-arrow">&#9660; scroll &#9660;</span>';
-      panel.appendChild(hint);
-      var checkScroll = function () {
-        var atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 20;
-        hint.classList.toggle('bt-scrolled-bottom', atBottom);
-      };
-      panel.addEventListener('scroll', checkScroll);
-      setTimeout(checkScroll, 50);
+      setTimeout(function () {
+        if (panel.scrollHeight <= panel.clientHeight + 5) return;
+        var hint = document.createElement('div');
+        hint.className = 'bt-scroll-hint';
+        hint.innerHTML = '<span class="bt-scroll-hint-arrow">&#9660; scroll &#9660;</span>';
+        panel.appendChild(hint);
+        var checkScroll = function () {
+          var atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 50;
+          hint.classList.toggle('bt-scrolled-bottom', atBottom);
+        };
+        panel.addEventListener('scroll', checkScroll);
+        setTimeout(checkScroll, 50);
+      }, 100);
     }
 
     renderStats();
@@ -2757,8 +2760,11 @@
         var isUnlocked = dungeonProgress.unlocked.indexOf(dungeon.id) !== -1;
         var isCleared = isDungeonClearedAny(dungeon.id);
 
+        var allCleared = isDungeonCleared(dungeon.id, 'normal') && isDungeonCleared(dungeon.id, 'hard') && isDungeonCleared(dungeon.id, 'brutal') && isDungeonCleared(dungeon.id, 'nightmare');
+
         if (!isUnlocked) card.classList.add('bt-dungeon-locked');
         if (isCleared) card.classList.add('bt-dungeon-cleared');
+        if (allCleared) card.classList.add('bt-dungeon-all-cleared');
 
         // Name
         var nameEl = document.createElement('div');
