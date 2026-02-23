@@ -996,11 +996,15 @@
       dom.activePetInfo.appendChild(activeSpr);
     }
 
+    var details = document.createElement('div');
+    details.className = 'shop-active-details';
+
+    var topRow = document.createElement('div');
+    topRow.className = 'shop-active-top';
     var nameEl = document.createElement('span');
     nameEl.className = 'shop-active-name';
     nameEl.textContent = creature.name;
-    dom.activePetInfo.appendChild(nameEl);
-
+    topRow.appendChild(nameEl);
     var levelEl = document.createElement('span');
     levelEl.className = 'shop-active-level';
     levelEl.textContent = ' Lv.' + pet.level;
@@ -1008,31 +1012,31 @@
       levelEl.textContent += ' MAX';
       levelEl.classList.add('shop-active-level-max');
     }
-    dom.activePetInfo.appendChild(levelEl);
-
-    var sep = document.createTextNode(' \u2014 ');
-    dom.activePetInfo.appendChild(sep);
+    topRow.appendChild(levelEl);
+    details.appendChild(topRow);
 
     var typeInfo = catalog.types[creature.type];
     var passiveEl = document.createElement('span');
     passiveEl.className = 'shop-active-passive';
     passiveEl.textContent = typeInfo ? typeInfo.passiveName : creature.type;
-    dom.activePetInfo.appendChild(passiveEl);
+    details.appendChild(passiveEl);
 
     if (typeInfo) {
       if (typeInfo.casinoPassive) {
         var casinoDesc = document.createElement('span');
         casinoDesc.className = 'shop-active-passive-desc';
         casinoDesc.textContent = typeInfo.casinoPassive;
-        dom.activePetInfo.appendChild(casinoDesc);
+        details.appendChild(casinoDesc);
       }
       if (typeInfo.farmBonusName && typeInfo.farmBonus) {
         var farmDesc = document.createElement('span');
         farmDesc.className = 'shop-active-passive-desc shop-active-farm-desc';
         farmDesc.textContent = typeInfo.farmBonusName + ': ' + typeInfo.farmBonus;
-        dom.activePetInfo.appendChild(farmDesc);
+        details.appendChild(farmDesc);
       }
     }
+
+    dom.activePetInfo.appendChild(details);
   }
 
   // Track active evolution filter
