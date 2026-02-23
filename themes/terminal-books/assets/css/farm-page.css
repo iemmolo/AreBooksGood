@@ -581,9 +581,24 @@
   color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
+.fp-popup-seed-sell {
+  font-size: 0.5rem;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
 .fp-popup-seed-info {
   font-size: 0.55rem;
   color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.fp-val-old {
+  text-decoration: line-through;
+  opacity: 0.45;
+}
+
+.fp-val-new {
+  color: var(--accent);
+  font-weight: bold;
 }
 
 .fp-popup-seed-disabled {

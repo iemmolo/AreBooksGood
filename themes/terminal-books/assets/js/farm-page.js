@@ -1736,10 +1736,30 @@
             btn.appendChild(nameSpan);
 
             if (window.FarmAPI.getEffectiveGrowTime && window.FarmAPI.formatTime) {
+              var effectiveGrow = window.FarmAPI.getEffectiveGrowTime(key);
+              var hasGrowBonus = effectiveGrow < crop.growTime;
               var timeSpan = document.createElement('span');
               timeSpan.className = 'fp-popup-seed-time';
-              timeSpan.textContent = window.FarmAPI.formatTime(window.FarmAPI.getEffectiveGrowTime(key));
+              if (hasGrowBonus) {
+                timeSpan.innerHTML = '<span class="fp-val-old">' + window.FarmAPI.formatTime(crop.growTime) + '</span> ' +
+                  '<span class="fp-val-new">' + window.FarmAPI.formatTime(effectiveGrow) + '</span>';
+              } else {
+                timeSpan.textContent = window.FarmAPI.formatTime(crop.growTime);
+              }
               btn.appendChild(timeSpan);
+            }
+
+            if (window.FarmAPI.getEffectiveSellValue) {
+              var effectiveSell = window.FarmAPI.getEffectiveSellValue(key);
+              var hasSellBonus = effectiveSell > crop.sell;
+              var sellSpan = document.createElement('span');
+              sellSpan.className = 'fp-popup-seed-sell';
+              if (hasSellBonus) {
+                sellSpan.innerHTML = '<span class="fp-val-old">' + crop.sell + '</span> <span class="fp-val-new">' + effectiveSell + '</span> JB';
+              } else {
+                sellSpan.textContent = crop.sell + ' JB';
+              }
+              btn.appendChild(sellSpan);
             }
 
             var infoSpan = document.createElement('span');
@@ -1780,10 +1800,30 @@
             btn.appendChild(nameSpan);
 
             if (window.FarmAPI.getEffectiveGrowTime && window.FarmAPI.formatTime) {
+              var effectiveGrow = window.FarmAPI.getEffectiveGrowTime(entry.key);
+              var hasGrowBonus = effectiveGrow < entry.crop.growTime;
               var timeSpan = document.createElement('span');
               timeSpan.className = 'fp-popup-seed-time';
-              timeSpan.textContent = window.FarmAPI.formatTime(window.FarmAPI.getEffectiveGrowTime(entry.key));
+              if (hasGrowBonus) {
+                timeSpan.innerHTML = '<span class="fp-val-old">' + window.FarmAPI.formatTime(entry.crop.growTime) + '</span> ' +
+                  '<span class="fp-val-new">' + window.FarmAPI.formatTime(effectiveGrow) + '</span>';
+              } else {
+                timeSpan.textContent = window.FarmAPI.formatTime(entry.crop.growTime);
+              }
               btn.appendChild(timeSpan);
+            }
+
+            if (window.FarmAPI.getEffectiveSellValue) {
+              var effectiveSell = window.FarmAPI.getEffectiveSellValue(entry.key);
+              var hasSellBonus = effectiveSell > entry.crop.sell;
+              var sellSpan = document.createElement('span');
+              sellSpan.className = 'fp-popup-seed-sell';
+              if (hasSellBonus) {
+                sellSpan.innerHTML = '<span class="fp-val-old">' + entry.crop.sell + '</span> <span class="fp-val-new">' + effectiveSell + '</span> JB';
+              } else {
+                sellSpan.textContent = entry.crop.sell + ' JB';
+              }
+              btn.appendChild(sellSpan);
             }
 
             var infoSpan = document.createElement('span');
