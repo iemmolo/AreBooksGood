@@ -956,6 +956,10 @@
     var positions = getFighterPositions();
     var shakeOff = getShakeOffset();
 
+    // Identify active turn fighter for highlight
+    var activeFighter = (currentTurnOrder && currentTurnIdx >= 0 && currentTurnIdx < currentTurnOrder.length && battleRunning)
+      ? currentTurnOrder[currentTurnIdx] : null;
+
     // Draw player team
     for (var p = 0; p < team.length; p++) {
       var fighter = team[p];
@@ -968,6 +972,17 @@
       }
       // Dead fighters: show ghosted at 20% if faint animation finished (opacity=0)
       if (fighter.hp <= 0 && fighter.opacity <= 0) fighter.opacity = 0.2;
+      // Active turn highlight ring
+      if (fighter === activeFighter && fighter.hp > 0) {
+        ctx.save();
+        ctx.strokeStyle = themeColors.accent;
+        ctx.lineWidth = Math.round(2 * s);
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(px + pos.size / 2, py + pos.size / 2, pos.size / 2 + Math.round(4 * s), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
       drawPlayerSprite(fighter, px, py, pos.size);
       // Name
       ctx.fillStyle = themeColors.fg;
@@ -997,6 +1012,17 @@
       }
       // Dead enemies: show ghosted at 20% if faint animation finished (opacity=0)
       if (enemy.hp <= 0 && enemy.opacity <= 0) enemy.opacity = 0.2;
+      // Active turn highlight ring
+      if (enemy === activeFighter && enemy.hp > 0) {
+        ctx.save();
+        ctx.strokeStyle = '#f44336';
+        ctx.lineWidth = Math.round(2 * s);
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(ex + epos.size / 2, ey + epos.size / 2, epos.size / 2 + Math.round(4 * s), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
       drawEnemySprite(enemy, ex, ey, epos.size, enemyAnimFrame);
       // Name
       ctx.fillStyle = themeColors.fg;
@@ -1126,7 +1152,7 @@
       fighter.status.burn--;
       msgs.push(fighter.name + ' took ' + burnDmg + ' burn damage!');
     }
-    if (fighter.status.curse > 0) {
+    if (fighter.hp > 0 && fighter.status.curse > 0) {
       var curseDmg = Math.max(1, Math.floor(fighter.maxHp * 0.12));
       fighter.hp = Math.max(0, fighter.hp - curseDmg);
       fighter.status.curse--;
@@ -1481,9 +1507,12 @@
           if (newCount > 0) {
             var newItems = animQueue.splice(lenBefore, newCount);
             for (var k = newItems.length - 1; k >= 0; k--) animQueue.unshift(newItems[k]);
+            renderBattle();
+            animTimer = setTimeout(next, 30 * speedMult);
+          } else {
+            // Nothing was enqueued (dead fighter skip, no target, etc.) — proceed instantly
+            next();
           }
-          renderBattle();
-          animTimer = setTimeout(next, 30 * speedMult);
           break;
         case 'faint':
           var f = item.fighter;
@@ -1610,9 +1639,31 @@
     // Check for deaths after status ticks
     animQueue.push({ type: 'check', callback: function () {
       var all = team.concat(enemies);
+      var deadFighters = [];
       for (var i = 0; i < all.length; i++) {
         if (all[i].hp <= 0 && all[i].opacity > 0) {
-          animQueue.push({ type: 'faint', fighter: all[i] });
+          deadFighters.push(all[i]);
+        }
+      }
+      if (deadFighters.length === 0) return;
+
+      // Check if the wave is ending (entire side wiped)
+      var anyPlayerAlive = false;
+      var anyEnemyAlive = false;
+      for (var p = 0; p < team.length; p++) { if (team[p].hp > 0) { anyPlayerAlive = true; break; } }
+      for (var e = 0; e < enemies.length; e++) { if (enemies[e].hp > 0) { anyEnemyAlive = true; break; } }
+      var waveEnding = !anyPlayerAlive || !anyEnemyAlive;
+
+      if (waveEnding) {
+        // Quick batch death — skip elaborate sequential faint animations
+        for (var d = 0; d < deadFighters.length; d++) {
+          deadFighters[d].opacity = 0;
+        }
+        animQueue.push({ type: 'delay', ms: 250 });
+      } else {
+        // Mid-wave deaths: play individual faint animations
+        for (var d2 = 0; d2 < deadFighters.length; d2++) {
+          animQueue.push({ type: 'faint', fighter: deadFighters[d2] });
         }
       }
     }});
@@ -2413,7 +2464,7 @@
           var frames = sd.frames || 3;
           var frameOffset = sd.frameOffset || 0;
           var frameIdx = Math.min(frameOffset + level - 1, frames - 1);
-          var scale = 48 / fw;
+          var scale = 64 / fw;
           spriteEl.style.backgroundImage = 'url(' + sheetUrl + ')';
           spriteEl.style.backgroundSize = (fw * frames * scale) + 'px ' + (fh * scale) + 'px';
           spriteEl.style.backgroundPosition = '-' + (frameIdx * fw * scale) + 'px 0';
@@ -2582,6 +2633,17 @@
     renderCreatureFilters();
 
     var petIds = Object.keys(petState.pets);
+    // Sort by type order then alphabetically
+    var typeOrder = { fire: 0, nature: 1, tech: 2, aqua: 3, shadow: 4, mystic: 5 };
+    petIds.sort(function (a, b) {
+      var ca = catalog ? catalog.creatures[a] : null;
+      var cb = catalog ? catalog.creatures[b] : null;
+      if (!ca || !cb) return 0;
+      var ta = typeOrder[ca.type] !== undefined ? typeOrder[ca.type] : 99;
+      var tb = typeOrder[cb.type] !== undefined ? typeOrder[cb.type] : 99;
+      if (ta !== tb) return ta - tb;
+      return ca.name.localeCompare(cb.name);
+    });
     for (var i = 0; i < petIds.length; i++) {
       (function (petId) {
         var pet = petState.pets[petId];
@@ -2984,6 +3046,7 @@
     var subsEl = document.getElementById('bt-gm-subs');
     if (subsEl) {
       subsEl.innerHTML = '';
+      subsEl.style.opacity = '';
       if (gear.subStats && gear.subStats.length > 0) {
         for (var s = 0; s < gear.subStats.length; s++) {
           var subLine = document.createElement('div');
