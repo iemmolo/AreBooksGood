@@ -15,100 +15,100 @@
       {{- partial "footer.html" . -}}
     </footer>
   </div>
-  {{- $js := resources.Get "js/theme-switcher.js" | minify -}}
+  {{- $js := resources.Get "js/theme-switcher.js" | minify | fingerprint -}}
   <script src="{{ $js.RelPermalink }}"></script>
-  {{- $wallet := resources.Get "js/wallet.js" | minify -}}
+  {{- $wallet := resources.Get "js/wallet.js" | minify | fingerprint -}}
   <script src="{{ $wallet.RelPermalink }}"></script>
   {{ if and .IsSection (ne .Type "chess") (ne .Section "games") (ne .Section "pets") -}}
-    {{- $filter := resources.Get "js/review-filter.js" | minify -}}
+    {{- $filter := resources.Get "js/review-filter.js" | minify | fingerprint -}}
     <script src="{{ $filter.RelPermalink }}"></script>
   {{- end }}
   {{ if or (eq .Layout "chess") (eq .Type "chess-play") (eq .Type "chess-learn") (eq .Type "chess-openings") -}}
-    {{- $engine := resources.Get "js/chess-engine.js" | minify -}}
+    {{- $engine := resources.Get "js/chess-engine.js" | minify | fingerprint -}}
     <script src="{{ $engine.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Layout "chess" -}}
-    {{- $chess := resources.Get "js/chess.js" | minify -}}
+    {{- $chess := resources.Get "js/chess.js" | minify | fingerprint -}}
     <script src="{{ $chess.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "chess-play" -}}
-    {{- $chessPlay := resources.Get "js/chess-play.js" | minify -}}
+    {{- $chessPlay := resources.Get "js/chess-play.js" | minify | fingerprint -}}
     <script src="{{ $chessPlay.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "chess-learn" -}}
-    {{- $learn := resources.Get "js/chess-learn.js" | minify -}}
+    {{- $learn := resources.Get "js/chess-learn.js" | minify | fingerprint -}}
     <script src="{{ $learn.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "chess-openings" -}}
-    {{- $openings := resources.Get "js/chess-openings.js" | minify -}}
+    {{- $openings := resources.Get "js/chess-openings.js" | minify | fingerprint -}}
     <script src="{{ $openings.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "blackjack" -}}
-    {{- $blackjack := resources.Get "js/blackjack.js" | minify -}}
+    {{- $blackjack := resources.Get "js/blackjack.js" | minify | fingerprint -}}
     <script src="{{ $blackjack.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "casino-wars" -}}
-    {{- $cw := resources.Get "js/casino-wars.js" | minify -}}
+    {{- $cw := resources.Get "js/casino-wars.js" | minify | fingerprint -}}
     <script src="{{ $cw.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "sudoku" -}}
-    {{- $sudoku := resources.Get "js/sudoku.js" | minify -}}
+    {{- $sudoku := resources.Get "js/sudoku.js" | minify | fingerprint -}}
     <script src="{{ $sudoku.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "wordle" -}}
-    {{- $wordle := resources.Get "js/wordle.js" | minify -}}
+    {{- $wordle := resources.Get "js/wordle.js" | minify | fingerprint -}}
     <script src="{{ $wordle.RelPermalink }}"></script>
   {{- end }}
-  {{- $pet := resources.Get "js/pet.js" | minify -}}
+  {{- $pet := resources.Get "js/pet.js" | minify | fingerprint -}}
   <script src="{{ $pet.RelPermalink }}"></script>
-  {{- $jb := resources.Get "js/jackbucks.js" | minify -}}
+  {{- $jb := resources.Get "js/jackbucks.js" | minify | fingerprint -}}
   <script src="{{ $jb.RelPermalink }}"></script>
-  {{- $farm := resources.Get "js/farm.js" | minify -}}
+  {{- $farm := resources.Get "js/farm.js" | minify | fingerprint -}}
   <script src="{{ $farm.RelPermalink }}"></script>
-  {{- $farmRes := resources.Get "js/farm-resources.js" | minify -}}
+  {{- $farmRes := resources.Get "js/farm-resources.js" | minify | fingerprint -}}
   <script src="{{ $farmRes.RelPermalink }}"></script>
-  {{- $petFarmAI := resources.Get "js/pet-farm-ai.js" | minify -}}
+  {{- $petFarmAI := resources.Get "js/pet-farm-ai.js" | minify | fingerprint -}}
   <script src="{{ $petFarmAI.RelPermalink }}"></script>
-  {{- $compendium := resources.Get "js/compendium.js" | minify -}}
+  {{- $compendium := resources.Get "js/compendium.js" | minify | fingerprint -}}
   <script src="{{ $compendium.RelPermalink }}"></script>
   {{ if eq .Type "silk-road" -}}
-    {{- $sr := resources.Get "js/silk-road.js" | minify -}}
+    {{- $sr := resources.Get "js/silk-road.js" | minify | fingerprint -}}
     <script src="{{ $sr.RelPermalink }}"></script>
   {{- end }}
   {{ if or (eq .Type "hatchery") (eq .Type "evolution") (eq .Type "collection") -}}
-    {{- $shop := resources.Get "js/shop.js" | minify -}}
+    {{- $shop := resources.Get "js/shop.js" | minify | fingerprint -}}
     <script src="{{ $shop.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "poker" -}}
-    {{- $poker := resources.Get "js/poker.js" | minify -}}
+    {{- $poker := resources.Get "js/poker.js" | minify | fingerprint -}}
     <script src="{{ $poker.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "slots" -}}
-    {{- $slots := resources.Get "js/slots.js" | minify -}}
+    {{- $slots := resources.Get "js/slots.js" | minify | fingerprint -}}
     <script src="{{ $slots.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "flappy" -}}
-    {{- $flappy := resources.Get "js/flappy.js" | minify -}}
+    {{- $flappy := resources.Get "js/flappy.js" | minify | fingerprint -}}
     <script src="{{ $flappy.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "doodle-jump" -}}
-    {{- $dj := resources.Get "js/doodle-jump.js" | minify -}}
+    {{- $dj := resources.Get "js/doodle-jump.js" | minify | fingerprint -}}
     <script src="{{ $dj.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "tower-defense" -}}
-    {{- $td := resources.Get "js/tower-defense.js" | minify -}}
+    {{- $td := resources.Get "js/tower-defense.js" | minify | fingerprint -}}
     <script src="{{ $td.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "trebuchet" -}}
-    {{- $tb := resources.Get "js/trebuchet.js" | minify -}}
+    {{- $tb := resources.Get "js/trebuchet.js" | minify | fingerprint -}}
     <script src="{{ $tb.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "battle" -}}
-    {{- $bt := resources.Get "js/battle.js" | minify -}}
+    {{- $bt := resources.Get "js/battle.js" | minify | fingerprint -}}
     <script src="{{ $bt.RelPermalink }}"></script>
   {{- end }}
   {{ if eq .Type "farm-page" -}}
-    {{- $fp := resources.Get "js/farm-page.js" | minify -}}
+    {{- $fp := resources.Get "js/farm-page.js" | minify | fingerprint -}}
     <script src="{{ $fp.RelPermalink }}"></script>
   {{- end }}
   <!-- Cloudflare Web Analytics (production only) -->

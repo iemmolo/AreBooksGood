@@ -112,6 +112,13 @@
     cape:      { desc: '+15% ability damage',        stat: 'abilityDmg',value: 0.15 }
   };
 
+  // ── Gear stat → TD effect scaling ────────────────
+  var GEAR_ATK_SCALE = 0.3;
+  var GEAR_SPD_SCALE = 0.015;
+  var GEAR_CRI_SCALE = 0.02;
+  var GEAR_CRI_MULT = 1.5;
+  var GEAR_DEF_CD_SCALE = 0.005;
+
   // Hero sprite rendering (sprite sheet)
   var heroSpriteData = null;
   var heroPetCatalog = null;
@@ -1328,27 +1335,44 @@
     heroPetId = null;
     heroPetType = null;
     heroPetLevel = 1;
-    if (typeof window.PetSystem === 'undefined' || !window.PetSystem.getState) return;
-    var state = window.PetSystem.getState();
-    if (!state || !state.petId) return;
-    heroPetId = state.petId;
-    heroPetType = (window.PetSystem && window.PetSystem.getCreatureType) ? window.PetSystem.getCreatureType(heroPetId) : null;
-    if (!heroPetType) {
-      var legacyTypes = { cat: 'nature', dragon: 'fire', robot: 'tech' };
-      heroPetType = legacyTypes[heroPetId] || 'nature';
+    if (typeof window.PetSystem !== 'undefined' && window.PetSystem.getState) {
+      var state = window.PetSystem.getState();
+      if (state && state.petId) {
+        heroPetId = state.petId;
+        heroPetType = (window.PetSystem.getCreatureType) ? window.PetSystem.getCreatureType(heroPetId) : null;
+        heroPetLevel = state.level || 1;
+      }
     }
-    heroPetLevel = state.level || 1;
-    // Read skin from localStorage (getState doesn't include it)
+    // Fallback + skin: read localStorage (PetSystem loads async, may not be ready)
+    var petParsed = null;
     try {
       var petRaw = localStorage.getItem('arebooksgood-pet');
-      if (petRaw) {
-        var petParsed = JSON.parse(petRaw);
-        if (petParsed.pets && petParsed.pets[heroPetId]) {
-          heroPetSkin = petParsed.pets[heroPetId].skin || 'default';
-        }
-      }
+      if (petRaw) petParsed = JSON.parse(petRaw);
     } catch (e) {}
-    if (heroSpriteData) loadHeroSheet(heroPetId);
+    if (!heroPetId && petParsed) {
+      if (petParsed.activePet && petParsed.pets && petParsed.pets[petParsed.activePet]) {
+        heroPetId = petParsed.activePet;
+        heroPetLevel = petParsed.pets[petParsed.activePet].level || 1;
+      }
+    }
+    if (!heroPetType && heroPetId) {
+      // Try catalog first (covers all creatures), then legacy fallback
+      var typeCat = heroPetCatalog || window.PetCatalog || null;
+      if (typeCat && typeCat.creatures) {
+        var lookupId = heroPetId;
+        if (typeCat.legacyMap && typeCat.legacyMap[heroPetId]) lookupId = typeCat.legacyMap[heroPetId];
+        if (typeCat.creatures[lookupId]) heroPetType = typeCat.creatures[lookupId].type;
+      }
+      if (!heroPetType) {
+        var legacyTypes = { cat: 'nature', dragon: 'fire', robot: 'tech' };
+        heroPetType = legacyTypes[heroPetId] || 'nature';
+      }
+    }
+    // Read skin (getState doesn't include it)
+    if (heroPetId && petParsed && petParsed.pets && petParsed.pets[heroPetId]) {
+      heroPetSkin = petParsed.pets[heroPetId].skin || 'default';
+    }
+    if (heroPetId && heroSpriteData) loadHeroSheet(heroPetId);
   }
 
   function getHeroAccessoryBonuses() {
@@ -1365,6 +1389,43 @@
         if (id && ACCESSORY_HERO_BONUSES[id]) {
           var bonus = ACCESSORY_HERO_BONUSES[id];
           heroAccessoryBonuses[bonus.stat] = bonus.value;
+        }
+      }
+    } catch (e) {}
+  }
+
+  var heroGearStats = { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 };
+
+  function loadHeroGearStats() {
+    heroGearStats = { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 };
+    if (!heroPetId) return;
+    try {
+      var eqRaw = localStorage.getItem('arebooksgood-dungeon-equip');
+      var invRaw = localStorage.getItem('arebooksgood-dungeon-inventory');
+      if (!eqRaw || !invRaw) return;
+      var equipMap = JSON.parse(eqRaw);
+      var inventory = JSON.parse(invRaw);
+      var eq = equipMap[heroPetId];
+      if (!eq) return;
+      var slots = ['weapon', 'armor', 'accessory'];
+      var secPerLvl = { hp: 3, cri: 1 };
+      for (var s = 0; s < slots.length; s++) {
+        var gearId = eq[slots[s]];
+        if (gearId == null) continue;
+        var gear = null;
+        for (var i = 0; i < inventory.length; i++) {
+          if (inventory[i].id === gearId) { gear = inventory[i]; break; }
+        }
+        if (!gear) continue;
+        if (gear.mainStat) heroGearStats[gear.mainStat] += (gear.mainValue || 0) + (gear.upgradeLevel || 0);
+        if (gear.secondaryStat) {
+          var secBonus = (secPerLvl[gear.secondaryStat] || 0) * (gear.upgradeLevel || 0);
+          heroGearStats[gear.secondaryStat] += (gear.secondaryValue || 0) + secBonus;
+        }
+        if (gear.subStats) {
+          for (var j = 0; j < gear.subStats.length; j++) {
+            heroGearStats[gear.subStats[j].stat] += gear.subStats[j].value;
+          }
         }
       }
     } catch (e) {}
@@ -1408,7 +1469,7 @@
     if (!hero || !heroPetType) return 0;
     var def = HERO_DEFS[heroPetType];
     var evo = getHeroEvolutionScale();
-    var dmg = def.dmg * evo.dmg;
+    var dmg = (def.dmg + heroGearStats.atk * GEAR_ATK_SCALE) * evo.dmg;
     if (heroAccessoryBonuses.damage) dmg *= 1 + heroAccessoryBonuses.damage;
     if (hero.critHitsRemaining > 0) dmg *= 2;
     return Math.round(dmg);
@@ -1425,6 +1486,7 @@
   function getHeroAbilityCooldown(baseCd) {
     var evo = getHeroEvolutionScale();
     var cd = baseCd * evo.cd;
+    if (heroGearStats.def > 0) cd *= 1 - Math.min(heroGearStats.def * GEAR_DEF_CD_SCALE, 0.15);
     if (heroAccessoryBonuses.cdReduce) cd *= 1 - heroAccessoryBonuses.cdReduce;
     return cd;
   }
@@ -1495,6 +1557,7 @@
     // Auto-attack
     if (hero.cooldown > 0) {
       var cdRate = 1;
+      if (heroGearStats.spd > 0) cdRate *= 1 + heroGearStats.spd * GEAR_SPD_SCALE;
       if (heroAccessoryBonuses.atkSpeed) cdRate *= 1 + heroAccessoryBonuses.atkSpeed;
       if (atkSpeedActive) cdRate *= 1.3;
       if (hero.rageTimer > 0) cdRate *= 2;
@@ -1506,11 +1569,18 @@
     if (target) {
       var tc = tileCenter(hero.col, hero.row);
       var dmg = getHeroDmg();
+      var isGearCrit = false;
+      // Gear-based crit (only when Nine Lives is NOT active)
+      if (hero.critHitsRemaining <= 0 && heroGearStats.cri > 0 && Math.random() < heroGearStats.cri * GEAR_CRI_SCALE) {
+        dmg = Math.round(dmg * GEAR_CRI_MULT);
+        isGearCrit = true;
+      }
       projectiles.push({
         x: tc.x, y: tc.y, target: target, dmg: dmg,
         speed: PROJECTILE_SPEED * TILE_SIZE,
         towerType: 'hero', megaBlast: false, sourceTower: hero,
-        heroPetId: heroPetId, heroPetType: heroPetType
+        heroPetId: heroPetId, heroPetType: heroPetType,
+        gearCrit: isGearCrit
       });
       hero.cooldown = def.speed;
       hero.attackFlash = 0.15;
@@ -2061,6 +2131,11 @@
           if (heroAccessoryBonuses.slow) {
             p.target.slow = { remaining: heroAccessoryBonuses.slow, factor: 0.5 };
           }
+        }
+        // Gear crit particle (outside alive check — show even on killing blow)
+        if (p.towerType === 'hero' && p.gearCrit) {
+          var hitPos = getPathPos(p.target.dist);
+          spawnParticle(hitPos.x, hitPos.y - 18, 'CRIT!', '#ffd700');
         }
         projectiles.splice(i, 1);
       } else {
@@ -2614,6 +2689,7 @@
     heroPetType = save.heroPetType || null;
     heroPetLevel = save.heroPetLevel || 1;
     getHeroAccessoryBonuses();
+    loadHeroGearStats();
     if (save.hero && heroPetId) {
       hero = {
         col: save.hero.col, row: save.hero.row, type: 'hero', petId: heroPetId,
@@ -3412,10 +3488,12 @@
     html += '<button class="td-inspect-close" id="td-inspect-close-btn">&times;</button>';
     html += '</div>';
 
+    var criPct = Math.round(heroGearStats.cri * GEAR_CRI_SCALE * 100);
     html += '<div class="td-inspect-stats">';
     html += '<span>DMG: ' + dmg + '</span>';
     html += '<span>Range: ' + rangeTiles + '</span>';
     html += '<span>Speed: ' + def.speed.toFixed(1) + 's</span>';
+    if (criPct > 0) html += '<span>CRI: ' + criPct + '%</span>';
     html += '<span class="td-inspect-kills">\uD83D\uDC80 ' + (t.kills || 0) + '</span>';
     html += '</div>';
 
@@ -3457,6 +3535,20 @@
       html += '<div style="padding:3px 8px;font-size:9px;color:#ffd700">';
       for (var li = 0; li < bonusLines.length; li++) {
         html += '\u2605 ' + bonusLines[li] + '<br>';
+      }
+      html += '</div>';
+    }
+
+    // Gear bonuses
+    var gearLines = [];
+    if (heroGearStats.atk > 0) gearLines.push('+' + (heroGearStats.atk * GEAR_ATK_SCALE).toFixed(1) + ' base DMG');
+    if (heroGearStats.spd > 0) gearLines.push('+' + Math.round(heroGearStats.spd * GEAR_SPD_SCALE * 100) + '% ATK speed');
+    if (heroGearStats.cri > 0) gearLines.push(criPct + '% crit chance');
+    if (heroGearStats.def > 0) gearLines.push('-' + Math.round(Math.min(heroGearStats.def * GEAR_DEF_CD_SCALE, 0.15) * 100) + '% ability CD');
+    if (gearLines.length > 0) {
+      html += '<div style="padding:3px 8px;font-size:9px;color:#ffd700">';
+      for (var gi = 0; gi < gearLines.length; gi++) {
+        html += '\u2694 ' + gearLines[gi] + '<br>';
       }
       html += '</div>';
     }
@@ -3898,6 +3990,7 @@
     heroMoving = false;
     getHeroPetInfo();
     getHeroAccessoryBonuses();
+    loadHeroGearStats();
 
     rebuildSynergyCache();
     gameState = 'building';
@@ -4017,6 +4110,7 @@
     var el = document.getElementById('td-hero-info');
     if (!el) return;
     getHeroPetInfo();
+    loadHeroGearStats();
     if (!heroPetType || !HERO_DEFS[heroPetType]) {
       el.classList.add('td-hidden');
       return;
@@ -4026,19 +4120,37 @@
     var color = HERO_ACCENT_COLORS[heroPetType];
     var evo = getHeroEvolutionScale();
 
+    // Effective DMG includes gear ATK bonus
+    var effectiveDmg = Math.round((def.dmg + heroGearStats.atk * GEAR_ATK_SCALE) * evo.dmg);
+    var criPct = Math.round(heroGearStats.cri * GEAR_CRI_SCALE * 100);
+
     var html = '<div class="td-hero-info-header" style="color:' + color + '">';
     html += petName + ' Hero';
     if (heroPetLevel > 1) html += ' <span style="opacity:0.7">Lv' + heroPetLevel + '</span>';
     html += '</div>';
     html += '<div class="td-hero-info-stats">';
-    html += '<span>DMG ' + Math.round(def.dmg * evo.dmg) + '</span>';
+    html += '<span>DMG ' + effectiveDmg + '</span>';
     html += '<span>SPD ' + (def.speed * evo.cd).toFixed(1) + 's</span>';
     html += '<span>RNG ' + def.range.toFixed(1) + '</span>';
+    if (criPct > 0) html += '<span>CRI ' + criPct + '%</span>';
     html += '</div>';
     html += '<div class="td-hero-info-abilities">';
     html += '<span style="color:' + color + '">Q: ' + def.q.name + '</span> ' + def.q.desc;
     html += '<br><span style="color:' + color + '">W: ' + def.w.name + '</span> ' + def.w.desc;
     html += '</div>';
+
+    // Gear bonus row
+    var hasGear = heroGearStats.atk > 0 || heroGearStats.spd > 0 || heroGearStats.cri > 0 || heroGearStats.def > 0;
+    if (hasGear) {
+      var gearParts = [];
+      if (heroGearStats.atk > 0) gearParts.push('+' + (heroGearStats.atk * GEAR_ATK_SCALE).toFixed(1) + ' base DMG');
+      if (heroGearStats.spd > 0) gearParts.push('+' + Math.round(heroGearStats.spd * GEAR_SPD_SCALE * 100) + '% ATK speed');
+      if (heroGearStats.cri > 0) gearParts.push(criPct + '% crit');
+      if (heroGearStats.def > 0) gearParts.push('-' + Math.round(Math.min(heroGearStats.def * GEAR_DEF_CD_SCALE, 0.15) * 100) + '% ability CD');
+      html += '<div class="td-hero-info-gear" style="color:#ffd700;font-size:10px">';
+      html += '\u2694 Gear: ' + gearParts.join(', ');
+      html += '</div>';
+    }
 
     el.innerHTML = html;
     el.classList.remove('td-hidden');
@@ -4130,7 +4242,8 @@
       armory: document.getElementById('td-tab-armory'),
       crate: document.getElementById('td-tab-crate'),
       synergies: document.getElementById('td-tab-synergies'),
-      blueprints: document.getElementById('td-tab-blueprints')
+      blueprints: document.getElementById('td-tab-blueprints'),
+      gear: document.getElementById('td-tab-gear')
     };
 
     // Hide farm-integration tabs if no FarmResources
@@ -4443,12 +4556,236 @@
     panel.innerHTML = html;
   }
 
+  // ── Gear panel (read-only) ────────────────────────
+  function renderGearPanel() {
+    var panel = document.getElementById('td-tab-gear');
+    if (!panel) return;
+
+    getHeroPetInfo();
+    loadHeroGearStats();
+
+    if (!heroPetId) {
+      panel.innerHTML = '<p class="td-panel-empty">No creature selected</p>';
+      return;
+    }
+
+    // Resolve legacy ID for catalog/equip lookups (e.g. robot → golem)
+    var gearCat = heroPetCatalog || window.PetCatalog || null;
+    if (!gearCat) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/data/petcatalog.json', false);
+        xhr.send();
+        if (xhr.status === 200) gearCat = JSON.parse(xhr.responseText);
+      } catch (e) {}
+    }
+    var gearCatId = heroPetId;
+    if (gearCat && gearCat.legacyMap && gearCat.legacyMap[heroPetId]) {
+      gearCatId = gearCat.legacyMap[heroPetId];
+    }
+    // Hardcoded fallback for legacy ID mapping if catalog unavailable
+    if (!gearCat && heroPetId === 'robot') {
+      gearCatId = 'golem';
+    }
+
+    // Resolve display name from catalog, fall back to capitalized ID
+    var petDisplayName = heroPetId.charAt(0).toUpperCase() + heroPetId.slice(1);
+    if (gearCat && gearCat.creatures && gearCat.creatures[gearCatId]) {
+      petDisplayName = gearCat.creatures[gearCatId].name || petDisplayName;
+    }
+
+    var RARITY_COLORS = { common: '#888', uncommon: '#4caf50', rare: '#ffd54f', epic: '#ab47bc', legendary: '#ff6b35' };
+    var SLOT_NAMES = ['weapon', 'armor', 'accessory'];
+    var equipped = {};
+    var inventory = [];
+    try {
+      var eqRaw = localStorage.getItem('arebooksgood-dungeon-equip');
+      var invRaw = localStorage.getItem('arebooksgood-dungeon-inventory');
+      if (eqRaw) {
+        var fullEquipMap = JSON.parse(eqRaw);
+        equipped = fullEquipMap[heroPetId] || fullEquipMap[gearCatId] || {};
+      }
+      if (invRaw) inventory = JSON.parse(invRaw);
+    } catch (e) {}
+
+    var html = '<div class="td-gear-pet-name">' + petDisplayName + '</div>';
+    html += '<div class="td-gear-grid">';
+    for (var s = 0; s < SLOT_NAMES.length; s++) {
+      var slot = SLOT_NAMES[s];
+      var gearId = equipped[slot];
+      var gear = null;
+      if (gearId != null) {
+        for (var i = 0; i < inventory.length; i++) {
+          if (inventory[i].id === gearId) { gear = inventory[i]; break; }
+        }
+      }
+
+      if (!gear) {
+        html += '<div class="td-gear-card td-gear-card-empty">';
+        html += '<div class="td-gear-slot-label">' + slot + '</div>';
+        html += '<div style="opacity:0.4">Empty</div>';
+        html += '</div>';
+        continue;
+      }
+
+      var rarity = gear.rarity || 'common';
+      var rarityColor = RARITY_COLORS[rarity] || RARITY_COLORS.common;
+      html += '<div class="td-gear-card" style="border-color:' + rarityColor + '">';
+      html += '<div class="td-gear-slot-label">' + slot + '</div>';
+      html += '<div class="td-gear-name" style="color:' + rarityColor + '">' + (gear.name || rarity + ' ' + slot);
+      if (gear.upgradeLevel > 0) html += ' <span style="color:#ffd700;font-size:9px">+' + gear.upgradeLevel + '</span>';
+      html += '</div>';
+      html += '<div class="td-gear-stats">';
+      if (gear.mainStat) html += gear.mainStat.toUpperCase() + ' +' + ((gear.mainValue || 0) + (gear.upgradeLevel || 0)) + '<br>';
+      if (gear.secondaryStat) {
+        var secPerLvl = { hp: 3, cri: 1 };
+        var secBonus = (secPerLvl[gear.secondaryStat] || 0) * (gear.upgradeLevel || 0);
+        html += gear.secondaryStat.toUpperCase() + ' +' + ((gear.secondaryValue || 0) + secBonus) + '<br>';
+      }
+      if (gear.subStats) {
+        for (var j = 0; j < gear.subStats.length; j++) {
+          html += gear.subStats[j].stat.toUpperCase() + ' +' + gear.subStats[j].value + '<br>';
+        }
+      }
+      html += '</div></div>';
+    }
+    html += '</div>';
+
+    // Auto-gear button
+    if (inventory.length > 0) {
+      html += '<div style="margin-bottom:6px"><button class="td-gear-auto-btn" id="td-auto-gear-btn">Auto-Gear</button></div>';
+    }
+
+    // TD effects summary
+    var criPct = Math.round(heroGearStats.cri * GEAR_CRI_SCALE * 100);
+    var hasGear = heroGearStats.atk > 0 || heroGearStats.spd > 0 || heroGearStats.cri > 0 || heroGearStats.def > 0;
+    if (hasGear) {
+      var parts = [];
+      if (heroGearStats.atk > 0) parts.push('\u2694 +' + (heroGearStats.atk * GEAR_ATK_SCALE).toFixed(1) + ' base DMG');
+      if (heroGearStats.spd > 0) parts.push('+' + Math.round(heroGearStats.spd * GEAR_SPD_SCALE * 100) + '% ATK speed');
+      if (heroGearStats.cri > 0) parts.push(criPct + '% crit chance');
+      if (heroGearStats.def > 0) parts.push('-' + Math.round(Math.min(heroGearStats.def * GEAR_DEF_CD_SCALE, 0.15) * 100) + '% ability CD');
+      html += '<div class="td-gear-effects">TD Effects: ' + parts.join(', ') + '</div>';
+    }
+
+    html += '<div class="td-gear-link"><a href="/battle/">Earn gear in Dungeons \u2192</a></div>';
+    panel.innerHTML = html;
+
+    // Wire auto-gear button
+    var autoBtn = document.getElementById('td-auto-gear-btn');
+    if (autoBtn) {
+      autoBtn.addEventListener('click', function () {
+        tdAutoGear();
+      });
+    }
+  }
+
+  function tdAutoGear() {
+    getHeroPetInfo();
+    if (!heroPetId) return;
+    var TIER_REQ = { '1': 1, '2': 2, '3': 3 };
+    var slots = ['weapon', 'armor', 'accessory'];
+
+    // Resolve effective level (legendary creatures = 3)
+    var creatureTier = 'common';
+    var cat = heroPetCatalog || window.PetCatalog || null;
+    if (!cat) {
+      // Sync fallback — catalog should be cached by now
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/data/petcatalog.json', false);
+        xhr.send();
+        if (xhr.status === 200) cat = JSON.parse(xhr.responseText);
+      } catch (e) {}
+    }
+    var catalogId = heroPetId;
+    if (cat && cat.legacyMap && cat.legacyMap[heroPetId]) {
+      catalogId = cat.legacyMap[heroPetId];
+    }
+    if (cat && cat.creatures && cat.creatures[catalogId]) {
+      creatureTier = cat.creatures[catalogId].tier || 'common';
+    }
+    // Hardcoded fallback for original pets if catalog unavailable
+    if (creatureTier === 'common' && !cat) {
+      var knownTiers = { dragon: 'legendary', cat: 'common', golem: 'rare', robot: 'rare' };
+      creatureTier = knownTiers[heroPetId] || knownTiers[catalogId] || 'common';
+    }
+    var effLevel = creatureTier === 'legendary' ? 3 : (heroPetLevel || 1);
+
+    // Read inventory + equip map
+    var inventory = [];
+    var equipMap = {};
+    try {
+      var invRaw = localStorage.getItem('arebooksgood-dungeon-inventory');
+      var eqRaw = localStorage.getItem('arebooksgood-dungeon-equip');
+      if (invRaw) inventory = JSON.parse(invRaw);
+      if (eqRaw) equipMap = JSON.parse(eqRaw);
+    } catch (e) { return; }
+    if (!inventory.length) return;
+
+    if (!equipMap[heroPetId]) equipMap[heroPetId] = {};
+    var eq = equipMap[heroPetId];
+
+    for (var s = 0; s < slots.length; s++) {
+      var slotKey = slots[s];
+      var bestGear = null;
+      var bestVal = -1;
+
+      for (var i = 0; i < inventory.length; i++) {
+        var g = inventory[i];
+        if (g.slot !== slotKey) continue;
+        // Check tier level requirement
+        var reqLevel = TIER_REQ[g.tier] || 1;
+        if (effLevel < reqLevel) continue;
+        var val = (g.mainValue || 0) + (g.upgradeLevel || 0);
+        if (val > bestVal) {
+          bestVal = val;
+          bestGear = g;
+        }
+      }
+
+      // Unequip current item in this slot
+      var oldId = eq[slotKey];
+      if (oldId != null) {
+        for (var j = 0; j < inventory.length; j++) {
+          if (inventory[j].id === oldId) { inventory[j].equippedBy = null; break; }
+        }
+        eq[slotKey] = null;
+      }
+
+      // Equip best — unequip from previous owner if needed
+      if (bestGear) {
+        if (bestGear.equippedBy && bestGear.equippedBy !== heroPetId) {
+          var prevEq = equipMap[bestGear.equippedBy];
+          if (prevEq) {
+            for (var ps = 0; ps < slots.length; ps++) {
+              if (prevEq[slots[ps]] === bestGear.id) { prevEq[slots[ps]] = null; break; }
+            }
+          }
+        }
+        eq[slotKey] = bestGear.id;
+        bestGear.equippedBy = heroPetId;
+      }
+    }
+
+    // Save back
+    try {
+      localStorage.setItem('arebooksgood-dungeon-equip', JSON.stringify(equipMap));
+      localStorage.setItem('arebooksgood-dungeon-inventory', JSON.stringify(inventory));
+    } catch (e) {}
+
+    // Re-render gear panel + hero info
+    renderGearPanel();
+    renderHeroInfo();
+  }
+
   // ── Refresh all panels ────────────────────────────
   function refreshAllPanels() {
     renderArmoryPanel();
     renderCratePanel();
     renderBlueprintsPanel();
     renderSynergiesPanel();
+    renderGearPanel();
   }
 
   // ── Resize handling ───────────────────────────────

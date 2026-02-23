@@ -327,6 +327,32 @@
   opacity: 0.8;
 }
 
+.td-hero-info-gear { margin-top: 4px; line-height: 1.4; }
+
+/* ── Gear tab panel ─────────────────────────────── */
+.td-gear-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.td-gear-card { border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); padding: 6px; font-size: 10px; line-height: 1.4; }
+.td-gear-card-empty { opacity: 0.3; text-align: center; padding: 12px 6px; }
+.td-gear-slot-label { font-size: 9px; opacity: 0.5; text-transform: uppercase; margin-bottom: 2px; }
+.td-gear-name { font-size: 11px; margin-bottom: 2px; }
+.td-gear-stats { opacity: 0.7; }
+.td-gear-effects { color: #ffd700; font-size: 11px; margin: 6px 0; line-height: 1.5; }
+.td-gear-pet-name { font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 6px; }
+.td-gear-auto-btn {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 4px 14px;
+  background: var(--accent);
+  color: var(--background);
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+.td-gear-auto-btn:hover { opacity: 0.85; }
+.td-gear-link { font-size: 11px; opacity: 0.7; }
+.td-gear-link a { color: var(--accent); text-decoration: none; }
+.td-gear-link a:hover { text-decoration: underline; }
+
 .td-final-stats {
   font-size: 15px;
   margin-bottom: 16px;
@@ -1106,6 +1132,7 @@
   .td-upgrade-grid { grid-template-columns: 1fr; }
   .td-upgrade-card { padding: 6px; }
   .td-crate-items-grid { grid-template-columns: 1fr; }
+  .td-gear-grid { grid-template-columns: 1fr; }
   .td-btn { font-size: 14px; padding: 10px 20px; min-height: 44px; }
   .td-invest-btn { width: 36px; height: 36px; font-size: 16px; }
 
