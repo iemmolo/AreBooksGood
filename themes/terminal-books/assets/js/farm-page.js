@@ -1430,7 +1430,8 @@
     window.removeEventListener('scroll', onScrollClosePopup, true);
   }
 
-  function onScrollClosePopup() {
+  function onScrollClosePopup(e) {
+    if (stationPopupEl && stationPopupEl.contains(e.target)) return;
     closeStationPopup();
   }
 
@@ -1491,6 +1492,7 @@
     } else {
       // Neither side fits perfectly — pin to top with scroll
       stationPopupEl.style.top = '8px';
+      stationPopupEl.style.maxHeight = Math.min(420, window.innerHeight - 16) + 'px';
     }
 
     stationPopupEl.style.visibility = '';
@@ -1645,6 +1647,7 @@
       stationPopupEl.style.top = (rect.bottom + 6) + 'px';
     } else {
       stationPopupEl.style.top = '8px';
+      stationPopupEl.style.maxHeight = Math.min(420, window.innerHeight - 16) + 'px';
     }
 
     stationPopupEl.style.visibility = '';
