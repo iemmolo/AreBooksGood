@@ -150,6 +150,21 @@ AreBooksGood - Improvement TODO
 - [x] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
 - [ ] Phase 4: Sprites, more enemies/maps, sound
 
+## Silk Road Buy-Back & Currency Bridge
+
+### Phase A: Material Buy-Back (Done)
+- [x] Add "Sell Materials" section to Silk Road shop
+- [x] Fixed JB prices per resource (fish, eggs, milk, wool, iron, gold, hardwood, wood, stone, processed items)
+- [x] Sell x1 / x5 / Sell All buttons per resource
+- [x] Merchant snarky buy-back dialogue lines
+- [x] Only show resources the player actually has
+
+### Phase D: Currency Bridge (JB ↔ Coins) (Done)
+- [x] Add toggle/option on buy-back to receive Casino Coins instead of JB
+- [x] Exchange rate: 1 JB = 5 Coins
+- [x] Toggle UI in buy-back section (JackBucks / Coins buttons)
+- [ ] Consider fluctuating daily prices (Option B polish) after bridge is working
+
 ## Future Ideas
 
 - [x] Add pet sprite previews to casino tile cards

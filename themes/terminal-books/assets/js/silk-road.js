@@ -45,12 +45,54 @@
     harvestMoon:    { name: 'Harvest Moon',    cost: 800,  desc: 'Ambient warm glow in top-right, slow pulse animation' }
   };
 
+  // ── Buy-back merchant lines ─────────────────────────────
+  var BUYBACK_LINES = [
+    "I'll take that off your hands... for a price.",
+    "Surplus materials? I know a guy.",
+    "One man's junk is another man's JackBucks.",
+    "I don't ask where it came from, you don't ask where it goes.",
+    "Ah, fresh stock. The warehouse thanks you.",
+    "Selling to me? Smart move. Asking questions? Not smart.",
+    "These materials will find a... new home.",
+    "The less inventory you carry, the faster you run.",
+    "Bulk discount? No. Bulk surcharge? Maybe.",
+    "I give fair prices. By my definition of fair."
+  ];
+
+  // ── Buy-back price table ──────────────────────────────────
+  // Pricing logic: rarer / slower to gather = more JB
+  var BUYBACK_PRICES = {
+    // Raw resources (gathered from stations)
+    wood:     { name: 'Wood',     price: 2,  cat: 'raw', icon: '\uD83E\uDEB5' },
+    stone:    { name: 'Stone',    price: 3,  cat: 'raw', icon: '\uD83E\uDEA8' },
+    fish:     { name: 'Fish',     price: 3,  cat: 'raw', icon: '\uD83D\uDC1F' },
+    eggs:     { name: 'Eggs',     price: 4,  cat: 'raw', icon: '\uD83E\uDD5A' },
+    milk:     { name: 'Milk',     price: 6,  cat: 'raw', icon: '\uD83E\uDD5B' },
+    wool:     { name: 'Wool',     price: 8,  cat: 'raw', icon: '\uD83E\uDDF6' },
+    iron:     { name: 'Iron',     price: 10, cat: 'raw', icon: '\u2692' },
+    hardwood: { name: 'Hardwood', price: 10, cat: 'raw', icon: '\uD83C\uDF33' },
+    gold:     { name: 'Gold',     price: 15, cat: 'raw', icon: '\uD83E\uDE99' },
+    // Processed resources
+    flour:       { name: 'Flour',        price: 5,  cat: 'processed', icon: '\uD83C\uDF3E' },
+    planks:      { name: 'Planks',       price: 6,  cat: 'processed', icon: '\uD83E\uDE9C' },
+    stoneBricks: { name: 'Stone Bricks', price: 8,  cat: 'processed', icon: '\uD83E\uDDF1' },
+    bread:       { name: 'Bread',        price: 10, cat: 'processed', icon: '\uD83C\uDF5E' },
+    rope:        { name: 'Rope',         price: 8,  cat: 'processed', icon: '\uD83E\uDE22' },
+    smokedFish:  { name: 'Smoked Fish',  price: 10, cat: 'processed', icon: '\uD83C\uDF7D' },
+    ironBars:    { name: 'Iron Bars',    price: 15, cat: 'processed', icon: '\u2699' },
+    crystalLens: { name: 'Crystal Lens', price: 25, cat: 'processed', icon: '\uD83D\uDD2E' }
+  };
+
+  var COIN_RATE = 5; // 1 JB worth = 5 coins
+  var buybackCurrency = 'jb'; // 'jb' or 'coins'
+
   var balanceEl;
   var dialogueEl;
   var seedsGrid;
   var farmhouseSection;
   var toolsGrid;
   var cosmeticsGrid;
+  var buybackGrid;
 
   // ── Helpers ───────────────────────────────────────────
   function getFarmAPI() { return window.FarmAPI || null; }
@@ -545,6 +587,151 @@
     renderCosmetics();
   }
 
+  // ── Buy-Back ─────────────────────────────────────────
+  function getResources() { return window.FarmResources || null; }
+
+  function renderBuyback() {
+    var res = getResources();
+    if (!res || !buybackGrid) return;
+
+    buybackGrid.innerHTML = '';
+    var all = res.getAll();
+    var keys = Object.keys(BUYBACK_PRICES);
+    var isCoins = buybackCurrency === 'coins';
+    var label = isCoins ? 'Coins' : 'JB';
+
+    // Currency toggle
+    var toggleRow = document.createElement('div');
+    toggleRow.className = 'sr-buyback-toggle';
+    var toggleLabel = document.createElement('span');
+    toggleLabel.textContent = 'Pay me in: ';
+    toggleRow.appendChild(toggleLabel);
+
+    var btnJB = document.createElement('button');
+    btnJB.className = 'sr-buyback-toggle-btn' + (!isCoins ? ' sr-buyback-toggle-active' : '');
+    btnJB.type = 'button';
+    btnJB.textContent = 'JackBucks';
+    btnJB.addEventListener('click', function () {
+      buybackCurrency = 'jb';
+      renderBuyback();
+    });
+    toggleRow.appendChild(btnJB);
+
+    var btnCoins = document.createElement('button');
+    btnCoins.className = 'sr-buyback-toggle-btn' + (isCoins ? ' sr-buyback-toggle-active' : '');
+    btnCoins.type = 'button';
+    btnCoins.textContent = 'Coins (x' + COIN_RATE + ')';
+    btnCoins.addEventListener('click', function () {
+      buybackCurrency = 'coins';
+      renderBuyback();
+    });
+    toggleRow.appendChild(btnCoins);
+
+    buybackGrid.appendChild(toggleRow);
+
+    var hasAny = false;
+
+    for (var i = 0; i < keys.length; i++) {
+      (function (key) {
+        var def = BUYBACK_PRICES[key];
+        var pool = def.cat === 'processed' ? all.processed : all.raw;
+        var count = pool[key] || 0;
+        if (count <= 0) return;
+        hasAny = true;
+
+        var unitPrice = isCoins ? def.price * COIN_RATE : def.price;
+
+        var card = document.createElement('div');
+        card.className = 'sr-card sr-buyback-card';
+
+        var name = document.createElement('div');
+        name.className = 'sr-card-name';
+        name.textContent = def.icon + ' ' + def.name;
+        card.appendChild(name);
+
+        var info = document.createElement('div');
+        info.className = 'sr-card-info';
+        info.textContent = 'Stock: x' + count + ' \u00B7 ' + unitPrice + ' ' + label + ' each';
+        card.appendChild(info);
+
+        var btnRow = document.createElement('div');
+        btnRow.className = 'sr-buyback-btns';
+
+        // Sell x1
+        var btn1 = document.createElement('button');
+        btn1.className = 'sr-card-btn sr-buyback-btn';
+        btn1.type = 'button';
+        btn1.textContent = 'SELL 1';
+        btn1.addEventListener('click', function () {
+          sellMaterial(key, 1, def.cat, card);
+        });
+        btnRow.appendChild(btn1);
+
+        // Sell x5
+        if (count >= 5) {
+          var btn5 = document.createElement('button');
+          btn5.className = 'sr-card-btn sr-buyback-btn';
+          btn5.type = 'button';
+          btn5.textContent = 'SELL 5';
+          btn5.addEventListener('click', function () {
+            sellMaterial(key, 5, def.cat, card);
+          });
+          btnRow.appendChild(btn5);
+        }
+
+        // Sell All
+        if (count > 1) {
+          var btnAll = document.createElement('button');
+          btnAll.className = 'sr-card-btn sr-buyback-btn sr-buyback-btn-all';
+          btnAll.type = 'button';
+          btnAll.textContent = 'SELL ALL (' + (count * unitPrice) + ' ' + label + ')';
+          btnAll.addEventListener('click', function () {
+            sellMaterial(key, count, def.cat, card);
+          });
+          btnRow.appendChild(btnAll);
+        }
+
+        card.appendChild(btnRow);
+        buybackGrid.appendChild(card);
+      })(keys[i]);
+    }
+
+    if (!hasAny) {
+      var empty = document.createElement('div');
+      empty.className = 'sr-buyback-empty';
+      empty.textContent = '> No materials to sell. Go gather some resources first.';
+      buybackGrid.appendChild(empty);
+    }
+  }
+
+  function sellMaterial(key, qty, category, cardEl) {
+    var jb = getJB();
+    var res = getResources();
+    if (!res) return;
+
+    var def = BUYBACK_PRICES[key];
+    if (!def) return;
+
+    var actual = res.deduct(category, key, qty);
+    if (actual <= 0) return;
+
+    var baseEarned = actual * def.price;
+
+    if (buybackCurrency === 'coins' && window.Wallet) {
+      window.Wallet.add(baseEarned * COIN_RATE);
+    } else if (jb) {
+      jb.add(baseEarned);
+    }
+
+    // Use buy-back dialogue
+    var line = BUYBACK_LINES[Math.floor(Math.random() * BUYBACK_LINES.length)];
+    if (dialogueEl) dialogueEl.textContent = '> ' + line;
+
+    updateBalance();
+    flashCard(cardEl);
+    renderBuyback();
+  }
+
   // ── Init ──────────────────────────────────────────────
   function init() {
     balanceEl = document.getElementById('sr-balance');
@@ -553,6 +740,7 @@
     farmhouseSection = document.getElementById('sr-farmhouse');
     toolsGrid = document.getElementById('sr-tools-grid');
     cosmeticsGrid = document.getElementById('sr-cosmetics-grid');
+    buybackGrid = document.getElementById('sr-buyback-grid');
 
     if (!seedsGrid) return; // Not on silk road page
 
@@ -562,12 +750,21 @@
     renderFarmhouse();
     renderTools();
     renderCosmetics();
+    renderBuyback();
 
     // Live balance updates
     var jb = getJB();
     if (jb && jb.onChange) {
       jb.onChange(function () {
         updateBalance();
+      });
+    }
+
+    // Re-render buy-back when resources change (gathered while on page)
+    var res = getResources();
+    if (res && res.onChange) {
+      res.onChange(function () {
+        renderBuyback();
       });
     }
   }
