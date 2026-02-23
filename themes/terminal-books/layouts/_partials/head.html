@@ -116,6 +116,16 @@
 {{- $compcss := resources.Get "css/compendium.css" | minify -}}
 <link rel="stylesheet" href="{{ $compcss.RelPermalink }}">
 
+{{/* Gear CSS (global) */}}
+{{- $gearcss := resources.Get "css/gear.css" | minify -}}
+<link rel="stylesheet" href="{{ $gearcss.RelPermalink }}">
+
+{{/* Gear Page CSS */}}
+{{ if eq .Type "gear" -}}
+  {{- $gpcss := resources.Get "css/gear-page.css" | minify -}}
+  <link rel="stylesheet" href="{{ $gpcss.RelPermalink }}">
+{{- end }}
+
 {{/* Silk Road CSS */}}
 {{ if eq .Type "silk-road" -}}
   {{- $sr := resources.Get "css/silk-road.css" | minify -}}

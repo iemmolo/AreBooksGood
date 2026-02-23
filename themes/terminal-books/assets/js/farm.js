@@ -17,7 +17,8 @@
     { key: 'compendium', icon: '\uD83D\uDCD6' },
     { key: 'tdLink', icon: '\uD83D\uDDE1' },
     { key: 'shopLink', icon: '\uD83D\uDCB0' },
-    { key: 'resourceLink', icon: '\u2692\uFE0F' }
+    { key: 'resourceLink', icon: '\u2692\uFE0F' },
+    { key: 'gearLink', icon: '\u2694\uFE0F' }
   ];
 
   // ── Crop definitions ────────────────────────────────────
@@ -1688,12 +1689,12 @@
     tile.className = 'farm-dash-tile';
     tile.setAttribute('data-tile', conf.key);
 
-    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium') {
+    if (conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium' || conf.key === 'gearLink') {
       tile.classList.add('farm-dash-link');
     }
 
     // Always visible on mobile (not hidden when count=0)
-    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium') {
+    if (conf.key === 'crops' || conf.key === 'farmLink' || conf.key === 'tdLink' || conf.key === 'shopLink' || conf.key === 'resourceLink' || conf.key === 'compendium' || conf.key === 'gearLink') {
       tile.classList.add('farm-dash-always');
     }
 
@@ -1744,6 +1745,11 @@
         } else {
           window.location.href = '/farm/game/#fp-sidebar';
         }
+      });
+    } else if (conf.key === 'gearLink') {
+      tile.addEventListener('click', function () {
+        collapseFarmBar();
+        window.location.href = '/pets/gear/';
       });
     } else if (conf.key === 'farmLink') {
       tile.addEventListener('click', function () {

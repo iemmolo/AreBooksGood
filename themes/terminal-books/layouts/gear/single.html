@@ -1,0 +1,75 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="gv-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="gear-vault-app">
+    <!-- Inventory Section -->
+    <section id="gv-inventory" class="gv-section">
+      <div class="gv-inventory-header">
+        <h2 class="gv-section-title">> inventory</h2>
+        <span id="gv-inv-count" class="gv-inv-count">0/50</span>
+      </div>
+      <div id="gv-inv-filters" class="gv-inv-filters">
+        <!-- Filled by JS -->
+      </div>
+      <div id="gv-bulk-sell" class="gv-bulk-sell"></div>
+      <div id="gv-inv-grid" class="gv-inv-grid">
+        <!-- Filled by JS -->
+      </div>
+    </section>
+
+    <!-- Creature Equip Section -->
+    <section id="gv-creatures" class="gv-section">
+      <h2 class="gv-section-title">> equipped gear</h2>
+      <div id="gv-creature-cards" class="gv-creature-cards">
+        <!-- Filled by JS -->
+      </div>
+    </section>
+
+    <!-- Gear Detail Modal -->
+    <div id="gv-modal" class="gv-modal gv-hidden">
+      <div class="gv-modal-backdrop"></div>
+      <div class="gv-modal-inner">
+        <div id="gv-modal-icon" class="gv-modal-icon"></div>
+        <h3 id="gv-modal-name" class="gv-modal-name"></h3>
+        <div id="gv-modal-rarity" class="gv-modal-rarity"></div>
+        <div id="gv-modal-tier" class="gv-modal-tier"></div>
+        <div id="gv-modal-main" class="gv-modal-main"></div>
+        <div id="gv-modal-subs" class="gv-modal-subs"></div>
+        <div id="gv-modal-special" class="gv-modal-special gv-hidden"></div>
+        <div id="gv-modal-set" class="gv-modal-set gv-hidden"></div>
+        <div id="gv-modal-upgrade" class="gv-modal-upgrade">
+          <div id="gv-upgrade-bar" class="gv-upgrade-bar">
+            <div id="gv-upgrade-fill" class="gv-upgrade-fill"></div>
+          </div>
+          <div id="gv-upgrade-label" class="gv-upgrade-label"></div>
+        </div>
+        <div id="gv-modal-roll" class="gv-modal-roll gv-hidden"></div>
+        <div class="gv-modal-actions">
+          <button id="gv-btn-upgrade" class="gv-btn">Upgrade</button>
+          <button id="gv-btn-equip" class="gv-btn">Equip</button>
+          <button id="gv-btn-sell" class="gv-btn gv-btn-danger">Sell</button>
+          <button id="gv-btn-close" class="gv-btn gv-btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Equip Picker Modal -->
+    <div id="gv-equip-picker" class="gv-modal gv-hidden">
+      <div class="gv-modal-backdrop"></div>
+      <div class="gv-modal-inner gv-equip-picker-inner">
+        <h3 id="gv-picker-title" class="gv-modal-name">Equip to...</h3>
+        <div id="gv-picker-creatures" class="gv-picker-creatures">
+          <!-- Filled by JS -->
+        </div>
+        <button id="gv-picker-close" class="gv-btn gv-btn-secondary">Cancel</button>
+      </div>
+    </div>
+
+    <div class="gv-nav-links">
+      <a href="/pets/battle/" class="gv-btn gv-btn-secondary">Back to Dungeons</a>
+    </div>
+  </div>
+{{ end }}

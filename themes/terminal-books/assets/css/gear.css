@@ -1,0 +1,43 @@
+/* ── Shared Gear CSS ────────────────────────
+   Gear icon + rarity classes for the gear vault page.
+   Battle page has its own bt-rarity rules in battle.css.
+   ─────────────────────────────────────────── */
+
+/* Gear icon base */
+.gv-gear-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+/* Rarity colors (gv- prefix for gear vault) */
+.gv-rarity-common   { border-color: #888 !important; }
+.gv-rarity-uncommon { border-color: #4caf50 !important; }
+.gv-rarity-rare     { border-color: #ffd54f !important; }
+.gv-rarity-epic     { border-color: #ab47bc !important; }
+
+.gv-rarity-text-common   { color: #888; }
+.gv-rarity-text-uncommon { color: #4caf50; }
+.gv-rarity-text-rare     { color: #ffd54f; }
+.gv-rarity-text-epic     { color: #ab47bc; }
+
+.gv-rarity-epic {
+  animation: gv-epic-glow 2s ease-in-out infinite;
+}
+
+@keyframes gv-epic-glow {
+  0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, #ab47bc 30%, transparent); }
+  50%      { box-shadow: 0 0 12px color-mix(in srgb, #ab47bc 50%, transparent); }
+}
+
+.gv-rarity-legendary { border-color: #ff6b35 !important; animation: gv-legendary-glow 2s ease-in-out infinite alternate; }
+.gv-rarity-text-legendary { color: #ff6b35; }
+
+@keyframes gv-legendary-glow {
+  from { box-shadow: 0 0 4px rgba(255,107,53,0.3); }
+  to   { box-shadow: 0 0 10px rgba(255,107,53,0.7); }
+}
+
+/* Stat diff colors */
+.gv-diff-up { color: #4caf50; }
+.gv-diff-down { color: #f44336; }

@@ -5,8 +5,7 @@
   var PET_KEY = 'arebooksgood-pet';
   var DUNGEON_KEY = 'arebooksgood-dungeon';
   var STATS_KEY = 'arebooksgood-dungeon-stats';
-  var INVENTORY_KEY = 'arebooksgood-dungeon-inventory';
-  var EQUIP_KEY = 'arebooksgood-dungeon-equip';
+  // Inventory & equip keys now managed by GearSystem
   var CANVAS_W = 400;
   var CANVAS_H = 400;
   var CANVAS_RATIO = 1; // square canvas for 3v3
@@ -273,34 +272,6 @@
   var gearSheetImages = {};
   var vfxImage = null;
 
-  // ── Inventory & Equip State ─────────────────────
-  var inventory = []; // array of gear objects
-  var equipMap = {};  // { creatureId: { weapon: gearId, armor: gearId, accessory: gearId } }
-
-  function loadInventory() {
-    try {
-      var raw = localStorage.getItem(INVENTORY_KEY);
-      if (raw) inventory = JSON.parse(raw);
-      if (!Array.isArray(inventory)) inventory = [];
-    } catch (e) { inventory = []; }
-  }
-
-  function saveInventory() {
-    try { localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory)); } catch (e) {}
-  }
-
-  function loadEquipMap() {
-    try {
-      var raw = localStorage.getItem(EQUIP_KEY);
-      if (raw) equipMap = JSON.parse(raw);
-      if (typeof equipMap !== 'object' || equipMap === null) equipMap = {};
-    } catch (e) { equipMap = {}; }
-  }
-
-  function saveEquipMap() {
-    try { localStorage.setItem(EQUIP_KEY, JSON.stringify(equipMap)); } catch (e) {}
-  }
-
   // ── State ─────────────────────────────────────────
   var currentScreen = 'dungeon-select';
   var selectedDungeon = null;
@@ -539,114 +510,7 @@
     ctx.beginPath(); roundRect(x, y, w, h, r); ctx.stroke();
   }
 
-  // ── Gear stat aggregation ─────────────────────────
-  function calcEquippedGearStats(creatureId) {
-    var gs = { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 };
-    var eq = equipMap[creatureId];
-    if (!eq) return gs;
-    var slots = ['weapon', 'armor', 'accessory'];
-    for (var s = 0; s < slots.length; s++) {
-      var gearId = eq[slots[s]];
-      if (gearId == null) continue;
-      var gear = null;
-      for (var i = 0; i < inventory.length; i++) {
-        if (inventory[i].id === gearId) { gear = inventory[i]; break; }
-      }
-      if (!gear) continue;
-      // Main stat + upgrade bonus
-      if (gear.mainStat) gs[gear.mainStat] += (gear.mainValue || 0) + (gear.upgradeLevel || 0);
-      // Secondary stat (armor HP, accessory CRI) + upgrade bonus
-      if (gear.secondaryStat) {
-        var secBonus = 0;
-        if (gearData && gearData.upgrade && gear.upgradeLevel) {
-          var secPerLvl = gearData.upgrade.secondaryStatPerLevel || {};
-          secBonus = (secPerLvl[gear.secondaryStat] || 0) * gear.upgradeLevel;
-        }
-        gs[gear.secondaryStat] += (gear.secondaryValue || 0) + secBonus;
-      }
-      // Sub stats
-      if (gear.subStats) {
-        for (var j = 0; j < gear.subStats.length; j++) {
-          gs[gear.subStats[j].stat] += gear.subStats[j].value;
-        }
-      }
-    }
-    return gs;
-  }
-
-  // ── Single gear stat aggregation (for comparison) ──
-  function calcSingleGearStats(gear) {
-    var gs = { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 };
-    if (!gear) return gs;
-    if (gear.mainStat) gs[gear.mainStat] += (gear.mainValue || 0) + (gear.upgradeLevel || 0);
-    if (gear.secondaryStat) {
-      var secBonus = 0;
-      if (gearData && gearData.upgrade && gear.upgradeLevel) {
-        var secPerLvl = gearData.upgrade.secondaryStatPerLevel || {};
-        secBonus = (secPerLvl[gear.secondaryStat] || 0) * gear.upgradeLevel;
-      }
-      gs[gear.secondaryStat] += (gear.secondaryValue || 0) + secBonus;
-    }
-    if (gear.subStats) {
-      for (var j = 0; j < gear.subStats.length; j++) {
-        gs[gear.subStats[j].stat] += gear.subStats[j].value;
-      }
-    }
-    return gs;
-  }
-
-  function calcGearDiff(candidateGear, currentGear) {
-    var cand = calcSingleGearStats(candidateGear);
-    var cur = calcSingleGearStats(currentGear);
-    var diff = {};
-    var hasDiff = false;
-    var stats = ['atk', 'def', 'hp', 'spd', 'cri'];
-    for (var i = 0; i < stats.length; i++) {
-      var d = cand[stats[i]] - cur[stats[i]];
-      if (d !== 0) { diff[stats[i]] = d; hasDiff = true; }
-    }
-    return hasDiff ? diff : null;
-  }
-
-  // ── Set Bonus Calculation ────────────────────────
-  function calcSetBonuses(creatureId) {
-    var bonus = { atk: 0, def: 0, hp: 0, spd: 0, cri: 0 };
-    if (!gearData || !gearData.sets) return bonus;
-    var eq = equipMap[creatureId];
-    if (!eq) return bonus;
-
-    // Gather names of equipped gear
-    var equippedNames = [];
-    var slotArr = ['weapon', 'armor', 'accessory'];
-    for (var i = 0; i < slotArr.length; i++) {
-      var gearId = eq[slotArr[i]];
-      if (gearId != null) {
-        var gear = findGearById(gearId);
-        if (gear) equippedNames.push(gear.name);
-      }
-    }
-
-    var setNames = Object.keys(gearData.sets);
-    for (var si = 0; si < setNames.length; si++) {
-      var setDef = gearData.sets[setNames[si]];
-      var count = 0;
-      for (var pi = 0; pi < setDef.pieces.length; pi++) {
-        if (equippedNames.indexOf(setDef.pieces[pi]) !== -1) count++;
-      }
-      var thresholds = ['3', '2']; // check higher first, only apply highest
-      for (var ti = 0; ti < thresholds.length; ti++) {
-        if (count >= parseInt(thresholds[ti]) && setDef.bonuses[thresholds[ti]]) {
-          var b = setDef.bonuses[thresholds[ti]];
-          var bKeys = Object.keys(b);
-          for (var bk = 0; bk < bKeys.length; bk++) {
-            bonus[bKeys[bk]] += b[bKeys[bk]];
-          }
-          break;
-        }
-      }
-    }
-    return bonus;
-  }
+  // ── Gear stat aggregation (delegated to GearSystem) ──
 
   // ── Create fighter objects ────────────────────────
   function createPlayerFighter(creatureId, level) {
@@ -655,8 +519,8 @@
     var tier = c.tier || 'common';
     var type = c.type || 'fire';
     var stats = calcCreatureStats(tier, type, level);
-    var gearStats = calcEquippedGearStats(creatureId);
-    var setBonuses = calcSetBonuses(creatureId);
+    var gearStats = GearSystem.calcEquippedStats(creatureId);
+    var setBonuses = GearSystem.calcSetBonuses(creatureId);
     // Merge set bonuses into gearStats
     gearStats.atk += setBonuses.atk;
     gearStats.def += setBonuses.def;
@@ -2031,137 +1895,7 @@
     if (waveBar) waveBar.style.width = (totalWaves > 0 ? (currentWave / totalWaves * 100) : 0) + '%';
   }
 
-  // ── Gear Drop Generation ─────────────────────────
-  var nextGearId = 1;
-
-  function initGearIdCounter() {
-    // Find max existing gear id
-    for (var i = 0; i < inventory.length; i++) {
-      if (inventory[i].id >= nextGearId) nextGearId = inventory[i].id + 1;
-    }
-  }
-
-  function randInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  function weightedRarityPick(weights) {
-    var total = 0;
-    var keys = ['common', 'uncommon', 'rare', 'epic'];
-    for (var i = 0; i < keys.length; i++) total += (weights[keys[i]] || 0);
-    var roll = Math.random() * total;
-    var cum = 0;
-    for (var j = 0; j < keys.length; j++) {
-      cum += (weights[keys[j]] || 0);
-      if (roll < cum) return keys[j];
-    }
-    return 'common';
-  }
-
-  function generateGearDrop(difficulty, dungeonStars, isFirstClear, dungeon) {
-    if (!gearData) return [];
-    var rates = gearData.dropRates[difficulty];
-    if (!rates) return [];
-
-    var numDrops = randInt(rates.minDrops, rates.maxDrops);
-    if (isFirstClear && numDrops < 1) numDrops = 1;
-
-    var drops = [];
-    var tierPool = gearData.tierDropsByDifficulty[difficulty] || [1];
-
-    for (var d = 0; d < numDrops; d++) {
-      var rarity = weightedRarityPick(rates.weights);
-      var slotKeys = ['weapon', 'armor', 'accessory'];
-      var slotKey = slotKeys[Math.floor(Math.random() * slotKeys.length)];
-      var slotDef = gearData.slots[slotKey];
-      var tier = tierPool[Math.floor(Math.random() * tierPool.length)];
-
-      var icons = slotDef.spriteIcons[rarity] || slotDef.spriteIcons;
-      var iconRoll = Math.floor(Math.random() * icons.length);
-      var name = slotDef.names[iconRoll % slotDef.names.length];
-      var mainStatRange = gearData.mainStatRanges[slotKey][rarity];
-      var mainValue = randInt(mainStatRange[0], mainStatRange[1]);
-
-      var gear = {
-        id: nextGearId++,
-        name: name,
-        slot: slotKey,
-        rarity: rarity,
-        tier: tier,
-        mainStat: slotDef.mainStat,
-        mainValue: mainValue,
-        spriteRow: slotDef.spriteRow,
-        spriteIcon: icons[iconRoll],
-        subStats: [],
-        upgradeLevel: 0,
-        equippedBy: null
-      };
-
-      // Secondary stat for armor (HP) and accessory (CRI)
-      if (slotKey === 'armor' && gearData.armorHPRanges[rarity]) {
-        var hpRange = gearData.armorHPRanges[rarity];
-        gear.secondaryStat = 'hp';
-        gear.secondaryValue = randInt(hpRange[0], hpRange[1]);
-      }
-      if (slotKey === 'accessory' && gearData.accessoryCriRanges[rarity]) {
-        var criRange = gearData.accessoryCriRanges[rarity];
-        gear.secondaryStat = 'cri';
-        gear.secondaryValue = randInt(criRange[0], criRange[1]);
-      }
-
-      // Sub stats
-      var numSubs = gearData.raritySubStats[rarity] || 0;
-      var subPool = gearData.subStatPool[slotKey] ? gearData.subStatPool[slotKey].slice() : [];
-      for (var s = 0; s < numSubs && subPool.length > 0; s++) {
-        var si = Math.floor(Math.random() * subPool.length);
-        var stat = subPool.splice(si, 1)[0];
-        var range = gearData.subStatRanges[stat];
-        gear.subStats.push({ stat: stat, value: randInt(range[0], range[1]) });
-      }
-
-      drops.push(gear);
-    }
-
-    // Boss legendary drops
-    if (dungeon && gearData.bossLoot && gearData.bossDropChance) {
-      var lastWave = dungeon.enemies[dungeon.enemies.length - 1];
-      if (lastWave) {
-        for (var bi = 0; bi < lastWave.length; bi++) {
-          var bossId = lastWave[bi];
-          var loot = gearData.bossLoot[bossId];
-          if (!loot) continue;
-          var chances = gearData.bossDropChance[difficulty];
-          if (!chances) continue;
-          var dropPct = isFirstClear ? chances.firstClear : chances.repeat;
-          if (Math.random() * 100 < dropPct) {
-            var bossGear = {
-              id: nextGearId++,
-              name: loot.name,
-              slot: loot.slot,
-              rarity: 'legendary',
-              tier: loot.tier || 3,
-              mainStat: loot.mainStat,
-              mainValue: loot.mainValue,
-              spriteRow: loot.spriteRow,
-              spriteIcon: loot.spriteIcon,
-              subStats: loot.subStats ? loot.subStats.slice() : [],
-              upgradeLevel: 0,
-              equippedBy: null
-            };
-            if (loot.secondaryStat) {
-              bossGear.secondaryStat = loot.secondaryStat;
-              bossGear.secondaryValue = loot.secondaryValue || 0;
-            }
-            if (loot.special) bossGear.special = loot.special;
-            if (loot.set) bossGear.set = loot.set;
-            drops.push(bossGear);
-          }
-        }
-      }
-    }
-
-    return drops;
-  }
+  // ── Gear Drop Generation (delegated to GearSystem) ──
 
   function preloadGearSheets(callback) {
     if (!gearData || !gearData.spriteSheets) { if (callback) callback(); return; }
@@ -2273,16 +2007,9 @@
     var gearDropsEl = document.getElementById('bt-gear-drops');
     var gearDropListEl = document.getElementById('bt-gear-drop-list');
     if (victory && gearData) {
-      gearDrops = generateGearDrop(selectedDifficulty, stars, isFirstClear, dungeon);
+      gearDrops = GearSystem.generateDrop(selectedDifficulty, stars, isFirstClear, dungeon);
       if (gearDrops.length > 0) {
-        var maxInv = gearData.maxInventory || 50;
-        for (var g = 0; g < gearDrops.length; g++) {
-          if (inventory.length < maxInv) {
-            inventory.push(gearDrops[g]);
-            gearDropsAdded++;
-          }
-        }
-        saveInventory();
+        gearDropsAdded = GearSystem.addToInventory(gearDrops);
       }
     }
 
@@ -2569,12 +2296,12 @@
     // Sprite icon
     var iconEl = document.createElement('div');
     iconEl.className = 'bt-gear-icon';
-    renderGearIcon(iconEl, gear);
+    GearSystem.renderGearIcon(iconEl, gear);
     card.appendChild(iconEl);
     // Name
     var nameEl = document.createElement('div');
     nameEl.className = 'bt-gear-drop-name';
-    nameEl.textContent = getGearDisplayName(gear);
+    nameEl.textContent = GearSystem.getDisplayName(gear);
     card.appendChild(nameEl);
     // Rarity + slot
     var rarityEl = document.createElement('div');
@@ -2584,9 +2311,9 @@
     // Main stat
     var statEl = document.createElement('div');
     statEl.className = 'bt-gear-drop-stat';
-    var statText = '+' + ((gear.mainValue || 0) + (gear.upgradeLevel || 0)) + ' ' + (gear.mainStat || '').toUpperCase();
+    var statText = '+' + GearSystem.getEffectiveMain(gear) + ' ' + (gear.mainStat || '').toUpperCase();
     if (gear.secondaryStat) {
-      statText += '  +' + (gear.secondaryValue || 0) + ' ' + gear.secondaryStat.toUpperCase();
+      statText += '  +' + GearSystem.getEffectiveSecondary(gear) + ' ' + gear.secondaryStat.toUpperCase();
     }
     statEl.textContent = statText;
     card.appendChild(statEl);
@@ -2612,21 +2339,7 @@
     return card;
   }
 
-  function renderGearIcon(el, gear, displaySize) {
-    if (!gearData || !gearData.spriteSheets[gear.rarity]) return;
-    var sheet = gearData.spriteSheets[gear.rarity];
-    var iconSize = sheet.iconSize || 16;
-    var size = displaySize || 32;
-    var scale = size / iconSize;
-    var sx = gear.spriteIcon * iconSize;
-    var sy = gear.spriteRow * iconSize;
-    el.style.width = size + 'px';
-    el.style.height = size + 'px';
-    el.style.backgroundImage = 'url(' + sheet.sheet + ')';
-    el.style.backgroundSize = (sheet.cols * iconSize * scale) + 'px ' + (3 * iconSize * scale) + 'px';
-    el.style.backgroundPosition = '-' + (sx * scale) + 'px -' + (sy * scale) + 'px';
-    el.style.imageRendering = 'pixelated';
-  }
+  // renderGearIcon → GearSystem.renderGearIcon
 
   // ── Screen transitions ────────────────────────────
   function showScreen(screen) {
@@ -2887,16 +2600,11 @@
             var gSlot = document.createElement('div');
             gSlot.className = 'bt-team-gear-icon';
             gSlot.title = slotKey;
-            var eq = equipMap[creatureId];
-            var gearId = eq ? eq[slotKey] : null;
-            var gear = null;
-            if (gearId != null) {
-              for (var gi = 0; gi < inventory.length; gi++) {
-                if (inventory[gi].id === gearId) { gear = inventory[gi]; break; }
-              }
-            }
+            var eqM = GearSystem.getEquipMap()[creatureId];
+            var gearId = eqM ? eqM[slotKey] : null;
+            var gear = gearId != null ? GearSystem.findById(gearId) : null;
             if (gear) {
-              renderGearIcon(gSlot, gear, 20);
+              GearSystem.renderGearIcon(gSlot, gear, 20);
               gSlot.classList.add('bt-rarity-' + gear.rarity);
             } else {
               gSlot.textContent = gearLabels[slotKey];
@@ -3303,19 +3011,17 @@
     if (!grid) return;
     grid.innerHTML = '';
 
+    var inv = GearSystem.getInventory();
     var maxInv = gearData ? gearData.maxInventory || 50 : 50;
-    if (countEl) countEl.textContent = inventory.length + '/' + maxInv;
+    if (countEl) countEl.textContent = inv.length + '/' + maxInv;
     if (titleEl) {
       titleEl.textContent = asEquipPicker ? 'Equip ' + (equipPickerSlot || '') : 'Inventory';
     }
 
-    // Filter buttons
     renderInventoryFilters();
-
-    // Bulk sell bar (only in browse mode, not equip picker)
     renderBulkSellBar(!asEquipPicker);
 
-    var filtered = inventory.filter(function (g) {
+    var filtered = inv.filter(function (g) {
       if (inventoryFilterSlot === 'all') return true;
       return g.slot === inventoryFilterSlot;
     });
@@ -3328,48 +3034,46 @@
       return;
     }
 
-    // Sort: legendary > epic > rare > uncommon > common
     var rarityOrder = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
-    filtered.sort(function (a, b) { return (rarityOrder[a.rarity] || 4) - (rarityOrder[b.rarity] || 4); });
+    filtered.sort(function (a, b) {
+      var eqA = a.equippedBy ? 1 : 0;
+      var eqB = b.equippedBy ? 1 : 0;
+      if (eqA !== eqB) return eqA - eqB;
+      return (rarityOrder[a.rarity] || 4) - (rarityOrder[b.rarity] || 4);
+    });
 
-    // Look up currently equipped gear for comparison
     var currentEquipped = null;
     if (asEquipPicker && equipPickerCreature && equipPickerSlot) {
-      var eqMap = equipMap[equipPickerCreature];
+      var eqMap = GearSystem.getEquipMap()[equipPickerCreature];
       var curId = eqMap ? eqMap[equipPickerSlot] : null;
-      if (curId != null) currentEquipped = findGearById(curId);
+      if (curId != null) currentEquipped = GearSystem.findById(curId);
     }
 
     for (var i = 0; i < filtered.length; i++) {
       (function (gear) {
         var card = document.createElement('div');
         card.className = 'bt-gear-card bt-rarity-' + gear.rarity;
-
-        // Equipped indicator
         if (gear.equippedBy) card.classList.add('bt-gear-equipped');
-
-        // Mark currently equipped item in equip picker
         var isCurrentEquipped = asEquipPicker && currentEquipped && gear.id === currentEquipped.id;
         if (isCurrentEquipped) card.classList.add('bt-gear-current');
 
         var iconEl = document.createElement('div');
         iconEl.className = 'bt-gear-icon';
-        renderGearIcon(iconEl, gear);
+        GearSystem.renderGearIcon(iconEl, gear);
         card.appendChild(iconEl);
 
         var nameEl = document.createElement('div');
         nameEl.className = 'bt-gear-card-name';
-        nameEl.textContent = getGearDisplayName(gear);
+        nameEl.textContent = GearSystem.getDisplayName(gear);
         card.appendChild(nameEl);
 
         var statEl = document.createElement('div');
         statEl.className = 'bt-gear-card-stat';
-        statEl.textContent = '+' + ((gear.mainValue || 0) + (gear.upgradeLevel || 0)) + ' ' + (gear.mainStat || '').toUpperCase();
+        statEl.textContent = '+' + GearSystem.getEffectiveMain(gear) + ' ' + (gear.mainStat || '').toUpperCase();
         card.appendChild(statEl);
 
-        // Stat diff when in equip picker mode
         if (asEquipPicker && !isCurrentEquipped) {
-          var diff = calcGearDiff(gear, currentEquipped);
+          var diff = GearSystem.calcDiff(gear, currentEquipped);
           if (diff) {
             var diffEl = document.createElement('div');
             diffEl.className = 'bt-gear-diff';
@@ -3410,7 +3114,8 @@
   function renderBulkSellBar(show) {
     var existing = document.getElementById('bt-bulk-sell-bar');
     if (existing) existing.remove();
-    if (!show || inventory.length === 0) return;
+    var inv = GearSystem.getInventory();
+    if (!show || inv.length === 0) return;
 
     var filtersEl = document.getElementById('bt-inventory-filters');
     if (!filtersEl) return;
@@ -3419,30 +3124,27 @@
     bar.id = 'bt-bulk-sell-bar';
     bar.className = 'bt-bulk-sell-bar';
 
-    // Sell All Common
-    var commonItems = inventory.filter(function (g) { return g.rarity === 'common' && !g.equippedBy; });
-    if (commonItems.length > 0) {
-      var commonPrice = gearData ? gearData.sellPrices.common || 5 : 5;
-      var commonTotal = commonItems.length * commonPrice;
-      var commonBtn = document.createElement('button');
-      commonBtn.className = 'bt-btn bt-btn-small bt-btn-danger';
-      commonBtn.textContent = 'Sell Common (' + commonItems.length + ') +' + commonTotal + 'c';
-      commonBtn.addEventListener('click', function () {
-        if (!confirm('Sell ' + commonItems.length + ' common gear for ' + commonTotal + ' coins?')) return;
-        for (var i = inventory.length - 1; i >= 0; i--) {
-          if (inventory[i].rarity === 'common' && !inventory[i].equippedBy) {
-            inventory.splice(i, 1);
-          }
-        }
-        saveInventory();
-        if (typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(commonTotal);
-        renderInventoryPanel(false);
-      });
-      bar.appendChild(commonBtn);
+    var rarities = ['common', 'uncommon', 'rare', 'epic'];
+    for (var r = 0; r < rarities.length; r++) {
+      (function (rarity) {
+        var items = inv.filter(function (g) { return g.rarity === rarity && !g.equippedBy && !(g.upgradeLevel > 0); });
+        if (items.length === 0) return;
+        var price = gearData ? gearData.sellPrices[rarity] || 5 : 5;
+        var total = items.length * price;
+        var label = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+        var btn = document.createElement('button');
+        btn.className = 'bt-btn bt-btn-small bt-btn-danger';
+        btn.textContent = 'Sell ' + label + ' (' + items.length + ') +' + total + 'c';
+        btn.addEventListener('click', function () {
+          if (!confirm('Sell ' + items.length + ' ' + label + ' gear for ' + total + ' coins?')) return;
+          GearSystem.bulkSell(function (g) { return g.rarity === rarity && !g.equippedBy && !(g.upgradeLevel > 0); });
+          renderInventoryPanel(false);
+        });
+        bar.appendChild(btn);
+      })(rarities[r]);
     }
 
-    // Sell All Unequipped
-    var unequipped = inventory.filter(function (g) { return !g.equippedBy; });
+    var unequipped = inv.filter(function (g) { return !g.equippedBy; });
     if (unequipped.length > 1) {
       var uTotal = 0;
       for (var i = 0; i < unequipped.length; i++) {
@@ -3453,13 +3155,7 @@
       uBtn.textContent = 'Sell Unequipped (' + unequipped.length + ') +' + uTotal + 'c';
       uBtn.addEventListener('click', function () {
         if (!confirm('Sell ALL ' + unequipped.length + ' unequipped gear for ' + uTotal + ' coins?')) return;
-        for (var j = inventory.length - 1; j >= 0; j--) {
-          if (!inventory[j].equippedBy) {
-            inventory.splice(j, 1);
-          }
-        }
-        saveInventory();
-        if (typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(uTotal);
+        GearSystem.bulkSell(function (g) { return !g.equippedBy; });
         renderInventoryPanel(false);
       });
       bar.appendChild(uBtn);
@@ -3502,12 +3198,15 @@
     if (!modal) return;
     modal.classList.remove('bt-hidden');
 
+    var rollEl = document.getElementById('bt-gm-roll');
+    if (rollEl) rollEl.classList.add('bt-hidden');
+
     var iconEl = document.getElementById('bt-gm-icon');
-    if (iconEl) { iconEl.innerHTML = ''; renderGearIcon(iconEl, gear, 48); }
+    if (iconEl) { iconEl.innerHTML = ''; GearSystem.renderGearIcon(iconEl, gear, 48); }
 
     var nameEl = document.getElementById('bt-gm-name');
     if (nameEl) {
-      nameEl.textContent = getGearDisplayName(gear);
+      nameEl.textContent = GearSystem.getDisplayName(gear);
       nameEl.className = 'bt-gm-name bt-rarity-text-' + gear.rarity;
     }
 
@@ -3522,17 +3221,25 @@
 
     var mainEl = document.getElementById('bt-gm-main');
     if (mainEl) {
-      var effectiveMain = (gear.mainValue || 0) + (gear.upgradeLevel || 0);
+      var effectiveMain = GearSystem.getEffectiveMain(gear);
       var mainText = '+' + effectiveMain + ' ' + (gear.mainStat || '').toUpperCase();
+      if (gear.upgradeBonusMain) mainText += ' (+' + gear.upgradeBonusMain + ' from upgrades)';
       if (gear.secondaryStat) {
-        var secBonus = 0;
-        if (gearData && gearData.upgrade && gear.upgradeLevel) {
-          var secPerLvl = gearData.upgrade.secondaryStatPerLevel || {};
-          secBonus = (secPerLvl[gear.secondaryStat] || 0) * gear.upgradeLevel;
-        }
-        mainText += '  +' + ((gear.secondaryValue || 0) + secBonus) + ' ' + gear.secondaryStat.toUpperCase();
+        var effectiveSec = GearSystem.getEffectiveSecondary(gear);
+        mainText += '  +' + effectiveSec + ' ' + gear.secondaryStat.toUpperCase();
+        if (gear.upgradeBonusSec) mainText += ' (+' + gear.upgradeBonusSec + ')';
       }
       mainEl.textContent = mainText;
+    }
+
+    // Upgrade level display
+    var tierLine = '';
+    if (gear.upgradeLevel > 0) {
+      var maxLvl = GearSystem.getMaxLevel(gear);
+      tierLine = 'Lv ' + gear.upgradeLevel + '/' + maxLvl;
+    }
+    if (tierEl && tierLine) {
+      tierEl.textContent += '  ' + tierLine;
     }
 
     var subsEl = document.getElementById('bt-gm-subs');
@@ -3551,7 +3258,6 @@
       }
     }
 
-    // Special text (legendary)
     var specialEl = document.getElementById('bt-gm-special');
     if (specialEl) {
       if (gear.special) {
@@ -3567,6 +3273,7 @@
     if (setEl) {
       setEl.classList.add('bt-hidden');
       if (gearData && gearData.sets && gear.rarity === 'legendary') {
+        var eMap = GearSystem.getEquipMap();
         var setNames = Object.keys(gearData.sets);
         for (var si = 0; si < setNames.length; si++) {
           var setDef = gearData.sets[setNames[si]];
@@ -3577,14 +3284,13 @@
             setNameEl.className = 'bt-gm-set-name';
             setNameEl.textContent = setNames[si];
             setEl.appendChild(setNameEl);
-            // Count how many set pieces this creature has equipped
             var equippedCount = 0;
             if (gear.equippedBy) {
-              var eq = equipMap[gear.equippedBy];
+              var eq = eMap[gear.equippedBy];
               if (eq) {
                 var slotArr = ['weapon', 'armor', 'accessory'];
                 for (var sk = 0; sk < slotArr.length; sk++) {
-                  var eqGear = eq[slotArr[sk]] != null ? findGearById(eq[slotArr[sk]]) : null;
+                  var eqGear = eq[slotArr[sk]] != null ? GearSystem.findById(eq[slotArr[sk]]) : null;
                   if (eqGear && setDef.pieces.indexOf(eqGear.name) !== -1) equippedCount++;
                 }
               }
@@ -3605,7 +3311,6 @@
               bonusLine.textContent = bonusText;
               setEl.appendChild(bonusLine);
             }
-            // List pieces
             for (var pi = 0; pi < setDef.pieces.length; pi++) {
               var pieceEl = document.createElement('div');
               pieceEl.className = 'bt-gm-set-bonus';
@@ -3621,16 +3326,14 @@
     // Upgrade button
     var upgradeBtn = document.getElementById('bt-gm-upgrade');
     if (upgradeBtn) {
-      var maxLvl = gearData && gearData.upgrade ? gearData.upgrade.maxLevel : 5;
+      var maxLvlU = GearSystem.getMaxLevel(gear);
       var curLvl = gear.upgradeLevel || 0;
-      if (curLvl >= maxLvl) {
-        upgradeBtn.textContent = 'MAX +' + maxLvl;
+      if (curLvl >= maxLvlU) {
+        upgradeBtn.textContent = 'MAX +' + curLvl;
         upgradeBtn.disabled = true;
         upgradeBtn.classList.remove('bt-hidden');
       } else {
-        var baseCost = gearData && gearData.upgrade ? gearData.upgrade.baseCost[gear.rarity] || 10 : 10;
-        var costMult = gearData && gearData.upgrade ? gearData.upgrade.costMultPerLevel || 1.5 : 1.5;
-        var cost = Math.floor(baseCost * Math.pow(costMult, curLvl));
+        var cost = GearSystem.getUpgradeCost(gear);
         upgradeBtn.textContent = 'Upgrade (' + cost + ' coins)';
         upgradeBtn.disabled = false;
         upgradeBtn.classList.remove('bt-hidden');
@@ -3658,16 +3361,7 @@
 
   function sellGear(gear) {
     if (!gear || gear.equippedBy) return;
-    var price = gearData ? gearData.sellPrices[gear.rarity] || 5 : 5;
-    // Remove from inventory
-    for (var i = 0; i < inventory.length; i++) {
-      if (inventory[i].id === gear.id) {
-        inventory.splice(i, 1);
-        break;
-      }
-    }
-    saveInventory();
-    if (typeof Wallet !== 'undefined' && Wallet.add) Wallet.add(price);
+    GearSystem.sellGear(gear);
     closeGearModal();
     if (inventoryOpen) renderInventoryPanel(!!equipPickerSlot);
   }
@@ -3675,179 +3369,59 @@
   // ── Equip / Unequip ────────────────────────────
   function tryEquipGear(gear, creatureId, slotKey) {
     if (!gear || !creatureId || !slotKey) return;
-    if (gear.slot !== slotKey) return;
-
-    // Check level requirement
-    var pet = petState && petState.pets ? petState.pets[creatureId] : null;
-    var creature = catalog ? catalog.creatures[creatureId] : null;
-    if (!pet || !creature) return;
-    var effLevel = getEffectiveLevel(creature.tier || 'common', pet.level || 1);
-    var reqLevel = gearData ? gearData.gearTierLevelReq[gear.tier] || 1 : 1;
-    if (effLevel < reqLevel) {
+    var ok = GearSystem.tryEquip(gear, creatureId, slotKey, petState, catalog, getEffectiveLevel);
+    if (!ok) {
+      var reqLevel = gearData ? gearData.gearTierLevelReq[gear.tier] || 1 : 1;
       alert('This creature needs level ' + reqLevel + '+ to equip Tier ' + gear.tier + ' gear.');
       return;
     }
-
-    // Unequip from previous owner if any
-    if (gear.equippedBy) {
-      unequipGear(gear);
-    }
-
-    // Unequip current item in this slot
-    var eq = equipMap[creatureId];
-    if (!eq) { eq = {}; equipMap[creatureId] = eq; }
-    if (eq[slotKey] != null) {
-      var oldGear = findGearById(eq[slotKey]);
-      if (oldGear) oldGear.equippedBy = null;
-    }
-
-    // Equip
-    eq[slotKey] = gear.id;
-    gear.equippedBy = creatureId;
-    saveEquipMap();
-    saveInventory();
-
     closeInventory();
     renderTeamSlots();
   }
 
   function unequipGear(gear) {
-    if (!gear || !gear.equippedBy) return;
-    var eq = equipMap[gear.equippedBy];
-    if (eq) {
-      var slots = ['weapon', 'armor', 'accessory'];
-      for (var i = 0; i < slots.length; i++) {
-        if (eq[slots[i]] === gear.id) {
-          eq[slots[i]] = null;
-          break;
-        }
-      }
-    }
-    gear.equippedBy = null;
-    saveEquipMap();
-    saveInventory();
-  }
-
-  function findGearById(gearId) {
-    for (var i = 0; i < inventory.length; i++) {
-      if (inventory[i].id === gearId) return inventory[i];
-    }
-    return null;
-  }
-
-  function getGearDisplayName(gear) {
-    if (!gear) return '';
-    var name = gear.name;
-    if (gear.upgradeLevel && gear.upgradeLevel > 0) name += ' +' + gear.upgradeLevel;
-    return name;
+    GearSystem.unequip(gear);
   }
 
   function upgradeGear(gear) {
-    if (!gear || !gearData || !gearData.upgrade) return;
-    var cfg = gearData.upgrade;
-    var curLvl = gear.upgradeLevel || 0;
-    if (curLvl >= cfg.maxLevel) return;
-
-    var baseCost = cfg.baseCost[gear.rarity] || 10;
-    var costMult = cfg.costMultPerLevel || 1.5;
-    var cost = Math.floor(baseCost * Math.pow(costMult, curLvl));
-
-    // Check wallet
-    if (typeof Wallet === 'undefined' || !Wallet.getBalance || Wallet.getBalance() < cost) {
-      alert('Not enough coins! Need ' + cost + '.');
+    if (!gear) return;
+    var result = GearSystem.upgrade(gear);
+    if (!result) {
+      if (!GearSystem.canUpgrade(gear)) {
+        var maxLvl = GearSystem.getMaxLevel(gear);
+        if ((gear.upgradeLevel || 0) >= maxLvl) return;
+        alert('Not enough coins! Need ' + GearSystem.getUpgradeCost(gear) + '.');
+      }
       return;
     }
-
-    Wallet.add(-cost);
-    gear.upgradeLevel = curLvl + 1;
-    saveInventory();
-
-    // Refresh modal
+    // Refresh modal then show roll result
     openGearModal(gear);
-    // Refresh inventory panel if open
+    showUpgradeRoll(gear, result);
     if (inventoryOpen) renderInventoryPanel(!!equipPickerSlot);
-    // Refresh team slots
     renderTeamSlots();
+  }
+
+  function showUpgradeRoll(gear, result) {
+    var rollEl = document.getElementById('bt-gm-roll');
+    if (!rollEl) return;
+    rollEl.classList.remove('bt-hidden');
+    var cfg = gearData && gearData.upgrade;
+    var mainMax = 1;
+    if (cfg && cfg.mainStatBoostRange && cfg.mainStatBoostRange[gear.rarity]) {
+      mainMax = cfg.mainStatBoostRange[gear.rarity][1];
+    }
+    var isHigh = result.mainRoll >= mainMax;
+    var text = '+' + result.mainRoll + ' ' + (gear.mainStat || '').toUpperCase();
+    if (result.secRoll > 0) {
+      text += ', +' + result.secRoll + ' ' + (gear.secondaryStat || '').toUpperCase();
+    }
+    rollEl.textContent = text;
+    rollEl.className = 'bt-gm-roll ' + (isHigh ? 'bt-roll-high' : 'bt-roll-low');
   }
 
   // ── Auto Gear ────────────────────────────────────
   function autoGear() {
-    if (!inventory.length) return;
-    var slots = ['weapon', 'armor', 'accessory'];
-
-    // Step 1: Unequip all gear from team creatures so everything is in the pool
-    for (var t = 0; t < teamSlots.length; t++) {
-      var cid = teamSlots[t];
-      if (!cid) continue;
-      var eq = equipMap[cid];
-      if (!eq) continue;
-      for (var s = 0; s < slots.length; s++) {
-        var gid = eq[slots[s]];
-        if (gid != null) {
-          var g = findGearById(gid);
-          if (g) g.equippedBy = null;
-          eq[slots[s]] = null;
-        }
-      }
-    }
-
-    // Step 2: Greedily assign best gear per slot per creature
-    var assigned = {};
-
-    for (var ti = 0; ti < teamSlots.length; ti++) {
-      var creatureId = teamSlots[ti];
-      if (!creatureId) continue;
-
-      var pet = petState && petState.pets ? petState.pets[creatureId] : null;
-      var creature = catalog ? catalog.creatures[creatureId] : null;
-      if (!pet || !creature) continue;
-
-      var effLevel = getEffectiveLevel(creature.tier || 'common', pet.level || 1);
-      if (!equipMap[creatureId]) equipMap[creatureId] = {};
-      var eq = equipMap[creatureId];
-
-      for (var si = 0; si < slots.length; si++) {
-        var slotKey = slots[si];
-        var bestGear = null;
-        var bestVal = -1;
-
-        for (var gi = 0; gi < inventory.length; gi++) {
-          var g = inventory[gi];
-          if (g.slot !== slotKey) continue;
-          // Skip if already assigned in this pass
-          if (assigned[g.id]) continue;
-          // Check level requirement
-          var reqLevel = gearData ? gearData.gearTierLevelReq[g.tier] || 1 : 1;
-          if (effLevel < reqLevel) continue;
-          var val = (g.mainValue || 0) + (g.upgradeLevel || 0);
-          if (val > bestVal) {
-            bestVal = val;
-            bestGear = g;
-          }
-        }
-
-        if (bestGear) {
-          // Unequip from previous owner if any
-          if (bestGear.equippedBy) {
-            var prevEq = equipMap[bestGear.equippedBy];
-            if (prevEq) {
-              for (var ps = 0; ps < slots.length; ps++) {
-                if (prevEq[slots[ps]] === bestGear.id) {
-                  prevEq[slots[ps]] = null;
-                  break;
-                }
-              }
-            }
-          }
-          eq[slotKey] = bestGear.id;
-          bestGear.equippedBy = creatureId;
-          assigned[bestGear.id] = true;
-        }
-      }
-    }
-
-    saveEquipMap();
-    saveInventory();
+    GearSystem.autoGear(teamSlots, petState, catalog, getEffectiveLevel);
     renderTeamSlots();
   }
 
@@ -4041,12 +3615,12 @@
   // ── Init ──────────────────────────────────────────
   loadStats();
   loadDungeonProgress();
-  loadInventory();
-  loadEquipMap();
-  initGearIdCounter();
+  GearSystem.loadInventory();
+  GearSystem.loadEquipMap();
   renderStats();
 
   loadData(function () {
+    GearSystem.init(gearData);
     loadPetState();
     preloadGearSheets(function () {
       showScreen('dungeon-select');

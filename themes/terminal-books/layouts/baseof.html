@@ -19,6 +19,8 @@
   <script src="{{ $js.RelPermalink }}"></script>
   {{- $wallet := resources.Get "js/wallet.js" | minify | fingerprint -}}
   <script src="{{ $wallet.RelPermalink }}"></script>
+  {{- $gear := resources.Get "js/gear.js" | minify | fingerprint -}}
+  <script src="{{ $gear.RelPermalink }}"></script>
   {{ if and .IsSection (ne .Type "chess") (ne .Section "games") (ne .Section "pets") -}}
     {{- $filter := resources.Get "js/review-filter.js" | minify | fingerprint -}}
     <script src="{{ $filter.RelPermalink }}"></script>
@@ -110,6 +112,10 @@
   {{ if eq .Type "farm-page" -}}
     {{- $fp := resources.Get "js/farm-page.js" | minify | fingerprint -}}
     <script src="{{ $fp.RelPermalink }}"></script>
+  {{- end }}
+  {{ if eq .Type "gear" -}}
+    {{- $gp := resources.Get "js/gear-page.js" | minify | fingerprint -}}
+    <script src="{{ $gp.RelPermalink }}"></script>
   {{- end }}
   <!-- Cloudflare Web Analytics (production only) -->
   {{ if not hugo.IsServer }}

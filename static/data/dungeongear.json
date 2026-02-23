@@ -182,11 +182,20 @@
     "normal":  { "firstClear": 20,  "repeat": 0 }
   },
   "upgrade": {
-    "maxLevel": 5,
-    "mainStatPerLevel": 1,
-    "baseCost": { "common": 10, "uncommon": 25, "rare": 75, "epic": 200, "legendary": 500 },
+    "maxLevelByRarity": {
+      "common": 3, "uncommon": 5, "rare": 7, "epic": 10, "legendary": 12
+    },
+    "costByRarity": {
+      "common": 10, "uncommon": 25, "rare": 75, "epic": 200, "legendary": 500
+    },
     "costMultPerLevel": 1.5,
-    "secondaryStatPerLevel": { "hp": 3, "cri": 1 }
+    "mainStatBoostRange": {
+      "common": [1, 2], "uncommon": [1, 3], "rare": [2, 4], "epic": [2, 5], "legendary": [3, 6]
+    },
+    "secondaryStatBoostRange": {
+      "hp":  { "common": [2, 4], "uncommon": [3, 6], "rare": [4, 8], "epic": [5, 10], "legendary": [6, 12] },
+      "cri": { "common": [1, 1], "uncommon": [1, 1], "rare": [1, 2], "epic": [1, 2], "legendary": [1, 3] }
+    }
   },
   "skinRewards": {
     "1": { "creatureId": "fox",     "name": "Fox Alt",     "desc": "A wild forest variant" },
