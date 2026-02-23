@@ -166,24 +166,22 @@ Current state: 20 dungeons, 5 modes (Dungeons/Daily/Spire/Titan/Faction Wars),
 
 ---
 
-## Backlog: Dungeon UI Polish
+## Backlog: Dungeon UI Polish — COMPLETE
 
-- [ ] Visual indicator when all difficulties of a dungeon are cleared (gold border, checkmark, or crown on card)
-- [ ] Per-difficulty completion badges on dungeon cards — show which difficulties (Normal/Hard/Brutal/Nightmare) have been beaten
+- [x] Visual indicator when all difficulties of a dungeon are cleared (gold border on card) — shipped in dcb2421
+- [x] Per-difficulty completion badges on dungeon cards — shipped in dcb2421
 
 ---
 
-## Phase 5: Frogger Creature + Fragment/Shard System
+## Phase 5: Fragment/Shard System
 
-**Goal**: Add Frogger as a collectible creature and introduce fragment-based creature acquisition.
+**Goal**: Introduce fragment-based creature acquisition. Frogger stays as a dungeon boss only (no creature form).
 
-- [ ] Extract Frogger evolution strip (144x48) + alt skin
-- [ ] Add to petsprites.json (both copies) + petcatalog.json
 - [ ] Fragment system: FRAGMENT_CONFIG, load/save, drops in endDungeon
 - [ ] Fragment panel in shop.js
-- [ ] Frogger unique moveset (Bubble, Spit Venom, Heal Wave, Tongue Lash)
+- [ ] New creature unlock via fragments (TBD — not Frogger)
 
-**Estimated scope**: ~310 lines JS, ~15 lines JSON
+**Estimated scope**: ~250 lines JS, ~15 lines JSON
 
 ---
 

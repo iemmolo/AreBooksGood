@@ -607,17 +607,14 @@
   position: relative;
 }
 .bt-scroll-hint {
-  position: sticky;
-  bottom: -28px;
-  left: 0;
-  right: 0;
-  margin: 0 -28px;
+  position: fixed;
   padding: 24px 0 8px;
   background: linear-gradient(to bottom, transparent, var(--background) 60%);
   text-align: center;
   pointer-events: none;
   transition: opacity 0.3s;
   z-index: 1;
+  border-radius: 0 0 7px 7px;
 }
 .bt-scroll-hint-arrow {
   display: inline-block;
@@ -1668,6 +1665,11 @@
   .bt-select-header {
     flex-wrap: wrap;
     gap: 6px;
+  }
+
+  .bt-select-header .bt-btn-small {
+    font-size: 0.75em;
+    padding: 4px 8px;
   }
 
   .bt-mode-tabs {

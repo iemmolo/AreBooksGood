@@ -2529,14 +2529,19 @@
     // Scroll hint — only show if content overflows
     var panel = resultsOverlay.querySelector('.bt-results-panel');
     if (panel) {
-      var oldHint = panel.querySelector('.bt-scroll-hint');
+      var oldHint = resultsOverlay.querySelector('.bt-scroll-hint');
       if (oldHint) oldHint.parentNode.removeChild(oldHint);
       setTimeout(function () {
         if (panel.scrollHeight <= panel.clientHeight + 5) return;
         var hint = document.createElement('div');
         hint.className = 'bt-scroll-hint';
         hint.innerHTML = '<span class="bt-scroll-hint-arrow">&#9660; scroll &#9660;</span>';
-        panel.appendChild(hint);
+        // Append to overlay (not panel) so hint doesn't inflate scrollHeight
+        var rect = panel.getBoundingClientRect();
+        hint.style.left = rect.left + 'px';
+        hint.style.width = rect.width + 'px';
+        hint.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+        resultsOverlay.appendChild(hint);
         var checkScroll = function () {
           var atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 50;
           hint.classList.toggle('bt-scrolled-bottom', atBottom);
@@ -4547,7 +4552,7 @@
       var diffs = ['normal', 'hard', 'brutal', 'nightmare'];
       var completedDiffs = factionState.completed[fc.id] || {};
 
-      html += '<div class="bt-faction-card' + (isActive ? '' : ' bt-faction-locked') + ' bt-type-' + fc.type + '">' +
+      html += '<div class="bt-faction-card' + (isActive ? '' : ' bt-faction-locked') + ' bt-type-border-' + fc.type + '">' +
         '<div class="bt-faction-card-name">' + fc.name + '</div>' +
         '<div class="bt-faction-card-desc">' + fc.desc + '</div>';
 
