@@ -103,6 +103,10 @@
     {{- $tb := resources.Get "js/trebuchet.js" | minify -}}
     <script src="{{ $tb.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "battle" -}}
+    {{- $bt := resources.Get "js/battle.js" | minify -}}
+    <script src="{{ $bt.RelPermalink }}"></script>
+  {{- end }}
   {{ if eq .Type "farm-page" -}}
     {{- $fp := resources.Get "js/farm-page.js" | minify -}}
     <script src="{{ $fp.RelPermalink }}"></script>

@@ -173,7 +173,7 @@
     heroSpriteFrameOffset = pd.frameOffset || 0;
     var img = new Image();
     img.onload = function () { heroSpriteSheet = img; };
-    img.src = pd.sheet;
+    img.src = (heroPetSkin === 'alt' && pd.altSheet) ? pd.altSheet : pd.sheet;
   }
 
   function drawHeroSprite(cx, cy, frameIdx) {
@@ -639,6 +639,7 @@
   var heroPetId = null;
   var heroPetType = null;
   var heroPetLevel = 1;
+  var heroPetSkin = 'default';
   var heroAccessoryBonuses = {};
 
   // ── Path computation ──────────────────────────────
@@ -1337,6 +1338,16 @@
       heroPetType = legacyTypes[heroPetId] || 'nature';
     }
     heroPetLevel = state.level || 1;
+    // Read skin from localStorage (getState doesn't include it)
+    try {
+      var petRaw = localStorage.getItem('arebooksgood-pet');
+      if (petRaw) {
+        var petParsed = JSON.parse(petRaw);
+        if (petParsed.pets && petParsed.pets[heroPetId]) {
+          heroPetSkin = petParsed.pets[heroPetId].skin || 'default';
+        }
+      }
+    } catch (e) {}
     if (heroSpriteData) loadHeroSheet(heroPetId);
   }
 

@@ -305,6 +305,68 @@
   padding: 3px 8px;
 }
 
+.shop-skin-toggle {
+  font-size: 0.65em;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, #ff6b35 40%, transparent);
+  border-radius: 3px;
+  background: transparent;
+  color: #ff6b35;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.shop-skin-toggle:hover {
+  background: color-mix(in srgb, #ff6b35 10%, transparent);
+  border-color: #ff6b35;
+}
+
+.shop-skin-toggle.shop-skin-active {
+  background: color-mix(in srgb, #ff6b35 15%, transparent);
+  border-color: #ff6b35;
+}
+
+/* ── Skin Picker (side-by-side) ──────────── */
+.shop-skin-picker {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.shop-skin-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.shop-skin-option:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.shop-skin-option.shop-skin-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.shop-skin-option-label {
+  font-size: 0.55em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  margin-top: 2px;
+}
+
+.shop-skin-option.shop-skin-selected .shop-skin-option-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ── Collection / Pokedex ────────────────── */
 .collection-stats {
   font-weight: 600;

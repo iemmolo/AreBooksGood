@@ -67,6 +67,7 @@
           }
         }
         if (saved._migrated) state._migrated = true;
+        if (saved.unlockedSkins) state.unlockedSkins = saved.unlockedSkins;
         return state;
       }
     } catch (e) {}
@@ -181,16 +182,17 @@
     return spriteData[spriteId] || null;
   }
 
-  function renderSpritePreview(petId, level) {
+  function renderSpritePreview(petId, level, skin) {
     var info = getSpriteInfo(petId);
     if (!info) return null;
     var fw = info.frameWidth || 48;
     var frameOffset = info.frameOffset || 0;
     var frameIdx = Math.min(frameOffset + (level || 1) - 1, (info.frames || 1) - 1);
+    var sheetUrl = (skin === 'alt' && info.altSheet) ? info.altSheet : info.sheet;
     var el = document.createElement('div');
     el.style.width = '48px';
     el.style.height = '48px';
-    el.style.backgroundImage = 'url(' + info.sheet + ')';
+    el.style.backgroundImage = 'url(' + sheetUrl + ')';
     el.style.backgroundSize = (fw * info.frames) + 'px ' + info.frameHeight + 'px';
     el.style.backgroundPosition = '-' + (frameIdx * fw) + 'px 0';
     el.style.imageRendering = 'pixelated';
@@ -689,11 +691,42 @@
           ownedCard.setAttribute('data-pet-id', cId);
           if (cData.tier === 'legendary') ownedCard.classList.add('shop-owned-legendary');
 
-          // Sprite
-          var sprPrev = renderSpritePreview(cId, pet.level);
-          if (sprPrev) {
-            sprPrev.style.margin = '0 auto 4px';
-            ownedCard.appendChild(sprPrev);
+          // Sprite (use alt skin if active)
+          var petSkin = pet.skin || 'default';
+          var hasSkinUnlocked = pet.skinUnlocked || (petState.unlockedSkins && petState.unlockedSkins[cId]);
+          if (hasSkinUnlocked) {
+            var skinPicker = document.createElement('div');
+            skinPicker.className = 'shop-skin-picker';
+            var skins = ['default', 'alt'];
+            for (var si = 0; si < skins.length; si++) {
+              var skinKey = skins[si];
+              var opt = document.createElement('div');
+              opt.className = 'shop-skin-option' + (petSkin === skinKey ? ' shop-skin-selected' : '');
+              var sprEl = renderSpritePreview(cId, pet.level, skinKey);
+              if (sprEl) opt.appendChild(sprEl);
+              var lbl = document.createElement('div');
+              lbl.className = 'shop-skin-option-label';
+              lbl.textContent = skinKey === 'default' ? 'Default' : 'Alt';
+              opt.appendChild(lbl);
+              opt.addEventListener('click', (function (pid, sk) {
+                return function () {
+                  var p = petState.pets[pid];
+                  if (!p) return;
+                  p.skin = sk;
+                  savePetState(petState);
+                  if (window.PetSystem && window.PetSystem.reload) window.PetSystem.reload();
+                  renderAll();
+                };
+              })(cId, skinKey));
+              skinPicker.appendChild(opt);
+            }
+            ownedCard.appendChild(skinPicker);
+          } else {
+            var sprPrev = renderSpritePreview(cId, pet.level, petSkin);
+            if (sprPrev) {
+              sprPrev.style.margin = '0 auto 4px';
+              ownedCard.appendChild(sprPrev);
+            }
           }
 
           // Tier label
@@ -801,7 +834,7 @@
 
     dom.activePetInfo.innerHTML = '';
 
-    var activeSpr = renderSpritePreview(id, pet.level);
+    var activeSpr = renderSpritePreview(id, pet.level, pet.skin || 'default');
     if (activeSpr) {
       activeSpr.style.flexShrink = '0';
       dom.activePetInfo.appendChild(activeSpr);
@@ -867,7 +900,7 @@
         maxCard.className = 'shop-evo-card shop-evo-card-max';
 
         // Max-level sprite centered
-        var maxSpr = renderSpritePreview(id, pet.level);
+        var maxSpr = renderSpritePreview(id, pet.level, pet.skin || 'default');
         if (maxSpr) {
           maxSpr.style.margin = '0 auto 8px';
           maxCard.appendChild(maxSpr);
@@ -902,13 +935,14 @@
       // Before/after sprite comparison
       var evoSprites = document.createElement('div');
       evoSprites.className = 'shop-evo-sprites';
-      var evoSprBefore = renderSpritePreview(id, pet.level);
+      var evoSkin = pet.skin || 'default';
+      var evoSprBefore = renderSpritePreview(id, pet.level, evoSkin);
       if (evoSprBefore) evoSprites.appendChild(evoSprBefore);
       var evoArrow = document.createElement('span');
       evoArrow.className = 'shop-evo-arrow';
       evoArrow.textContent = '\u2192';
       evoSprites.appendChild(evoArrow);
-      var evoSprAfter = renderSpritePreview(id, nextLevel);
+      var evoSprAfter = renderSpritePreview(id, nextLevel, evoSkin);
       if (evoSprAfter) evoSprites.appendChild(evoSprAfter);
       card.appendChild(evoSprites);
 
@@ -1165,7 +1199,8 @@
         // Sprite
         var sprBox = document.createElement('div');
         sprBox.className = 'collection-sprite';
-        var spr = renderSpritePreview(c.id, owned && petState.pets[c.id] ? petState.pets[c.id].level : 1);
+        var collSkin = (owned && petState.pets[c.id]) ? (petState.pets[c.id].skin || 'default') : 'default';
+        var spr = renderSpritePreview(c.id, owned && petState.pets[c.id] ? petState.pets[c.id].level : 1, collSkin);
         if (spr) {
           if (!owned) spr.style.filter = 'brightness(0) opacity(0.3)';
           sprBox.appendChild(spr);
@@ -1227,7 +1262,8 @@
     // Large 2x sprite
     var sprWrap = document.createElement('div');
     sprWrap.className = 'collection-modal-sprite';
-    var spr = renderSpritePreview(creatureId, pet ? pet.level : 1);
+    var modalSkin = pet ? (pet.skin || 'default') : 'default';
+    var spr = renderSpritePreview(creatureId, pet ? pet.level : 1, modalSkin);
     if (spr) {
       spr.style.transform = 'scale(2)';
       spr.style.transformOrigin = 'center';

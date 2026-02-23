@@ -92,6 +92,12 @@
   <link rel="stylesheet" href="{{ $tb.RelPermalink }}">
 {{- end }}
 
+{{/* Battle CSS */}}
+{{ if eq .Type "battle" -}}
+  {{- $bt := resources.Get "css/battle.css" | minify -}}
+  <link rel="stylesheet" href="{{ $bt.RelPermalink }}">
+{{- end }}
+
 {{/* Farm Page CSS */}}
 {{ if eq .Type "farm-page" -}}
   {{- $fpcss := resources.Get "css/farm-page.css" | minify -}}

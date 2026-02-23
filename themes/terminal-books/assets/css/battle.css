@@ -1,0 +1,1298 @@
+/* ============================================
+   Pet Dungeon — Auto-Battle Raids
+   ============================================ */
+
+.bt-intro {
+  margin-bottom: 20px;
+}
+
+/* ── Section titles ──────────────────────── */
+.bt-section-title {
+  margin: 0 0 12px;
+  font-size: 1.1em;
+  color: var(--accent);
+}
+
+.bt-section-sub {
+  margin-top: 16px;
+  font-size: 0.95em;
+}
+
+/* ── Screens ─────────────────────────────── */
+.bt-screen {
+  /* default visible */
+}
+
+.bt-hidden {
+  display: none !important;
+}
+
+/* ── Type colors ─────────────────────────── */
+.bt-type-fire    { color: #ff6b35; border-color: #ff6b35; background: color-mix(in srgb, #ff6b35 15%, var(--background)); }
+.bt-type-nature  { color: #4caf50; border-color: #4caf50; background: color-mix(in srgb, #4caf50 15%, var(--background)); }
+.bt-type-tech    { color: #78909c; border-color: #78909c; background: color-mix(in srgb, #78909c 15%, var(--background)); }
+.bt-type-aqua    { color: #29b6f6; border-color: #29b6f6; background: color-mix(in srgb, #29b6f6 15%, var(--background)); }
+.bt-type-shadow  { color: #ab47bc; border-color: #ab47bc; background: color-mix(in srgb, #ab47bc 15%, var(--background)); }
+.bt-type-mystic  { color: #ffd54f; border-color: #ffd54f; background: color-mix(in srgb, #ffd54f 15%, var(--background)); }
+
+/* ── Dungeon Select Grid ─────────────────── */
+.bt-dungeon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bt-dungeon-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 10px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.bt-dungeon-card:hover:not(.bt-dungeon-locked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+  transform: translateY(-2px);
+}
+
+.bt-dungeon-card.bt-dungeon-locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bt-dungeon-card.bt-dungeon-cleared {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.bt-dungeon-card-name {
+  font-size: 0.95em;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.bt-dungeon-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-bottom: 4px;
+}
+
+.bt-dungeon-card-stars {
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+.bt-dungeon-card-type {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 0.72em;
+  font-weight: 600;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.bt-dungeon-card-lock {
+  font-size: 0.72em;
+  font-weight: 600;
+  margin-top: 6px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  align-self: flex-start;
+}
+
+.bt-dungeon-card-check {
+  font-size: 0.72em;
+  font-weight: 600;
+  margin-top: 6px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  align-self: flex-start;
+}
+
+/* ── Team Builder ────────────────────────── */
+.bt-dungeon-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+  font-size: 0.92em;
+}
+
+.bt-dungeon-info-name {
+  font-weight: 700;
+}
+
+.bt-dungeon-info-lock {
+  font-size: 0.82em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.bt-team-slots {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.bt-team-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 100px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 2px dashed color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bt-team-slot:hover {
+  border-color: var(--accent);
+}
+
+.bt-team-slot.bt-team-slot-filled {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--background));
+}
+
+.bt-team-slot-sprite {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  margin-bottom: 4px;
+}
+
+.bt-team-slot-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  text-align: center;
+}
+
+.bt-team-slot-filled .bt-team-slot-label {
+  color: var(--foreground);
+}
+
+/* Creature picker grid (reuses creature card style) */
+.bt-creature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bt-creature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.bt-creature-card:hover:not(.bt-creature-disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+  transform: translateY(-2px);
+}
+
+.bt-creature-card.bt-creature-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.bt-creature-card.bt-creature-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+}
+
+.bt-creature-card-sprite {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  margin-bottom: 4px;
+}
+
+.bt-creature-card-name {
+  font-size: 0.8em;
+  font-weight: 600;
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+.bt-creature-card-info {
+  font-size: 0.72em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.bt-creature-card-type {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 0.68em;
+  font-weight: 600;
+  border-radius: 3px;
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bt-no-pets {
+  text-align: center;
+  padding: 40px 20px;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.bt-team-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* ── Wave HUD ────────────────────────────── */
+.bt-wave-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 8px 8px 0 0;
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+.bt-wave-label {
+  font-variant-numeric: tabular-nums;
+}
+
+.bt-wave-dungeon {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.bt-speed-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.bt-speed-btn {
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 0.82em;
+  font-weight: 700;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 10%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bt-speed-btn:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.bt-speed-btn.bt-speed-active {
+  color: var(--background);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Wave progress bar ───────────────────── */
+.bt-wave-progress {
+  height: 6px;
+  background: color-mix(in srgb, var(--foreground) 10%, var(--background));
+  border-left: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  overflow: hidden;
+}
+
+.bt-wave-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* ── Game area ───────────────────────────── */
+.bt-game-area {
+  margin: 0 auto;
+}
+
+.bt-canvas-wrap {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-top: none;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 6%, var(--background));
+  box-shadow:
+    inset 0 2px 12px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 4px 20px color-mix(in srgb, #000 15%, transparent);
+}
+
+#bt-canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ── Battle controls ─────────────────────── */
+.bt-battle-controls {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-top: none;
+}
+
+/* ── Battle log ──────────────────────────── */
+.bt-log {
+  max-height: 100px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  font-size: 0.82em;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--foreground) 4%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.bt-log-inner {
+  /* scrollable content */
+}
+
+.bt-log-line {
+  margin: 0;
+  padding: 1px 0;
+}
+
+.bt-log-line.bt-log-effective {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.bt-log-line.bt-log-weak {
+  color: #ff9800;
+}
+
+.bt-log-line.bt-log-crit {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.bt-log-line.bt-log-wave {
+  color: var(--accent);
+  font-weight: 700;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+/* ── Overlays ────────────────────────────── */
+.bt-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  z-index: 10050;
+}
+
+.bt-overlay-inner {
+  text-align: center;
+  padding: 28px;
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 8px;
+  max-width: 380px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.bt-overlay-title {
+  margin: 0 0 16px;
+  font-size: 1.5em;
+  color: var(--accent);
+}
+
+.bt-overlay-title.bt-defeat-title {
+  color: #f44336;
+}
+
+/* ── Results grid ────────────────────────── */
+.bt-results {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 12px auto 16px;
+  max-width: 200px;
+  font-size: 1em;
+}
+
+.bt-result-label {
+  text-align: left;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.bt-result-value {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.bt-first-clear {
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  font-weight: 700;
+  color: #ffd54f;
+  background: color-mix(in srgb, #ffd54f 10%, var(--background));
+  border: 1px solid color-mix(in srgb, #ffd54f 30%, transparent);
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
+.bt-creature-xp-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.bt-creature-xp-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 6px;
+  font-size: 0.82em;
+}
+
+.bt-creature-xp-sprite {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  margin-bottom: 2px;
+}
+
+.bt-creature-xp-name {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.bt-creature-xp-amount {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bt-creature-xp-fainted {
+  opacity: 0.5;
+}
+
+.bt-gear-drops {
+  margin-bottom: 14px;
+}
+
+.bt-gear-drops-title {
+  font-size: 0.9em;
+  margin: 0 0 6px;
+  color: var(--accent);
+}
+
+.bt-gear-drop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.bt-results-actions {
+  margin-top: 8px;
+}
+
+/* ── Buttons ─────────────────────────────── */
+.bt-btn {
+  display: inline-block;
+  padding: 10px 32px;
+  font-family: inherit;
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--background);
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.1s, box-shadow 0.15s;
+  margin: 4px;
+}
+
+.bt-btn:hover:not(:disabled) {
+  transform: scale(1.04);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.bt-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.bt-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.bt-btn-secondary {
+  color: var(--foreground);
+  background: var(--background);
+  border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  font-size: 0.9em;
+  padding: 8px 24px;
+}
+
+.bt-btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+  box-shadow: none;
+}
+
+.bt-btn-small {
+  padding: 5px 14px;
+  font-size: 0.85em;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bt-btn-danger {
+  color: #ff4444;
+  background: var(--background);
+  border-color: color-mix(in srgb, #ff4444 40%, transparent);
+}
+
+.bt-btn-danger:hover:not(:disabled) {
+  border-color: #ff4444;
+  background: color-mix(in srgb, #ff4444 10%, var(--background));
+  box-shadow: none;
+}
+
+/* ── Stats panel ─────────────────────────── */
+.bt-stats {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+}
+
+.bt-stats-title {
+  margin: 0 0 10px;
+  font-size: 1em;
+}
+
+.bt-stats-grid {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92em;
+}
+
+.bt-stat-label {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.bt-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Dungeon Select Header ───────────────── */
+.bt-select-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.bt-select-header .bt-section-title {
+  margin-bottom: 0;
+}
+
+/* ── Difficulty Badges (dungeon cards) ───── */
+.bt-diff-badges {
+  display: flex;
+  gap: 3px;
+  margin-top: 5px;
+}
+
+.bt-diff-badge {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 0.62em;
+  font-weight: 700;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+}
+
+.bt-diff-badge.bt-diff-cleared {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--background));
+}
+
+.bt-diff-normal { }
+.bt-diff-hard   { color: #ff9800; border-color: color-mix(in srgb, #ff9800 30%, transparent); }
+.bt-diff-brutal { color: #f44336; border-color: color-mix(in srgb, #f44336 30%, transparent); }
+.bt-diff-hard.bt-diff-cleared   { color: #ff9800; border-color: #ff9800; background: color-mix(in srgb, #ff9800 12%, var(--background)); }
+.bt-diff-brutal.bt-diff-cleared { color: #f44336; border-color: #f44336; background: color-mix(in srgb, #f44336 12%, var(--background)); }
+
+/* ── Difficulty Picker (team builder) ────── */
+.bt-difficulty-picker {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.bt-diff-btn {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bt-diff-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
+}
+
+.bt-diff-btn.bt-diff-active {
+  color: var(--background);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.bt-diff-btn.bt-diff-active.bt-diff-hard {
+  background: #ff9800;
+  border-color: #ff9800;
+}
+
+.bt-diff-btn.bt-diff-active.bt-diff-brutal {
+  background: #f44336;
+  border-color: #f44336;
+}
+
+.bt-diff-btn.bt-diff-locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.bt-diff-check {
+  color: inherit;
+}
+
+/* ── Creature Card Stats ─────────────────── */
+.bt-creature-card-stats {
+  display: flex;
+  gap: 4px;
+  font-size: 0.62em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin-top: 2px;
+}
+
+/* ── Team Slot Gear Icons ────────────────── */
+.bt-team-gear-slots {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.bt-team-gear-icon {
+  width: 22px;
+  height: 22px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55em;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  transition: border-color 0.15s;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+.bt-team-gear-icon:hover {
+  border-color: var(--accent);
+}
+
+.bt-team-gear-icon.bt-gear-empty {
+  /* default styling */
+}
+
+/* ── Gear Icon (shared) ──────────────────── */
+.bt-gear-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+/* ── Gear Drop Cards (results) ───────────── */
+.bt-gear-drop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  min-width: 85px;
+}
+
+.bt-gear-drop-name {
+  font-size: 0.72em;
+  font-weight: 600;
+  margin-top: 2px;
+  text-align: center;
+}
+
+.bt-gear-drop-slot {
+  font-size: 0.62em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  text-transform: uppercase;
+}
+
+.bt-gear-drop-rarity {
+  font-size: 0.62em;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.bt-gear-drop-stat {
+  font-size: 0.65em;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 1px;
+}
+
+.bt-gear-drop-subs {
+  font-size: 0.55em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-top: 1px;
+}
+
+.bt-gear-drop-special {
+  font-size: 0.52em;
+  font-style: italic;
+  color: #ff6b35;
+  margin-top: 2px;
+}
+
+/* ── Rarity colors ───────────────────────── */
+.bt-rarity-common   { border-color: #888 !important; }
+.bt-rarity-uncommon { border-color: #4caf50 !important; }
+.bt-rarity-rare     { border-color: #ffd54f !important; }
+.bt-rarity-epic     { border-color: #ab47bc !important; }
+
+.bt-rarity-text-common   { color: #888; }
+.bt-rarity-text-uncommon { color: #4caf50; }
+.bt-rarity-text-rare     { color: #ffd54f; }
+.bt-rarity-text-epic     { color: #ab47bc; }
+
+.bt-rarity-epic {
+  animation: bt-epic-glow 2s ease-in-out infinite;
+}
+
+@keyframes bt-epic-glow {
+  0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, #ab47bc 30%, transparent); }
+  50%      { box-shadow: 0 0 12px color-mix(in srgb, #ab47bc 50%, transparent); }
+}
+
+.bt-rarity-legendary { border-color: #ff6b35 !important; animation: bt-legendary-glow 2s ease-in-out infinite alternate; }
+.bt-rarity-text-legendary { color: #ff6b35; }
+
+@keyframes bt-legendary-glow {
+  from { box-shadow: 0 0 4px rgba(255,107,53,0.3); }
+  to   { box-shadow: 0 0 10px rgba(255,107,53,0.7); }
+}
+
+/* ── Inventory Panel ─────────────────────── */
+.bt-inventory-inner {
+  max-width: 440px;
+  text-align: left;
+}
+
+.bt-inventory-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.bt-inventory-header .bt-overlay-title {
+  margin: 0;
+  flex: 1;
+  font-size: 1.2em;
+}
+
+.bt-inventory-count {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.bt-inventory-filters {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.bt-inv-filter-btn {
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.bt-inv-filter-btn:hover {
+  border-color: var(--accent);
+}
+
+.bt-inv-filter-btn.bt-inv-filter-active {
+  color: var(--background);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.bt-inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 6px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.bt-inventory-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px 10px;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  font-size: 0.88em;
+}
+
+/* ── Gear Card (inventory) ───────────────── */
+.bt-gear-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+  position: relative;
+}
+
+.bt-gear-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.bt-gear-card.bt-gear-equipped {
+  background: color-mix(in srgb, var(--accent) 8%, var(--background));
+}
+
+.bt-gear-card-name {
+  font-size: 0.68em;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.bt-gear-card-stat {
+  font-size: 0.62em;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.bt-gear-eq-tag {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  font-size: 0.55em;
+  font-weight: 700;
+  color: var(--background);
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* ── Gear Stat Comparison ────────────────── */
+.bt-gear-diff { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; margin-top: 2px; font-size: 0.55em; font-weight: 700; }
+.bt-diff-up { color: #4caf50; }
+.bt-diff-down { color: #f44336; }
+.bt-gear-current { border-color: var(--accent) !important; opacity: 0.6; }
+
+/* ── Gear Detail Modal ───────────────────── */
+.bt-gear-modal-inner {
+  text-align: center;
+  max-width: 300px;
+}
+
+.bt-gm-icon {
+  margin: 0 auto 8px;
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+
+.bt-gm-name {
+  margin: 0 0 4px;
+  font-size: 1.1em;
+}
+
+.bt-gm-rarity {
+  font-size: 0.85em;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-bottom: 4px;
+}
+
+.bt-gm-tier {
+  font-size: 0.78em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-bottom: 8px;
+}
+
+.bt-gm-main {
+  font-size: 1em;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.bt-gm-subs {
+  font-size: 0.88em;
+  margin-bottom: 12px;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.bt-gm-special {
+  font-size: 0.82em;
+  font-style: italic;
+  color: #ff6b35;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  border: 1px solid color-mix(in srgb, #ff6b35 25%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, #ff6b35 6%, var(--background));
+}
+
+.bt-gm-set {
+  font-size: 0.78em;
+  text-align: left;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--background));
+}
+
+.bt-gm-set-name {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.bt-gm-set-bonus {
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+}
+
+.bt-gm-set-bonus.bt-set-active {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.bt-gm-upgrade-cost {
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-top: 2px;
+}
+
+.bt-gm-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Skin Unlock Banner (results) ────────── */
+.bt-skin-unlock {
+  margin-bottom: 14px;
+  padding: 10px;
+  border: 1px solid #ff6b35;
+  border-radius: 6px;
+  background: color-mix(in srgb, #ff6b35 8%, var(--background));
+  animation: bt-legendary-glow 2s ease-in-out infinite alternate;
+}
+
+.bt-skin-unlock-title {
+  color: #ff6b35;
+  font-size: 1em;
+  margin: 0 0 8px;
+}
+
+.bt-skin-unlock-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.bt-skin-unlock-arrow {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.bt-skin-unlock-sprite {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+
+.bt-skin-unlock-label {
+  font-size: 0.8em;
+  font-weight: 600;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.bt-skin-unlock-name {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #ff6b35;
+  margin-top: 4px;
+}
+
+.bt-skin-unlock-desc {
+  font-size: 0.72em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  font-style: italic;
+}
+
+.bt-skin-unlock-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Skin Toggle (team builder) ────────── */
+.bt-skin-toggle {
+  width: 22px;
+  height: 22px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--foreground) 5%, var(--background));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  font-weight: 700;
+  font-family: inherit;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  transition: border-color 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.bt-skin-toggle:hover {
+  border-color: #ff6b35;
+  color: #ff6b35;
+}
+
+.bt-skin-toggle.bt-skin-active {
+  border-color: #ff6b35;
+  color: #ff6b35;
+  background: color-mix(in srgb, #ff6b35 12%, var(--background));
+}
+
+/* ── Dungeon Card Skin Reward Hint ─────── */
+.bt-dungeon-skin-hint {
+  font-size: 0.68em;
+  font-weight: 600;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.bt-dungeon-skin-hint.bt-skin-locked {
+  color: #ff6b35;
+  background: color-mix(in srgb, #ff6b35 8%, transparent);
+}
+
+.bt-dungeon-skin-hint.bt-skin-earned {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 480px) {
+  .bt-intro {
+    margin-bottom: 12px;
+  }
+
+  .bt-dungeon-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+
+  .bt-dungeon-card {
+    padding: 10px 8px;
+  }
+
+  .bt-team-slots {
+    gap: 6px;
+  }
+
+  .bt-team-slot {
+    width: 80px;
+    height: auto;
+    min-height: 90px;
+    padding: 6px;
+  }
+
+  .bt-creature-grid {
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    gap: 6px;
+  }
+
+  .bt-creature-card {
+    padding: 6px 4px;
+  }
+
+  .bt-wave-hud {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 6px 10px;
+    font-size: 0.85em;
+  }
+
+  .bt-overlay-inner {
+    padding: 20px 16px;
+  }
+
+  .bt-overlay-title {
+    font-size: 1.3em;
+  }
+
+  .bt-btn {
+    padding: 8px 24px;
+    font-size: 1em;
+  }
+
+  .bt-stats {
+    margin-top: 16px;
+    padding: 10px;
+  }
+
+  .bt-difficulty-picker {
+    gap: 4px;
+  }
+
+  .bt-diff-btn {
+    padding: 5px 12px;
+    font-size: 0.78em;
+  }
+
+  .bt-inventory-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+
+  .bt-team-gear-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bt-gear-modal-inner {
+    max-width: 260px;
+  }
+
+  .bt-select-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

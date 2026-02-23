@@ -1,0 +1,180 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="bt-intro">
+    {{ .Content }}
+  </div>
+
+  <div id="battle-app">
+    <!-- Screen 1: Dungeon Select -->
+    <div id="bt-dungeon-select" class="bt-screen">
+      <div class="bt-select-header">
+        <h2 class="bt-section-title">> select dungeon</h2>
+        <button id="bt-inventory-btn" class="bt-btn bt-btn-small">Inventory</button>
+      </div>
+      <div id="bt-dungeon-grid" class="bt-dungeon-grid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Screen 2: Team Builder -->
+    <div id="bt-team-screen" class="bt-screen bt-hidden">
+      <h2 class="bt-section-title">> build your team</h2>
+      <div id="bt-dungeon-info" class="bt-dungeon-info">
+        <span id="bt-dungeon-name" class="bt-dungeon-info-name"></span>
+        <span id="bt-dungeon-type-lock" class="bt-dungeon-info-lock"></span>
+      </div>
+
+      <!-- Difficulty picker -->
+      <div id="bt-difficulty-picker" class="bt-difficulty-picker">
+        <!-- Filled by JS -->
+      </div>
+
+      <!-- Team slots -->
+      <div class="bt-team-slots">
+        <div class="bt-team-slot" data-slot="0">
+          <div class="bt-team-slot-sprite"></div>
+          <div class="bt-team-slot-label">Slot 1</div>
+        </div>
+        <div class="bt-team-slot" data-slot="1">
+          <div class="bt-team-slot-sprite"></div>
+          <div class="bt-team-slot-label">Slot 2</div>
+        </div>
+        <div class="bt-team-slot" data-slot="2">
+          <div class="bt-team-slot-sprite"></div>
+          <div class="bt-team-slot-label">Slot 3</div>
+        </div>
+      </div>
+
+      <div class="bt-team-actions">
+        <button id="bt-enter-dungeon" class="bt-btn" disabled>Enter Dungeon</button>
+        <button id="bt-auto-gear" class="bt-btn bt-btn-small bt-btn-secondary">Auto Gear</button>
+        <button id="bt-back-to-dungeons" class="bt-btn bt-btn-secondary">Back</button>
+      </div>
+
+      <!-- Creature picker -->
+      <h3 class="bt-section-title bt-section-sub">> available creatures</h3>
+      <div id="bt-creature-picker" class="bt-creature-grid">
+        <!-- Filled by JS -->
+      </div>
+      <div id="bt-no-pets" class="bt-no-pets bt-hidden">
+        <p>You don't have any creatures yet!</p>
+        <a href="/pets/hatchery/" class="bt-btn">Visit the Hatchery</a>
+      </div>
+    </div>
+
+    <!-- Screen 3: Auto-Battle -->
+    <div id="bt-battle-screen" class="bt-screen bt-hidden">
+      <!-- Wave HUD -->
+      <div class="bt-wave-hud">
+        <span id="bt-wave-label" class="bt-wave-label">Wave 1/3</span>
+        <span id="bt-dungeon-label" class="bt-wave-dungeon"></span>
+        <div class="bt-speed-controls">
+          <button id="bt-speed-btn" class="bt-speed-btn" title="Toggle speed">x1</button>
+        </div>
+      </div>
+
+      <!-- Wave progress bar -->
+      <div class="bt-wave-progress">
+        <div id="bt-wave-bar" class="bt-wave-bar" style="width: 0%"></div>
+      </div>
+
+      <!-- Canvas wrapper -->
+      <div id="bt-game-area" class="bt-game-area">
+        <div class="bt-canvas-wrap">
+          <canvas id="bt-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Battle controls -->
+      <div class="bt-battle-controls">
+        <button id="bt-skip-wave" class="bt-btn bt-btn-small">Skip Wave</button>
+        <button id="bt-retreat-btn" class="bt-btn bt-btn-small bt-btn-danger">Retreat</button>
+      </div>
+
+      <!-- Battle log -->
+      <div id="bt-log" class="bt-log">
+        <div id="bt-log-inner" class="bt-log-inner"></div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Results Overlay -->
+    <div id="bt-results-overlay" class="bt-overlay bt-hidden">
+      <div class="bt-overlay-inner bt-results-panel">
+        <h2 id="bt-results-title" class="bt-overlay-title">Dungeon Cleared!</h2>
+        <div class="bt-results">
+          <span class="bt-result-label">Waves</span><span id="bt-result-waves" class="bt-result-value">0/0</span>
+          <span class="bt-result-label">XP Earned</span><span id="bt-result-xp" class="bt-result-value">0</span>
+          <span class="bt-result-label">Coins</span><span id="bt-result-coins" class="bt-result-value">0</span>
+          <span class="bt-result-label">JB Bonus</span><span id="bt-result-jb" class="bt-result-value">0</span>
+        </div>
+        <div id="bt-first-clear" class="bt-first-clear bt-hidden">
+          First Clear Bonus!
+        </div>
+        <div id="bt-skin-unlock" class="bt-skin-unlock bt-hidden">
+          <h3 class="bt-skin-unlock-title">Skin Unlocked!</h3>
+          <div id="bt-skin-unlock-content" class="bt-skin-unlock-content"></div>
+        </div>
+        <div id="bt-creature-xp-list" class="bt-creature-xp-list">
+          <!-- Per-creature XP filled by JS -->
+        </div>
+        <div id="bt-gear-drops" class="bt-gear-drops bt-hidden">
+          <h3 class="bt-gear-drops-title">Gear Drops</h3>
+          <div id="bt-gear-drop-list" class="bt-gear-drop-list">
+          </div>
+        </div>
+        <div class="bt-results-actions">
+          <button id="bt-results-continue" class="bt-btn">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Panel (overlay) -->
+    <div id="bt-inventory-panel" class="bt-overlay bt-hidden">
+      <div class="bt-overlay-inner bt-inventory-inner">
+        <div class="bt-inventory-header">
+          <h2 id="bt-inventory-title" class="bt-overlay-title">Inventory</h2>
+          <span id="bt-inventory-count" class="bt-inventory-count">0/50</span>
+          <button id="bt-inventory-close" class="bt-btn bt-btn-small bt-btn-secondary">Close</button>
+        </div>
+        <div id="bt-inventory-filters" class="bt-inventory-filters">
+          <!-- Filled by JS -->
+        </div>
+        <div id="bt-inventory-grid" class="bt-inventory-grid">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Gear Detail Modal -->
+    <div id="bt-gear-modal" class="bt-overlay bt-hidden">
+      <div class="bt-overlay-inner bt-gear-modal-inner">
+        <div id="bt-gm-icon" class="bt-gm-icon"></div>
+        <h3 id="bt-gm-name" class="bt-gm-name"></h3>
+        <div id="bt-gm-rarity" class="bt-gm-rarity"></div>
+        <div id="bt-gm-tier" class="bt-gm-tier"></div>
+        <div id="bt-gm-main" class="bt-gm-main"></div>
+        <div id="bt-gm-subs" class="bt-gm-subs"></div>
+        <div id="bt-gm-special" class="bt-gm-special bt-hidden"></div>
+        <div id="bt-gm-set" class="bt-gm-set bt-hidden"></div>
+        <div class="bt-gm-actions">
+          <button id="bt-gm-equip" class="bt-btn bt-btn-small">Equip...</button>
+          <button id="bt-gm-upgrade" class="bt-btn bt-btn-small bt-hidden">Upgrade</button>
+          <button id="bt-gm-sell" class="bt-btn bt-btn-small bt-btn-danger">Sell</button>
+          <button id="bt-gm-close" class="bt-btn bt-btn-small bt-btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dungeon Stats -->
+    <div id="bt-dungeon-stats" class="bt-stats">
+      <h3 class="bt-stats-title">Dungeon Stats</h3>
+      <div class="bt-stats-grid">
+        <span class="bt-stat-label">Raids</span><span id="bt-stat-raids" class="bt-stat-value">0</span>
+        <span class="bt-stat-label">Clears</span><span id="bt-stat-clears" class="bt-stat-value">0</span>
+        <span class="bt-stat-label">Total XP</span><span id="bt-stat-xp" class="bt-stat-value">0</span>
+        <span class="bt-stat-label">Total Coins</span><span id="bt-stat-coins" class="bt-stat-value">0</span>
+      </div>
+      <button id="bt-reset-stats" class="bt-btn bt-btn-small bt-btn-danger">Reset Stats</button>
+    </div>
+  </div>
+{{ end }}

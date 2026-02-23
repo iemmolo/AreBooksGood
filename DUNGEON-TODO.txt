@@ -1,0 +1,71 @@
+Pet Dungeon System — Auto-Battle Raids + Gear & Stats
+======================================================
+
+## Phase 1 — Core Dungeon (Complete)
+
+- [x] Create DUNGEON-TODO.txt tracking doc
+- [x] Deploy assets (VFX sheet, enemy sprites, gear icons)
+- [x] Create dungeon-enemies.json (enemy defs with sprite data)
+- [x] Rewrite single.html (dungeon select, team builder, battle, results)
+- [x] Rewrite battle.css (dungeon cards, team slots, 3v3, speed controls, results)
+- [x] Rewrite battle.js (dungeon system, auto-battle, 3v3 rendering, VFX)
+- [x] Update content/games/battle/index.md front matter
+
+## Phase 2 — Stats, Gear & Difficulty (Complete)
+
+- [x] Deploy gear sprite sheets (gear-blue.png, gear-gold.png, gear-purple.png)
+- [x] Create dungeongear.json (gear templates, stat ranges, drop rates, difficulty config)
+- [x] Add creature base stats (HP/ATK/DEF/SPD/CRI from tier/type/level)
+- [x] Type stat leanings (Fire +ATK, Nature +HP, Tech +CRI, Aqua +DEF, Shadow +SPD, Mystic +ATK/DEF)
+- [x] Update calcDamage formula: power * (ATK/DEF ratio) * STAB * typeMult * atkBuff * critMult * variance
+- [x] Turn order by SPD stat (faster creatures go first)
+- [x] Crit system: CRI% chance for 1.5x damage + gold "CRIT!" floating text
+- [x] Difficulty system (Normal/Hard/Brutal) with RSL-style progression
+  - Must clear Normal to unlock Hard, Hard to unlock Brutal (per dungeon)
+  - Hard: 1.5x HP/1.3x ATK, 1.5x rewards
+  - Brutal: 2.2x HP/1.8x ATK, 2.5x rewards
+- [x] Difficulty picker in team builder + difficulty badges on dungeon cards
+- [x] Per-difficulty dungeon progress tracking (migrates old format)
+- [x] Gear drop generation with rarity-weighted rolls per difficulty
+  - Normal: 0-1 drops (70% common, 25% uncommon, 5% rare)
+  - Hard: 1-2 drops (30% common, 45% uncommon, 20% rare, 5% epic)
+  - Brutal: 1-3 drops (30% uncommon, 45% rare, 25% epic)
+  - First clear guarantees 1+ drop
+- [x] 4 gear rarities: Common (grey), Uncommon (green), Rare (gold), Epic (purple glow)
+- [x] 3 gear slots per creature: Weapon (ATK), Armor (DEF+HP), Accessory (SPD+CRI)
+- [x] Sub-stats: 0/1/2/3 for common/uncommon/rare/epic
+- [x] Gear tier/level requirements (T1: any, T2: Lv2+, T3: Lv3+, legendaries = eff. Lv3)
+- [x] Inventory panel (grid, filter by slot, count badge, max 50 items)
+- [x] Gear detail modal (sprite, name, rarity, main stat, sub-stats, tier)
+- [x] Sell system (common=5, uncommon=15, rare=50, epic=150 coins)
+- [x] Equip/unequip from team builder gear slots
+- [x] Equipped gear modifies combat stats (ATK, DEF, HP, SPD, CRI)
+- [x] Gear drops shown in results overlay with rarity borders
+- [x] Creature stats shown in team builder cards (A/D/S)
+- [x] Epic rarity glow animation
+- [x] Mobile responsive for all new UI
+
+## Phase 3 — Stat Comparison, Balance, Boss Gear, Upgrades, Sets (Complete)
+
+- [x] Stat comparison: green/red diffs in equip picker, currently-equipped highlighting
+- [x] Balance pass: per-enemy DEF/SPD/CRI, brutal softened (2.0/1.6), normal drop rate buff
+- [x] Boss-specific legendary gear drops (7 unique legendaries, boss waves in dungeons 4-7)
+- [x] Legendary rarity: orange glow, special text in modal, sorted above epic
+- [x] Gear upgrade/enhance system: +1 main stat per level, coin cost, MAX +5
+- [x] Set bonuses: Slime Conqueror (3pc) + Abyssal Set (3pc), applied in combat
+- [x] Upgrade level shown in gear names (+N suffix)
+- [x] Upgrade bonuses applied to calcEquippedGearStats and stat comparison
+
+## Phase 4 — Alt Skin Unlocks (Complete)
+
+- [x] Add skinRewards mapping to dungeongear.json (8 dungeons → 8 creature alt skins)
+- [x] Skin unlock on Brutal first clear — dungeon progress as source of truth
+- [x] Skin unlock banner in results overlay (before/after sprite, name, desc)
+- [x] Auto-set creature skin to 'alt' on unlock + persist skinUnlocked flag
+- [x] Skin toggle in team builder (S button next to gear slots)
+- [x] Skin toggle in hatchery owned pet cards
+- [x] Alt sheet support in pet.js (updateSprite, renderPreview API)
+- [x] Alt sheet support in shop.js (renderSpritePreview, collection, evolution, modal)
+- [x] Alt sheet in battle canvas (spriteKey for preload + drawPlayerSprite)
+- [x] Dungeon card skin reward hints (locked/earned indicator)
+- [x] CSS for skin unlock banner, skin toggle, dungeon skin hints

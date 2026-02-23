@@ -176,6 +176,7 @@
   var petCatalog = null;
   var petId = null;
   var petLevel = 1;
+  var petSkin = 'default';
   var spriteSheet = null;
   var spriteFrameCount = 0;
   var spriteMaxLevel = 3;
@@ -189,12 +190,14 @@
         if (ps.activePet && ps.pets && ps.pets[ps.activePet]) {
           petId = ps.activePet;
           petLevel = ps.pets[ps.activePet].level || 1;
+          petSkin = ps.pets[ps.activePet].skin || 'default';
           return;
         }
       }
     } catch (e) {}
     petId = null;
     petLevel = 1;
+    petSkin = 'default';
   }
 
   function loadSpriteData(cb) {
@@ -250,7 +253,7 @@
       spriteSheet = img;
       renderPetPreview();
     };
-    img.src = pd.sheet;
+    img.src = (petSkin === 'alt' && pd.altSheet) ? pd.altSheet : pd.sheet;
   }
 
   function renderPetPreview() {

@@ -211,6 +211,7 @@
             }
           }
         }
+        if (saved.unlockedSkins) state.unlockedSkins = saved.unlockedSkins;
         return state;
       }
     } catch (e) {}
@@ -220,6 +221,32 @@
   function savePetState() {
     if (!petState) return;
     try {
+      // Merge fields from localStorage before saving, so other scripts
+      // (e.g. battle.js dungeon rewards / skin unlocks) don't get overwritten
+      var freshRaw = localStorage.getItem(PET_STORAGE_KEY);
+      if (freshRaw) {
+        var fresh = JSON.parse(freshRaw);
+        if (fresh.pets && petState.pets) {
+          var ids = Object.keys(fresh.pets);
+          for (var i = 0; i < ids.length; i++) {
+            var pid = ids[i];
+            if (petState.pets[pid] && fresh.pets[pid]) {
+              petState.pets[pid].mergeXP = fresh.pets[pid].mergeXP || 0;
+              // Preserve skin data written by battle.js
+              if (fresh.pets[pid].skin) petState.pets[pid].skin = fresh.pets[pid].skin;
+              if (fresh.pets[pid].skinUnlocked) petState.pets[pid].skinUnlocked = fresh.pets[pid].skinUnlocked;
+            }
+          }
+        }
+        // Preserve global unlockedSkins map
+        if (fresh.unlockedSkins) {
+          if (!petState.unlockedSkins) petState.unlockedSkins = {};
+          var skinIds = Object.keys(fresh.unlockedSkins);
+          for (var si = 0; si < skinIds.length; si++) {
+            petState.unlockedSkins[skinIds[si]] = fresh.unlockedSkins[skinIds[si]];
+          }
+        }
+      }
       localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(petState));
     } catch (e) {}
   }
@@ -242,6 +269,13 @@
     return info ? info.frames : 1;
   }
 
+  function getActiveSheet(info, petId) {
+    if (!info) return null;
+    var pet = petState ? petState.pets[petId] : null;
+    if (pet && pet.skin === 'alt' && info.altSheet) return info.altSheet;
+    return info.sheet;
+  }
+
   function updateSprite() {
     if (!spriteEl || !petState || !petState.activePet) return;
 
@@ -253,6 +287,7 @@
 
     var frameCount = info.frames || 1;
     var fw = info.frameWidth || 48;
+    var sheetUrl = getActiveSheet(info, petState.activePet);
 
     // Each frame in the strip is an evolution level, not an animation frame
     // Clamp to maxLevel from sprite data (prevents blank frames on 2EVO/Uniques)
@@ -271,17 +306,18 @@
       imgEl.className = 'pet-sprite-img';
       imgEl.style.width = SPRITE_DISPLAY_SIZE + 'px';
       imgEl.style.height = SPRITE_DISPLAY_SIZE + 'px';
-      imgEl.style.backgroundImage = 'url(' + info.sheet + ')';
+      imgEl.style.backgroundImage = 'url(' + sheetUrl + ')';
       imgEl.style.backgroundSize = (fw * frameCount) + 'px ' + info.frameHeight + 'px';
       imgEl.style.imageRendering = 'pixelated';
       spriteEl.appendChild(imgEl);
     }
 
-    // Update background-image if pet changed
-    if (imgEl.getAttribute('data-pet') !== petState.activePet) {
-      imgEl.style.backgroundImage = 'url(' + info.sheet + ')';
+    // Update background-image if pet changed or skin changed
+    var skinKey = petState.activePet + ':' + (pet.skin || 'default');
+    if (imgEl.getAttribute('data-pet') !== skinKey) {
+      imgEl.style.backgroundImage = 'url(' + sheetUrl + ')';
       imgEl.style.backgroundSize = (fw * frameCount) + 'px ' + info.frameHeight + 'px';
-      imgEl.setAttribute('data-pet', petState.activePet);
+      imgEl.setAttribute('data-pet', skinKey);
     }
 
     imgEl.style.backgroundPosition = '-' + (frameIdx * fw) + 'px 0';
@@ -1254,17 +1290,18 @@
 
     // API for shop sprite previews
     window.PetSprites = {
-      renderPreview: function (petId, level) {
+      renderPreview: function (petId, level, skin) {
         var info = getSpriteInfo(petId);
         if (!info) return null;
         var fw = info.frameWidth || 48;
+        var sheetUrl = (skin === 'alt' && info.altSheet) ? info.altSheet : info.sheet;
         // Clamp level to maxLevel from spriteData
         var frameOffset = info.frameOffset || 0;
         var frameIdx = Math.min(frameOffset + (level || 1) - 1, (info.frames || 3) - 1);
         var el = document.createElement('div');
         el.style.width = '48px';
         el.style.height = '48px';
-        el.style.backgroundImage = 'url(' + info.sheet + ')';
+        el.style.backgroundImage = 'url(' + sheetUrl + ')';
         el.style.backgroundSize = (fw * info.frames) + 'px ' + info.frameHeight + 'px';
         el.style.backgroundPosition = '-' + (frameIdx * fw) + 'px 0';
         el.style.imageRendering = 'pixelated';
@@ -1459,7 +1496,7 @@
         imgEl.className = 'pet-sprite-img';
         imgEl.style.width = displaySize + 'px';
         imgEl.style.height = displaySize + 'px';
-        imgEl.style.backgroundImage = 'url(' + info.sheet + ')';
+        imgEl.style.backgroundImage = 'url(' + getActiveSheet(info, petState.activePet) + ')';
         imgEl.style.backgroundSize = (fw * frames * ratio) + 'px ' + (fh * ratio) + 'px';
         var frameOffset = info.frameOffset || 0;
         var frameIdx = Math.min(frameOffset + (pet.level || 1) - 1, frames - 1);

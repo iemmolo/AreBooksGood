@@ -1,0 +1,158 @@
+{
+  "slime-green": {
+    "name": "Green Slime",
+    "sprite": "/images/pets/enemies/slime-green.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "nature", "hpBase": 40, "atkBase": 8, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-blue": {
+    "name": "Blue Slime",
+    "sprite": "/images/pets/enemies/slime-blue.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "aqua", "hpBase": 40, "atkBase": 8, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-pink": {
+    "name": "Pink Slime",
+    "sprite": "/images/pets/enemies/slime-pink.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "fire", "hpBase": 40, "atkBase": 8, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-black": {
+    "name": "Black Slime",
+    "sprite": "/images/pets/enemies/slime-black.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "shadow", "hpBase": 45, "atkBase": 10, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-golden": {
+    "name": "Golden Slime",
+    "sprite": "/images/pets/enemies/slime-golden.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 50, "atkBase": 10, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-light-blue": {
+    "name": "Frost Slime",
+    "sprite": "/images/pets/enemies/slime-light-blue.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "aqua", "hpBase": 42, "atkBase": 9, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-purple": {
+    "name": "Hex Slime",
+    "sprite": "/images/pets/enemies/slime-purple.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "mystic", "hpBase": 45, "atkBase": 9, "defBase": 5, "spdBase": 7, "criBase": 3, "isBoss": false
+  },
+  "slime-green-big": {
+    "name": "Giant Green Slime",
+    "sprite": "/images/pets/enemies/slime-green-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "nature", "hpBase": 100, "atkBase": 14, "defBase": 8, "spdBase": 5, "criBase": 5, "isBoss": true
+  },
+  "slime-blue-big": {
+    "name": "Giant Blue Slime",
+    "sprite": "/images/pets/enemies/slime-blue-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "aqua", "hpBase": 100, "atkBase": 14, "defBase": 8, "spdBase": 5, "criBase": 5, "isBoss": true
+  },
+  "slime-black-big": {
+    "name": "Giant Shadow Slime",
+    "sprite": "/images/pets/enemies/slime-black-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "shadow", "hpBase": 110, "atkBase": 15, "defBase": 8, "spdBase": 5, "criBase": 5, "isBoss": true
+  },
+  "slime-golden-big": {
+    "name": "Giant Gold Slime",
+    "sprite": "/images/pets/enemies/slime-golden-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 120, "atkBase": 16, "defBase": 8, "spdBase": 5, "criBase": 5, "isBoss": true
+  },
+  "slime-pink-big": {
+    "name": "Giant Ember Slime",
+    "sprite": "/images/pets/enemies/slime-pink-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "fire", "hpBase": 100, "atkBase": 14, "defBase": 8, "spdBase": 5, "criBase": 5, "isBoss": true
+  },
+  "myconid-green": {
+    "name": "Forest Myconid",
+    "sprite": "/images/pets/enemies/myconid-green.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "nature", "hpBase": 50, "atkBase": 10, "defBase": 7, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "myconid-blue": {
+    "name": "Aqua Myconid",
+    "sprite": "/images/pets/enemies/myconid-blue.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "aqua", "hpBase": 50, "atkBase": 10, "defBase": 7, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "myconid-red": {
+    "name": "Ember Myconid",
+    "sprite": "/images/pets/enemies/myconid-red.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "fire", "hpBase": 55, "atkBase": 11, "defBase": 7, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "myconid-pink": {
+    "name": "Mystic Myconid",
+    "sprite": "/images/pets/enemies/myconid-pink.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "mystic", "hpBase": 55, "atkBase": 11, "defBase": 7, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "myconid-purple": {
+    "name": "Shadow Myconid",
+    "sprite": "/images/pets/enemies/myconid-purple.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "shadow", "hpBase": 55, "atkBase": 12, "defBase": 7, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "goblin-spear": {
+    "name": "Spear Goblin",
+    "sprite": "/images/pets/enemies/goblin-spear.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 55, "atkBase": 12, "defBase": 6, "spdBase": 10, "criBase": 3, "isBoss": false
+  },
+  "goblin-archer": {
+    "name": "Archer Goblin",
+    "sprite": "/images/pets/enemies/goblin-archer.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 48, "atkBase": 13, "defBase": 4, "spdBase": 12, "criBase": 3, "isBoss": false
+  },
+  "goblin-bomb": {
+    "name": "Bomb Goblin",
+    "sprite": "/images/pets/enemies/goblin-bomb.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 45, "atkBase": 14, "defBase": 5, "spdBase": 8, "criBase": 3, "isBoss": false
+  },
+  "spike": {
+    "name": "Spike",
+    "sprite": "/images/pets/enemies/spike.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "shadow", "hpBase": 60, "atkBase": 13, "defBase": 9, "spdBase": 9, "criBase": 3, "isBoss": false
+  },
+  "sprout-blue": {
+    "name": "Blue Sprout",
+    "sprite": "/images/pets/enemies/sprout-blue.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 1, "row": 0,
+    "type": "nature", "hpBase": 35, "atkBase": 7, "defBase": 3, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "sprout-pink": {
+    "name": "Pink Sprout",
+    "sprite": "/images/pets/enemies/sprout-pink.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 1, "row": 0,
+    "type": "nature", "hpBase": 38, "atkBase": 8, "defBase": 3, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "sprout-purple": {
+    "name": "Shadow Sprout",
+    "sprite": "/images/pets/enemies/sprout-purple.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 1, "row": 0,
+    "type": "shadow", "hpBase": 38, "atkBase": 8, "defBase": 3, "spdBase": 6, "criBase": 3, "isBoss": false
+  },
+  "venom-bloom": {
+    "name": "Venom Bloom",
+    "sprite": "/images/pets/enemies/venom-bloom.png",
+    "frameWidth": 48, "frameHeight": 48, "frames": 3, "row": 0,
+    "type": "nature", "hpBase": 130, "atkBase": 16, "defBase": 10, "spdBase": 6, "criBase": 8, "isBoss": true
+  },
+  "mimic": {
+    "name": "Mimic",
+    "sprite": "/images/pets/enemies/mimic.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "shadow", "hpBase": 140, "atkBase": 17, "defBase": 7, "spdBase": 11, "criBase": 12, "isBoss": true
+  }
+}
