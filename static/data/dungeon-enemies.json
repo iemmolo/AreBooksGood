@@ -242,13 +242,13 @@
   "pumpkin-boss": {
     "name": "Pumpkin Knight",
     "sprite": "/images/pets/enemies/pumpkin-boss.png",
-    "frameWidth": 224, "frameHeight": 96, "frames": 2, "row": 0,
+    "frameWidth": 112, "frameHeight": 96, "frames": 4, "row": 0,
     "type": "nature", "hpBase": 170, "atkBase": 19, "defBase": 13, "spdBase": 10, "criBase": 9, "isBoss": true
   },
   "cloud-boss": {
     "name": "Storm Cloud",
     "sprite": "/images/pets/enemies/cloud-boss.png",
-    "frameWidth": 192, "frameHeight": 112, "frames": 3, "row": 0,
+    "frameWidth": 112, "frameHeight": 112, "frames": 4, "row": 0,
     "type": "aqua", "hpBase": 175, "atkBase": 18, "defBase": 14, "spdBase": 9, "criBase": 8, "isBoss": true
   }
 }

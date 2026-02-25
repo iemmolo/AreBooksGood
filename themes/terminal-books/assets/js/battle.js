@@ -4459,7 +4459,13 @@
     var drawY = y + (size - drawH);
     ctx.save();
     ctx.globalAlpha = fighter.opacity;
-    ctx.drawImage(titanSheetImg, sx, sy, fw, fh, drawX, drawY, drawW, drawH);
+    if (cfg.flip) {
+      ctx.translate(drawX + drawW, drawY);
+      ctx.scale(-1, 1);
+      ctx.drawImage(titanSheetImg, sx, sy, fw, fh, 0, 0, drawW, drawH);
+    } else {
+      ctx.drawImage(titanSheetImg, sx, sy, fw, fh, drawX, drawY, drawW, drawH);
+    }
     ctx.restore();
   }
 
