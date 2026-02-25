@@ -23,118 +23,118 @@
 {{- $terminal := resources.Get "css/terminal.css" -}}
 {{- $themes := resources.Get "css/themes.css" -}}
 {{- $custom := resources.Get "css/custom.css" -}}
-{{- $styles := slice $terminal $themes $custom | resources.Concat "css/bundle.css" | minify -}}
+{{- $styles := slice $terminal $themes $custom | resources.Concat "css/bundle.css" | minify | fingerprint -}}
 <link rel="stylesheet" href="{{ $styles.RelPermalink }}">
 
 {{/* Chess CSS — on chess and chess-play pages */}}
 {{ if or (eq .Layout "chess") (eq .Type "chess-play") (eq .Type "chess-learn") (eq .Type "chess-openings") -}}
-  {{- $chess := resources.Get "css/chess.css" | minify -}}
+  {{- $chess := resources.Get "css/chess.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $chess.RelPermalink }}">
 {{- end }}
 
 {{/* Blackjack CSS */}}
 {{ if eq .Type "blackjack" -}}
-  {{- $blackjack := resources.Get "css/blackjack.css" | minify -}}
+  {{- $blackjack := resources.Get "css/blackjack.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $blackjack.RelPermalink }}">
 {{- end }}
 
 {{/* Casino Wars CSS */}}
 {{ if eq .Type "casino-wars" -}}
-  {{- $cw := resources.Get "css/casino-wars.css" | minify -}}
+  {{- $cw := resources.Get "css/casino-wars.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $cw.RelPermalink }}">
 {{- end }}
 
 {{/* Sudoku CSS */}}
 {{ if eq .Type "sudoku" -}}
-  {{- $sudoku := resources.Get "css/sudoku.css" | minify -}}
+  {{- $sudoku := resources.Get "css/sudoku.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $sudoku.RelPermalink }}">
 {{- end }}
 
 {{/* Wordle CSS */}}
 {{ if eq .Type "wordle" -}}
-  {{- $wordle := resources.Get "css/wordle.css" | minify -}}
+  {{- $wordle := resources.Get "css/wordle.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $wordle.RelPermalink }}">
 {{- end }}
 
 {{/* Poker CSS */}}
 {{ if eq .Type "poker" -}}
-  {{- $poker := resources.Get "css/poker.css" | minify -}}
+  {{- $poker := resources.Get "css/poker.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $poker.RelPermalink }}">
 {{- end }}
 
 {{/* Slots CSS */}}
 {{ if eq .Type "slots" -}}
-  {{- $slots := resources.Get "css/slots.css" | minify -}}
+  {{- $slots := resources.Get "css/slots.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $slots.RelPermalink }}">
 {{- end }}
 
 {{/* Flappy Bird CSS */}}
 {{ if eq .Type "flappy" -}}
-  {{- $flappy := resources.Get "css/flappy.css" | minify -}}
+  {{- $flappy := resources.Get "css/flappy.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $flappy.RelPermalink }}">
 {{- end }}
 
 {{/* Doodle Jump CSS */}}
 {{ if eq .Type "doodle-jump" -}}
-  {{- $dj := resources.Get "css/doodle-jump.css" | minify -}}
+  {{- $dj := resources.Get "css/doodle-jump.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $dj.RelPermalink }}">
 {{- end }}
 
 {{/* Tower Defense CSS */}}
 {{ if eq .Type "tower-defense" -}}
-  {{- $td := resources.Get "css/tower-defense.css" | minify -}}
+  {{- $td := resources.Get "css/tower-defense.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $td.RelPermalink }}">
 {{- end }}
 
 {{/* Trebuchet CSS */}}
 {{ if eq .Type "trebuchet" -}}
-  {{- $tb := resources.Get "css/trebuchet.css" | minify -}}
+  {{- $tb := resources.Get "css/trebuchet.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $tb.RelPermalink }}">
 {{- end }}
 
 {{/* Battle CSS */}}
 {{ if eq .Type "battle" -}}
-  {{- $bt := resources.Get "css/battle.css" | minify -}}
+  {{- $bt := resources.Get "css/battle.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $bt.RelPermalink }}">
 {{- end }}
 
 {{/* Farm Page CSS */}}
 {{ if eq .Type "farm-page" -}}
-  {{- $fpcss := resources.Get "css/farm-page.css" | minify -}}
+  {{- $fpcss := resources.Get "css/farm-page.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $fpcss.RelPermalink }}">
 {{- end }}
 
 {{/* Pet CSS (global) */}}
-{{- $petcss := resources.Get "css/pet.css" | minify -}}
+{{- $petcss := resources.Get "css/pet.css" | minify | fingerprint -}}
 <link rel="stylesheet" href="{{ $petcss.RelPermalink }}">
 
 {{/* Farm CSS (global) */}}
-{{- $farmcss := resources.Get "css/farm.css" | minify -}}
+{{- $farmcss := resources.Get "css/farm.css" | minify | fingerprint -}}
 <link rel="stylesheet" href="{{ $farmcss.RelPermalink }}">
 
 {{/* Compendium CSS (global) */}}
-{{- $compcss := resources.Get "css/compendium.css" | minify -}}
+{{- $compcss := resources.Get "css/compendium.css" | minify | fingerprint -}}
 <link rel="stylesheet" href="{{ $compcss.RelPermalink }}">
 
 {{/* Gear CSS (global) */}}
-{{- $gearcss := resources.Get "css/gear.css" | minify -}}
+{{- $gearcss := resources.Get "css/gear.css" | minify | fingerprint -}}
 <link rel="stylesheet" href="{{ $gearcss.RelPermalink }}">
 
 {{/* Gear Page CSS */}}
 {{ if eq .Type "gear" -}}
-  {{- $gpcss := resources.Get "css/gear-page.css" | minify -}}
+  {{- $gpcss := resources.Get "css/gear-page.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $gpcss.RelPermalink }}">
 {{- end }}
 
 {{/* Silk Road CSS */}}
 {{ if eq .Type "silk-road" -}}
-  {{- $sr := resources.Get "css/silk-road.css" | minify -}}
+  {{- $sr := resources.Get "css/silk-road.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $sr.RelPermalink }}">
 {{- end }}
 
 {{/* Pet Shop CSS */}}
 {{ if or (eq .Type "hatchery") (eq .Type "evolution") (eq .Type "collection") -}}
-  {{- $shop := resources.Get "css/shop.css" | minify -}}
+  {{- $shop := resources.Get "css/shop.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $shop.RelPermalink }}">
 {{- end }}
 

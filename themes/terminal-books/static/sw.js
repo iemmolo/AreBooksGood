@@ -1,4 +1,4 @@
-var CACHE_NAME = 'abg-v1';
+var CACHE_NAME = 'abg-v2';
 
 self.addEventListener('install', function(event) {
   self.skipWaiting();
