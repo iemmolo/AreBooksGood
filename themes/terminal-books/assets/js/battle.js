@@ -1799,7 +1799,14 @@
           break;
         case 'lunge':
           // Attacker slides toward target over several frames
-          if (item.fighter && item.fighter.isTitan && titanAnim.config) titanAnimSetAnim('attack');
+          if (item.fighter && item.fighter.isTitan && titanAnim.config) {
+            if (titanAnim.config.anims.walk) {
+              titanAnim.chainAttack = true;
+              titanAnimSetAnim('walk');
+            } else {
+              titanAnimSetAnim('attack');
+            }
+          }
           if (skipWave) {
             next();
           } else {
@@ -4274,36 +4281,39 @@
   function showTitanScreen() {
     if (!titanScreen) return;
     loadTitanState();
-    // Pick this week's titan from titanSprites config
     var titanIds = gearData && gearData.titanSprites ? Object.keys(gearData.titanSprites) : [];
-    var weekSeed = Math.floor(Date.now() / (7 * 86400000));
-    var titanIdx = titanIds.length > 0 ? weekSeed % titanIds.length : 0;
-    var titanId = titanIds[titanIdx] || 'demon-slime';
-    var titanCfg = gearData && gearData.titanSprites ? gearData.titanSprites[titanId] : null;
-    var titanName = titanId.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
 
-    titanScreen.innerHTML = '<h2 class="bt-section-title">> world boss</h2>' +
-      '<div class="bt-titan-info">' +
-      '<div class="bt-titan-name">' + titanName + '</div>' +
-      '<div class="bt-titan-attempts">Attempts: ' + titanState.attemptsToday + '/3</div>' +
-      '<div class="bt-titan-kills">Total Kills: ' + titanState.kills + '</div>' +
-      '<div class="bt-titan-damage">Total Damage: ' + titanState.totalDamage + '</div>' +
-      (titanState.attemptsToday > 0 ?
-        '<button id="bt-titan-start" class="bt-btn">Challenge Boss</button>' :
-        '<div class="bt-titan-done">No attempts remaining today</div>') +
-      '</div>';
+    var html = '<h2 class="bt-section-title">> world boss</h2>' +
+      '<div class="bt-titan-attempts-bar">Attempts: ' + titanState.attemptsToday + '/3 &nbsp; | &nbsp; ' +
+      'Kills: ' + titanState.kills + ' &nbsp; | &nbsp; Damage: ' + titanState.totalDamage + '</div>' +
+      '<div class="bt-titan-grid">';
 
-    var startBtn = document.getElementById('bt-titan-start');
-    if (startBtn) {
-      startBtn.addEventListener('click', function () {
-        startTitanMode(titanId);
+    for (var i = 0; i < titanIds.length; i++) {
+      var tid = titanIds[i];
+      var tCfg = gearData.titanSprites[tid];
+      var tName = (tCfg && tCfg.name) || tid.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      var disabled = false; // TODO: restore titanState.attemptsToday <= 0
+      html += '<div class="bt-titan-card' + (disabled ? ' bt-titan-disabled' : '') + '" data-titan="' + tid + '">' +
+        '<div class="bt-titan-card-name">' + tName + '</div>' +
+        (disabled ? '<div class="bt-titan-done">No attempts left</div>' :
+          '<button class="bt-btn bt-titan-go" data-titan="' + tid + '">Challenge</button>') +
+        '</div>';
+    }
+
+    html += '</div>';
+    titanScreen.innerHTML = html;
+
+    var btns = titanScreen.querySelectorAll('.bt-titan-go');
+    for (var j = 0; j < btns.length; j++) {
+      btns[j].addEventListener('click', function () {
+        startTitanMode(this.getAttribute('data-titan'));
       });
     }
   }
 
   function createTitanFighter(titanId) {
     var titanCfg = gearData && gearData.titanSprites ? gearData.titanSprites[titanId] : null;
-    var titanName = titanId.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    var titanName = (titanCfg && titanCfg.name) || titanId.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
     var types = ['fire', 'nature', 'aqua', 'shadow', 'mystic', 'tech'];
     var titanType = types[Math.abs(titanId.length) % types.length];
     return {
@@ -4324,8 +4334,9 @@
   function startTitanMode(titanId) {
     gameMode = 'titan';
     loadTitanState();
-    if (titanState.attemptsToday <= 0) return;
-    titanState.attemptsToday--;
+    // TODO: restore attempt limit
+    // if (titanState.attemptsToday <= 0) return;
+    // titanState.attemptsToday--;
     saveTitanState();
 
     activeTitan = createTitanFighter(titanId);
@@ -4369,7 +4380,7 @@
   var titanAnim = {
     titanId: null, sheet: null, config: null,
     currentAnim: 'idle', frame: 0, timer: 0, loop: true,
-    phaseText: null, phaseTimer: 0
+    chainAttack: false, phaseText: null, phaseTimer: 0
   };
   var titanSheetImg = null;
 
@@ -4379,6 +4390,7 @@
     titanAnim.timer = 0;
     titanAnim.currentAnim = 'idle';
     titanAnim.loop = true;
+    titanAnim.chainAttack = false;
     titanAnim.phaseText = null;
     titanAnim.phaseTimer = 0;
     var cfg = gearData && gearData.titanSprites ? gearData.titanSprites[titanId] : null;
@@ -4396,7 +4408,7 @@
     titanAnim.currentAnim = name;
     titanAnim.frame = 0;
     titanAnim.timer = 0;
-    titanAnim.loop = (name === 'idle');
+    titanAnim.loop = (name === 'idle' || name === 'walk');
   }
 
   function titanAnimUpdate(dt) {
@@ -4409,7 +4421,11 @@
       titanAnim.timer -= speed;
       titanAnim.frame++;
       if (titanAnim.frame >= anim.frames) {
-        if (titanAnim.loop) {
+        if (titanAnim.currentAnim === 'walk' && titanAnim.chainAttack) {
+          // Walk finished during lunge — chain into attack
+          titanAnim.chainAttack = false;
+          titanAnimSetAnim('attack');
+        } else if (titanAnim.loop) {
           titanAnim.frame = 0;
         } else {
           titanAnim.frame = anim.frames - 1;
@@ -4437,7 +4453,7 @@
     var sx = (frame % cols) * fw;
     var sy = (row + Math.floor(frame / cols)) * fh;
     var aspect = fw / fh;
-    var drawW = size * Math.min(1.5, aspect);
+    var drawW = size * Math.min(2.0, aspect);
     var drawH = drawW / aspect;
     var drawX = x + (size - drawW) / 2;
     var drawY = y + (size - drawH);

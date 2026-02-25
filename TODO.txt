@@ -167,8 +167,9 @@ AreBooksGood - Improvement TODO
 
 ## Battle / Dungeon UI
 
-- [ ] Visual indicator when all difficulties of a dungeon are cleared (e.g. gold border, checkmark, crown icon on card)
-- [ ] Per-difficulty completion badges on dungeon cards — show which difficulties (Normal/Hard/Brutal/Nightmare) have been beaten
+- [x] Visual indicator when all difficulties of a dungeon are cleared (gold border on card) — shipped dcb2421
+- [x] Per-difficulty completion badges on dungeon cards — shipped dcb2421
+- [x] Fix Titan boss animation (double-rendering, flashing) — rework to use demon slime asset pack
 
 ## Pet UI
 

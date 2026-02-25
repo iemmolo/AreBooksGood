@@ -303,39 +303,44 @@
       "frameWidth": 288, "frameHeight": 160, "cols": 22,
       "anims": {
         "idle":   { "row": 0, "frames": 6, "speed": 150 },
-        "attack": { "row": 2, "frames": 12, "speed": 80 },
+        "walk":   { "row": 1, "frames": 12, "speed": 100 },
+        "attack": { "row": 2, "frames": 15, "speed": 80 },
         "hit":    { "row": 3, "frames": 5, "speed": 100 },
-        "death":  { "row": 4, "frames": 15, "speed": 100 }
+        "death":  { "row": 4, "frames": 22, "speed": 100 }
       }
     },
     "cursed-spirit": {
+      "name": "Cursed Spirits",
       "sheet": "/images/pets/titans/cursed-spirit.png",
       "frameWidth": 224, "frameHeight": 112, "cols": 7,
       "anims": {
-        "idle":   { "row": 0, "frames": 4, "speed": 180 },
+        "idle":   { "row": 0, "frames": 7, "speed": 180 },
+        "walk":   { "row": 2, "frames": 7, "speed": 100 },
         "attack": { "row": 1, "frames": 7, "speed": 90 },
-        "hit":    { "row": 3, "frames": 5, "speed": 100 },
-        "death":  { "row": 4, "frames": 7, "speed": 110 }
+        "hit":    { "row": 3, "frames": 3, "speed": 100 },
+        "death":  { "row": 4, "frames": 5, "speed": 110 }
       }
     },
     "pumpkin": {
       "sheet": "/images/pets/titans/ancient-pumpkin.png",
       "frameWidth": 224, "frameHeight": 96, "cols": 7,
       "anims": {
-        "idle":   { "row": 0, "frames": 4, "speed": 200 },
-        "attack": { "row": 2, "frames": 6, "speed": 90 },
-        "hit":    { "row": 4, "frames": 5, "speed": 100 },
-        "death":  { "row": 6, "frames": 7, "speed": 110 }
+        "idle":   { "row": 0, "frames": 2, "speed": 200 },
+        "walk":   { "row": 1, "frames": 2, "speed": 120 },
+        "attack": { "row": 2, "frames": 3, "speed": 90 },
+        "hit":    { "row": 5, "frames": 3, "speed": 100 },
+        "death":  { "row": 6, "frames": 4, "speed": 110 }
       }
     },
     "cloud-monster": {
       "sheet": "/images/pets/titans/storm-colossus.png",
       "frameWidth": 192, "frameHeight": 112, "cols": 7,
       "anims": {
-        "idle":   { "row": 0, "frames": 4, "speed": 200 },
+        "idle":   { "row": 0, "frames": 3, "speed": 200 },
+        "walk":   { "row": 2, "frames": 3, "speed": 120 },
         "attack": { "row": 1, "frames": 7, "speed": 80 },
-        "hit":    { "row": 4, "frames": 5, "speed": 100 },
-        "death":  { "row": 6, "frames": 6, "speed": 120 }
+        "hit":    { "row": 4, "frames": 3, "speed": 100 },
+        "death":  { "row": 6, "frames": 4, "speed": 120 }
       }
     }
   },

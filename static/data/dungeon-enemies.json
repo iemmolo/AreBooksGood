@@ -229,26 +229,26 @@
   },
   "demon-slime-boss": {
     "name": "Demon Slime",
-    "sprite": "/images/pets/titans/demon-slime-king.png",
+    "sprite": "/images/pets/enemies/demon-slime-boss.png",
     "frameWidth": 288, "frameHeight": 160, "frames": 6, "row": 0,
     "type": "fire", "hpBase": 190, "atkBase": 22, "defBase": 13, "spdBase": 8, "criBase": 10, "isBoss": true
   },
   "cursed-spirit-boss": {
-    "name": "Cursed Spirit",
-    "sprite": "/images/pets/titans/cursed-spirit.png",
-    "frameWidth": 224, "frameHeight": 112, "frames": 4, "row": 0,
+    "name": "Cursed Spirits",
+    "sprite": "/images/pets/enemies/cursed-spirit-boss.png",
+    "frameWidth": 224, "frameHeight": 112, "frames": 7, "row": 0,
     "type": "fire", "hpBase": 175, "atkBase": 20, "defBase": 10, "spdBase": 12, "criBase": 11, "isBoss": true
   },
   "pumpkin-boss": {
     "name": "Pumpkin Knight",
-    "sprite": "/images/pets/titans/ancient-pumpkin.png",
-    "frameWidth": 224, "frameHeight": 96, "frames": 4, "row": 0,
+    "sprite": "/images/pets/enemies/pumpkin-boss.png",
+    "frameWidth": 224, "frameHeight": 96, "frames": 2, "row": 0,
     "type": "nature", "hpBase": 170, "atkBase": 19, "defBase": 13, "spdBase": 10, "criBase": 9, "isBoss": true
   },
   "cloud-boss": {
     "name": "Storm Cloud",
-    "sprite": "/images/pets/titans/storm-colossus.png",
-    "frameWidth": 192, "frameHeight": 112, "frames": 4, "row": 0,
+    "sprite": "/images/pets/enemies/cloud-boss.png",
+    "frameWidth": 192, "frameHeight": 112, "frames": 3, "row": 0,
     "type": "aqua", "hpBase": 175, "atkBase": 18, "defBase": 14, "spdBase": 9, "criBase": 8, "isBoss": true
   }
 }

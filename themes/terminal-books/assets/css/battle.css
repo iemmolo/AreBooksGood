@@ -2311,22 +2311,44 @@
 }
 
 /* ── Titan info ─────────────────────── */
-.bt-titan-name {
-  font-weight: 700;
-  font-size: 1.1em;
-  margin-bottom: 6px;
-  color: var(--accent);
+.bt-titan-attempts-bar {
+  font-size: 0.85em;
+  margin-bottom: 12px;
+  opacity: 0.7;
 }
 
-.bt-titan-attempts,
-.bt-titan-kills,
-.bt-titan-damage {
-  font-size: 0.85em;
-  margin-bottom: 4px;
+.bt-titan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.bt-titan-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+}
+
+.bt-titan-card:hover:not(.bt-titan-disabled) {
+  border-color: var(--accent);
+}
+
+.bt-titan-card-name {
+  font-weight: 700;
+  font-size: 1.05em;
+  margin-bottom: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.bt-titan-disabled {
+  opacity: 0.4;
 }
 
 .bt-titan-done {
   font-style: italic;
   opacity: 0.5;
-  margin-top: 8px;
+  margin-top: 4px;
+  font-size: 0.85em;
 }
