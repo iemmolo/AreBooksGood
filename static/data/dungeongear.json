@@ -300,7 +300,7 @@
   "titanSprites": {
     "demon-slime": {
       "sheet": "/images/pets/titans/demon-slime-king.png",
-      "frameWidth": 288, "frameHeight": 160, "cols": 22,
+      "frameWidth": 288, "frameHeight": 160, "cols": 22, "scale": 3.5,
       "anims": {
         "idle":   { "row": 0, "frames": 6, "speed": 150 },
         "walk":   { "row": 1, "frames": 12, "speed": 100 },

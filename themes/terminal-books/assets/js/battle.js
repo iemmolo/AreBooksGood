@@ -1184,12 +1184,20 @@
       });
     }
     // Enemy positions — centered at 75% of canvas width
+    var isTitanFight = gameMode === 'titan' && enemies.length === 1 && enemies[0] && enemies[0].isTitan;
     for (var j = 0; j < 3; j++) {
       var eSize = (enemies[j] && enemies[j].isBoss) ? bossSize : spriteSize;
+      var ex = CANVAS_W * 0.75 - eSize / 2;
+      var ey = startY + j * spacingY;
+      if (isTitanFight && j === 0) {
+        var titanScale = (titanAnim.config && titanAnim.config.scale) || 3.0;
+        eSize = Math.round(bossSize * titanScale);
+        ex = CANVAS_W * 0.75 - eSize / 2;
+        ey = CANVAS_H * 0.5 - eSize / 2;
+      }
       positions.push({
         side: 'enemy', idx: j,
-        x: CANVAS_W * 0.75 - eSize / 2,
-        y: startY + j * spacingY,
+        x: ex, y: ey,
         size: eSize
       });
     }
@@ -4483,6 +4491,7 @@
     var drawY = y + (size - drawH);
     ctx.save();
     ctx.globalAlpha = fighter.opacity;
+    ctx.imageSmoothingEnabled = false;
     if (cfg.flip) {
       ctx.translate(drawX + drawW, drawY);
       ctx.scale(-1, 1);
