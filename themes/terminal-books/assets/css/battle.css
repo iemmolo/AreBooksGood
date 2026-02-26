@@ -2337,9 +2337,15 @@
 .bt-titan-card-name {
   font-weight: 700;
   font-size: 1.05em;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   color: var(--accent);
   text-transform: uppercase;
+}
+
+.bt-titan-card-stats {
+  font-size: 0.8em;
+  opacity: 0.6;
+  margin-bottom: 8px;
 }
 
 .bt-titan-disabled {

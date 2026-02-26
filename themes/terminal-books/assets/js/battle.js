@@ -2754,6 +2754,7 @@
         btn.textContent = tab.label;
         btn.addEventListener('click', function () {
           gameMode = tab.id;
+          try { localStorage.setItem('arebooksgood-dungeon-tab', tab.id); } catch (e) {}
           showScreen(tab.screen);
         });
         modeTabsEl.appendChild(btn);
@@ -2907,6 +2908,19 @@
     updateEnterButton();
   }
 
+  function isTitanDiffCleared(titanId, diff) {
+    var b = titanState.bosses[titanId];
+    return b && b.diffs && !!b.diffs[diff];
+  }
+
+  function isTitanDiffUnlocked(titanId, diff) {
+    if (diff === 'normal') return true;
+    if (diff === 'hard') return isTitanDiffCleared(titanId, 'normal');
+    if (diff === 'brutal') return isTitanDiffCleared(titanId, 'hard');
+    if (diff === 'nightmare') return isTitanDiffCleared(titanId, 'brutal');
+    return false;
+  }
+
   function renderDifficultyPicker() {
     var container = document.getElementById('bt-difficulty-picker');
     if (!container) return;
@@ -2914,24 +2928,26 @@
     var diffs = ['normal', 'hard', 'brutal', 'nightmare'];
     var labels = { normal: 'Normal', hard: 'Hard', brutal: 'Brutal', nightmare: 'Nightmare' };
     var dungeonId = selectedDungeon ? selectedDungeon.id : 0;
+    var isTitan = gameMode === 'titan' && activeTitan;
+    var titanId = isTitan ? activeTitan.titanId : null;
     for (var i = 0; i < diffs.length; i++) {
       (function (diff) {
         var btn = document.createElement('button');
         btn.className = 'bt-diff-btn bt-diff-' + diff;
         if (diff === selectedDifficulty) btn.classList.add('bt-diff-active');
-        var unlocked = isDifficultyUnlocked(dungeonId, diff);
+        var unlocked = isTitan ? isTitanDiffUnlocked(titanId, diff) : isDifficultyUnlocked(dungeonId, diff);
         if (!unlocked) btn.classList.add('bt-diff-locked');
         btn.disabled = !unlocked;
         var labelSpan = document.createElement('span');
         labelSpan.textContent = labels[diff];
         btn.appendChild(labelSpan);
-        if (isDungeonCleared(dungeonId, diff)) {
+        var cleared = isTitan ? isTitanDiffCleared(titanId, diff) : isDungeonCleared(dungeonId, diff);
+        if (cleared) {
           var check = document.createElement('span');
           check.className = 'bt-diff-check';
           check.textContent = ' *';
           btn.appendChild(check);
         }
-        // Multiplier subtitle
         if (gearData && gearData.difficulty && gearData.difficulty[diff]) {
           var dd = gearData.difficulty[diff];
           var subtitle = document.createElement('span');
@@ -3349,8 +3365,18 @@
         logMessage('--- Entering ' + selectedDungeon.name + ' ---', 'bt-log-wave');
         logMessage('--- Wave 1/' + totalWaves + ' ---', 'bt-log-wave');
 
-        // Titan mode: override enemies with titan fighter
+        // Titan mode: apply difficulty scaling and override enemies
         if (gameMode === 'titan' && activeTitan) {
+          var diffCfg = gearData && gearData.difficulty ? gearData.difficulty[selectedDifficulty] : null;
+          if (diffCfg) {
+            var baseHp = 10000;
+            var baseAtk = 35;
+            activeTitan.maxHp = Math.floor(baseHp * (diffCfg.hpMult || 1));
+            activeTitan.hp = activeTitan.maxHp;
+            activeTitan.displayHp = activeTitan.maxHp;
+            activeTitan.stats.hp = activeTitan.maxHp;
+            activeTitan.stats.atk = Math.floor(baseAtk * (diffCfg.atkMult || 1));
+          }
           titanAnimInit(activeTitan.titanId);
         }
         generateWaveEnemies(0, function () {
@@ -4251,7 +4277,7 @@
   }
 
   // ── World Boss / Titan Mode ──────────────────────
-  var titanState = { attemptsToday: 3, lastAttemptDate: null, totalDamage: 0, kills: 0 };
+  var titanState = { bosses: {} };
   var activeTitan = null;
 
   function loadTitanState() {
@@ -4259,19 +4285,17 @@
       var raw = localStorage.getItem('arebooksgood-titan');
       if (raw) {
         var s = JSON.parse(raw);
-        titanState.attemptsToday = s.attemptsToday != null ? s.attemptsToday : 3;
-        titanState.lastAttemptDate = s.lastAttemptDate || null;
-        titanState.totalDamage = s.totalDamage || 0;
-        titanState.kills = s.kills || 0;
+        titanState.bosses = s.bosses || {};
+        // Migrate old flat format
+        if (!s.bosses && (s.totalDamage || s.kills)) {
+          titanState.bosses._legacy = { damage: s.totalDamage || 0, kills: s.kills || 0 };
+        }
       }
     } catch (e) {}
-    // Reset attempts if new day
-    var today = getDailyDate();
-    if (titanState.lastAttemptDate !== today) {
-      titanState.attemptsToday = 3;
-      titanState.lastAttemptDate = today;
-      saveTitanState();
-    }
+  }
+
+  function getTitanBossStats(titanId) {
+    return titanState.bosses[titanId] || { damage: 0, kills: 0 };
   }
 
   function saveTitanState() {
@@ -4284,19 +4308,17 @@
     var titanIds = gearData && gearData.titanSprites ? Object.keys(gearData.titanSprites) : [];
 
     var html = '<h2 class="bt-section-title">> world boss</h2>' +
-      '<div class="bt-titan-attempts-bar">Attempts: ' + titanState.attemptsToday + '/3 &nbsp; | &nbsp; ' +
-      'Kills: ' + titanState.kills + ' &nbsp; | &nbsp; Damage: ' + titanState.totalDamage + '</div>' +
       '<div class="bt-titan-grid">';
 
     for (var i = 0; i < titanIds.length; i++) {
       var tid = titanIds[i];
       var tCfg = gearData.titanSprites[tid];
       var tName = (tCfg && tCfg.name) || tid.replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
-      var disabled = false; // TODO: restore titanState.attemptsToday <= 0
-      html += '<div class="bt-titan-card' + (disabled ? ' bt-titan-disabled' : '') + '" data-titan="' + tid + '">' +
+      var bStats = getTitanBossStats(tid);
+      html += '<div class="bt-titan-card" data-titan="' + tid + '">' +
         '<div class="bt-titan-card-name">' + tName + '</div>' +
-        (disabled ? '<div class="bt-titan-done">No attempts left</div>' :
-          '<button class="bt-btn bt-titan-go" data-titan="' + tid + '">Challenge</button>') +
+        '<div class="bt-titan-card-stats">Kills: ' + bStats.kills + ' &nbsp; Dmg: ' + bStats.damage + '</div>' +
+        '<button class="bt-btn bt-titan-go" data-titan="' + tid + '">Challenge</button>' +
         '</div>';
     }
 
@@ -4334,15 +4356,11 @@
   function startTitanMode(titanId) {
     gameMode = 'titan';
     loadTitanState();
-    // TODO: restore attempt limit
-    // if (titanState.attemptsToday <= 0) return;
-    // titanState.attemptsToday--;
-    saveTitanState();
 
     activeTitan = createTitanFighter(titanId);
     selectedDungeon = { id: 0, name: activeTitan.name, typeLock: null, waves: 1, stars: 5,
       enemies: [['slime-green']] }; // placeholder, titan replaces enemies
-    selectedDifficulty = 'brutal';
+    selectedDifficulty = 'normal';
     teamSlots = [null, null, null];
     creatureFilter = 'all';
     creatureLevelFilter = 'all';
@@ -4369,9 +4387,15 @@
 
   function endTitanAttempt(titan) {
     if (!titan) return;
+    var tid = titan.titanId;
+    if (!titanState.bosses[tid]) titanState.bosses[tid] = { damage: 0, kills: 0, diffs: {} };
+    if (!titanState.bosses[tid].diffs) titanState.bosses[tid].diffs = {};
     var damageDealt = titan.maxHp - Math.max(0, titan.hp);
-    titanState.totalDamage += damageDealt;
-    if (titan.hp <= 0) titanState.kills++;
+    titanState.bosses[tid].damage += damageDealt;
+    if (titan.hp <= 0) {
+      titanState.bosses[tid].kills++;
+      titanState.bosses[tid].diffs[selectedDifficulty] = true;
+    }
     saveTitanState();
     activeTitan = null;
   }
@@ -4639,7 +4663,15 @@
     GearSystem.init(gearData);
     loadPetState();
     preloadGearSheets(function () {
-      showScreen('dungeon-select');
+      var savedTab = null;
+      try { savedTab = localStorage.getItem('arebooksgood-dungeon-tab'); } catch (e) {}
+      var tabScreenMap = { dungeon: 'dungeon-select', daily: 'daily-screen', spire: 'spire-screen', titan: 'titan-screen', faction: 'faction-screen' };
+      if (savedTab && tabScreenMap[savedTab]) {
+        gameMode = savedTab;
+        showScreen(tabScreenMap[savedTab]);
+      } else {
+        showScreen('dungeon-select');
+      }
     });
   });
 
