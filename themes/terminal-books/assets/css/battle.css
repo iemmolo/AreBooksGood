@@ -2321,13 +2321,22 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .bt-titan-card {
   border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
   border-radius: 6px;
-  padding: 14px;
+  padding: 10px 8px;
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bt-titan-card .bt-btn {
+  font-size: 0.75em;
+  padding: 6px 12px;
 }
 
 .bt-titan-card:hover:not(.bt-titan-disabled) {
@@ -2340,6 +2349,9 @@
   margin-bottom: 4px;
   color: var(--accent);
   text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bt-titan-card-stats {
