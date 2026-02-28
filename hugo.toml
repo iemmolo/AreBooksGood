@@ -45,7 +45,7 @@ theme = 'terminal-books'
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]
-      unsafe = false
+      unsafe = true
 
 [outputs]
   home = ['html', 'rss']
