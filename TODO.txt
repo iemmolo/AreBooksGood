@@ -148,7 +148,8 @@ AreBooksGood - Improvement TODO
 - [x] Phase 1c: Pet hero on canvas, auto-attack, Q/W abilities, cosmetic bonuses
 - [x] Phase 2d: Blueprint gating retrofit — TD wave milestones unlock farm buildings (wave 5→chickenCoop, 10→cowPasture, etc.)
 - [x] Phase 3: Per-pet-type hero differentiation (Cat/Dragon/Robot)
-- [ ] Phase 4: Sprites, more enemies/maps, sound
+- [x] Phase 4: Sprites — enemy/tower/effect sprites + map backgrounds, toggle UI (see TD-SPRITE-TODO.txt)
+- [ ] Phase 5: Sound effects, more enemy types from alt packs
 
 ## Silk Road Buy-Back & Currency Bridge
 

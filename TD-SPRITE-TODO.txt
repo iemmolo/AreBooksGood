@@ -1,0 +1,88 @@
+TD Sprite Integration — Task Tracker
+=====================================
+
+## Phase 0: Asset Preparation (Build Pipeline)
+
+- [x] Create scripts/pack-td-sprites.py
+- [x] Enemy sheets: 10 monsters × 5 animations, sampled/trimmed/downscaled to 48px
+- [x] Tower sheets: crop from individual sprites, downscale to 48x48
+- [x] Effect sheets: 6 effects, trimmed/downscaled to 64px
+- [x] Map backgrounds: 3 maps scaled to 640x480
+- [x] Generate static/data/td-sprites.json metadata
+- [x] Run script — verify all outputs in static/images/td/ (3.2MB total)
+
+## Phase 1: Sprite Loading & Animation System
+
+- [x] Add tdSpriteData, tdSpriteSheets, tdSpritesReady, TD_SPRITES_ENABLED vars
+- [x] Add ENEMY_SPRITE_MAP constant (enemy type → monster number)
+- [x] Add TOWER_SPRITE_MAP constant (tower type → sprite sheet key)
+- [x] Add MAP_BG_MAP constant (map id → background number)
+- [x] Implement loadTDSprites(callback) — fetch JSON + preload all Image objects + maps
+- [x] Implement drawSpriteFrame(sheetKey, row, frame, cx, cy, drawW, drawH, flipX)
+- [x] Implement drawTowerSprite(sheetKey, level, cx, cy, drawSize)
+- [x] Implement updateEnemyAnim(e, dt) — advance animation frame by state/timing
+- [x] Add anim fields to enemy object in updateSpawner (animState, animFrame, animTimer, facingLeft, dying, etc.)
+- [x] Add anim fields to splitter minions
+- [x] Implement spriteEffects system (spawnSpriteEffect, updateSpriteEffects, drawSpriteEffects)
+- [x] Call loadTDSprites() at init
+
+## Phase 2: Enemy Sprites
+
+- [x] Modify drawEnemyShape — try sprite first, fall back to geometric shapes
+- [x] Keep HP bars, DOT/slow rings, auras drawn on top of sprites (skip for dying)
+- [x] Add updateEnemyAnim(e, dt) call in updateEnemies loop
+- [x] Update e.facingLeft based on path direction
+- [x] In damageEnemy: trigger animState = 'hurt' on hit
+- [x] In damageEnemy: on death set dying = true, animState = 'die', delay alive = false
+- [x] Skip dying enemies in findTarget (no retargeting)
+- [x] Skip dying enemies in checkWaveComplete (don't count as alive)
+- [x] Skip dying enemies in HUD alive counter
+- [x] Skip dying enemies in caltrops/exit checks
+- [x] Skip dying enemies in healer aura
+- [x] Handle DOT death with sprite death animation
+- [x] Remove projectiles targeting dying enemies
+
+## Phase 3: Tower Sprites
+
+- [x] Modify drawTowers — look up sprite via TOWER_SPRITE_MAP[t.type]
+- [x] Draw sprite frame based on t.level - 1 as frame index
+- [x] Keep range circles, synergy indicators overlaid
+- [x] Add level indicator text on sprite towers
+- [x] Add inspected tower highlight border on sprite towers
+- [x] Fall back to colored squares + symbol if sprite unavailable
+
+## Phase 4: Effects & Projectiles
+
+- [x] Add spriteEffects[] array + functions (in Phase 1)
+- [x] Wire fire tower hit → spawnSpriteEffect('fire')
+- [x] Wire frost tower hit → spawnSpriteEffect('freeze')
+- [x] Wire cannon splash → spawnSpriteEffect('stone')
+- [x] Wire lightning projectile → spawnSpriteEffect('zip')
+- [x] Add updateSpriteEffects(dt) to update()
+- [x] Add drawSpriteEffects() to draw() after projectiles
+- [x] Clear spriteEffects in startGame and resumeGame
+
+## Phase 5: Map Backgrounds
+
+- [x] Preload map background images in loadTDSprites
+- [x] Modify draw() — drawImage(mapBg) as backdrop if loaded
+- [x] Apply 30% colorBg overlay for terminal theme
+- [x] Map assignment: map1→bg1, map2→bg2, map3→bg3
+- [x] Fall back to solid colorBg fill if no map image
+
+## Phase 6: Polish
+
+- [x] Sprite toggle: localStorage-persisted setting (TD_SPRITES_KEY)
+- [x] Add toggle checkbox UI on start screen (renderSpriteToggle)
+- [x] Death animation: enemies play die animation before removal
+- [x] Existing particle system still fires on death alongside sprite animation
+- [ ] Loading screen: progress bar overlay during loadTDSprites() (deferred — async load is fast enough)
+- [ ] Hit flash: brief white flash on sprite when enemy takes damage (deferred — needs offscreen canvas approach)
+
+## Future Polish (Nice-to-have)
+
+- [ ] Add more enemy-to-monster visual variety (use alt monster packs for late waves)
+- [ ] Tower firing animations (rotate/recoil)
+- [ ] Projectile sprites (arrows, fireballs, ice shards)
+- [ ] GUI elements from td-gui pack for overlays
+- [ ] Use map layers for custom path compositions

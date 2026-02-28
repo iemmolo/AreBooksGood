@@ -1,0 +1,399 @@
+{
+  "enemies": {
+    "1": {
+      "sheet": "enemies/enemy-1.png",
+      "frameW": 62,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "2": {
+      "sheet": "enemies/enemy-2.png",
+      "frameW": 68,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "3": {
+      "sheet": "enemies/enemy-3.png",
+      "frameW": 72,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "4": {
+      "sheet": "enemies/enemy-4.png",
+      "frameW": 61,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "5": {
+      "sheet": "enemies/enemy-5.png",
+      "frameW": 64,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "6": {
+      "sheet": "enemies/enemy-6.png",
+      "frameW": 63,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "7": {
+      "sheet": "enemies/enemy-7.png",
+      "frameW": 78,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "8": {
+      "sheet": "enemies/enemy-8.png",
+      "frameW": 71,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "9": {
+      "sheet": "enemies/enemy-9.png",
+      "frameW": 76,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    },
+    "10": {
+      "sheet": "enemies/enemy-10.png",
+      "frameW": 59,
+      "frameH": 48,
+      "animations": {
+        "idle": {
+          "row": 0,
+          "frames": 10,
+          "speed": 0.08
+        },
+        "walk": {
+          "row": 1,
+          "frames": 10,
+          "speed": 0.06
+        },
+        "attack": {
+          "row": 2,
+          "frames": 10,
+          "speed": 0.05
+        },
+        "hurt": {
+          "row": 3,
+          "frames": 10,
+          "speed": 0.04
+        },
+        "die": {
+          "row": 4,
+          "frames": 10,
+          "speed": 0.06
+        }
+      }
+    }
+  },
+  "towers": {
+    "tower-archer": {
+      "sheet": "towers/tower-archer.png",
+      "frameW": 48,
+      "frameH": 48,
+      "frames": 4
+    },
+    "tower-stone": {
+      "sheet": "towers/tower-stone.png",
+      "frameW": 48,
+      "frameH": 48,
+      "frames": 4
+    },
+    "tower-magic": {
+      "sheet": "towers/tower-magic.png",
+      "frameW": 48,
+      "frameH": 48,
+      "frames": 4
+    },
+    "tower-support": {
+      "sheet": "towers/tower-support.png",
+      "frameW": 48,
+      "frameH": 48,
+      "frames": 4
+    }
+  },
+  "effects": {
+    "fire": {
+      "sheet": "effects/fx-fire.png",
+      "frameW": 103,
+      "frameH": 64,
+      "frames": 10,
+      "speed": 0.04
+    },
+    "freeze": {
+      "sheet": "effects/fx-freeze.png",
+      "frameW": 119,
+      "frameH": 64,
+      "frames": 8,
+      "speed": 0.05
+    },
+    "stone": {
+      "sheet": "effects/fx-stone.png",
+      "frameW": 109,
+      "frameH": 64,
+      "frames": 9,
+      "speed": 0.04
+    },
+    "zip": {
+      "sheet": "effects/fx-zip.png",
+      "frameW": 35,
+      "frameH": 64,
+      "frames": 7,
+      "speed": 0.03
+    },
+    "damage": {
+      "sheet": "effects/fx-damage.png",
+      "frameW": 89,
+      "frameH": 64,
+      "frames": 10,
+      "speed": 0.05
+    },
+    "def": {
+      "sheet": "effects/fx-def.png",
+      "frameW": 108,
+      "frameH": 64,
+      "frames": 10,
+      "speed": 0.05
+    }
+  },
+  "maps": {
+    "1": "maps/map-1.png",
+    "2": "maps/map-2.png",
+    "3": "maps/map-3.png"
+  }
+}

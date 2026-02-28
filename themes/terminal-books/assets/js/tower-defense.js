@@ -130,6 +130,249 @@
   var heroAnimFrame = 0;
   var HERO_DRAW_SIZE = 32; // display size on canvas
 
+  // ── TD Sprite system ────────────────────────────────
+  var TD_SPRITES_ENABLED = true;
+  var tdSpriteData = null;       // parsed td-sprites.json
+  var tdSpriteSheets = {};       // key → Image objects
+  var tdSpritesReady = false;
+  var tdSpriteLoadProgress = 0;  // 0-1 for loading bar
+  var tdMapImages = {};          // map number → Image
+
+  // Save preference to localStorage
+  var TD_SPRITES_KEY = 'arebooksgood-td-sprites';
+  try {
+    var savedPref = localStorage.getItem(TD_SPRITES_KEY);
+    if (savedPref !== null) TD_SPRITES_ENABLED = savedPref !== 'false';
+  } catch (e) {}
+
+  var ENEMY_SPRITE_MAP = {
+    slime:    '1',
+    skeleton: '3',
+    goblin:   '4',
+    healer:   '5',
+    orc:      '6',
+    splitter: '9',
+    ghost:    '8',
+    shielder: '7',
+    boss:     '2'
+  };
+
+  var TOWER_SPRITE_MAP = {
+    arrow:      'tower-archer',
+    cannon:     'tower-stone',
+    frost:      'tower-magic',
+    fire:       'tower-magic',
+    sniper:     'tower-archer',
+    lightning:  'tower-magic',
+    watchtower: 'tower-support',
+    goldmine:   'tower-support'
+  };
+
+  var MAP_BG_MAP = { map1: '1', map2: '2', map3: '3' };
+
+  function loadTDSprites(callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/data/td-sprites.json', true);
+    xhr.onload = function () {
+      if (xhr.status !== 200) { if (callback) callback(); return; }
+      try { tdSpriteData = JSON.parse(xhr.responseText); } catch (e) { if (callback) callback(); return; }
+
+      // Collect all sheets to preload
+      var toLoad = [];
+      var key;
+      if (tdSpriteData.enemies) {
+        for (key in tdSpriteData.enemies) {
+          toLoad.push({ key: 'enemy-' + key, src: '/images/td/' + tdSpriteData.enemies[key].sheet });
+        }
+      }
+      if (tdSpriteData.towers) {
+        for (key in tdSpriteData.towers) {
+          toLoad.push({ key: key, src: '/images/td/' + tdSpriteData.towers[key].sheet });
+        }
+      }
+      if (tdSpriteData.effects) {
+        for (key in tdSpriteData.effects) {
+          toLoad.push({ key: 'fx-' + key, src: '/images/td/' + tdSpriteData.effects[key].sheet });
+        }
+      }
+
+      if (toLoad.length === 0) { tdSpritesReady = true; if (callback) callback(); return; }
+
+      var loaded = 0;
+      var total = toLoad.length;
+
+      // Also preload map backgrounds
+      if (tdSpriteData.maps) {
+        for (key in tdSpriteData.maps) {
+          (function (mk) {
+            var mimg = new Image();
+            mimg.onload = function () { tdMapImages[mk] = mimg; };
+            mimg.src = '/images/td/' + tdSpriteData.maps[mk];
+          })(key);
+        }
+      }
+
+      for (var i = 0; i < toLoad.length; i++) {
+        (function (item) {
+          var img = new Image();
+          img.onload = function () {
+            tdSpriteSheets[item.key] = img;
+            loaded++;
+            tdSpriteLoadProgress = loaded / total;
+            if (loaded >= total) {
+              tdSpritesReady = true;
+              if (callback) callback();
+            }
+          };
+          img.onerror = function () {
+            loaded++;
+            tdSpriteLoadProgress = loaded / total;
+            if (loaded >= total) {
+              tdSpritesReady = true;
+              if (callback) callback();
+            }
+          };
+          img.src = item.src;
+        })(toLoad[i]);
+      }
+    };
+    xhr.onerror = function () { if (callback) callback(); };
+    xhr.send();
+  }
+
+  function drawSpriteFrame(sheetKey, row, frame, cx, cy, drawW, drawH, flipX) {
+    var img = tdSpriteSheets[sheetKey];
+    if (!img) return false;
+    var meta = null;
+    // Resolve metadata from sheet key
+    if (sheetKey.indexOf('enemy-') === 0) {
+      var eid = sheetKey.replace('enemy-', '');
+      meta = tdSpriteData && tdSpriteData.enemies && tdSpriteData.enemies[eid];
+    } else if (sheetKey.indexOf('fx-') === 0) {
+      var fxid = sheetKey.replace('fx-', '');
+      meta = tdSpriteData && tdSpriteData.effects && tdSpriteData.effects[fxid];
+    } else {
+      meta = tdSpriteData && tdSpriteData.towers && tdSpriteData.towers[sheetKey];
+    }
+    if (!meta) return false;
+
+    var fw = meta.frameW;
+    var fh = meta.frameH;
+    var sx = frame * fw;
+    var sy = row * fh;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (flipX) {
+      ctx.translate(cx, cy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, sx, sy, fw, fh, -drawW / 2, -drawH / 2, drawW, drawH);
+    } else {
+      ctx.drawImage(img, sx, sy, fw, fh, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
+    }
+    ctx.restore();
+    return true;
+  }
+
+  function drawTowerSprite(sheetKey, level, cx, cy, drawSize) {
+    var img = tdSpriteSheets[sheetKey];
+    if (!img) return false;
+    var meta = tdSpriteData && tdSpriteData.towers && tdSpriteData.towers[sheetKey];
+    if (!meta) return false;
+
+    var fw = meta.frameW;
+    var fh = meta.frameH;
+    var frameIdx = Math.min(level - 1, meta.frames - 1);
+    var sx = 0;
+    var sy = frameIdx * fh;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sx, sy, fw, fh, cx - drawSize / 2, cy - drawSize / 2, drawSize, drawSize);
+    ctx.restore();
+    return true;
+  }
+
+  function updateEnemyAnim(e, dt) {
+    if (!TD_SPRITES_ENABLED || !tdSpritesReady) return;
+    var spriteId = ENEMY_SPRITE_MAP[e.type];
+    if (!spriteId) return;
+    var meta = tdSpriteData && tdSpriteData.enemies && tdSpriteData.enemies[spriteId];
+    if (!meta || !meta.animations) return;
+
+    var animDef = meta.animations[e.animState];
+    if (!animDef) return;
+
+    // Don't advance if animation is locked (hurt/die)
+    if (e.animLocked && e.animState !== 'die') {
+      e.animLockTimer -= dt;
+      if (e.animLockTimer <= 0) {
+        e.animLocked = false;
+        e.animState = e.dying ? 'die' : 'walk';
+        e.animFrame = 0;
+        e.animTimer = 0;
+        animDef = meta.animations[e.animState];
+        if (!animDef) return;
+      } else {
+        return;
+      }
+    }
+
+    e.animTimer += dt;
+    if (e.animTimer >= animDef.speed) {
+      e.animTimer -= animDef.speed;
+      e.animFrame++;
+      if (e.animFrame >= animDef.frames) {
+        if (e.animState === 'die') {
+          // Death animation finished — remove enemy
+          e.alive = false;
+          e.deathAnimDone = true;
+        } else {
+          e.animFrame = 0;
+        }
+      }
+    }
+  }
+
+  // Sprite effect system
+  var spriteEffects = [];
+
+  function spawnSpriteEffect(x, y, type, size) {
+    if (!TD_SPRITES_ENABLED || !tdSpritesReady) return;
+    var meta = tdSpriteData && tdSpriteData.effects && tdSpriteData.effects[type];
+    if (!meta) return;
+    spriteEffects.push({
+      x: x, y: y, type: type,
+      size: size || 48,
+      frame: 0, timer: 0,
+      speed: meta.speed || 0.05,
+      maxFrames: meta.frames || 10
+    });
+  }
+
+  function updateSpriteEffects(dt) {
+    for (var i = spriteEffects.length - 1; i >= 0; i--) {
+      var fx = spriteEffects[i];
+      fx.timer += dt;
+      if (fx.timer >= fx.speed) {
+        fx.timer -= fx.speed;
+        fx.frame++;
+        if (fx.frame >= fx.maxFrames) {
+          spriteEffects.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  function drawSpriteEffects() {
+    if (!TD_SPRITES_ENABLED || !tdSpritesReady) return;
+    for (var i = 0; i < spriteEffects.length; i++) {
+      var fx = spriteEffects[i];
+      var sheetKey = 'fx-' + fx.type;
+      drawSpriteFrame(sheetKey, 0, fx.frame, fx.x, fx.y, fx.size, fx.size, false);
+    }
+  }
+
   function loadHeroSprites() {
     // Load catalog first to resolve spriteId, then load sprites
     var catXhr = new XMLHttpRequest();
@@ -760,8 +1003,17 @@
           e.hp -= dotDmg;
           var dotPos = getPathPos(e.dist);
           spawnParticle(dotPos.x + (Math.random() - 0.5) * 8, dotPos.y - 10, '-' + dotDmg, '#f84');
-          if (e.hp <= 0) {
-            e.alive = false;
+          if (e.hp <= 0 && !e.dying) {
+            if (TD_SPRITES_ENABLED && tdSpritesReady && ENEMY_SPRITE_MAP[e.type]) {
+              e.dying = true;
+              e.animState = 'die';
+              e.animFrame = 0;
+              e.animTimer = 0;
+              e.animLocked = false;
+              e.speed = 0;
+            } else {
+              e.alive = false;
+            }
             totalKilled++;
             continue;
           }
@@ -776,6 +1028,24 @@
         e.slow.remaining -= dt;
       }
       e.dist += pxPerSec * dt;
+
+      // Update facing direction based on movement
+      var curPos = getPathPos(e.dist);
+      var prevPos = getPathPos(Math.max(0, e.dist - 1));
+      if (curPos.x < prevPos.x) e.facingLeft = true;
+      else if (curPos.x > prevPos.x) e.facingLeft = false;
+
+      // Update sprite animation
+      updateEnemyAnim(e, dt);
+
+      // Decay hit flash
+      if (e.hitFlash > 0) {
+        e.hitFlash -= dt * 5;
+        if (e.hitFlash < 0) e.hitFlash = 0;
+      }
+
+      // Skip combat/exit checks for dying enemies
+      if (e.dying) continue;
 
       // Check caltrops
       var ePos = getPathPos(e.dist);
@@ -810,16 +1080,22 @@
       }
     }
 
-    // Remove dead enemies
+    // Remove dead enemies (keep dying enemies until death animation finishes)
     for (var j = enemies.length - 1; j >= 0; j--) {
-      if (!enemies[j].alive) enemies.splice(j, 1);
+      var ej = enemies[j];
+      if (!ej.alive) {
+        enemies.splice(j, 1);
+      } else if (ej.dying && ej.deathAnimDone) {
+        ej.alive = false;
+        enemies.splice(j, 1);
+      }
     }
   }
 
   function updateHealers(dt) {
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
-      if (!e.alive || e.special !== 'healer') continue;
+      if (!e.alive || e.dying || e.special !== 'healer') continue;
       e.healTimer += dt;
       if (e.healTimer < 2.5) continue;
       e.healTimer -= 2.5;
@@ -827,7 +1103,7 @@
       var healerPos = getPathPos(e.dist);
       for (var j = 0; j < enemies.length; j++) {
         var target = enemies[j];
-        if (!target.alive || target === e) continue;
+        if (!target.alive || target.dying || target === e) continue;
         if (target.hp >= target.maxHp) continue;
         var tp = getPathPos(target.dist);
         var dx = tp.x - healerPos.x;
@@ -897,8 +1173,29 @@
     var pos = getPathPos(enemy.dist);
     spawnParticle(pos.x + (Math.random() - 0.5) * 10, pos.y - 12, '-' + dmg, colorFg);
 
+    // Trigger hit flash and hurt animation
+    enemy.hitFlash = 1;
+    if (TD_SPRITES_ENABLED && !enemy.dying && enemy.hp > 0) {
+      enemy.animState = 'hurt';
+      enemy.animFrame = 0;
+      enemy.animTimer = 0;
+      enemy.animLocked = true;
+      enemy.animLockTimer = 0.3;
+    }
+
     if (enemy.hp <= 0) {
-      enemy.alive = false;
+      // If sprites enabled, start death animation instead of immediate removal
+      if (TD_SPRITES_ENABLED && tdSpritesReady && ENEMY_SPRITE_MAP[enemy.type]) {
+        enemy.dying = true;
+        enemy.animState = 'die';
+        enemy.animFrame = 0;
+        enemy.animTimer = 0;
+        enemy.animLocked = false;
+        enemy.speed = 0; // Stop movement during death
+        // alive stays true until death animation finishes (handled in updateEnemyAnim)
+      } else {
+        enemy.alive = false;
+      }
       totalKilled++;
       if (sourceTower && typeof sourceTower.kills === 'number') sourceTower.kills++;
 
@@ -940,7 +1237,16 @@
             slow: null,
             caltropsHit: {},
             healTimer: 0,
-            isMinion: true
+            isMinion: true,
+            animState: 'walk',
+            animFrame: 0,
+            animTimer: 0,
+            animLocked: false,
+            animLockTimer: 0,
+            facingLeft: false,
+            dying: false,
+            deathAnimDone: false,
+            hitFlash: 0
           });
         }
       }
@@ -962,6 +1268,34 @@
 
   function drawEnemyShape(pos, e) {
     var r = e.radius;
+
+    // Try sprite rendering first
+    if (TD_SPRITES_ENABLED && tdSpritesReady) {
+      var spriteId = ENEMY_SPRITE_MAP[e.type];
+      if (spriteId) {
+        var sheetKey = 'enemy-' + spriteId;
+        var meta = tdSpriteData && tdSpriteData.enemies && tdSpriteData.enemies[spriteId];
+        if (meta && meta.animations && meta.animations[e.animState]) {
+          var animDef = meta.animations[e.animState];
+          var drawSize = e.shape === 'boss' ? 40 : 28;
+          // Ghost: draw at 50% alpha
+          if (e.special === 'dodge') ctx.globalAlpha = 0.5;
+          // Hit flash: brief white overlay
+          if (e.hitFlash > 0) {
+            ctx.globalAlpha = 0.6;
+          }
+          var drew = drawSpriteFrame(sheetKey, animDef.row, Math.min(e.animFrame, animDef.frames - 1),
+            pos.x, pos.y, drawSize, drawSize, e.facingLeft);
+          if (drew) {
+            if (e.special === 'dodge') ctx.globalAlpha = 1;
+            ctx.globalAlpha = 1;
+            return;
+          }
+        }
+      }
+    }
+
+    // Fallback: geometric shapes
     // Ghost: draw at 50% alpha
     if (e.special === 'dodge') ctx.globalAlpha = 0.5;
 
@@ -1047,10 +1381,13 @@
   function drawEnemies() {
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
-      if (!e.alive) continue;
+      if (!e.alive && !e.dying) continue;
       var pos = getPathPos(e.dist);
 
       drawEnemyShape(pos, e);
+
+      // Skip overlays for dying enemies (just show death animation)
+      if (e.dying) continue;
 
       // DOT indicator (orange ring)
       if (e.dot && e.dot.remaining > 0) {
@@ -1854,7 +2191,7 @@
 
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
-      if (!e.alive) continue;
+      if (!e.alive || e.dying) continue;
       var pos = getPathPos(e.dist);
       var dx = pos.x - tc.x;
       var dy = pos.y - tc.y;
@@ -1898,22 +2235,51 @@
 
       var half = TILE_SIZE * 0.35;
       var towerColor = def.color || colorAccent;
-      ctx.fillStyle = towerColor;
-      ctx.globalAlpha = 0.3;
-      ctx.fillRect(tc.x - half, tc.y - half, half * 2, half * 2);
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = isInspected ? '#fff' : towerColor;
-      ctx.lineWidth = isInspected ? 2.5 : 1.5;
-      ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      var drewSprite = false;
 
-      // Tower symbol with level
-      var label = def.symbol;
-      if (t.level > 1) label = def.symbol + t.level;
-      ctx.fillStyle = colorFg;
-      ctx.font = 'bold ' + (t.level > 1 ? '12' : '14') + 'px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, tc.x, tc.y);
+      // Try sprite rendering first
+      if (TD_SPRITES_ENABLED && tdSpritesReady) {
+        var towerSheetKey = TOWER_SPRITE_MAP[t.type];
+        if (towerSheetKey) {
+          drewSprite = drawTowerSprite(towerSheetKey, t.level, tc.x, tc.y, TILE_SIZE - 4);
+        }
+      }
+
+      if (!drewSprite) {
+        // Fallback: geometric colored square + symbol
+        ctx.fillStyle = towerColor;
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(tc.x - half, tc.y - half, half * 2, half * 2);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = isInspected ? '#fff' : towerColor;
+        ctx.lineWidth = isInspected ? 2.5 : 1.5;
+        ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+
+        // Tower symbol with level
+        var label = def.symbol;
+        if (t.level > 1) label = def.symbol + t.level;
+        ctx.fillStyle = colorFg;
+        ctx.font = 'bold ' + (t.level > 1 ? '12' : '14') + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, tc.x, tc.y);
+      }
+
+      // Inspected tower highlight border (always draw)
+      if (drewSprite && isInspected) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      }
+
+      // Level indicator on sprite towers
+      if (drewSprite && t.level > 1) {
+        ctx.fillStyle = colorFg;
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Lv' + t.level, tc.x, tc.y + half - 2);
+      }
 
       // Watchtower aura ring
       if (t.type === 'watchtower') {
@@ -2067,7 +2433,7 @@
   function updateProjectiles(dt) {
     for (var i = projectiles.length - 1; i >= 0; i--) {
       var p = projectiles[i];
-      if (!p.target.alive) {
+      if (!p.target.alive || p.target.dying) {
         projectiles.splice(i, 1);
         continue;
       }
@@ -2078,6 +2444,12 @@
       var dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < 5) {
+        // Spawn sprite effect at impact point
+        var impactPos = getPathPos(p.target.dist);
+        if (p.towerType === 'fire') spawnSpriteEffect(impactPos.x, impactPos.y, 'fire', 48);
+        else if (p.towerType === 'frost') spawnSpriteEffect(impactPos.x, impactPos.y, 'freeze', 48);
+        else if (p.towerType === 'lightning') spawnSpriteEffect(impactPos.x, impactPos.y, 'zip', 48);
+
         damageEnemy(p.target, p.dmg, p.sourceTower);
         // Fire tower DOT
         if (p.towerType === 'fire' && p.target.alive) {
@@ -2120,6 +2492,7 @@
             }
           }
           splashEffects.push({ x: p.x, y: p.y, radius: 0, maxRadius: splashRadius, life: 0.3 });
+          spawnSpriteEffect(p.x, p.y, 'stone', 64);
         }
         // Hero projectile effects
         if (p.towerType === 'hero' && p.target.alive) {
@@ -2347,7 +2720,17 @@
         slow: null,
         caltropsHit: {},
         healTimer: 0,
-        isMinion: false
+        isMinion: false,
+        // Sprite animation fields
+        animState: 'walk',
+        animFrame: 0,
+        animTimer: 0,
+        animLocked: false,
+        animLockTimer: 0,
+        facingLeft: false,
+        dying: false,
+        deathAnimDone: false,
+        hitFlash: 0
       });
       totalSpawned++;
       updateHUD();
@@ -2359,7 +2742,7 @@
     if (spawnQueue.length > 0) return;
     var aliveCount = 0;
     for (var i = 0; i < enemies.length; i++) {
-      if (enemies[i].alive) aliveCount++;
+      if (enemies[i].alive && !enemies[i].dying) aliveCount++;
     }
     if (aliveCount === 0) {
       endWave();
@@ -2666,6 +3049,7 @@
     particles = [];
     lightningEffects = [];
     splashEffects = [];
+    spriteEffects = [];
     spawnQueue = [];
     totalSpawned = 0;
     hoverTile = null;
@@ -2852,7 +3236,7 @@
     if (hudEnemies) {
       var alive = 0;
       for (var i = 0; i < enemies.length; i++) {
-        if (enemies[i].alive) alive++;
+        if (enemies[i].alive && !enemies[i].dying) alive++;
       }
       var total = totalSpawned + spawnQueue.length;
       hudEnemies.textContent = alive + '/' + total;
@@ -3375,14 +3759,32 @@
       updateProjectiles(dt);
       updateSplash(dt);
       updateLightning(dt);
+      updateSpriteEffects(dt);
       checkWaveComplete();
     }
     updateParticles(dt);
   }
 
   function draw() {
-    ctx.fillStyle = colorBg;
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    // Map background or solid fill
+    if (TD_SPRITES_ENABLED && tdSpritesReady) {
+      var mapNum = MAP_BG_MAP[currentMapId];
+      var mapImg = mapNum && tdMapImages[mapNum];
+      if (mapImg) {
+        ctx.drawImage(mapImg, 0, 0, CANVAS_W, CANVAS_H);
+        // Terminal theme overlay for readability
+        ctx.fillStyle = colorBg;
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = colorBg;
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      }
+    } else {
+      ctx.fillStyle = colorBg;
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    }
     drawGrid();
     drawPath();
     drawCaltrops();
@@ -3391,6 +3793,7 @@
     drawHero();
     drawEnemies();
     drawProjectiles();
+    drawSpriteEffects();
     drawSplash();
     drawLightning();
     drawParticles();
@@ -3965,6 +4368,7 @@
     particles = [];
     lightningEffects = [];
     splashEffects = [];
+    spriteEffects = [];
     spawnQueue = [];
     totalSpawned = 0;
     totalKilled = 0;
@@ -4046,6 +4450,37 @@
     showStartScreen();
   }
 
+  function renderSpriteToggle() {
+    var container = document.getElementById('td-start-buttons');
+    if (!container) return;
+    // Remove old toggle if present
+    var old = document.getElementById('td-sprite-toggle');
+    if (old) old.remove();
+
+    var wrap = document.createElement('div');
+    wrap.id = 'td-sprite-toggle';
+    wrap.style.cssText = 'text-align:center;margin-top:8px;font-size:12px;opacity:0.8;';
+
+    var label = document.createElement('label');
+    label.style.cssText = 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;';
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = TD_SPRITES_ENABLED;
+    cb.style.cssText = 'accent-color:' + colorAccent + ';cursor:pointer;';
+    cb.addEventListener('change', function () {
+      TD_SPRITES_ENABLED = cb.checked;
+      try { localStorage.setItem(TD_SPRITES_KEY, String(TD_SPRITES_ENABLED)); } catch (e) {}
+      drawIdle();
+    });
+
+    var text = document.createTextNode(' Sprite graphics' + (tdSpritesReady ? '' : ' (loading...)'));
+    label.appendChild(cb);
+    label.appendChild(text);
+    wrap.appendChild(label);
+    container.appendChild(wrap);
+  }
+
   function showStartScreen() {
     gameSpeed = 1;
     autoWave = false;
@@ -4091,6 +4526,7 @@
     renderTowerBar();
     refreshAllPanels();
     renderHeroInfo();
+    renderSpriteToggle();
     drawIdle();
     // Re-check scroll fade after content is populated
     setTimeout(function () {
@@ -4820,6 +5256,7 @@
 
   // ── Init ──────────────────────────────────────────
   loadHeroSprites();
+  loadTDSprites();
   computePath();
   renderTowerBar();
   initTabs();
