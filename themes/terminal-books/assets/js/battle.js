@@ -2226,6 +2226,7 @@
     var xpPer = Math.floor(10 * stars * (wavesCleared / totalWaves) * rewardMult);
     var totalXPawarded = 0;
     creatureXPList.innerHTML = '';
+    var xpBarAnimations = [];
 
     for (var i = 0; i < team.length; i++) {
       var creature = team[i];
@@ -2234,12 +2235,14 @@
       if (isFirstClear) xp = Math.floor(xp * 3);
       totalXPawarded += xp;
 
+      var oldMergeXP = 0;
       try {
         var freshRaw = localStorage.getItem(PET_KEY);
         if (freshRaw) {
           var freshState = JSON.parse(freshRaw);
           if (freshState.pets && freshState.pets[creature.id]) {
-            freshState.pets[creature.id].mergeXP = (freshState.pets[creature.id].mergeXP || 0) + xp;
+            oldMergeXP = freshState.pets[creature.id].mergeXP || 0;
+            freshState.pets[creature.id].mergeXP = oldMergeXP + xp;
             localStorage.setItem(PET_KEY, JSON.stringify(freshState));
           }
         }
@@ -2273,8 +2276,51 @@
       xpEl.className = 'bt-creature-xp-amount';
       xpEl.textContent = '+' + xp + ' XP' + (alive ? '' : ' (fainted)');
       item.appendChild(xpEl);
+
+      // XP progress bar
+      var creatureMaxLevel = 1;
+      if (catalog && catalog.creatures && catalog.creatures[creature.id]) {
+        creatureMaxLevel = catalog.creatures[creature.id].maxLevel || 1;
+      }
+      var isMaxed = (creature.level || 1) >= creatureMaxLevel;
+
+      if (isMaxed) {
+        var maxLabel = document.createElement('div');
+        maxLabel.className = 'bt-creature-xp-label';
+        maxLabel.textContent = 'MAX';
+        item.appendChild(maxLabel);
+      } else {
+        var nextReq = catalog && catalog.evolution && catalog.evolution[String((creature.level || 1) + 1)]
+          ? catalog.evolution[String((creature.level || 1) + 1)].xpRequired : 100;
+        var newMergeXP = oldMergeXP + xp;
+        var oldPct = Math.min(oldMergeXP / nextReq * 100, 100);
+        var newPct = Math.min(newMergeXP / nextReq * 100, 100);
+
+        var barContainer = document.createElement('div');
+        barContainer.className = 'bt-creature-xp-bar';
+        var barFill = document.createElement('div');
+        barFill.className = 'bt-creature-xp-fill';
+        barFill.style.width = oldPct + '%';
+        barContainer.appendChild(barFill);
+        item.appendChild(barContainer);
+
+        var barLabel = document.createElement('div');
+        barLabel.className = 'bt-creature-xp-label';
+        barLabel.textContent = Math.min(newMergeXP, nextReq) + '/' + nextReq;
+        item.appendChild(barLabel);
+
+        xpBarAnimations.push({ fill: barFill, pct: newPct });
+      }
+
       creatureXPList.appendChild(item);
     }
+
+    // Animate XP bars ~1s after the results overlay opens
+    setTimeout(function() {
+      for (var a = 0; a < xpBarAnimations.length; a++) {
+        xpBarAnimations[a].fill.style.width = xpBarAnimations[a].pct + '%';
+      }
+    }, 1000);
 
     // Coins with reward multiplier
     var coins = victory ? Math.floor(stars * 15 * wavesCleared * rewardMult) : 0;
