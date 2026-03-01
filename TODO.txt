@@ -171,6 +171,27 @@ AreBooksGood - Improvement TODO
 - [x] Per-difficulty completion badges on dungeon cards — shipped dcb2421
 - [x] Fix Titan boss animation (double-rendering, flashing) — rework to use demon slime asset pack
 
+## Pet Skills (Phase 1 & 2 shipped)
+
+### Phase 1 (Done)
+- [x] Page skeleton, layout, routing (`/pets/skills/`)
+- [x] Star Dust wallet (global, header widget)
+- [x] All 5 mini-games (Mining, Fishing, Woodcutting, Smithing, Combat)
+- [x] XP/leveling system (1-99) with resource tiers
+- [x] Pet assignment + idle/offline progress (8h cap) + idle report modal
+- [x] Star prestige system (5 stars, soft reset, escalating costs)
+- [x] Battle stat integration (+10%/star HP/ATK/DEF/SPD, +2 CRI/star)
+- [x] Tool upgrades (5 tiers per skill, Star Dust cost)
+- [x] Keyboard shortcuts (1-5 to select skills)
+
+### Phase 2 (Done) — see SKILLS-TODO.txt for full checklist
+- [x] Mini-game depth: mining combo+gems+respawn, fishing quality+sizes+power, woodcutting rhythm+nests, smithing 5-hit+masterwork, combat player HP+dodge+potions+crits+death
+- [x] Progression: level-up effects, resource unlock toasts, star shower 2x events, mastery system, milestones panel
+- [x] Pet integration: pet sprite in game area, skill-specific speech, level-up congrats, type visual particles
+- [x] Visual polish: tier colors, themed backgrounds, XP bar glow, star prestige burst, skill row star indicators
+- [ ] Economy balancing pass — target: level 99 ≈ 40-60h active, first star in 2-3h, fifth star multi-week
+- [ ] Mobile polish — bottom sheet pet picker, stacked layout tuning, touch-friendly mini-game sizing
+
 ## Pet UI
 
 - [ ] Side menu slide-out hot pet swap menu — grid of pet sprites, small loop animation when scrolled into view

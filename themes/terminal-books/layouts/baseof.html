@@ -65,6 +65,8 @@
   <script src="{{ $pet.RelPermalink }}"></script>
   {{- $jb := resources.Get "js/jackbucks.js" | minify | fingerprint -}}
   <script src="{{ $jb.RelPermalink }}"></script>
+  {{- $sd := resources.Get "js/stardust.js" | minify | fingerprint -}}
+  <script src="{{ $sd.RelPermalink }}"></script>
   {{- $farm := resources.Get "js/farm.js" | minify | fingerprint -}}
   <script src="{{ $farm.RelPermalink }}"></script>
   {{- $farmRes := resources.Get "js/farm-resources.js" | minify | fingerprint -}}
@@ -120,6 +122,10 @@
   {{ if eq .Type "gigs" -}}
     {{- $gigs := resources.Get "js/gigs.js" | minify | fingerprint -}}
     <script src="{{ $gigs.RelPermalink }}"></script>
+  {{- end }}
+  {{ if eq .Type "skills" -}}
+    {{- $skills := resources.Get "js/skills.js" | minify | fingerprint -}}
+    <script src="{{ $skills.RelPermalink }}"></script>
   {{- end }}
   <!-- Cloudflare Web Analytics (production only) -->
   {{ if not hugo.IsServer }}

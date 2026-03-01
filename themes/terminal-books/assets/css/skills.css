@@ -1,0 +1,1597 @@
+/* ── Skills Page Layout ────────────────────────── */
+.skills-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0.5rem;
+}
+
+.skills-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--background) 90%, var(--foreground));
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.skills-dust-icon {
+  color: #ffd700;
+  margin-right: 0.25rem;
+}
+
+.skills-topbar-left {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.skills-topbar-right {
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+/* ── Grid Layout ──────────────────────────────── */
+.skills-grid {
+  display: grid;
+  grid-template-columns: 170px 1fr 200px;
+  gap: 0.5rem;
+  min-height: 500px;
+}
+
+.skills-panel-title {
+  font-family: monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+}
+
+/* ── Left Panel: Skill List ───────────────────── */
+.skills-list-panel {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--background) 95%, var(--foreground));
+}
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 0.25rem;
+}
+
+.skill-row:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.skill-row.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.skill-icon {
+  font-size: 1.3rem;
+  width: 1.6rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.skill-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.skill-name {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--foreground);
+  display: block;
+}
+
+.skill-level {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  display: block;
+}
+
+.skill-xp-bar {
+  height: 6px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin: 2px 0;
+  overflow: hidden;
+}
+
+.skill-xp-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+/* ── Center Panel: Game Area ──────────────────── */
+.skills-game-panel {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--background) 95%, var(--foreground));
+  display: flex;
+  flex-direction: column;
+}
+
+.skills-game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.skills-game-header h2 {
+  margin: 0;
+  font-family: monospace;
+  font-size: 1.1rem;
+  color: var(--foreground);
+}
+
+.skills-game-resource {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.skills-game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skills-game-log {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  height: 60px;
+  min-height: 60px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.skills-game-log div {
+  padding: 1px 0;
+}
+
+/* ── Mining Mini-Game ─────────────────────────── */
+.mining-rocks {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.mining-rock {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  cursor: pointer;
+  border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  background: color-mix(in srgb, var(--background) 85%, var(--foreground));
+  transition: transform 0.1s, border-color 0.15s;
+  position: relative;
+  user-select: none;
+}
+
+.mining-rock:hover {
+  border-color: var(--accent);
+}
+
+.mining-rock:active {
+  transform: scale(0.95);
+}
+
+.mining-rock.shaking {
+  animation: rockShake 0.3s ease-in-out;
+}
+
+.mining-rock.cracking {
+  animation: rockCrack 0.4s ease-out;
+}
+
+.mining-rock.depleted {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+@keyframes rockShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px) rotate(-1deg); }
+  40% { transform: translateX(3px) rotate(1deg); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes rockCrack {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); filter: brightness(1.5); }
+  100% { transform: scale(1); opacity: 0.5; }
+}
+
+/* Ore float-up particle */
+.ore-particle {
+  position: absolute;
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: bold;
+  pointer-events: none;
+  animation: oreFloat 1.2s ease-out forwards;
+  z-index: 10;
+}
+
+.ore-particle.xp {
+  color: #4fc3f7;
+}
+
+.ore-particle.dust {
+  color: #ffd700;
+}
+
+@keyframes oreFloat {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+/* ── Fishing Mini-Game ────────────────────────── */
+.fishing-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.fishing-water {
+  width: 200px;
+  height: 120px;
+  border: 2px solid color-mix(in srgb, #4fc3f7 40%, transparent);
+  background: color-mix(in srgb, #1a3a5c 80%, var(--background));
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fishing-line {
+  width: 2px;
+  height: 0;
+  background: color-mix(in srgb, var(--foreground) 60%, transparent);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transition: height 0.5s ease-out;
+}
+
+.fishing-line.cast {
+  height: 80px;
+}
+
+.fishing-bobber {
+  position: absolute;
+  font-size: 1.5rem;
+  top: 70px;
+  left: calc(50% - 10px);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.fishing-bobber.visible {
+  opacity: 1;
+}
+
+.fishing-bobber.bite {
+  animation: bobberBite 0.15s ease-in-out infinite;
+  color: #ff5252;
+}
+
+@keyframes bobberBite {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+.fishing-exclaim {
+  position: absolute;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ff5252;
+  top: 30px;
+  left: calc(50% - 10px);
+  animation: exclaimPulse 0.3s ease-in-out infinite;
+  display: none;
+}
+
+.fishing-exclaim.visible {
+  display: block;
+}
+
+@keyframes exclaimPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.fishing-btn {
+  font-family: monospace;
+  font-size: 1rem;
+  padding: 0.6rem 1.5rem;
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.fishing-btn:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.fishing-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fishing-status {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  min-height: 1.2em;
+}
+
+/* ── Woodcutting Mini-Game ────────────────────── */
+.woodcutting-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wc-tree {
+  font-size: 4rem;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s;
+}
+
+.wc-tree:active {
+  transform: scale(0.95);
+}
+
+.wc-tree.chopping {
+  animation: treeChop 0.2s ease-in-out;
+}
+
+.wc-tree.falling {
+  animation: treeFall 0.6s ease-in forwards;
+}
+
+@keyframes treeChop {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes treeFall {
+  0% { transform: rotate(0); opacity: 1; }
+  100% { transform: rotate(60deg) translateX(40px); opacity: 0; }
+}
+
+.wc-hits-bar {
+  width: 120px;
+  height: 8px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  overflow: hidden;
+}
+
+.wc-hits-fill {
+  height: 100%;
+  background: #66bb6a;
+  transition: width 0.15s;
+}
+
+.wc-hit-count {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* ── Smithing Mini-Game ───────────────────────── */
+.smithing-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.smithing-recipe-select {
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  padding: 0.3rem 0.5rem;
+}
+
+.smithing-anvil {
+  font-size: 3rem;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.smithing-anvil.hit {
+  animation: anvilHit 0.2s ease-out;
+}
+
+@keyframes anvilHit {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); filter: brightness(1.5); }
+  100% { transform: scale(1); }
+}
+
+.smithing-timing-bar {
+  width: 200px;
+  height: 20px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.smithing-timing-zone {
+  position: absolute;
+  height: 100%;
+  background: color-mix(in srgb, #66bb6a 40%, transparent);
+  border: 1px solid #66bb6a;
+}
+
+.smithing-timing-cursor {
+  position: absolute;
+  width: 3px;
+  height: 100%;
+  background: var(--foreground);
+  top: 0;
+  transition: none;
+}
+
+.smithing-progress {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.smithing-status {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  min-height: 1.2em;
+}
+
+/* ── Combat Mini-Game ─────────────────────────── */
+.combat-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.combat-enemy {
+  width: 96px;
+  height: 96px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.combat-enemy-sprite {
+  width: 64px;
+  height: 64px;
+  background-size: auto 64px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+.combat-enemy-name {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--foreground);
+}
+
+.combat-hp-bar {
+  width: 160px;
+  height: 8px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  overflow: hidden;
+}
+
+.combat-hp-fill {
+  height: 100%;
+  background: #ef5350;
+  transition: width 0.2s;
+}
+
+.combat-hp-text {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.combat-btn {
+  font-family: monospace;
+  font-size: 1rem;
+  padding: 0.5rem 2rem;
+  border: 2px solid #ef5350;
+  background: color-mix(in srgb, #ef5350 20%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.combat-btn:hover {
+  background: color-mix(in srgb, #ef5350 35%, transparent);
+}
+
+.combat-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.combat-streak {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.combat-dmg-float {
+  position: absolute;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 1rem;
+  pointer-events: none;
+  animation: dmgFloat 0.8s ease-out forwards;
+  z-index: 10;
+}
+
+.combat-dmg-float.player-dmg {
+  color: #ef5350;
+}
+
+.combat-dmg-float.enemy-dmg {
+  color: #ffa726;
+}
+
+@keyframes dmgFloat {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+/* ── Right Panel ──────────────────────────────── */
+.skills-right-panel {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--background) 95%, var(--foreground));
+}
+
+.skills-pet-slot {
+  margin-bottom: 0.75rem;
+}
+
+.skills-pet-empty {
+  text-align: center;
+}
+
+.skills-assign-btn, .skills-unassign-btn {
+  font-family: monospace;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  width: 100%;
+}
+
+.skills-assign-btn:hover, .skills-unassign-btn:hover {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.skills-pet-hint {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  margin: 0.3rem 0 0;
+}
+
+.skills-pet-assigned {
+  text-align: center;
+}
+
+.skills-pet-sprite {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.25rem;
+  image-rendering: pixelated;
+  background-size: auto 48px;
+  background-repeat: no-repeat;
+}
+
+.skills-pet-name {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--foreground);
+}
+
+.skills-pet-type-bonus {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  margin: 0.2rem 0 0;
+}
+
+.skills-pet-activity {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin: 0.2rem 0 0.4rem;
+  font-style: italic;
+}
+
+/* Tool slot */
+.skills-tool-slot {
+  margin-bottom: 0.75rem;
+  padding: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.skills-tool-info {
+  display: flex;
+  justify-content: space-between;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  margin-bottom: 0.3rem;
+}
+
+.skills-tool-hint {
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  margin: 0.2rem 0;
+  line-height: 1.4;
+}
+
+.skills-tool-hint .tool-next-name {
+  color: var(--accent);
+}
+
+.skills-upgrade-tool-btn {
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #ffd700;
+  background: color-mix(in srgb, #ffd700 10%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  width: 100%;
+}
+
+.skills-upgrade-tool-btn:hover {
+  background: color-mix(in srgb, #ffd700 25%, transparent);
+}
+
+.skills-upgrade-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Star panel */
+.skills-star-panel {
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.skills-stars-display {
+  font-size: 1.5rem;
+  letter-spacing: 0.15em;
+  color: #ffd700;
+  margin-bottom: 0.25rem;
+}
+
+.skills-stars-display.glow-1 { text-shadow: 0 0 4px #ffd700; }
+.skills-stars-display.glow-2 { text-shadow: 0 0 6px #ffd700; }
+.skills-stars-display.glow-3 { text-shadow: 0 0 10px #ffd700, 0 0 3px #ffa000; }
+.skills-stars-display.glow-4 { text-shadow: 0 0 14px #ffd700, 0 0 5px #ffa000; }
+.skills-stars-display.glow-5 { text-shadow: 0 0 20px #ffd700, 0 0 8px #ffa000, 0 0 3px #fff; }
+
+.skills-star-cost {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin-bottom: 0.3rem;
+}
+
+.skills-starup-btn {
+  font-family: monospace;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid #ffd700;
+  background: color-mix(in srgb, #ffd700 15%, transparent);
+  color: #ffd700;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+}
+
+.skills-starup-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, #ffd700 30%, transparent);
+}
+
+.skills-starup-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.skills-star-hint {
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  margin: 0.3rem 0 0;
+}
+
+/* Idle status */
+.skills-idle-status {
+  padding: 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.skills-idle-label {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+/* ── Pet Picker Overlay ───────────────────────── */
+.skills-pet-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skills-pet-picker-modal {
+  background: var(--background);
+  border: 2px solid var(--accent);
+  padding: 1rem;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.skills-pet-picker-modal h3 {
+  font-family: monospace;
+  margin: 0 0 0.75rem;
+  color: var(--foreground);
+}
+
+.skills-pet-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.skills-pet-pick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.skills-pet-pick-card:hover {
+  border-color: var(--accent);
+}
+
+.skills-pet-pick-card.assigned-elsewhere {
+  pointer-events: none;
+  border-color: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.skills-pet-pick-card.assigned-elsewhere .skills-pet-pick-sprite {
+  filter: grayscale(0.8) brightness(0.6);
+}
+
+.skills-pet-pick-card.assigned-elsewhere .skills-pet-pick-name,
+.skills-pet-pick-card.assigned-elsewhere .skills-pet-pick-type {
+  opacity: 0.5;
+}
+
+.skills-pet-pick-sprite {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  background-size: auto 48px;
+  background-repeat: no-repeat;
+}
+
+.skills-pet-pick-name {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--foreground);
+  margin-top: 0.2rem;
+}
+
+.skills-pet-pick-type {
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: var(--accent);
+}
+
+.skills-picker-close {
+  font-family: monospace;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ── Confirm & Idle Report Overlays ───────────── */
+.skills-confirm-overlay, .skills-idle-report-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  z-index: 9001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skills-confirm-modal, .skills-idle-report-modal {
+  background: var(--background);
+  border: 2px solid #ffd700;
+  padding: 1.25rem;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+}
+
+.skills-confirm-modal h3, .skills-idle-report-modal h3 {
+  font-family: monospace;
+  color: #ffd700;
+  margin: 0 0 0.75rem;
+}
+
+.skills-confirm-modal p {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--foreground);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.skills-confirm-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.skills-confirm-yes {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem;
+  border: 2px solid #ffd700;
+  background: color-mix(in srgb, #ffd700 25%, transparent);
+  color: #ffd700;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.skills-confirm-no {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.skills-idle-report-content {
+  text-align: left;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--foreground);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.skills-idle-report-content .idle-pet-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.skills-idle-report-content .idle-pet-sprite {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  background-size: auto 32px;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+.skills-idle-report-content .idle-total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.skills-idle-report-ok {
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem 1.5rem;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+/* ── Active page auto-train floating text ─────── */
+.skills-auto-float {
+  position: absolute;
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--accent);
+  pointer-events: none;
+  animation: autoFloat 1.5s ease-out forwards;
+  white-space: nowrap;
+}
+
+@keyframes autoFloat {
+  0% { opacity: 0.8; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+/* ── D4: Game Area Themed Backgrounds ─────────── */
+.skills-game-area[data-skill="mining"] {
+  background: color-mix(in srgb, #5d4037 8%, transparent);
+}
+.skills-game-area[data-skill="fishing"] {
+  background: color-mix(in srgb, #1565c0 8%, transparent);
+}
+.skills-game-area[data-skill="woodcutting"] {
+  background: color-mix(in srgb, #2e7d32 8%, transparent);
+}
+.skills-game-area[data-skill="smithing"] {
+  background: color-mix(in srgb, #e65100 8%, transparent);
+}
+.skills-game-area[data-skill="combat"] {
+  background: color-mix(in srgb, #b71c1c 8%, transparent);
+}
+
+/* ── D1: Resource Tier Colors ─────────────────── */
+.tier-0 { color: #888; }
+.tier-1 { color: #ccc; }
+.tier-2 { color: #4caf50; }
+.tier-3 { color: #2196f3; }
+.tier-4 { color: #9c27b0; }
+.tier-5 { color: #ffd700; }
+
+/* ── D2: XP Bar Enhancement ───────────────────── */
+.skill-xp-bar.xp-near-level .skill-xp-fill {
+  box-shadow: 0 0 6px var(--accent), 0 0 2px var(--accent);
+}
+
+.skill-xp-bar.xp-bar-flash {
+  animation: xpBarFlash 0.5s ease-out;
+}
+
+@keyframes xpBarFlash {
+  0% { box-shadow: 0 0 8px var(--accent); }
+  100% { box-shadow: none; }
+}
+
+/* ── B1: Level-Up Effects ─────────────────────── */
+.skill-row.level-up-glow {
+  animation: levelUpGlow 1.5s ease-out;
+}
+
+@keyframes levelUpGlow {
+  0% { box-shadow: 0 0 12px var(--accent); border-color: var(--accent); }
+  100% { box-shadow: none; border-color: transparent; }
+}
+
+.skills-page.screen-flash {
+  animation: screenFlash 0.2s ease-out;
+}
+
+@keyframes screenFlash {
+  0% { filter: brightness(1.3); }
+  100% { filter: brightness(1); }
+}
+
+.level-up-big-text {
+  position: absolute;
+  font-family: monospace;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--accent);
+  pointer-events: none;
+  z-index: 20;
+  animation: bigTextFade 1.2s ease-out forwards;
+  text-shadow: 0 0 10px var(--accent);
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+}
+
+@keyframes bigTextFade {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.2); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(1); }
+}
+
+.skills-milestone-banner {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background);
+  border: 2px solid var(--accent);
+  padding: 1rem 2rem;
+  font-family: monospace;
+  font-size: 1.1rem;
+  color: var(--accent);
+  z-index: 9999;
+  text-align: center;
+  animation: bannerSlide 0.3s ease-out;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.skills-milestone-banner.mastered {
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 30px color-mix(in srgb, #ffd700 40%, transparent);
+  font-size: 1.3rem;
+}
+
+@keyframes bannerSlide {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── B2: Resource Unlock Toast ────────────────── */
+.skills-unlock-toast {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--accent) 20%, var(--background));
+  border: 1px solid var(--accent);
+  padding: 0.4rem 0.75rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  z-index: 15;
+  animation: toastSlide 0.3s ease-out;
+}
+
+@keyframes toastSlide {
+  0% { opacity: 0; transform: translateY(-100%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ── B3: Star Shower ──────────────────────────── */
+.skills-game-panel.star-shower {
+  box-shadow: inset 0 0 20px color-mix(in srgb, #ffd700 25%, transparent);
+}
+
+.star-shower-banner {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: color-mix(in srgb, #ffd700 20%, var(--background));
+  border: 1px solid #ffd700;
+  padding: 0.2rem 0.5rem;
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: #ffd700;
+  z-index: 15;
+}
+
+/* ── B4: Mastery System ───────────────────────── */
+.skill-row.mastered {
+  border-color: #ffd700 !important;
+  animation: masteryShimmer 3s ease-in-out infinite;
+}
+
+@keyframes masteryShimmer {
+  0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, #ffd700 20%, transparent); }
+  50% { box-shadow: 0 0 10px color-mix(in srgb, #ffd700 40%, transparent); }
+}
+
+/* ── B5: Milestones Panel ─────────────────────── */
+.skills-milestones {
+  padding: 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.skills-milestone-stat {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  padding: 0.15rem 0;
+}
+
+.skills-milestone-stat span {
+  color: var(--accent);
+}
+
+/* ── C1: Pet in Game Area ─────────────────────── */
+.skills-game-pet {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  background-size: auto 48px;
+  background-repeat: no-repeat;
+  z-index: 5;
+  transition: transform 0.2s;
+}
+
+.skills-game-pet.pet-bounce {
+  animation: petBounce 0.4s ease-out;
+}
+
+.skills-game-pet.pet-wiggle {
+  animation: petWiggle 0.5s ease-in-out;
+}
+
+.skills-game-pet.pet-cheer {
+  animation: petCheer 0.4s ease-out;
+}
+
+@keyframes petBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes petWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes petCheer {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ── C4: Pet Type Visual Particles ────────────── */
+.type-particle {
+  position: absolute;
+  font-size: 1rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.type-particle.fire-particle {
+  animation: fireFloat 1s ease-out forwards;
+}
+
+.type-particle.aqua-particle {
+  animation: aquaScatter 0.8s ease-out forwards;
+}
+
+.type-particle.nature-particle {
+  animation: leafDrift 1.2s ease-out forwards;
+}
+
+.type-particle.tech-particle {
+  animation: sparkFlash 0.5s ease-out forwards;
+}
+
+.type-particle.shadow-particle {
+  animation: shadowWisp 1s ease-out forwards;
+}
+
+@keyframes fireFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) translateX(8px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-60px) translateX(-5px) scale(0.8); }
+}
+
+@keyframes aquaScatter {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx, 20px), var(--dy, -30px)) scale(0.5); }
+}
+
+@keyframes leafDrift {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-50px) translateX(15px) rotate(180deg); }
+}
+
+@keyframes sparkFlash {
+  0% { opacity: 1; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+
+@keyframes shadowWisp {
+  0% { opacity: 0.8; transform: translateY(0) scale(1); }
+  50% { opacity: 0.5; transform: translateY(-20px) scale(1.2) rotate(10deg); }
+  100% { opacity: 0; transform: translateY(-50px) scale(0.5) rotate(-10deg); }
+}
+
+/* ── D3: Star Prestige Burst ──────────────────── */
+.star-up-burst {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, #ffd700 30%, transparent);
+  z-index: 9998;
+  pointer-events: none;
+  animation: starBurst 0.8s ease-out forwards;
+}
+
+@keyframes starBurst {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.skills-stars-display.star-shake {
+  animation: starShake 0.5s ease-in-out;
+}
+
+@keyframes starShake {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.3) rotate(-5deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+  75% { transform: scale(1.2) rotate(-3deg); }
+}
+
+/* ── D5: Skill Row Star Indicators ────────────── */
+.skill-star-indicator {
+  display: inline;
+  color: #ffd700;
+  font-size: 0.6rem;
+  margin-left: 0.2rem;
+}
+
+/* ── A1: Mining Enhancements ──────────────────── */
+.mining-combo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ffd700;
+  pointer-events: none;
+  text-shadow: 0 0 6px #ffd700;
+  z-index: 15;
+}
+
+.mining-rock.depleted {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.mining-rock-label {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  white-space: nowrap;
+}
+
+.mining-respawn-timer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.ore-particle.gem {
+  color: #ffd700;
+  text-shadow: 0 0 8px #ffd700;
+  font-size: 1rem;
+}
+
+/* ── A2: Fishing Enhancements ─────────────────── */
+.fishing-power-bar {
+  width: 160px;
+  height: 12px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  overflow: hidden;
+}
+
+.fishing-power-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.05s linear;
+}
+
+.fishing-golden {
+  color: #ffd700 !important;
+  text-shadow: 0 0 8px #ffd700;
+  font-weight: bold;
+}
+
+.fishing-rare {
+  color: #e040fb !important;
+  text-shadow: 0 0 8px #e040fb;
+  font-weight: bold;
+}
+
+.fishing-size {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+/* ── A3: Woodcutting Enhancements ─────────────── */
+.wc-double-chop {
+  position: absolute;
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffd700;
+  pointer-events: none;
+  animation: doubleChopFlash 0.6s ease-out forwards;
+  z-index: 15;
+  text-shadow: 0 0 8px #ffd700;
+}
+
+@keyframes doubleChopFlash {
+  0% { opacity: 1; transform: translateY(0) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-30px) scale(1); }
+}
+
+.wc-tree-label {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.ore-particle.nest {
+  color: #8d6e63;
+  font-size: 1.2rem;
+}
+
+/* ── A4: Smithing Enhancements ────────────────── */
+.smithing-anvil.glow-1 { filter: brightness(1.1); }
+.smithing-anvil.glow-2 { filter: brightness(1.2); text-shadow: 0 0 4px #ffa000; }
+.smithing-anvil.glow-3 { filter: brightness(1.3); text-shadow: 0 0 8px #ffa000; }
+.smithing-anvil.glow-4 { filter: brightness(1.5); text-shadow: 0 0 12px #ffd700; }
+.smithing-anvil.glow-5 { filter: brightness(1.7); text-shadow: 0 0 18px #ffd700, 0 0 6px #fff; }
+
+.smithing-masterwork {
+  position: absolute;
+  font-family: monospace;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 12px #ffd700;
+  pointer-events: none;
+  z-index: 15;
+  animation: masterworkFlash 1s ease-out forwards;
+}
+
+@keyframes masterworkFlash {
+  0% { opacity: 1; transform: scale(1.5); }
+  50% { transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+/* ── A5: Combat Enhancements ──────────────────── */
+.combat-player-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.combat-player-hp-bar {
+  width: 160px;
+  height: 8px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  overflow: hidden;
+}
+
+.combat-player-hp-fill {
+  height: 100%;
+  background: #66bb6a;
+  transition: width 0.2s;
+}
+
+.combat-player-hp-text {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.combat-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.combat-dodge-btn {
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid #ffa726;
+  background: color-mix(in srgb, #ffa726 15%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.combat-dodge-btn:hover {
+  background: color-mix(in srgb, #ffa726 30%, transparent);
+}
+
+.combat-dodge-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.combat-potion-btn {
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #66bb6a;
+  background: color-mix(in srgb, #66bb6a 15%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.combat-potion-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.combat-dmg-float.crit {
+  color: #ff1744 !important;
+  font-size: 1.3rem;
+  text-shadow: 0 0 8px #ff1744;
+}
+
+.combat-dmg-float.dodge-text {
+  color: #ffa726;
+  font-size: 1rem;
+}
+
+.combat-death-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  font-family: monospace;
+}
+
+.combat-death-text {
+  font-size: 1.5rem;
+  color: #ef5350;
+  margin-bottom: 0.5rem;
+}
+
+.combat-death-countdown {
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* ── Mobile Layout ────────────────────────────── */
+@media (max-width: 768px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skills-list-panel {
+    order: 1;
+  }
+
+  .skills-list {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+  }
+
+  .skill-row {
+    flex-direction: column;
+    min-width: 70px;
+    text-align: center;
+    margin-bottom: 0;
+    padding: 0.3rem;
+  }
+
+  .skill-info {
+    width: 100%;
+  }
+
+  .skills-game-panel {
+    order: 2;
+    min-height: 320px;
+  }
+
+  .skills-right-panel {
+    order: 3;
+  }
+
+  .skills-topbar {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+}

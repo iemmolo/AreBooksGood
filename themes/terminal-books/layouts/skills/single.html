@@ -1,0 +1,161 @@
+{{ define "main" }}
+<div class="skills-page" id="skills-page">
+
+  <!-- Top Bar -->
+  <div class="skills-topbar">
+    <div class="skills-topbar-left">
+      <span class="skills-dust-icon">&#10022;</span>
+      <span id="skills-dust-display">0</span> Star Dust
+    </div>
+    <div class="skills-topbar-right">
+      Total Levels: <span id="skills-total-levels">5</span> / 495
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="skills-grid">
+
+    <!-- Left Panel: Skill List -->
+    <div class="skills-list-panel">
+      <h3 class="skills-panel-title">Skills</h3>
+      <div class="skills-list" id="skills-list">
+        <div class="skill-row selected" data-skill="mining">
+          <span class="skill-icon">&#9935;</span>
+          <div class="skill-info">
+            <span class="skill-name">Mining</span>
+            <div class="skill-xp-bar"><div class="skill-xp-fill" style="width:0%"></div></div>
+            <span class="skill-level">Lv 1</span>
+          </div>
+        </div>
+        <div class="skill-row" data-skill="fishing">
+          <span class="skill-icon">&#127907;</span>
+          <div class="skill-info">
+            <span class="skill-name">Fishing</span>
+            <div class="skill-xp-bar"><div class="skill-xp-fill" style="width:0%"></div></div>
+            <span class="skill-level">Lv 1</span>
+          </div>
+        </div>
+        <div class="skill-row" data-skill="woodcutting">
+          <span class="skill-icon">&#129683;</span>
+          <div class="skill-info">
+            <span class="skill-name">Woodcutting</span>
+            <div class="skill-xp-bar"><div class="skill-xp-fill" style="width:0%"></div></div>
+            <span class="skill-level">Lv 1</span>
+          </div>
+        </div>
+        <div class="skill-row" data-skill="smithing">
+          <span class="skill-icon">&#128296;</span>
+          <div class="skill-info">
+            <span class="skill-name">Smithing</span>
+            <div class="skill-xp-bar"><div class="skill-xp-fill" style="width:0%"></div></div>
+            <span class="skill-level">Lv 1</span>
+          </div>
+        </div>
+        <div class="skill-row" data-skill="combat">
+          <span class="skill-icon">&#9876;</span>
+          <div class="skill-info">
+            <span class="skill-name">Combat</span>
+            <div class="skill-xp-bar"><div class="skill-xp-fill" style="width:0%"></div></div>
+            <span class="skill-level">Lv 1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Panel: Active Mini-Game -->
+    <div class="skills-game-panel" id="skills-game-panel">
+      <div class="skills-game-header">
+        <h2 id="skills-game-title">Mining</h2>
+        <div class="skills-game-resource">
+          Current: <span id="skills-current-resource">Copper Ore</span>
+        </div>
+      </div>
+      <div class="skills-game-area" id="skills-game-area">
+        <!-- Mini-game content injected by JS -->
+      </div>
+      <div class="skills-game-log" id="skills-game-log"></div>
+    </div>
+
+    <!-- Right Panel: Pet Assignment + Star Up -->
+    <div class="skills-right-panel">
+      <h3 class="skills-panel-title">Pet Assignment</h3>
+      <div class="skills-pet-slot" id="skills-pet-slot">
+        <div class="skills-pet-empty" id="skills-pet-empty">
+          <button class="skills-assign-btn" id="skills-assign-btn">Assign Pet</button>
+          <p class="skills-pet-hint">Assigned pets auto-train while you're away</p>
+        </div>
+        <div class="skills-pet-assigned" id="skills-pet-assigned" style="display:none">
+          <div class="skills-pet-sprite" id="skills-pet-sprite"></div>
+          <div class="skills-pet-name" id="skills-pet-name"></div>
+          <div class="skills-pet-type-bonus" id="skills-pet-type-bonus"></div>
+          <div class="skills-pet-activity" id="skills-pet-activity"></div>
+          <button class="skills-unassign-btn" id="skills-unassign-btn">Unassign</button>
+        </div>
+      </div>
+
+      <h3 class="skills-panel-title">Tools</h3>
+      <div class="skills-tool-slot" id="skills-tool-slot">
+        <div class="skills-tool-info" id="skills-tool-info">
+          <span id="skills-tool-name">Basic Pickaxe</span>
+          <span id="skills-tool-tier">Tier 1/5</span>
+        </div>
+        <div class="skills-tool-hint" id="skills-tool-hint"></div>
+        <button class="skills-upgrade-tool-btn" id="skills-upgrade-tool-btn">Upgrade (500 SD)</button>
+      </div>
+
+      <h3 class="skills-panel-title">Star Prestige</h3>
+      <div class="skills-star-panel" id="skills-star-panel">
+        <div class="skills-stars-display" id="skills-stars-display">&#9734;&#9734;&#9734;&#9734;&#9734;</div>
+        <div class="skills-star-cost" id="skills-star-cost">Next: 1,000 SD</div>
+        <button class="skills-starup-btn" id="skills-starup-btn" disabled>Star Up</button>
+        <p class="skills-star-hint">Resets this skill to Lv 1.<br>Permanent stat boosts!</p>
+      </div>
+
+      <h3 class="skills-panel-title">Idle Status</h3>
+      <div class="skills-idle-status" id="skills-idle-status">
+        <span class="skills-idle-label">Auto-training: Off</span>
+      </div>
+
+      <h3 class="skills-panel-title">Milestones</h3>
+      <div class="skills-milestones" id="skills-milestones">
+        <div class="skills-milestone-stat">Actions: <span id="ms-total-actions">0</span></div>
+        <div class="skills-milestone-stat">Dust earned: <span id="ms-total-dust">0</span></div>
+        <div class="skills-milestone-stat">Highest Lv: <span id="ms-highest-level">1</span></div>
+        <div class="skills-milestone-stat">Mastered: <span id="ms-mastered-count">0</span> / 5</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Pet Picker Overlay -->
+  <div class="skills-pet-picker-overlay" id="skills-pet-picker" style="display:none">
+    <div class="skills-pet-picker-modal">
+      <h3>Choose a Pet</h3>
+      <div class="skills-pet-picker-grid" id="skills-pet-picker-grid"></div>
+      <button class="skills-picker-close" id="skills-picker-close">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Star Up Confirmation Modal -->
+  <div class="skills-confirm-overlay" id="skills-confirm-overlay" style="display:none">
+    <div class="skills-confirm-modal">
+      <h3>Star Up?</h3>
+      <p id="skills-confirm-text"></p>
+      <div class="skills-confirm-buttons">
+        <button class="skills-confirm-yes" id="skills-confirm-yes">Star Up!</button>
+        <button class="skills-confirm-no" id="skills-confirm-no">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Idle Report Modal -->
+  <div class="skills-idle-report-overlay" id="skills-idle-report" style="display:none">
+    <div class="skills-idle-report-modal">
+      <h3>While you were away...</h3>
+      <div class="skills-idle-report-content" id="skills-idle-report-content"></div>
+      <button class="skills-idle-report-ok" id="skills-idle-report-ok">OK</button>
+    </div>
+  </div>
+
+</div>
+{{ end }}
