@@ -117,6 +117,10 @@
     {{- $gp := resources.Get "js/gear-page.js" | minify | fingerprint -}}
     <script src="{{ $gp.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "gigs" -}}
+    {{- $gigs := resources.Get "js/gigs.js" | minify | fingerprint -}}
+    <script src="{{ $gigs.RelPermalink }}"></script>
+  {{- end }}
   <!-- Cloudflare Web Analytics (production only) -->
   {{ if not hugo.IsServer }}
   <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ec14089dd8b94cf180a0ea764726ff5d"}'></script>

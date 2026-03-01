@@ -1,0 +1,52 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+
+  {{ $gigs := site.Data.gigs }}
+  <div id="gig-app" data-gigs='{{ $gigs | jsonify }}'>
+
+    <div class="gig-filter-bar">
+      <div class="gig-filter-row">
+        <input type="text" id="gig-search" class="gig-search" placeholder="Search events, venues...">
+        <select id="gig-category" class="gig-select">
+          <option value="">All categories</option>
+        </select>
+      </div>
+      <div class="gig-filter-row">
+        <select id="gig-price" class="gig-select">
+          <option value="">All prices</option>
+          <option value="free">Free only</option>
+          <option value="paid">Paid only</option>
+        </select>
+        <select id="gig-date" class="gig-select">
+          <option value="">All dates</option>
+          <option value="today">Today</option>
+          <option value="tomorrow">Tomorrow</option>
+          <option value="weekend">This weekend</option>
+          <option value="week">This week</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gig-status-bar">
+      <span id="gig-count"></span>
+      <button id="gig-clear" class="gig-clear-btn" style="display:none;">Clear filters</button>
+    </div>
+
+    <div id="gig-list"></div>
+
+    <div id="gig-empty" class="gig-empty" style="display:none;">
+      <p>No events match your filters.</p>
+      <button id="gig-empty-clear" class="gig-clear-btn">Clear filters</button>
+    </div>
+
+    <div id="gig-no-data" class="gig-empty" style="display:none;">
+      <p>No events loaded. Check back soon.</p>
+    </div>
+
+    <div class="gig-footer">
+      <span id="gig-updated"></span>
+      <span class="gig-location"></span>
+    </div>
+
+  </div>
+{{ end }}

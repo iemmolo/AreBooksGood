@@ -138,6 +138,12 @@
   <link rel="stylesheet" href="{{ $shop.RelPermalink }}">
 {{- end }}
 
+{{/* Gigs CSS */}}
+{{ if eq .Type "gigs" -}}
+  {{- $gigs := resources.Get "css/gigs.css" | minify | fingerprint -}}
+  <link rel="stylesheet" href="{{ $gigs.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">

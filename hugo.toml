@@ -38,6 +38,10 @@ theme = 'terminal-books'
     pageRef = '/pets'
     weight = 37
   [[menus.main]]
+    name = 'Gigs'
+    pageRef = '/gigs'
+    weight = 38
+  [[menus.main]]
     name = 'About'
     pageRef = '/about'
     weight = 50

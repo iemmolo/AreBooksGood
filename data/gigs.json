@@ -1,0 +1,154 @@
+{
+  "fetched_at": "2026-03-01T11:13:52+00:00",
+  "location": "Fremantle, WA",
+  "radius_km": 10,
+  "events": [
+    {
+      "id": 398389,
+      "name": "Recent Works - Tarisse King and more",
+      "description": "We are pleased to present new works from Tarisse King supported by other recent small works by gallery artists. Tarisse now lives in New Zealand with her partner and children, and has been a full-time artist from her ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-02-20 10:00:00",
+      "datetime_end": "2026-03-15 17:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/recent-works-tarisse-king-and-more/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 398331,
+      "name": "From the Desert",
+      "description": "Japingka gallery presents an exhibition of works by leading senior artists of the Western and Central Desert art movement. Bringing together painters from multiple language groups&mdash;including Pintupi, Warlpiri, ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-02-20 10:00:00",
+      "datetime_end": "2026-03-22 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/from-the-desert/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 398093,
+      "name": "Perth Festival: Brad Rimmer | Loom of the Land",
+      "description": "Loom of the Land brings together three interconnected bodies of work from artist Brad Rimmer&rsquo;s Wheatbelt trilogy in a major survey exhibition. Silence (2009), Nature Boy (2019), and Nowhere Near (2023) have been ...",
+      "venue": "Fremantle Arts Centre, Fremantle, Western Australia",
+      "address": "",
+      "category": "Photography",
+      "datetime_start": "2026-02-07 10:00:00",
+      "datetime_end": "2026-04-26 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/perth-festival-brad-rimmer-loom-of-the-land/perth",
+      "status": "active"
+    },
+    {
+      "id": 398589,
+      "name": "Melville Ability Dance Class",
+      "description": "The Ability dance class at the Melville leisurefit is on Fridays from 10.30am-11.30am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
+      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "address": "",
+      "category": "Dance Classes",
+      "datetime_start": "2026-02-27 10:30:00",
+      "datetime_end": "2026-12-18 11:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 397868,
+      "name": "Art Exhibition: Emergent Curiosities",
+      "description": "Fremantle-based artist Jem Ham presents Emergent Curiosities, a solo exhibition of works exploring the hidden landscapes of the mind. Inspired by Aldous Huxley\u2019s idea that \u201cour mind still has its darkest Africas, its ...",
+      "venue": "Colab 2 Gallery, White Gum Valley, Western Australia",
+      "address": "",
+      "category": "Fine Art",
+      "datetime_start": "2026-03-06 18:00:00",
+      "datetime_end": "2026-03-15 16:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/art-exhibition-emergent-curiosities/perth",
+      "status": "active"
+    },
+    {
+      "id": 398371,
+      "name": "Comedy Warehouse",
+      "description": "A fabulous night of fun and frivolity based on audience suggestions. \n \nOur talented cast is coming to Fremantle to spin out funny, fully improvised stories based on audience suggestions that will exist for that night ...",
+      "venue": "Hybrid Warehouse, Fremantle, Western Australia",
+      "address": "",
+      "category": "Comedy",
+      "datetime_start": "2026-03-12 19:00:00",
+      "datetime_end": "2026-03-12 20:45:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/comedy-warehouse/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 398597,
+      "name": "Forever 18 Mini-Fest \u2013 Live Music Fundraiser",
+      "description": "Clancy&rsquo;s Fish Pub Fremantle comes alive on Sunday, March 15, as Amby&rsquo;s Army presents the Forever 18 Mini-Fest &ndash; an unforgettable night of live music supporting youth mental health. \n \nFeaturing an ...",
+      "venue": "Clancy's Fish Pub Fremantle, Fremantle, Western Australia",
+      "address": "",
+      "category": "Rock & Pop",
+      "datetime_start": "2026-03-15 17:00:00",
+      "datetime_end": "2026-03-15 21:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/forever-18-mini-fest-live-music-fundraiser/perth/fremantle",
+      "status": "active"
+    }
+  ],
+  "categories": [
+    {
+      "id": "All Events",
+      "name": "All Events"
+    },
+    {
+      "id": "Concerts & Gig Guide",
+      "name": "Concerts & Gig Guide"
+    },
+    {
+      "id": "Performing Arts",
+      "name": "Performing Arts"
+    },
+    {
+      "id": "Sports & Outdoors",
+      "name": "Sports & Outdoors"
+    },
+    {
+      "id": "Festivals & Lifestyle",
+      "name": "Festivals & Lifestyle"
+    },
+    {
+      "id": "Music Festivals",
+      "name": "Music Festivals"
+    },
+    {
+      "id": "Exhibitions",
+      "name": "Exhibitions"
+    },
+    {
+      "id": "Workshops, Conferences & Classes",
+      "name": "Workshops, Conferences & Classes"
+    },
+    {
+      "id": "Quiz, Karaoke",
+      "name": "Quiz, Karaoke"
+    },
+    {
+      "id": "Alternative, Indie",
+      "name": "Alternative, Indie"
+    }
+  ]
+}
