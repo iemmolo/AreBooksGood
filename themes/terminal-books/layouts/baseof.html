@@ -101,6 +101,10 @@
     {{- $td := resources.Get "js/tower-defense.js" | minify | fingerprint -}}
     <script src="{{ $td.RelPermalink }}"></script>
   {{- end }}
+  {{ if eq .Type "tower-defense-2" -}}
+    {{- $td2 := resources.Get "js/tower-defense-2.js" | minify | fingerprint -}}
+    <script src="{{ $td2.RelPermalink }}"></script>
+  {{- end }}
   {{ if eq .Type "trebuchet" -}}
     {{- $tb := resources.Get "js/trebuchet.js" | minify | fingerprint -}}
     <script src="{{ $tb.RelPermalink }}"></script>

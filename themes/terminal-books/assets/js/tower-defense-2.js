@@ -2,28 +2,39 @@
   'use strict';
 
   // ── Constants ─────────────────────────────────────
-  var GRID_COLS = 16;
-  var GRID_ROWS = 12;
-  var TILE_SIZE = 40;
+  var GRID_COLS = 32;
+  var GRID_ROWS = 24;
+  var TILE_SIZE = 20;
 
   var MAPS = {
     map1: {
       name: 'Valley',
-      desc: 'Classic zigzag through the valley',
-      path: [[0,6],[3,6],[3,2],[8,2],[8,8],[12,8],[12,4],[15,4]],
-      spawn: [0,6], exit: [15,4]
+      desc: 'Winding S-curve through the forest',
+      paths: [
+        [[0,3],[22,3],[24,5],[24,8],[23,9],[22,10],[21,11],[18,12],[15,12],[14,15],[10,17],[9,20],[8,23]],
+        [[0,3],[22,3],[24,5],[24,8],[23,9],[22,10],[21,11],[18,12],[15,12],[14,15],[14,20],[14,23]],
+        [[0,3],[22,3],[24,5],[24,8],[23,9],[22,10],[21,11],[18,12],[15,12],[14,15],[19,18],[20,23]]
+      ],
+      spawn: [0,3],
+      exits: [[8,23],[14,23],[20,23]]
     },
     map2: {
-      name: 'Switchback',
-      desc: 'Tight switchbacks from the north',
-      path: [[15,1],[12,1],[12,5],[4,5],[4,8],[10,8],[10,11],[0,11]],
-      spawn: [15,1], exit: [0,11]
+      name: 'Desert',
+      desc: 'Switchbacks past the oasis ruins',
+      path: [[0,14],[10,14],[10,2],[22,2],[22,10],[31,10]],
+      spawn: [0,14], exit: [31,10]
     },
     map3: {
-      name: 'Spiral',
-      desc: 'Long spiral toward the center',
-      path: [[0,1],[14,1],[14,10],[2,10],[2,5],[8,5],[8,8],[13,8]],
-      spawn: [0,1], exit: [13,8]
+      name: 'Haunted',
+      desc: 'Snake through the cursed wastes',
+      path: [[0,4],[8,4],[8,16],[14,16],[14,6],[24,6],[24,16],[31,16]],
+      spawn: [0,4], exit: [31,16]
+    },
+    map4: {
+      name: 'Tundra',
+      desc: 'Frozen pass through the mountains',
+      path: [[0,10],[8,10],[8,4],[22,4],[22,16],[31,16]],
+      spawn: [0,10], exit: [31,16]
     }
   };
 
@@ -38,14 +49,14 @@
   var currentDifficulty = 'normal';
 
   var TOWER_DEFS = {
-    arrow:      { symbol: 'A',  name: 'Arrow',      dmg: 5,  range: 3, speed: 1.0, cost: 10, color: null,     blueprint: false, ability: { name: 'Volley',    desc: 'Fire 5 arrows at random enemies in range', cooldown: 15 } },
-    cannon:     { symbol: 'C',  name: 'Cannon',     dmg: 15, range: 2, speed: 2.5, cost: 25, color: '#a86',   blueprint: false, ability: { name: 'Mega Blast', desc: 'Next shot 3x damage, 2x splash radius', cooldown: 20 } },
-    frost:      { symbol: 'Fr', name: 'Frost',      dmg: 3,  range: 3, speed: 1.5, cost: 20, color: '#4cf',   blueprint: false, ability: { name: 'Blizzard',  desc: 'Freeze all enemies in range for 3s', cooldown: 25 } },
-    watchtower: { symbol: 'Wt', name: 'Watchtower',  dmg: 0,  range: 3, speed: 0,   cost: 15, color: '#aaa',   blueprint: true, unlockCost: { processed: { stoneBricks: 1 } }, waveReq: 10, ability: { name: 'Rally', desc: 'Double range buff (+20%) for 10s', cooldown: 30 } },
-    fire:       { symbol: 'Fi', name: 'Fire',        dmg: 10, range: 2, speed: 1.2, cost: 30, color: '#f84',   blueprint: true, unlockCost: { raw: { hardwood: 2 } }, waveReq: 15, ability: { name: 'Inferno', desc: 'Apply DOT to all enemies on map', cooldown: 25 } },
-    sniper:     { symbol: 'S',  name: 'Sniper',      dmg: 25, range: 5, speed: 3.0, cost: 50, color: '#8cf',   blueprint: true, unlockCost: { processed: { ironBars: 2 } }, waveReq: 20, ability: { name: 'Headshot', desc: '200 damage to highest-HP enemy in range', cooldown: 20 } },
-    goldmine:   { symbol: 'G',  name: 'Gold Mine',   dmg: 0,  range: 0, speed: 0,   cost: 40, color: '#ffd700',blueprint: true, unlockCost: { raw: { gold: 1 } }, waveReq: 25, ability: { name: 'Payday', desc: '+15 SB instantly', cooldown: 30 } },
-    lightning:  { symbol: 'L',  name: 'Lightning',   dmg: 15, range: 3, speed: 2.5, cost: 60, color: '#ff0',   blueprint: true, unlockCost: { processed: { crystalLens: 1 } }, waveReq: 30, ability: { name: 'Storm', desc: 'Hit every enemy on screen', cooldown: 30 } }
+    arrow:      { symbol: 'A',  name: 'Arrow',      dmg: 5,  range: 6,  speed: 1.0, cost: 10, color: null,     blueprint: false, size: 3, ability: { name: 'Volley',    desc: 'Fire 5 arrows at random enemies in range', cooldown: 15 } },
+    cannon:     { symbol: 'C',  name: 'Cannon',     dmg: 15, range: 4,  speed: 2.5, cost: 25, color: '#a86',   blueprint: false, size: 3, ability: { name: 'Mega Blast', desc: 'Next shot 3x damage, 2x splash radius', cooldown: 20 } },
+    frost:      { symbol: 'Fr', name: 'Frost',      dmg: 3,  range: 6,  speed: 1.5, cost: 20, color: '#4cf',   blueprint: false, size: 3, ability: { name: 'Blizzard',  desc: 'Freeze all enemies in range for 3s', cooldown: 25 } },
+    watchtower: { symbol: 'Wt', name: 'Watchtower',  dmg: 0,  range: 6,  speed: 0,   cost: 15, color: '#aaa',   blueprint: true, size: 3, unlockCost: { processed: { stoneBricks: 1 } }, waveReq: 10, ability: { name: 'Rally', desc: 'Double range buff (+20%) for 10s', cooldown: 30 } },
+    fire:       { symbol: 'Fi', name: 'Fire',        dmg: 10, range: 4,  speed: 1.2, cost: 30, color: '#f84',   blueprint: true, size: 3, unlockCost: { raw: { hardwood: 2 } }, waveReq: 15, ability: { name: 'Inferno', desc: 'Apply DOT to all enemies on map', cooldown: 25 } },
+    sniper:     { symbol: 'S',  name: 'Sniper',      dmg: 25, range: 10, speed: 3.0, cost: 50, color: '#8cf',   blueprint: true, size: 3, unlockCost: { processed: { ironBars: 2 } }, waveReq: 20, ability: { name: 'Headshot', desc: '200 damage to highest-HP enemy in range', cooldown: 20 } },
+    goldmine:   { symbol: 'G',  name: 'Gold Mine',   dmg: 0,  range: 0,  speed: 0,   cost: 40, color: '#ffd700',blueprint: true, size: 3, unlockCost: { raw: { gold: 1 } }, waveReq: 25, ability: { name: 'Payday', desc: '+15 SB instantly', cooldown: 30 } },
+    lightning:  { symbol: 'L',  name: 'Lightning',   dmg: 15, range: 6,  speed: 2.5, cost: 60, color: '#ff0',   blueprint: true, size: 3, unlockCost: { processed: { crystalLens: 1 } }, waveReq: 30, ability: { name: 'Storm', desc: 'Hit every enemy on screen', cooldown: 30 } }
   };
 
   var ENEMY_DEFS = {
@@ -63,7 +74,7 @@
   var START_LIVES = 20;
   var START_SB = 50;
   var SPAWN_INTERVAL = 0.8;
-  var PROJECTILE_SPEED = 6;
+  var PROJECTILE_SPEED = 12;
   var STATS_KEY = 'arebooksgood-td-stats';
   var CRATE_KEY = 'arebooksgood-td-crate';
   var SAVE_KEY = 'arebooksgood-td-save';
@@ -80,22 +91,22 @@
 
   // ── Hero Definitions ─────────────────────────────
   var HERO_DEFS = {
-    fire:   { dmg: 7,  speed: 1.0, range: 2.5, color: '#f84', symbol: 'F',
+    fire:   { dmg: 7,  speed: 1.0, range: 5.0, color: '#f84', symbol: 'F', size: 3,
               q: { name: 'Fire Breath', cooldown: 18, desc: 'Damage + fire DOT to all in range' },
               w: { name: 'Dragon Rage', cooldown: 28, desc: '2x attack speed + fire DOT for 8s' } },
-    nature: { dmg: 8,  speed: 0.8, range: 2.5, color: '#f9c', symbol: 'N',
+    nature: { dmg: 8,  speed: 0.8, range: 5.0, color: '#f9c', symbol: 'N', size: 3,
               q: { name: 'Pounce',     cooldown: 12, desc: 'Instant 3x damage to closest enemy' },
               w: { name: 'Nine Lives',  cooldown: 25, desc: 'Next 5 attacks crit for 2x damage' } },
-    tech:   { dmg: 6,  speed: 1.2, range: 2.5, color: '#4cf', symbol: 'T',
+    tech:   { dmg: 6,  speed: 1.2, range: 5.0, color: '#4cf', symbol: 'T', size: 3,
               q: { name: 'EMP Blast',   cooldown: 20, desc: 'Stun all enemies in range for 2s' },
               w: { name: 'Overclock',   cooldown: 30, desc: '+30% attack speed to towers in range for 8s' } },
-    aqua:   { dmg: 6,  speed: 1.0, range: 3.0, color: '#4af', symbol: 'A',
+    aqua:   { dmg: 6,  speed: 1.0, range: 6.0, color: '#4af', symbol: 'A', size: 3,
               q: { name: 'Tidal Wave',  cooldown: 16, desc: 'Knockback + slow all enemies in range' },
               w: { name: 'Whirlpool',   cooldown: 26, desc: 'Slow zone for 6s at hero position' } },
-    shadow: { dmg: 9,  speed: 0.7, range: 2.0, color: '#a6f', symbol: 'S',
+    shadow: { dmg: 9,  speed: 0.7, range: 4.0, color: '#a6f', symbol: 'S', size: 3,
               q: { name: 'Backstab',    cooldown: 10, desc: 'Instant 4x damage to weakest enemy' },
               w: { name: 'Cloak',       cooldown: 30, desc: 'Invisible for 5s, next hit crits 3x' } },
-    mystic: { dmg: 5,  speed: 1.1, range: 3.0, color: '#f6a', symbol: 'M',
+    mystic: { dmg: 5,  speed: 1.1, range: 6.0, color: '#f6a', symbol: 'M', size: 3,
               q: { name: 'Arcane Bolt', cooldown: 14, desc: 'Chain lightning hits 3 enemies' },
               w: { name: 'Enchant',     cooldown: 28, desc: 'Towers in range get +25% damage for 8s' } }
   };
@@ -128,7 +139,250 @@
   var heroSpriteFrameOffset = 0;
   var heroAnimTimer = 0;
   var heroAnimFrame = 0;
-  var HERO_DRAW_SIZE = 32; // display size on canvas
+  var HERO_DRAW_SIZE = 48; // display size on canvas (fits 3x3 footprint)
+
+  // ── TD Sprite system ────────────────────────────────
+  var TD_SPRITES_ENABLED = true;
+  var tdSpriteData = null;       // parsed td-sprites.json
+  var tdSpriteSheets = {};       // key → Image objects
+  var tdSpritesReady = false;
+  var tdSpriteLoadProgress = 0;  // 0-1 for loading bar
+  var tdMapImages = {};          // map number → Image
+
+  // Save preference to localStorage
+  var TD_SPRITES_KEY = 'arebooksgood-td-sprites';
+  try {
+    var savedPref = localStorage.getItem(TD_SPRITES_KEY);
+    if (savedPref !== null) TD_SPRITES_ENABLED = savedPref !== 'false';
+  } catch (e) {}
+
+  var ENEMY_SPRITE_MAP = {
+    slime:    '1',
+    skeleton: '3',
+    goblin:   '4',
+    healer:   '5',
+    orc:      '6',
+    splitter: '9',
+    ghost:    '8',
+    shielder: '7',
+    boss:     '2'
+  };
+
+  var TOWER_SPRITE_MAP = {
+    arrow:      'tower-archer',
+    cannon:     'tower-stone',
+    frost:      'tower-magic',
+    fire:       'tower-magic',
+    sniper:     'tower-archer',
+    lightning:  'tower-magic',
+    watchtower: 'tower-support',
+    goldmine:   'tower-support'
+  };
+
+  var MAP_BG_MAP = { map1: '1', map2: '2', map3: '3', map4: '4' };
+
+  function loadTDSprites(callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/data/td-sprites.json', true);
+    xhr.onload = function () {
+      if (xhr.status !== 200) { if (callback) callback(); return; }
+      try { tdSpriteData = JSON.parse(xhr.responseText); } catch (e) { if (callback) callback(); return; }
+
+      // Collect all sheets to preload
+      var toLoad = [];
+      var key;
+      if (tdSpriteData.enemies) {
+        for (key in tdSpriteData.enemies) {
+          toLoad.push({ key: 'enemy-' + key, src: '/images/td/' + tdSpriteData.enemies[key].sheet });
+        }
+      }
+      if (tdSpriteData.towers) {
+        for (key in tdSpriteData.towers) {
+          toLoad.push({ key: key, src: '/images/td/' + tdSpriteData.towers[key].sheet });
+        }
+      }
+      if (tdSpriteData.effects) {
+        for (key in tdSpriteData.effects) {
+          toLoad.push({ key: 'fx-' + key, src: '/images/td/' + tdSpriteData.effects[key].sheet });
+        }
+      }
+
+      if (toLoad.length === 0) { tdSpritesReady = true; if (callback) callback(); return; }
+
+      var loaded = 0;
+      var total = toLoad.length;
+
+      // Also preload map backgrounds
+      if (tdSpriteData.maps) {
+        for (key in tdSpriteData.maps) {
+          (function (mk) {
+            var mimg = new Image();
+            mimg.onload = function () { tdMapImages[mk] = mimg; };
+            mimg.src = '/images/td/' + tdSpriteData.maps[mk];
+          })(key);
+        }
+      }
+
+      for (var i = 0; i < toLoad.length; i++) {
+        (function (item) {
+          var img = new Image();
+          img.onload = function () {
+            tdSpriteSheets[item.key] = img;
+            loaded++;
+            tdSpriteLoadProgress = loaded / total;
+            if (loaded >= total) {
+              tdSpritesReady = true;
+              if (callback) callback();
+            }
+          };
+          img.onerror = function () {
+            loaded++;
+            tdSpriteLoadProgress = loaded / total;
+            if (loaded >= total) {
+              tdSpritesReady = true;
+              if (callback) callback();
+            }
+          };
+          img.src = item.src;
+        })(toLoad[i]);
+      }
+    };
+    xhr.onerror = function () { if (callback) callback(); };
+    xhr.send();
+  }
+
+  function drawSpriteFrame(sheetKey, row, frame, cx, cy, drawW, drawH, flipX) {
+    var img = tdSpriteSheets[sheetKey];
+    if (!img) return false;
+    var meta = null;
+    // Resolve metadata from sheet key
+    if (sheetKey.indexOf('enemy-') === 0) {
+      var eid = sheetKey.replace('enemy-', '');
+      meta = tdSpriteData && tdSpriteData.enemies && tdSpriteData.enemies[eid];
+    } else if (sheetKey.indexOf('fx-') === 0) {
+      var fxid = sheetKey.replace('fx-', '');
+      meta = tdSpriteData && tdSpriteData.effects && tdSpriteData.effects[fxid];
+    } else {
+      meta = tdSpriteData && tdSpriteData.towers && tdSpriteData.towers[sheetKey];
+    }
+    if (!meta) return false;
+
+    var fw = meta.frameW;
+    var fh = meta.frameH;
+    var sx = frame * fw;
+    var sy = row * fh;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (flipX) {
+      ctx.translate(cx, cy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, sx, sy, fw, fh, -drawW / 2, -drawH / 2, drawW, drawH);
+    } else {
+      ctx.drawImage(img, sx, sy, fw, fh, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
+    }
+    ctx.restore();
+    return true;
+  }
+
+  function drawTowerSprite(sheetKey, level, cx, cy, drawSize) {
+    var img = tdSpriteSheets[sheetKey];
+    if (!img) return false;
+    var meta = tdSpriteData && tdSpriteData.towers && tdSpriteData.towers[sheetKey];
+    if (!meta) return false;
+
+    var fw = meta.frameW;
+    var fh = meta.frameH;
+    var frameIdx = Math.min(level - 1, meta.frames - 1);
+    var sx = 0;
+    var sy = frameIdx * fh;
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sx, sy, fw, fh, cx - drawSize / 2, cy - drawSize / 2, drawSize, drawSize);
+    ctx.restore();
+    return true;
+  }
+
+  function updateEnemyAnim(e, dt) {
+    if (!TD_SPRITES_ENABLED || !tdSpritesReady) return;
+    var spriteId = ENEMY_SPRITE_MAP[e.type];
+    if (!spriteId) return;
+    var meta = tdSpriteData && tdSpriteData.enemies && tdSpriteData.enemies[spriteId];
+    if (!meta || !meta.animations) return;
+
+    var animDef = meta.animations[e.animState];
+    if (!animDef) return;
+
+    // Don't advance if animation is locked (hurt/die)
+    if (e.animLocked && e.animState !== 'die') {
+      e.animLockTimer -= dt;
+      if (e.animLockTimer <= 0) {
+        e.animLocked = false;
+        e.animState = e.dying ? 'die' : 'walk';
+        e.animFrame = 0;
+        e.animTimer = 0;
+        animDef = meta.animations[e.animState];
+        if (!animDef) return;
+      } else {
+        return;
+      }
+    }
+
+    e.animTimer += dt;
+    if (e.animTimer >= animDef.speed) {
+      e.animTimer -= animDef.speed;
+      e.animFrame++;
+      if (e.animFrame >= animDef.frames) {
+        if (e.animState === 'die') {
+          // Death animation finished — remove enemy
+          e.alive = false;
+          e.deathAnimDone = true;
+        } else {
+          e.animFrame = 0;
+        }
+      }
+    }
+  }
+
+  // Sprite effect system
+  var spriteEffects = [];
+
+  function spawnSpriteEffect(x, y, type, size) {
+    if (!TD_SPRITES_ENABLED || !tdSpritesReady) return;
+    var meta = tdSpriteData && tdSpriteData.effects && tdSpriteData.effects[type];
+    if (!meta) return;
+    spriteEffects.push({
+      x: x, y: y, type: type,
+      size: size || 48,
+      frame: 0, timer: 0,
+      speed: meta.speed || 0.05,
+      maxFrames: meta.frames || 10
+    });
+  }
+
+  function updateSpriteEffects(dt) {
+    for (var i = spriteEffects.length - 1; i >= 0; i--) {
+      var fx = spriteEffects[i];
+      fx.timer += dt;
+      if (fx.timer >= fx.speed) {
+        fx.timer -= fx.speed;
+        fx.frame++;
+        if (fx.frame >= fx.maxFrames) {
+          spriteEffects.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  function drawSpriteEffects() {
+    if (!TD_SPRITES_ENABLED || !tdSpritesReady) return;
+    for (var i = 0; i < spriteEffects.length; i++) {
+      var fx = spriteEffects[i];
+      var sheetKey = 'fx-' + fx.type;
+      drawSpriteFrame(sheetKey, 0, fx.frame, fx.x, fx.y, fx.size, fx.size, false);
+    }
+  }
 
   function loadHeroSprites() {
     // Load catalog first to resolve spriteId, then load sprites
@@ -208,7 +462,7 @@
     for (var i = 0; i < towers.length; i++) {
       var other = towers[i];
       if (other === tower) continue;
-      if (Math.abs(other.col - tower.col) <= 1 && Math.abs(other.row - tower.row) <= 1) {
+      if (Math.abs(other.col - tower.col) <= TOWER_CELLS + 1 && Math.abs(other.row - tower.row) <= TOWER_CELLS + 1) {
         neighbors.push(other);
       }
     }
@@ -653,27 +907,13 @@
   var pathTiles = {};
   var pathSegments = [];
   var pathTotalLen = 0;
+  var allPathSegments = [];
+  var allPathTotalLen = [];
+  var numPaths = 1;
 
-  function computePath() {
-    pathTiles = {};
-    pathSegments = [];
-    pathTotalLen = 0;
-
-    var wp = MAPS[currentMapId].path;
-    for (var i = 0; i < wp.length - 1; i++) {
-      var c1 = wp[i][0], r1 = wp[i][1];
-      var c2 = wp[i + 1][0], r2 = wp[i + 1][1];
-      var dc = c2 > c1 ? 1 : (c2 < c1 ? -1 : 0);
-      var dr = r2 > r1 ? 1 : (r2 < r1 ? -1 : 0);
-      var c = c1, r = r1;
-      while (true) {
-        pathTiles[c + ',' + r] = true;
-        if (c === c2 && r === r2) break;
-        c += dc;
-        r += dr;
-      }
-    }
-
+  function computePathWaypoints(wp) {
+    var segs = [];
+    var totalLen = 0;
     for (var j = 0; j < wp.length - 1; j++) {
       var x1 = wp[j][0] * TILE_SIZE + TILE_SIZE / 2;
       var y1 = wp[j][1] * TILE_SIZE + TILE_SIZE / 2;
@@ -682,21 +922,63 @@
       var dx = x2 - x1;
       var dy = y2 - y1;
       var len = Math.sqrt(dx * dx + dy * dy);
-      pathSegments.push({ x1: x1, y1: y1, x2: x2, y2: y2, len: len });
-      pathTotalLen += len;
+      segs.push({ x1: x1, y1: y1, x2: x2, y2: y2, len: len });
+      totalLen += len;
     }
+    return { segs: segs, totalLen: totalLen };
+  }
+
+  function addPathTiles(wp) {
+    for (var i = 0; i < wp.length - 1; i++) {
+      var c1 = wp[i][0], r1 = wp[i][1];
+      var c2 = wp[i + 1][0], r2 = wp[i + 1][1];
+      // Bresenham line rasterisation — handles any slope
+      var dc = Math.abs(c2 - c1), sc = c1 < c2 ? 1 : -1;
+      var dr = -Math.abs(r2 - r1), sr = r1 < r2 ? 1 : -1;
+      var err = dc + dr;
+      var c = c1, r = r1;
+      while (true) {
+        pathTiles[c + ',' + r] = true;
+        if (c === c2 && r === r2) break;
+        var e2 = 2 * err;
+        if (e2 >= dr) { err += dr; c += sc; }
+        if (e2 <= dc) { err += dc; r += sr; }
+      }
+    }
+  }
+
+  function computePath() {
+    pathTiles = {};
+    allPathSegments = [];
+    allPathTotalLen = [];
+
+    var map = MAPS[currentMapId];
+    var pathList = map.paths || [map.path];
+    numPaths = pathList.length;
+
+    for (var p = 0; p < pathList.length; p++) {
+      var wp = pathList[p];
+      addPathTiles(wp);
+      var result = computePathWaypoints(wp);
+      allPathSegments.push(result.segs);
+      allPathTotalLen.push(result.totalLen);
+    }
+
+    // Backward compat: set globals to first path
+    pathSegments = allPathSegments[0];
+    pathTotalLen = allPathTotalLen[0];
   }
 
   function isPathTile(col, row) {
     return pathTiles[col + ',' + row] === true;
   }
 
-  function isBuildable(col, row) {
+  function isBuildableSingle(col, row) {
     if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS) return false;
     if (isPathTile(col, row)) return false;
-    if (hero && hero.col === col && hero.row === row) return false;
+    if (hero && isTowerOnTile(hero, col, row)) return false;
     for (var i = 0; i < towers.length; i++) {
-      if (towers[i].col === col && towers[i].row === row) return false;
+      if (isTowerOnTile(towers[i], col, row)) return false;
     }
     return true;
   }
@@ -709,17 +991,40 @@
     return { col: Math.floor(px / TILE_SIZE), row: Math.floor(py / TILE_SIZE) };
   }
 
-  function getPathPos(d) {
+  // ── Multi-cell tower helpers ────────────────────────
+  var TOWER_CELLS = 3;
+
+  function towerCenter(col, row) {
+    var half = TOWER_CELLS * TILE_SIZE / 2;
+    return { x: col * TILE_SIZE + half, y: row * TILE_SIZE + half };
+  }
+
+  function isTowerOnTile(tower, col, row) {
+    return col >= tower.col && col < tower.col + TOWER_CELLS &&
+           row >= tower.row && row < tower.row + TOWER_CELLS;
+  }
+
+  function isBuildableFootprint(col, row) {
+    for (var dc = 0; dc < TOWER_CELLS; dc++) {
+      for (var dr = 0; dr < TOWER_CELLS; dr++) {
+        if (!isBuildableSingle(col + dc, row + dr)) return false;
+      }
+    }
+    return true;
+  }
+
+  function getPathPos(d, pathIdx) {
+    var segs = allPathSegments[pathIdx || 0];
     var acc = 0;
-    for (var i = 0; i < pathSegments.length; i++) {
-      var seg = pathSegments[i];
+    for (var i = 0; i < segs.length; i++) {
+      var seg = segs[i];
       if (acc + seg.len >= d) {
         var t = (d - acc) / seg.len;
         return { x: seg.x1 + (seg.x2 - seg.x1) * t, y: seg.y1 + (seg.y2 - seg.y1) * t };
       }
       acc += seg.len;
     }
-    var last = pathSegments[pathSegments.length - 1];
+    var last = segs[segs.length - 1];
     return { x: last.x2, y: last.y2 };
   }
 
@@ -741,7 +1046,8 @@
       slow: null,
       caltropsHit: {},
       healTimer: 0,
-      isMinion: false
+      isMinion: false,
+      pathIndex: Math.floor(Math.random() * numPaths)
     });
   }
 
@@ -758,10 +1064,19 @@
           e.dot.tickTimer -= 0.5;
           var dotDmg = Math.round(e.dot.dmg * 0.5);
           e.hp -= dotDmg;
-          var dotPos = getPathPos(e.dist);
+          var dotPos = getPathPos(e.dist, e.pathIndex);
           spawnParticle(dotPos.x + (Math.random() - 0.5) * 8, dotPos.y - 10, '-' + dotDmg, '#f84');
-          if (e.hp <= 0) {
-            e.alive = false;
+          if (e.hp <= 0 && !e.dying) {
+            if (TD_SPRITES_ENABLED && tdSpritesReady && ENEMY_SPRITE_MAP[e.type]) {
+              e.dying = true;
+              e.animState = 'die';
+              e.animFrame = 0;
+              e.animTimer = 0;
+              e.animLocked = false;
+              e.speed = 0;
+            } else {
+              e.alive = false;
+            }
             totalKilled++;
             continue;
           }
@@ -769,7 +1084,7 @@
       }
 
       // Move along path
-      var pxPerSec = e.speed * TILE_SIZE * 1.5;
+      var pxPerSec = e.speed * TILE_SIZE * 3.0;
       if (ropeTrapActive) pxPerSec *= 0.5;
       if (e.slow && e.slow.remaining > 0) {
         pxPerSec *= e.slow.factor;
@@ -777,8 +1092,26 @@
       }
       e.dist += pxPerSec * dt;
 
+      // Update facing direction based on movement
+      var curPos = getPathPos(e.dist, e.pathIndex);
+      var prevPos = getPathPos(Math.max(0, e.dist - 1), e.pathIndex);
+      if (curPos.x < prevPos.x) e.facingLeft = true;
+      else if (curPos.x > prevPos.x) e.facingLeft = false;
+
+      // Update sprite animation
+      updateEnemyAnim(e, dt);
+
+      // Decay hit flash
+      if (e.hitFlash > 0) {
+        e.hitFlash -= dt * 5;
+        if (e.hitFlash < 0) e.hitFlash = 0;
+      }
+
+      // Skip combat/exit checks for dying enemies
+      if (e.dying) continue;
+
       // Check caltrops
-      var ePos = getPathPos(e.dist);
+      var ePos = getPathPos(e.dist, e.pathIndex);
       var eTile = pixelToTile(ePos.x, ePos.y);
       for (var ci = 0; ci < caltropZones.length; ci++) {
         var cz = caltropZones[ci];
@@ -791,15 +1124,16 @@
       if (!e.alive) continue;
 
       // Check if reached exit
-      if (e.dist >= pathTotalLen) {
+      var eTotalLen = allPathTotalLen[e.pathIndex || 0];
+      if (e.dist >= eTotalLen) {
         e.alive = false;
         if (shieldCharges > 0) {
           shieldCharges--;
-          var shieldPos = getPathPos(pathTotalLen);
+          var shieldPos = getPathPos(eTotalLen, e.pathIndex);
           spawnParticle(shieldPos.x, shieldPos.y, 'BLOCKED', '#ffd700');
         } else {
           lives--;
-          var exitPos = getPathPos(pathTotalLen);
+          var exitPos = getPathPos(eTotalLen, e.pathIndex);
           spawnParticle(exitPos.x, exitPos.y, '-1 \u2665', '#e55');
           if (lives <= 0) {
             lives = 0;
@@ -810,29 +1144,35 @@
       }
     }
 
-    // Remove dead enemies
+    // Remove dead enemies (keep dying enemies until death animation finishes)
     for (var j = enemies.length - 1; j >= 0; j--) {
-      if (!enemies[j].alive) enemies.splice(j, 1);
+      var ej = enemies[j];
+      if (!ej.alive) {
+        enemies.splice(j, 1);
+      } else if (ej.dying && ej.deathAnimDone) {
+        ej.alive = false;
+        enemies.splice(j, 1);
+      }
     }
   }
 
   function updateHealers(dt) {
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
-      if (!e.alive || e.special !== 'healer') continue;
+      if (!e.alive || e.dying || e.special !== 'healer') continue;
       e.healTimer += dt;
       if (e.healTimer < 2.5) continue;
       e.healTimer -= 2.5;
 
-      var healerPos = getPathPos(e.dist);
+      var healerPos = getPathPos(e.dist, e.pathIndex);
       for (var j = 0; j < enemies.length; j++) {
         var target = enemies[j];
-        if (!target.alive || target === e) continue;
+        if (!target.alive || target.dying || target === e) continue;
         if (target.hp >= target.maxHp) continue;
-        var tp = getPathPos(target.dist);
+        var tp = getPathPos(target.dist, target.pathIndex);
         var dx = tp.x - healerPos.x;
         var dy = tp.y - healerPos.y;
-        if (Math.sqrt(dx * dx + dy * dy) <= 2 * TILE_SIZE) {
+        if (Math.sqrt(dx * dx + dy * dy) <= 4 * TILE_SIZE) {
           var heal = Math.round(target.maxHp * 0.05);
           target.hp = Math.min(target.maxHp, target.hp + heal);
           spawnParticle(tp.x + (Math.random() - 0.5) * 8, tp.y - 10, '+heal', '#4f8');
@@ -848,14 +1188,14 @@
       if (!e.alive) continue;
       e.shielded = false;
       if (e.special === 'shield') continue;
-      var ep = getPathPos(e.dist);
+      var ep = getPathPos(e.dist, e.pathIndex);
       for (var j = 0; j < enemies.length; j++) {
         var s = enemies[j];
         if (!s.alive || s.special !== 'shield') continue;
-        var sp = getPathPos(s.dist);
+        var sp = getPathPos(s.dist, s.pathIndex);
         var dx = sp.x - ep.x;
         var dy = sp.y - ep.y;
-        if (Math.sqrt(dx * dx + dy * dy) <= 2 * TILE_SIZE) {
+        if (Math.sqrt(dx * dx + dy * dy) <= 4 * TILE_SIZE) {
           e.shielded = true;
           break;
         }
@@ -870,11 +1210,11 @@
     for (var i = 0; i < enemies.length; i++) {
       var s = enemies[i];
       if (!s.alive || s.special !== 'shield') continue;
-      var sp = getPathPos(s.dist);
-      var ep = getPathPos(enemy.dist);
+      var sp = getPathPos(s.dist, s.pathIndex);
+      var ep = getPathPos(enemy.dist, enemy.pathIndex);
       var dx = sp.x - ep.x;
       var dy = sp.y - ep.y;
-      if (Math.sqrt(dx * dx + dy * dy) <= 2 * TILE_SIZE) return 0.4;
+      if (Math.sqrt(dx * dx + dy * dy) <= 4 * TILE_SIZE) return 0.4;
     }
     return 0;
   }
@@ -882,7 +1222,7 @@
   function damageEnemy(enemy, dmg, sourceTower, bypassShield) {
     // Ghost dodge: 50% evasion (DOT bypasses since it modifies hp directly)
     if (enemy.special === 'dodge' && Math.random() < 0.5) {
-      var dodgePos = getPathPos(enemy.dist);
+      var dodgePos = getPathPos(enemy.dist, enemy.pathIndex);
       spawnParticle(dodgePos.x + (Math.random() - 0.5) * 10, dodgePos.y - 12, 'DODGE', '#999');
       return;
     }
@@ -894,11 +1234,32 @@
       }
     }
     enemy.hp -= dmg;
-    var pos = getPathPos(enemy.dist);
+    var pos = getPathPos(enemy.dist, enemy.pathIndex);
     spawnParticle(pos.x + (Math.random() - 0.5) * 10, pos.y - 12, '-' + dmg, colorFg);
 
+    // Trigger hit flash and hurt animation
+    enemy.hitFlash = 1;
+    if (TD_SPRITES_ENABLED && !enemy.dying && enemy.hp > 0) {
+      enemy.animState = 'hurt';
+      enemy.animFrame = 0;
+      enemy.animTimer = 0;
+      enemy.animLocked = true;
+      enemy.animLockTimer = 0.3;
+    }
+
     if (enemy.hp <= 0) {
-      enemy.alive = false;
+      // If sprites enabled, start death animation instead of immediate removal
+      if (TD_SPRITES_ENABLED && tdSpritesReady && ENEMY_SPRITE_MAP[enemy.type]) {
+        enemy.dying = true;
+        enemy.animState = 'die';
+        enemy.animFrame = 0;
+        enemy.animTimer = 0;
+        enemy.animLocked = false;
+        enemy.speed = 0; // Stop movement during death
+        // alive stays true until death animation finishes (handled in updateEnemyAnim)
+      } else {
+        enemy.alive = false;
+      }
       totalKilled++;
       if (sourceTower && typeof sourceTower.kills === 'number') sourceTower.kills++;
 
@@ -940,7 +1301,17 @@
             slow: null,
             caltropsHit: {},
             healTimer: 0,
-            isMinion: true
+            isMinion: true,
+            pathIndex: enemy.pathIndex,
+            animState: 'walk',
+            animFrame: 0,
+            animTimer: 0,
+            animLocked: false,
+            animLockTimer: 0,
+            facingLeft: false,
+            dying: false,
+            deathAnimDone: false,
+            hitFlash: 0
           });
         }
       }
@@ -962,6 +1333,34 @@
 
   function drawEnemyShape(pos, e) {
     var r = e.radius;
+
+    // Try sprite rendering first
+    if (TD_SPRITES_ENABLED && tdSpritesReady) {
+      var spriteId = ENEMY_SPRITE_MAP[e.type];
+      if (spriteId) {
+        var sheetKey = 'enemy-' + spriteId;
+        var meta = tdSpriteData && tdSpriteData.enemies && tdSpriteData.enemies[spriteId];
+        if (meta && meta.animations && meta.animations[e.animState]) {
+          var animDef = meta.animations[e.animState];
+          var drawSize = e.shape === 'boss' ? 40 : 28;
+          // Ghost: draw at 50% alpha
+          if (e.special === 'dodge') ctx.globalAlpha = 0.5;
+          // Hit flash: brief white overlay
+          if (e.hitFlash > 0) {
+            ctx.globalAlpha = 0.6;
+          }
+          var drew = drawSpriteFrame(sheetKey, animDef.row, Math.min(e.animFrame, animDef.frames - 1),
+            pos.x, pos.y, drawSize, drawSize, e.facingLeft);
+          if (drew) {
+            if (e.special === 'dodge') ctx.globalAlpha = 1;
+            ctx.globalAlpha = 1;
+            return;
+          }
+        }
+      }
+    }
+
+    // Fallback: geometric shapes
     // Ghost: draw at 50% alpha
     if (e.special === 'dodge') ctx.globalAlpha = 0.5;
 
@@ -1047,10 +1446,13 @@
   function drawEnemies() {
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
-      if (!e.alive) continue;
-      var pos = getPathPos(e.dist);
+      if (!e.alive && !e.dying) continue;
+      var pos = getPathPos(e.dist, e.pathIndex);
 
       drawEnemyShape(pos, e);
+
+      // Skip overlays for dying enemies (just show death animation)
+      if (e.dying) continue;
 
       // DOT indicator (orange ring)
       if (e.dot && e.dot.remaining > 0) {
@@ -1079,7 +1481,7 @@
         var healPulse = 0.3 + 0.2 * Math.sin(Date.now() * 0.004);
         ctx.save();
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 2 * TILE_SIZE, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, 4 * TILE_SIZE, 0, Math.PI * 2);
         ctx.strokeStyle = '#4f8';
         ctx.globalAlpha = healPulse;
         ctx.lineWidth = 1;
@@ -1093,7 +1495,7 @@
       if (e.special === 'shield') {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 2 * TILE_SIZE, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, 4 * TILE_SIZE, 0, Math.PI * 2);
         ctx.strokeStyle = '#6cf';
         ctx.globalAlpha = 0.25;
         ctx.lineWidth = 1.5;
@@ -1131,16 +1533,16 @@
   // ── Watchtower range aura ─────────────────────────
   function getWatchtowerBonus(tower) {
     var bonus = 0;
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     for (var i = 0; i < towers.length; i++) {
       var other = towers[i];
       if (other.type !== 'watchtower') continue;
       if (other === tower) continue;
-      var oc = tileCenter(other.col, other.row);
+      var oc = towerCenter(other.col, other.row);
       var dx = tc.x - oc.x;
       var dy = tc.y - oc.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= 2 * TILE_SIZE) {
+      if (dist <= 4 * TILE_SIZE) {
         bonus += other.rallyTimer > 0 ? 0.2 : 0.1;
       }
     }
@@ -1201,7 +1603,7 @@
     if (cost === null || sb < cost) return false;
     sb -= cost;
     tower.level++;
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     spawnParticle(tc.x, tc.y, 'Lv' + tower.level + '!', '#ffd700');
     updateHUD();
     renderInspectPanel();
@@ -1211,7 +1613,7 @@
   function sellTower(tower) {
     if (tower.type === 'hero') return;
     var refund = Math.floor(getTotalInvestment(tower) * 0.5);
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     spawnParticle(tc.x, tc.y, '+' + refund + ' SB', '#ffd700');
     sb += refund;
     for (var i = 0; i < towers.length; i++) {
@@ -1231,7 +1633,7 @@
     if (!mods.specialAbilities) return;
     if (tower.abilityCooldown > 0) return;
     var def = TOWER_DEFS[tower.type];
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     var rangePx = getEffectiveRangePx(tower);
 
     switch (tower.type) {
@@ -1239,7 +1641,7 @@
         var targets = [];
         for (var i = 0; i < enemies.length; i++) {
           if (!enemies[i].alive) continue;
-          var ep = getPathPos(enemies[i].dist);
+          var ep = getPathPos(enemies[i].dist, enemies[i].pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) targets.push(enemies[i]);
         }
@@ -1258,7 +1660,7 @@
       case 'frost': // Blizzard — freeze all enemies in range 3s
         for (var i = 0; i < enemies.length; i++) {
           if (!enemies[i].alive) continue;
-          var ep = getPathPos(enemies[i].dist);
+          var ep = getPathPos(enemies[i].dist, enemies[i].pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
             enemies[i].slow = { remaining: 3, factor: 0 };
@@ -1284,7 +1686,7 @@
         var best = null;
         for (var i = 0; i < enemies.length; i++) {
           if (!enemies[i].alive) continue;
-          var ep = getPathPos(enemies[i].dist);
+          var ep = getPathPos(enemies[i].dist, enemies[i].pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
             if (!best || enemies[i].hp > best.hp) best = enemies[i];
@@ -1311,7 +1713,7 @@
         for (var i = 0; i < enemies.length; i++) {
           if (!enemies[i].alive) continue;
           damageEnemy(enemies[i], stormDmg, tower);
-          var ep = getPathPos(enemies[i].dist);
+          var ep = getPathPos(enemies[i].dist, enemies[i].pathIndex);
           lightningEffects.push({ points: [{ x: tc.x, y: tc.y }, { x: ep.x, y: ep.y }], life: 0.3 });
         }
         spawnParticle(tc.x, tc.y, 'STORM!', '#ff0');
@@ -1323,9 +1725,9 @@
   }
 
   function getTowerAt(col, row) {
-    if (hero && hero.col === col && hero.row === row) return hero;
+    if (hero && isTowerOnTile(hero, col, row)) return hero;
     for (var i = 0; i < towers.length; i++) {
-      if (towers[i].col === col && towers[i].row === row) return towers[i];
+      if (isTowerOnTile(towers[i], col, row)) return towers[i];
     }
     return null;
   }
@@ -1433,7 +1835,7 @@
 
   function placeHero(col, row) {
     if (!heroPetType || !HERO_DEFS[heroPetType]) return false;
-    if (!isBuildable(col, row)) return false;
+    if (!isBuildableFootprint(col, row)) return false;
     var def = HERO_DEFS[heroPetType];
     hero = {
       col: col, row: row, type: 'hero', petId: heroPetId,
@@ -1441,7 +1843,7 @@
       targetMode: 'closest', kills: 0, attackFlash: 0,
       critHitsRemaining: 0, rageTimer: 0, overclockTimer: 0
     };
-    var tc = tileCenter(col, row);
+    var tc = towerCenter(col, row);
     spawnParticle(tc.x, tc.y, 'Hero placed!', def.color);
     heroPlacing = false;
     return true;
@@ -1450,10 +1852,10 @@
   function moveHero(col, row) {
     if (!hero) return false;
     if (hero.col === col && hero.row === row) return false;
-    if (!isBuildable(col, row)) return false;
+    if (!isBuildableFootprint(col, row)) return false;
     hero.col = col;
     hero.row = row;
-    var tc = tileCenter(col, row);
+    var tc = towerCenter(col, row);
     spawnParticle(tc.x, tc.y, 'Hero moved!', HERO_DEFS[heroPetType] ? HERO_DEFS[heroPetType].color : colorAccent);
     heroMoving = false;
     return true;
@@ -1493,7 +1895,7 @@
 
   function findHeroTarget() {
     if (!hero) return null;
-    var tc = tileCenter(hero.col, hero.row);
+    var tc = towerCenter(hero.col, hero.row);
     var rangePx = getHeroRangePx();
     var mode = hero.targetMode || 'closest';
     var best = null;
@@ -1502,7 +1904,7 @@
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
       if (!e.alive) continue;
-      var pos = getPathPos(e.dist);
+      var pos = getPathPos(e.dist, e.pathIndex);
       var dx = pos.x - tc.x;
       var dy = pos.y - tc.y;
       var d = Math.sqrt(dx * dx + dy * dy);
@@ -1567,7 +1969,7 @@
 
     var target = findHeroTarget();
     if (target) {
-      var tc = tileCenter(hero.col, hero.row);
+      var tc = towerCenter(hero.col, hero.row);
       var dmg = getHeroDmg();
       var isGearCrit = false;
       // Gear-based crit (only when Nine Lives is NOT active)
@@ -1594,7 +1996,7 @@
     if (!hero || !heroPetType) return;
     if (hero.qCooldown > 0) return;
     var def = HERO_DEFS[heroPetType];
-    var tc = tileCenter(hero.col, hero.row);
+    var tc = towerCenter(hero.col, hero.row);
     var rangePx = getHeroRangePx();
     var evo = getHeroEvolutionScale();
 
@@ -1619,7 +2021,7 @@
         for (var i = 0; i < enemies.length; i++) {
           var e = enemies[i];
           if (!e.alive) continue;
-          var ep = getPathPos(e.dist);
+          var ep = getPathPos(e.dist, e.pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
             damageEnemy(e, breathDmg, hero);
@@ -1637,7 +2039,7 @@
         for (var i = 0; i < enemies.length; i++) {
           var e = enemies[i];
           if (!e.alive) continue;
-          var ep = getPathPos(e.dist);
+          var ep = getPathPos(e.dist, e.pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
             e.slow = { remaining: stunDur, factor: 0 };
@@ -1658,7 +2060,7 @@
         for (var i = 0; i < enemies.length; i++) {
           var e = enemies[i];
           if (!e.alive) continue;
-          var ep = getPathPos(e.dist);
+          var ep = getPathPos(e.dist, e.pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) {
             damageEnemy(e, waveDmg, hero);
@@ -1680,7 +2082,7 @@
         for (var i = 0; i < enemies.length; i++) {
           var e = enemies[i];
           if (!e.alive) continue;
-          var ep = getPathPos(e.dist);
+          var ep = getPathPos(e.dist, e.pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx && e.hp < weakHp) {
             weakest = e;
@@ -1699,7 +2101,7 @@
         for (var i = 0; i < enemies.length; i++) {
           var e = enemies[i];
           if (!e.alive) continue;
-          var ep = getPathPos(e.dist);
+          var ep = getPathPos(e.dist, e.pathIndex);
           var dx = ep.x - tc.x, dy = ep.y - tc.y;
           if (Math.sqrt(dx * dx + dy * dy) <= rangePx) chainTargets.push(e);
         }
@@ -1722,7 +2124,7 @@
     if (!hero || !heroPetType) return;
     if (hero.wCooldown > 0) return;
     var def = HERO_DEFS[heroPetType];
-    var tc = tileCenter(hero.col, hero.row);
+    var tc = towerCenter(hero.col, hero.row);
 
     switch (heroPetType) {
       case 'nature': // Nine Lives — next N attacks crit
@@ -1765,7 +2167,7 @@
     var def = TOWER_DEFS[type];
     var cost = getEffectiveCost(def);
     if (sb < cost) return false;
-    if (!isBuildable(col, row)) return false;
+    if (!isBuildableFootprint(col, row)) return false;
 
     sb -= cost;
     towersBuilt++;
@@ -1819,8 +2221,8 @@
         if (crossfire) cdRate *= 1 + 0.15 * getSynergyMultiplier(crossfire.stacks);
         // Robot Overclock: +30% attack speed to towers in hero range
         if (hero && heroPetType === 'tech' && hero.overclockTimer > 0) {
-          var htc = tileCenter(hero.col, hero.row);
-          var ttc = tileCenter(t.col, t.row);
+          var htc = towerCenter(hero.col, hero.row);
+          var ttc = towerCenter(t.col, t.row);
           var hdx = ttc.x - htc.x, hdy = ttc.y - htc.y;
           if (Math.sqrt(hdx * hdx + hdy * hdy) <= getHeroRangePx()) cdRate *= 1.3;
         }
@@ -1846,7 +2248,7 @@
   function findTarget(tower) {
     var def = TOWER_DEFS[tower.type];
     if (def.range === 0) return null;
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     var rangePx = getEffectiveRangePx(tower);
     var mode = tower.targetMode || 'closest';
     var best = null;
@@ -1854,8 +2256,8 @@
 
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
-      if (!e.alive) continue;
-      var pos = getPathPos(e.dist);
+      if (!e.alive || e.dying) continue;
+      var pos = getPathPos(e.dist, e.pathIndex);
       var dx = pos.x - tc.x;
       var dy = pos.y - tc.y;
       var d = Math.sqrt(dx * dx + dy * dy);
@@ -1893,32 +2295,68 @@
     for (var i = 0; i < towers.length; i++) {
       var t = towers[i];
       var def = TOWER_DEFS[t.type];
-      var tc = tileCenter(t.col, t.row);
+      var tc = towerCenter(t.col, t.row);
       var isInspected = inspectedTower === t;
 
-      var half = TILE_SIZE * 0.35;
+      var footprintPx = TOWER_CELLS * TILE_SIZE;
+      var half = footprintPx / 2;
       var towerColor = def.color || colorAccent;
-      ctx.fillStyle = towerColor;
-      ctx.globalAlpha = 0.3;
-      ctx.fillRect(tc.x - half, tc.y - half, half * 2, half * 2);
-      ctx.globalAlpha = 1;
-      ctx.strokeStyle = isInspected ? '#fff' : towerColor;
-      ctx.lineWidth = isInspected ? 2.5 : 1.5;
-      ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      var drewSprite = false;
 
-      // Tower symbol with level
-      var label = def.symbol;
-      if (t.level > 1) label = def.symbol + t.level;
-      ctx.fillStyle = colorFg;
-      ctx.font = 'bold ' + (t.level > 1 ? '12' : '14') + 'px monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, tc.x, tc.y);
+      // Tile tint for the full footprint
+      ctx.fillStyle = towerColor;
+      ctx.globalAlpha = 0.08;
+      ctx.fillRect(t.col * TILE_SIZE, t.row * TILE_SIZE, footprintPx, footprintPx);
+      ctx.globalAlpha = 1;
+
+      // Try sprite rendering first
+      if (TD_SPRITES_ENABLED && tdSpritesReady) {
+        var towerSheetKey = TOWER_SPRITE_MAP[t.type];
+        if (towerSheetKey) {
+          drewSprite = drawTowerSprite(towerSheetKey, t.level, tc.x, tc.y, footprintPx - 4);
+        }
+      }
+
+      if (!drewSprite) {
+        // Fallback: geometric colored square + symbol
+        ctx.fillStyle = towerColor;
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(tc.x - half + 4, tc.y - half + 4, footprintPx - 8, footprintPx - 8);
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = isInspected ? '#fff' : towerColor;
+        ctx.lineWidth = isInspected ? 2.5 : 1.5;
+        ctx.strokeRect(tc.x - half + 4, tc.y - half + 4, footprintPx - 8, footprintPx - 8);
+
+        // Tower symbol with level
+        var label = def.symbol;
+        if (t.level > 1) label = def.symbol + t.level;
+        ctx.fillStyle = colorFg;
+        ctx.font = 'bold ' + (t.level > 1 ? '14' : '16') + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, tc.x, tc.y);
+      }
+
+      // Inspected tower highlight border (always draw)
+      if (drewSprite && isInspected) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(t.col * TILE_SIZE + 2, t.row * TILE_SIZE + 2, footprintPx - 4, footprintPx - 4);
+      }
+
+      // Level indicator on sprite towers
+      if (drewSprite && t.level > 1) {
+        ctx.fillStyle = colorFg;
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Lv' + t.level, tc.x, tc.y + half - 12);
+      }
 
       // Watchtower aura ring
       if (t.type === 'watchtower') {
         ctx.beginPath();
-        ctx.arc(tc.x, tc.y, 2 * TILE_SIZE, 0, Math.PI * 2);
+        ctx.arc(tc.x, tc.y, 4 * TILE_SIZE, 0, Math.PI * 2);
         ctx.strokeStyle = '#aaa';
         ctx.globalAlpha = 0.1;
         ctx.lineWidth = 1;
@@ -1927,7 +2365,7 @@
       }
 
       // Range circle: permanent for inspected tower, on hover otherwise
-      var showRange = isInspected || (hoverTile && hoverTile.col === t.col && hoverTile.row === t.row);
+      var showRange = isInspected || (hoverTile && isTowerOnTile(t, hoverTile.col, hoverTile.row));
       if (showRange && def.range > 0) {
         var rangePx = getEffectiveRangePx(t);
         ctx.beginPath();
@@ -1968,7 +2406,7 @@
           ctx.setLineDash([4, 4]);
           for (var pi = 0; pi < syn.partners.length; pi++) {
             var partner = syn.partners[pi];
-            var pc = tileCenter(partner.col, partner.row);
+            var pc = towerCenter(partner.col, partner.row);
             ctx.beginPath();
             ctx.moveTo(tc.x, tc.y);
             ctx.lineTo(pc.x, pc.y);
@@ -1991,7 +2429,7 @@
 
   // ── Lightning chain ───────────────────────────────
   function fireLightningChain(tower, firstTarget, maxHits) {
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     var dmg = getEffectiveDmg(tower);
     // Superconductor synergy: +30% damage to slowed enemies
     var supercon = hasSynergy(tower, 'superconductor');
@@ -2007,18 +2445,18 @@
 
     var current = firstTarget;
     for (var n = 1; n < maxHits; n++) {
-      var pos = getPathPos(current.dist);
+      var pos = getPathPos(current.dist, current.pathIndex);
       var best = null;
       var bestD = Infinity;
       for (var i = 0; i < enemies.length; i++) {
         if (hitSet[i]) continue;
         var e = enemies[i];
         if (!e.alive) continue;
-        var ep = getPathPos(e.dist);
+        var ep = getPathPos(e.dist, e.pathIndex);
         var dx = ep.x - pos.x;
         var dy = ep.y - pos.y;
         var d = Math.sqrt(dx * dx + dy * dy);
-        if (d <= 2 * TILE_SIZE && d < bestD) {
+        if (d <= 4 * TILE_SIZE && d < bestD) {
           bestD = d;
           best = e;
           hitSet[i] = true;
@@ -2037,7 +2475,7 @@
     // Visual: store lightning segments for rendering
     var points = [{ x: tc.x, y: tc.y }];
     for (var h = 0; h < hit.length; h++) {
-      var hp = getPathPos(hit[h].dist);
+      var hp = getPathPos(hit[h].dist, hit[h].pathIndex);
       points.push({ x: hp.x, y: hp.y });
     }
     lightningEffects.push({ points: points, life: 0.3 });
@@ -2045,7 +2483,7 @@
 
   // ── Projectiles ───────────────────────────────────
   function fireProjectile(tower, target) {
-    var tc = tileCenter(tower.col, tower.row);
+    var tc = towerCenter(tower.col, tower.row);
     var dmg = getEffectiveDmg(tower);
     var isMega = tower.megaBlast;
     if (isMega) {
@@ -2067,17 +2505,23 @@
   function updateProjectiles(dt) {
     for (var i = projectiles.length - 1; i >= 0; i--) {
       var p = projectiles[i];
-      if (!p.target.alive) {
+      if (!p.target.alive || p.target.dying) {
         projectiles.splice(i, 1);
         continue;
       }
 
-      var targetPos = getPathPos(p.target.dist);
+      var targetPos = getPathPos(p.target.dist, p.target.pathIndex);
       var dx = targetPos.x - p.x;
       var dy = targetPos.y - p.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < 5) {
+        // Spawn sprite effect at impact point
+        var impactPos = getPathPos(p.target.dist, p.target.pathIndex);
+        if (p.towerType === 'fire') spawnSpriteEffect(impactPos.x, impactPos.y, 'fire', 48);
+        else if (p.towerType === 'frost') spawnSpriteEffect(impactPos.x, impactPos.y, 'freeze', 48);
+        else if (p.towerType === 'lightning') spawnSpriteEffect(impactPos.x, impactPos.y, 'zip', 48);
+
         damageEnemy(p.target, p.dmg, p.sourceTower);
         // Fire tower DOT
         if (p.towerType === 'fire' && p.target.alive) {
@@ -2102,14 +2546,14 @@
         }
         // Cannon tower splash
         if (p.towerType === 'cannon') {
-          var splashRadius = p.megaBlast ? 2 * TILE_SIZE : TILE_SIZE;
+          var splashRadius = p.megaBlast ? 4 * TILE_SIZE : 2 * TILE_SIZE;
           var splashDmg = Math.round(p.dmg * 0.5);
           // Scorched Earth synergy: cannon splash applies fire DOT
           var scorched = p.sourceTower ? hasSynergy(p.sourceTower, 'scorched') : null;
           for (var si = 0; si < enemies.length; si++) {
             var se = enemies[si];
             if (!se.alive || se === p.target) continue;
-            var sp = getPathPos(se.dist);
+            var sp = getPathPos(se.dist, se.pathIndex);
             var sdx = sp.x - p.x;
             var sdy = sp.y - p.y;
             if (Math.sqrt(sdx * sdx + sdy * sdy) <= splashRadius) {
@@ -2120,6 +2564,7 @@
             }
           }
           splashEffects.push({ x: p.x, y: p.y, radius: 0, maxRadius: splashRadius, life: 0.3 });
+          spawnSpriteEffect(p.x, p.y, 'stone', 64);
         }
         // Hero projectile effects
         if (p.towerType === 'hero' && p.target.alive) {
@@ -2134,7 +2579,7 @@
         }
         // Gear crit particle (outside alive check — show even on killing blow)
         if (p.towerType === 'hero' && p.gearCrit) {
-          var hitPos = getPathPos(p.target.dist);
+          var hitPos = getPathPos(p.target.dist, p.target.pathIndex);
           spawnParticle(hitPos.x, hitPos.y - 18, 'CRIT!', '#ffd700');
         }
         projectiles.splice(i, 1);
@@ -2347,7 +2792,18 @@
         slow: null,
         caltropsHit: {},
         healTimer: 0,
-        isMinion: false
+        isMinion: false,
+        pathIndex: Math.floor(Math.random() * numPaths),
+        // Sprite animation fields
+        animState: 'walk',
+        animFrame: 0,
+        animTimer: 0,
+        animLocked: false,
+        animLockTimer: 0,
+        facingLeft: false,
+        dying: false,
+        deathAnimDone: false,
+        hitFlash: 0
       });
       totalSpawned++;
       updateHUD();
@@ -2359,7 +2815,7 @@
     if (spawnQueue.length > 0) return;
     var aliveCount = 0;
     for (var i = 0; i < enemies.length; i++) {
-      if (enemies[i].alive) aliveCount++;
+      if (enemies[i].alive && !enemies[i].dying) aliveCount++;
     }
     if (aliveCount === 0) {
       endWave();
@@ -2604,6 +3060,7 @@
   function saveRun() {
     try {
       var data = {
+        version: 2,
         wave: wave,
         sb: sb,
         sbEarned: sbEarned,
@@ -2631,7 +3088,12 @@
   function loadSave() {
     try {
       var raw = localStorage.getItem(SAVE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        var save = JSON.parse(raw);
+        // Discard old grid saves (pre-32x24)
+        if (!save.version || save.version < 2) return null;
+        return save;
+      }
     } catch (e) {}
     return null;
   }
@@ -2666,6 +3128,7 @@
     particles = [];
     lightningEffects = [];
     splashEffects = [];
+    spriteEffects = [];
     spawnQueue = [];
     totalSpawned = 0;
     hoverTile = null;
@@ -2852,7 +3315,7 @@
     if (hudEnemies) {
       var alive = 0;
       for (var i = 0; i < enemies.length; i++) {
-        if (enemies[i].alive) alive++;
+        if (enemies[i].alive && !enemies[i].dying) alive++;
       }
       var total = totalSpawned + spawnQueue.length;
       hudEnemies.textContent = alive + '/' + total;
@@ -3102,15 +3565,17 @@
   // ── Drawing ───────────────────────────────────────
   function drawGrid() {
     ctx.strokeStyle = colorFg;
-    ctx.globalAlpha = 0.06;
+    ctx.globalAlpha = 0.04;
     ctx.lineWidth = 0.5;
     for (var c = 0; c <= GRID_COLS; c++) {
+      if (c % 2 !== 0) continue;
       ctx.beginPath();
       ctx.moveTo(c * TILE_SIZE, 0);
       ctx.lineTo(c * TILE_SIZE, CANVAS_H);
       ctx.stroke();
     }
     for (var r = 0; r <= GRID_ROWS; r++) {
+      if (r % 2 !== 0) continue;
       ctx.beginPath();
       ctx.moveTo(0, r * TILE_SIZE);
       ctx.lineTo(CANVAS_W, r * TILE_SIZE);
@@ -3130,44 +3595,58 @@
     }
     ctx.globalAlpha = 1;
 
+    // Draw directional arrows for each path
     ctx.fillStyle = colorAccent;
     ctx.globalAlpha = 0.15;
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    var wp = MAPS[currentMapId].path;
-    for (var i = 0; i < wp.length - 1; i++) {
-      var c1 = wp[i][0], r1 = wp[i][1];
-      var c2 = wp[i + 1][0], r2 = wp[i + 1][1];
-      var dc = c2 > c1 ? 1 : (c2 < c1 ? -1 : 0);
-      var dr = r2 > r1 ? 1 : (r2 < r1 ? -1 : 0);
-      var arrow = dc > 0 ? '\u25B6' : dc < 0 ? '\u25C0' : dr > 0 ? '\u25BC' : '\u25B2';
-      var cc = c1, rr = r1;
-      var step = 0;
-      while (true) {
-        if (step % 2 === 0) {
-          var tc = tileCenter(cc, rr);
-          ctx.fillText(arrow, tc.x, tc.y);
+    var curMap = MAPS[currentMapId];
+    var pathList = curMap.paths || [curMap.path];
+    for (var pi = 0; pi < pathList.length; pi++) {
+      var wp = pathList[pi];
+      for (var i = 0; i < wp.length - 1; i++) {
+        var c1 = wp[i][0], r1 = wp[i][1];
+        var c2 = wp[i + 1][0], r2 = wp[i + 1][1];
+        var arrow = (Math.abs(c2 - c1) >= Math.abs(r2 - r1))
+          ? (c2 > c1 ? '\u25B6' : '\u25C0')
+          : (r2 > r1 ? '\u25BC' : '\u25B2');
+        // Bresenham line rasterisation
+        var bdc = Math.abs(c2 - c1), bsc = c1 < c2 ? 1 : -1;
+        var bdr = -Math.abs(r2 - r1), bsr = r1 < r2 ? 1 : -1;
+        var berr = bdc + bdr;
+        var cc = c1, rr = r1;
+        var step = 0;
+        while (true) {
+          if (step % 4 === 0) {
+            var tc = tileCenter(cc, rr);
+            ctx.fillText(arrow, tc.x, tc.y);
+          }
+          if (cc === c2 && rr === r2) break;
+          var e2 = 2 * berr;
+          if (e2 >= bdr) { berr += bdr; cc += bsc; }
+          if (e2 <= bdc) { berr += bdc; rr += bsr; }
+          step++;
         }
-        if (cc === c2 && rr === r2) break;
-        cc += dc;
-        rr += dr;
-        step++;
       }
     }
     ctx.globalAlpha = 1;
 
+    // IN / OUT labels
     ctx.font = 'bold 10px monospace';
     ctx.globalAlpha = 0.4;
     ctx.fillStyle = colorAccent;
-    var curMap = MAPS[currentMapId];
     var spawnTC = tileCenter(curMap.spawn[0], curMap.spawn[1]);
     ctx.textAlign = 'right';
     ctx.fillText('IN', spawnTC.x - 4, spawnTC.y);
-    var exitTC = tileCenter(curMap.exit[0], curMap.exit[1]);
-    ctx.textAlign = 'left';
-    ctx.fillText('OUT', exitTC.x + TILE_SIZE / 2 + 2, exitTC.y);
+
+    var exitList = curMap.exits || [curMap.exit];
+    for (var ei = 0; ei < exitList.length; ei++) {
+      var exitTC = tileCenter(exitList[ei][0], exitList[ei][1]);
+      ctx.textAlign = 'left';
+      ctx.fillText('OUT', exitTC.x + TILE_SIZE / 2 + 2, exitTC.y);
+    }
     ctx.globalAlpha = 1;
   }
 
@@ -3175,13 +3654,15 @@
   function drawHero() {
     if (!hero || !heroPetType) return;
     var def = HERO_DEFS[heroPetType];
-    var tc = tileCenter(hero.col, hero.row);
+    var tc = towerCenter(hero.col, hero.row);
     var isInspected = inspectedTower === hero;
+    var footprintPx = TOWER_CELLS * TILE_SIZE;
+    var half = footprintPx / 2;
 
-    // Tile tint
+    // Tile tint (full footprint)
     ctx.fillStyle = def.color;
     ctx.globalAlpha = 0.15;
-    ctx.fillRect(hero.col * TILE_SIZE, hero.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    ctx.fillRect(hero.col * TILE_SIZE, hero.row * TILE_SIZE, footprintPx, footprintPx);
     ctx.globalAlpha = 1;
 
     // Attack flash
@@ -3189,7 +3670,7 @@
       ctx.fillStyle = def.color;
       ctx.globalAlpha = hero.attackFlash / 0.15 * 0.3;
       ctx.beginPath();
-      ctx.arc(tc.x, tc.y, TILE_SIZE * 0.4, 0, Math.PI * 2);
+      ctx.arc(tc.x, tc.y, footprintPx * 0.4, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
@@ -3200,16 +3681,15 @@
       drawHeroSprite(tc.x, tc.y, heroFrame);
     } else {
       // Fallback: colored square with symbol
-      var half = TILE_SIZE * 0.35;
       ctx.fillStyle = def.color;
       ctx.globalAlpha = 0.4;
-      ctx.fillRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      ctx.fillRect(tc.x - half + 4, tc.y - half + 4, footprintPx - 8, footprintPx - 8);
       ctx.globalAlpha = 1;
       ctx.strokeStyle = isInspected ? '#fff' : def.color;
       ctx.lineWidth = isInspected ? 2.5 : 1.5;
-      ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      ctx.strokeRect(tc.x - half + 4, tc.y - half + 4, footprintPx - 8, footprintPx - 8);
       ctx.fillStyle = colorFg;
-      ctx.font = 'bold 14px monospace';
+      ctx.font = 'bold 16px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(def.symbol, tc.x, tc.y);
@@ -3219,7 +3699,7 @@
     if (isInspected) {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
-      ctx.strokeRect(hero.col * TILE_SIZE + 2, hero.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+      ctx.strokeRect(hero.col * TILE_SIZE + 2, hero.row * TILE_SIZE + 2, footprintPx - 4, footprintPx - 4);
     }
 
     // Ability auras
@@ -3229,7 +3709,7 @@
       ctx.globalAlpha = 0.6 + 0.4 * Math.sin(Date.now() * 0.008);
       for (var di = 0; di < 4; di++) {
         var angle = Date.now() * 0.003 + di * Math.PI / 2;
-        ctx.fillRect(tc.x + Math.cos(angle) * 14 - 1, tc.y + Math.sin(angle) * 14 - 1, 3, 3);
+        ctx.fillRect(tc.x + Math.cos(angle) * 24 - 1, tc.y + Math.sin(angle) * 24 - 1, 3, 3);
       }
       ctx.globalAlpha = 1;
     }
@@ -3237,7 +3717,7 @@
       // Dragon rage: orange pulsing ring
       ctx.save();
       ctx.beginPath();
-      ctx.arc(tc.x, tc.y, TILE_SIZE * 0.45, 0, Math.PI * 2);
+      ctx.arc(tc.x, tc.y, footprintPx * 0.4, 0, Math.PI * 2);
       ctx.strokeStyle = '#f84';
       ctx.globalAlpha = 0.4 + 0.3 * Math.sin(Date.now() * 0.006);
       ctx.lineWidth = 2;
@@ -3259,7 +3739,7 @@
     }
 
     // Range circle when inspected or hovered
-    var showRange = isInspected || (hoverTile && hoverTile.col === hero.col && hoverTile.row === hero.row);
+    var showRange = isInspected || (hoverTile && isTowerOnTile(hero, hoverTile.col, hoverTile.row));
     if (showRange) {
       var rangePx = getHeroRangePx();
       ctx.beginPath();
@@ -3277,23 +3757,24 @@
     if (!hoverTile) return;
 
     // Hero placement/movement ghost
+    var ghostFP = TOWER_CELLS * TILE_SIZE;
     if (heroPlacing || heroMoving) {
       var hc = hoverTile.col;
       var hr = hoverTile.row;
-      var hBuildable = isBuildable(hc, hr);
+      var hBuildable = isBuildableFootprint(hc, hr);
       var hDef = heroPetType ? HERO_DEFS[heroPetType] : null;
       var hColor = hDef ? hDef.color : colorAccent;
-      var htc = tileCenter(hc, hr);
+      var htc = towerCenter(hc, hr);
 
       ctx.fillStyle = hBuildable ? hColor : '#e44';
       ctx.globalAlpha = 0.15;
-      ctx.fillRect(hc * TILE_SIZE, hr * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      ctx.fillRect(hc * TILE_SIZE, hr * TILE_SIZE, ghostFP, ghostFP);
       ctx.globalAlpha = 1;
 
       if (hBuildable && hDef) {
         ctx.fillStyle = colorFg;
         ctx.globalAlpha = 0.4;
-        ctx.font = 'bold 14px monospace';
+        ctx.font = 'bold 16px monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(hDef.symbol, htc.x, htc.y);
@@ -3327,25 +3808,24 @@
     if (!selectedTower) return;
     var col = hoverTile.col;
     var row = hoverTile.row;
-    var buildable = isBuildable(col, row);
+    var buildable = isBuildableFootprint(col, row);
     var def = TOWER_DEFS[selectedTower];
-    var tc = tileCenter(col, row);
+    var tc = towerCenter(col, row);
 
     ctx.fillStyle = buildable ? (def.color || colorAccent) : '#e44';
     ctx.globalAlpha = 0.15;
-    ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, ghostFP, ghostFP);
     ctx.globalAlpha = 1;
 
     if (buildable) {
-      var half = TILE_SIZE * 0.35;
       ctx.strokeStyle = def.color || colorAccent;
       ctx.globalAlpha = 0.4;
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(tc.x - half, tc.y - half, half * 2, half * 2);
+      ctx.strokeRect(col * TILE_SIZE + 4, row * TILE_SIZE + 4, ghostFP - 8, ghostFP - 8);
 
       ctx.fillStyle = colorFg;
       ctx.globalAlpha = 0.4;
-      ctx.font = 'bold 14px monospace';
+      ctx.font = 'bold 16px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(def.symbol, tc.x, tc.y);
@@ -3375,14 +3855,32 @@
       updateProjectiles(dt);
       updateSplash(dt);
       updateLightning(dt);
+      updateSpriteEffects(dt);
       checkWaveComplete();
     }
     updateParticles(dt);
   }
 
   function draw() {
-    ctx.fillStyle = colorBg;
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    // Map background or solid fill
+    if (TD_SPRITES_ENABLED && tdSpritesReady) {
+      var mapNum = MAP_BG_MAP[currentMapId];
+      var mapImg = mapNum && tdMapImages[mapNum];
+      if (mapImg) {
+        ctx.drawImage(mapImg, 0, 0, CANVAS_W, CANVAS_H);
+        // Terminal theme overlay for readability
+        ctx.fillStyle = colorBg;
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = colorBg;
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      }
+    } else {
+      ctx.fillStyle = colorBg;
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    }
     drawGrid();
     drawPath();
     drawCaltrops();
@@ -3391,6 +3889,7 @@
     drawHero();
     drawEnemies();
     drawProjectiles();
+    drawSpriteEffects();
     drawSplash();
     drawLightning();
     drawParticles();
@@ -3566,21 +4065,23 @@
     panel.classList.remove('td-hidden');
 
     // Position panel near hero
-    var heroScreenX = t.col * TILE_SIZE * scale;
-    var heroScreenY = t.row * TILE_SIZE * scale;
+    var heroTC = towerCenter(t.col, t.row);
+    var heroScreenX = heroTC.x * scale;
+    var heroScreenY = heroTC.y * scale;
+    var heroFootprintScreen = TOWER_CELLS * TILE_SIZE * scale;
     var panelW = isMobile ? 160 : 180;
     var wrapW = canvasWrap.clientWidth;
     var wrapH = canvasWrap.clientHeight;
 
-    var left = Math.min(Math.max(4, heroScreenX - panelW / 2 + TILE_SIZE * scale / 2), wrapW - panelW - 4);
+    var left = Math.min(Math.max(4, heroScreenX - panelW / 2), wrapW - panelW - 4);
     panel.style.left = left + 'px';
     panel.style.width = panelW + 'px';
 
     if (heroScreenY > wrapH / 2) {
-      panel.style.bottom = (wrapH - heroScreenY + 4) + 'px';
+      panel.style.bottom = (wrapH - heroScreenY + heroFootprintScreen / 2 + 4) + 'px';
       panel.style.top = 'auto';
     } else {
-      panel.style.top = (heroScreenY + TILE_SIZE * scale + 4) + 'px';
+      panel.style.top = (heroScreenY + heroFootprintScreen / 2 + 4) + 'px';
       panel.style.bottom = 'auto';
     }
 
@@ -3695,21 +4196,23 @@
     panel.classList.remove('td-hidden');
 
     // Position panel near tower
-    var towerScreenX = t.col * TILE_SIZE * scale;
-    var towerScreenY = t.row * TILE_SIZE * scale;
+    var towerTC = towerCenter(t.col, t.row);
+    var towerScreenX = towerTC.x * scale;
+    var towerScreenY = towerTC.y * scale;
+    var towerFootprintScreen = TOWER_CELLS * TILE_SIZE * scale;
     var panelW = isMobile ? 160 : 180;
     var wrapW = canvasWrap.clientWidth;
     var wrapH = canvasWrap.clientHeight;
 
-    var left = Math.min(Math.max(4, towerScreenX - panelW / 2 + TILE_SIZE * scale / 2), wrapW - panelW - 4);
+    var left = Math.min(Math.max(4, towerScreenX - panelW / 2), wrapW - panelW - 4);
     panel.style.left = left + 'px';
     panel.style.width = panelW + 'px';
 
     if (towerScreenY > wrapH / 2) {
-      panel.style.bottom = (wrapH - towerScreenY + 4) + 'px';
+      panel.style.bottom = (wrapH - towerScreenY + towerFootprintScreen / 2 + 4) + 'px';
       panel.style.top = 'auto';
     } else {
-      panel.style.top = (towerScreenY + TILE_SIZE * scale + 4) + 'px';
+      panel.style.top = (towerScreenY + towerFootprintScreen / 2 + 4) + 'px';
       panel.style.bottom = 'auto';
     }
 
@@ -3856,7 +4359,7 @@
     var tile = pixelToTile(coords.x, coords.y);
 
     // Hero placement
-    if (heroPlacing && isBuildable(tile.col, tile.row)) {
+    if (heroPlacing && isBuildableFootprint(tile.col, tile.row)) {
       placeHero(tile.col, tile.row);
       renderTowerBar();
       renderHeroAbilities();
@@ -3865,7 +4368,7 @@
     }
 
     // Hero movement (building phase only)
-    if (heroMoving && gameState === 'building' && isBuildable(tile.col, tile.row)) {
+    if (heroMoving && gameState === 'building' && isBuildableFootprint(tile.col, tile.row)) {
       moveHero(tile.col, tile.row);
       renderTowerBar();
       updateTowerBtnStates();
@@ -3900,7 +4403,7 @@
       closeInspect();
     }
 
-    if (selectedTower && isTowerUnlocked(selectedTower) && isBuildable(tile.col, tile.row)) {
+    if (selectedTower && isTowerUnlocked(selectedTower) && isBuildableFootprint(tile.col, tile.row)) {
       var def = TOWER_DEFS[selectedTower];
       if (sb >= getEffectiveCost(def)) {
         placeTower(tile.col, tile.row, selectedTower);
@@ -3965,6 +4468,7 @@
     particles = [];
     lightningEffects = [];
     splashEffects = [];
+    spriteEffects = [];
     spawnQueue = [];
     totalSpawned = 0;
     totalKilled = 0;
@@ -4046,6 +4550,37 @@
     showStartScreen();
   }
 
+  function renderSpriteToggle() {
+    var container = document.getElementById('td-start-buttons');
+    if (!container) return;
+    // Remove old toggle if present
+    var old = document.getElementById('td-sprite-toggle');
+    if (old) old.remove();
+
+    var wrap = document.createElement('div');
+    wrap.id = 'td-sprite-toggle';
+    wrap.style.cssText = 'text-align:center;margin-top:8px;font-size:12px;opacity:0.8;';
+
+    var label = document.createElement('label');
+    label.style.cssText = 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;';
+
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = TD_SPRITES_ENABLED;
+    cb.style.cssText = 'accent-color:' + colorAccent + ';cursor:pointer;';
+    cb.addEventListener('change', function () {
+      TD_SPRITES_ENABLED = cb.checked;
+      try { localStorage.setItem(TD_SPRITES_KEY, String(TD_SPRITES_ENABLED)); } catch (e) {}
+      drawIdle();
+    });
+
+    var text = document.createTextNode(' Sprite graphics' + (tdSpritesReady ? '' : ' (loading...)'));
+    label.appendChild(cb);
+    label.appendChild(text);
+    wrap.appendChild(label);
+    container.appendChild(wrap);
+  }
+
   function showStartScreen() {
     gameSpeed = 1;
     autoWave = false;
@@ -4091,6 +4626,7 @@
     renderTowerBar();
     refreshAllPanels();
     renderHeroInfo();
+    renderSpriteToggle();
     drawIdle();
     // Re-check scroll fade after content is populated
     setTimeout(function () {
@@ -4820,6 +5356,7 @@
 
   // ── Init ──────────────────────────────────────────
   loadHeroSprites();
+  loadTDSprites();
   computePath();
   renderTowerBar();
   initTabs();

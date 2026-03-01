@@ -1,6 +1,44 @@
 TD Sprite Integration — Task Tracker
 =====================================
 
+## Current Status (2026-02-28)
+
+All 6 phases shipped in commit aa02f2f. Sprites render for enemies, towers,
+effects, and map backgrounds with a geometric-shapes fallback toggle.
+
+## Key Files
+
+| File | Lines | Role |
+|------|-------|------|
+| `themes/terminal-books/assets/js/tower-defense.js` | ~5272 | All game logic + sprite rendering |
+| `scripts/pack-td-sprites.py` | ~260 | PIL build script: raw assets → optimized sheets |
+| `static/data/td-sprites.json` | — | Sprite metadata (frameW/H, anim rows, speeds) |
+| `static/images/td/enemies/enemy-{1..10}.png` | — | 10 enemy sheets, 5 anim rows × 10 frames |
+| `static/images/td/towers/tower-{archer,stone,magic,support}.png` | — | 4 tower sheets, vertical 48×192 (4 levels) |
+| `static/images/td/effects/fx-{fire,freeze,stone,zip,damage,def}.png` | — | 6 effect strips, 64px tall |
+| `static/images/td/maps/map-{1,2,3}.png` | — | 3 backgrounds, 640×480 |
+| `TD-ASSET-REFERENCE.md` | — | Full asset pack inventory + mapping tables |
+
+## Architecture Notes
+
+- Sprite system lives inside the existing IIFE, after hero sprite vars (~line 133)
+- `TD_SPRITES_ENABLED` (localStorage key `arebooksgood-td-sprites`) gates all sprite rendering
+- `loadTDSprites()` called at init, fetches td-sprites.json then preloads all Image objects
+- Enemy objects get runtime-only anim fields: `animState, animFrame, animTimer, animLocked, animLockTimer, facingLeft, dying, deathAnimDone, hitFlash`
+- `dying` flag is critical: dying enemies stay in the array for death animation but are skipped by targeting, wave-complete, HUD count, healers, caltrops, exit checks, and projectile acquisition
+- `drawEnemyShape()` tries sprite first, falls back to geometric shapes
+- `drawTowers()` tries `drawTowerSprite()` first, falls back to colored square + symbol
+- `spriteEffects[]` array holds active VFX, updated/drawn each frame
+- Map backgrounds drawn in `draw()` with 30% colorBg overlay before grid
+- `renderSpriteToggle()` adds checkbox to start screen buttons area
+
+## Source Asset Pack
+
+`_asset-pack/tower-defense-2d-game-kit-v1.1/` — not committed, must be present to run build script.
+See TD-ASSET-REFERENCE.md for full directory structure and sprite dimensions.
+
+---
+
 ## Phase 0: Asset Preparation (Build Pipeline)
 
 - [x] Create scripts/pack-td-sprites.py
@@ -78,6 +116,59 @@ TD Sprite Integration — Task Tracker
 - [x] Existing particle system still fires on death alongside sprite animation
 - [ ] Loading screen: progress bar overlay during loadTDSprites() (deferred — async load is fast enough)
 - [ ] Hit flash: brief white flash on sprite when enemy takes damage (deferred — needs offscreen canvas approach)
+
+## Phase 7: Multi-Path (Branching) Support
+
+- [x] Add `paths` (array of waypoint arrays) and `exits` to Valley map definition
+- [x] Refactor computePath() → allPathSegments[], allPathTotalLen[], numPaths
+- [x] Extract computePathWaypoints() and addPathTiles() helpers
+- [x] Add `pathIdx` param to getPathPos(), use allPathSegments[pathIdx]
+- [x] Assign random pathIndex to enemies in updateSpawner() and spawnEnemy()
+- [x] Splitter minions inherit parent's pathIndex
+- [x] Pass e.pathIndex to all getPathPos() call sites (30+ locations)
+- [x] Exit check uses allPathTotalLen[e.pathIndex] per enemy
+- [x] drawPath() draws arrows for all paths, OUT labels for all exits
+- [x] Remove yellow debug border from drawPath()
+- [x] Backward compat: maps 2/3/4 use `paths || [path]` fallback (numPaths=1)
+
+## Phase 8: Finer Grid + Multi-Cell Towers
+
+- [x] Change grid constants: 32×24 grid, 20px tiles (canvas stays 640×480)
+- [x] Add `size: 3` to all TOWER_DEFS and HERO_DEFS entries
+- [x] Add TOWER_CELLS constant, towerCenter(), isTowerOnTile(), isBuildableFootprint() helpers
+- [x] Rename isBuildable → isBuildableSingle, update for multi-cell overlap checks
+- [x] Update getTowerAt to check all cells in tower/hero footprint
+- [x] Update tower placement, hero placement/move to use isBuildableFootprint
+- [x] Update drawTowers: 3×3 footprint tint, sprite scaled to footprintPx-4, multi-cell hover
+- [x] Update drawHero: 3×3 footprint tint, sprite/fallback scaled to footprint
+- [x] Update drawGhostTower: 3×3 placement preview for towers and hero
+- [x] Update all tower/hero tileCenter() calls → towerCenter() (upgradeTower, sellTower, activateAbility, findTarget, fireProjectile, fireLightningChain, updateTowers overclock, hero abilities)
+- [x] Double tower ranges (arrow 3→6, cannon 2→4, etc.) to maintain same pixel radius
+- [x] Double hero ranges (2.5→5.0, 3.0→6.0, etc.)
+- [x] Double PROJECTILE_SPEED (6→12) to maintain same pixel velocity
+- [x] Double enemy speed multiplier (1.5→3.0) to maintain same pixel velocity
+- [x] Fix healer/shielder/lightning proximity: 2*TILE_SIZE → 4*TILE_SIZE (same 80px)
+- [x] Fix cannon splash radius: TILE_SIZE → 2*TILE_SIZE (same 40px)
+- [x] Fix watchtower proximity: 2*TILE_SIZE → 4*TILE_SIZE
+- [x] Update synergy adjacency for multi-cell: Math.abs(col diff) ≤ TOWER_CELLS+1
+- [x] Re-plot all 4 map waypoints at double resolution
+- [x] Reduce drawGrid density (every 2nd line) and opacity
+- [x] Reduce drawPath arrow density (step%4 vs step%2)
+- [x] Update inspect panel positioning to use towerCenter + footprint size
+- [x] Add save version field (version: 2), discard old saves on load
+- [x] Update HERO_DRAW_SIZE from 32 to 48 for 3×3 footprint
+
+## Phase 9: Split into Tower Defense 2
+
+- [x] Copy modified tower-defense.js → tower-defense-2.js (finer grid + multi-cell)
+- [x] Restore original tower-defense.js from main branch
+- [x] Create content/farm/tower-defense-2/index.md (type: tower-defense-2, alias /td2/)
+- [x] Create layouts/tower-defense-2/single.html
+- [x] Add tower-defense-2.js conditional loading in baseof.html
+- [x] Add tower-defense-2 CSS loading in head.html (shares tower-defense.css)
+- [x] Add TD2 nav link in header.html farm sub-nav
+- [x] Fix Bresenham path rasterization in addPathTiles() and drawPath() (replaced naive diagonal stepping that caused infinite loops)
+- [x] Trace Valley map road pixels and re-plot waypoints to match background art
 
 ## Future Polish (Nice-to-have)
 

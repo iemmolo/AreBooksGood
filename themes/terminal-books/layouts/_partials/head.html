@@ -81,7 +81,7 @@
 {{- end }}
 
 {{/* Tower Defense CSS */}}
-{{ if eq .Type "tower-defense" -}}
+{{ if or (eq .Type "tower-defense") (eq .Type "tower-defense-2") -}}
   {{- $td := resources.Get "css/tower-defense.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $td.RelPermalink }}">
 {{- end }}

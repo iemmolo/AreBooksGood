@@ -82,7 +82,7 @@ EFFECT_SPEEDS = {
 }
 
 # ── Map definitions ──────────────────────────────────────────────
-MAP_BACKGROUNDS = [1, 2, 3]
+MAP_BACKGROUNDS = [1, 2, 3, 4]
 
 
 def ensure_dir(path):

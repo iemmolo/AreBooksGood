@@ -394,6 +394,7 @@
   "maps": {
     "1": "maps/map-1.png",
     "2": "maps/map-2.png",
-    "3": "maps/map-3.png"
+    "3": "maps/map-3.png",
+    "4": "maps/map-4.png"
   }
 }

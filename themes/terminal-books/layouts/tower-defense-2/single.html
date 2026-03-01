@@ -1,0 +1,72 @@
+{{ define "main" }}
+<div id="td-game-area">
+  <div id="td-hud">
+    <span id="td-wave">Wave: 1</span>
+    <span id="td-lives">&#9829; 20</span>
+    <span id="td-sb">SB: 0</span>
+    <span id="td-enemies">0/0</span>
+  </div>
+  <div id="td-canvas-wrap">
+    <canvas id="td-canvas"></canvas>
+    <div id="td-inspect-panel" class="td-inspect-panel td-hidden"></div>
+    <div id="td-start-overlay" class="td-overlay">
+      <div class="td-overlay-content td-start-content">
+        <h2 class="td-title">Tower Defense 2</h2>
+        <div class="td-tab-bar">
+          <button class="td-tab td-tab-active" data-tab="overview">Overview</button>
+          <button class="td-tab" data-tab="armory">Armory</button>
+          <button class="td-tab" data-tab="crate">Supply Crate</button>
+          <button class="td-tab" data-tab="synergies">Synergies</button>
+          <button class="td-tab" data-tab="blueprints">Blueprints</button>
+          <button class="td-tab" data-tab="gear">Gear</button>
+        </div>
+        <div id="td-tab-overview" class="td-tab-panel">
+          <p class="td-subtitle">Place towers to defend the path.<br>Earn SamBucks (SB) each wave.</p>
+          <div class="td-instructions">
+            <p>1. Place towers on the grid to attack enemies</p>
+            <p>2. Upgrade towers and place them adjacent for synergy bonuses</p>
+            <p>3. Deploy your pet as a hero unit (free!)</p>
+            <p>4. Use Q/W abilities during waves</p>
+            <p>5. Earn SB to build more towers, cash out for JB</p>
+          </div>
+          <div id="td-hero-info" class="td-hero-info td-hidden"></div>
+          <div id="td-map-select" class="td-select-group"></div>
+          <div id="td-difficulty-select" class="td-select-group"></div>
+          <div id="td-record-display" class="td-record-display"></div>
+          <div id="td-start-breakdown" class="td-start-breakdown"></div>
+          <div id="td-invest-section" class="td-invest-section"></div>
+          <div id="td-start-stats" class="td-stats-block"></div>
+        </div>
+        <div id="td-tab-armory" class="td-tab-panel td-hidden"></div>
+        <div id="td-tab-crate" class="td-tab-panel td-hidden"></div>
+        <div id="td-tab-synergies" class="td-tab-panel td-hidden"></div>
+        <div id="td-tab-blueprints" class="td-tab-panel td-hidden"></div>
+        <div id="td-tab-gear" class="td-tab-panel td-hidden"></div>
+      </div>
+    </div>
+    <div id="td-gameover-overlay" class="td-overlay td-hidden">
+      <div class="td-overlay-content">
+        <h2 class="td-title">Game Over</h2>
+        <div class="td-final-stats">
+          <p>Reached Wave <span id="td-final-wave">1</span></p>
+          <p>Enemies Killed: <span id="td-final-kills">0</span></p>
+          <p>Towers Built: <span id="td-final-towers">0</span></p>
+          <p>SB Earned: <span id="td-final-sb">0</span></p>
+          <p id="td-cashout-line" class="td-cashout-line"></p>
+          <p id="td-milestone-mats" class="td-cashout-line" style="display:none;color:#ffd700"></p>
+          <p id="td-farm-unlocks" class="td-cashout-line" style="display:none;color:#4caf50"></p>
+        </div>
+        <div id="td-gameover-stats" class="td-stats-block"></div>
+        <button id="td-retry-btn" class="td-btn">Play Again</button>
+      </div>
+    </div>
+  </div>
+  <div id="td-start-buttons" class="td-start-buttons">
+    <button id="td-resume-btn" class="td-btn td-btn-resume td-hidden">Resume</button>
+    <button id="td-play-btn" class="td-btn">Start Game</button>
+  </div>
+  <div id="td-tower-bar" class="td-hidden"></div>
+  <div id="td-crate-bar" class="td-crate-bar td-hidden"></div>
+  <div id="td-hero-abilities" class="td-hero-abilities td-hidden"></div>
+</div>
+{{ end }}
