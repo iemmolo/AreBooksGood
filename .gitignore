@@ -4,3 +4,24 @@ resources/_gen/
 .DS_Store
 CLAUDE.md
 node_modules/
+
+# Large binary files
+*.rar
+*.bmp
+*.zip
+
+# Untracked asset packs
+DarkFantasyEnemies_FREE/
+FREE_Samurai 2D Pixel Art v1.2/
+FlyingForestEnemies_FREE/
+Free Fantasy Enemy Pack 1/
+Frogger/
+Golems_Free_Version/
+Monsters_Creatures_Fantasy/
+SUDOKU Master collection/
+boss_demon_slime_FREE_v1.0/
+Pocket Creature Tamer/
+Pocket Creature Tamer DEMO/
+farm-main-one.png
+maindesign.bmp
+static/images/pets/champion/

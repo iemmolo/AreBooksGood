@@ -191,31 +191,32 @@
       enemies: [['slime-green','slime-blue','slime-pink'],['dark-bat','forest-flyer','golem-blue'],['fantasy-goblin','mushroom-warrior','golem-orange'],['skeleton-knight','dark-bat','dark-bat'],['flying-eye','fantasy-goblin','mushroom-warrior'],['cursed-spirit-boss','golem-orange','golem-blue'],['pumpkin-boss','forest-flyer','dark-bat'],['cloud-boss','skeleton-knight','fantasy-goblin'],['demon-slime-boss','mushroom-warrior','flying-eye'],['samurai-boss','skeleton-knight','demon-slime-boss']] }
   ];
 
-  // ── Dungeon backgrounds ─────────────────────────────
-  var DUNGEON_BG = {
-    1: '/images/pets/backgrounds/bg-1.png',
-    2: '/images/pets/backgrounds/bg-2.png',
-    3: '/images/pets/backgrounds/bg-3.png',
-    4: '/images/pets/backgrounds/bg-4.png',
-    5: '/images/pets/backgrounds/bg-5.png',
-    6: '/images/pets/backgrounds/bg-6.png',
-    7: '/images/pets/backgrounds/bg-7.png',
-    8: '/images/pets/backgrounds/bg-8.png',
-    9: '/images/pets/backgrounds/bg-9.png',
-    10: '/images/pets/backgrounds/bg-10.png',
-    11: '/images/pets/backgrounds/bg-11.png',
-    12: '/images/pets/backgrounds/bg-12.png',
-    13: '/images/pets/backgrounds/bg-13.png',
-    14: '/images/pets/backgrounds/bg-14.png',
-    15: '/images/pets/backgrounds/bg-15.png',
-    16: '/images/pets/backgrounds/bg-16.png',
-    17: '/images/pets/backgrounds/bg-17.png',
-    18: '/images/pets/backgrounds/bg-18.png',
-    19: '/images/pets/backgrounds/bg-19.png',
-    20: '/images/pets/backgrounds/bg-20.png'
+  // ── Dungeon backgrounds (themed per dungeon + type color overlay) ──
+  var DUNGEON_ARENA = {
+    1:  '/images/pets/backgrounds/arena-cave.png',       // Grass Cavern
+    2:  '/images/pets/backgrounds/arena-volcanic.png',    // Ember Depths
+    3:  '/images/pets/backgrounds/arena-grotto.png',      // Tidal Grotto
+    4:  '/images/pets/backgrounds/arena-crypt.png',       // Shadow Crypt
+    5:  '/images/pets/backgrounds/arena-vault.png',       // Tech Vault
+    6:  '/images/pets/backgrounds/arena-grove.png',       // Ancient Grove
+    7:  '/images/pets/backgrounds/arena-spire.png',       // Mystic Spire
+    8:  '/images/pets/backgrounds/arena-abyss.png',       // Abyssal Rift
+    9:  '/images/pets/backgrounds/arena-marsh.png',       // Poison Marsh
+    10: '/images/pets/backgrounds/arena-vault.png',       // Iron Forge
+    11: '/images/pets/backgrounds/arena-spire.png',       // Void Sanctum
+    12: '/images/pets/backgrounds/arena-colosseum.png',   // The Gauntlet
+    13: '/images/pets/backgrounds/arena-crypt.png',       // Bone Yard
+    14: '/images/pets/backgrounds/arena-marsh.png',       // Fungal Depths
+    15: '/images/pets/backgrounds/arena-colosseum.png',   // Golem Forge
+    16: '/images/pets/backgrounds/arena-volcanic.png',    // Inferno Pit
+    17: '/images/pets/backgrounds/arena-grotto.png',      // Storm Peaks
+    18: '/images/pets/backgrounds/arena-castle.png',      // Ronin's Keep
+    19: '/images/pets/backgrounds/arena-cathedral.png',   // Cursed Cathedral
+    20: '/images/pets/backgrounds/arena-abyss.png'        // The Abyss
   };
-  var bgPattern = null;
+  var bgImageCache = {}; // cache loaded images by src
   var bgImage = null;
+  var bgTypeColor = null;
 
   // ── DOM refs ──────────────────────────────────────
   var canvas = document.getElementById('bt-canvas');
@@ -517,16 +518,20 @@
     if (spritesToLoad.length === 0) afterLoad();
 
     function afterLoad() {
-      var bgSrc = DUNGEON_BG[selectedDungeon.id];
-      if (bgSrc) {
+      bgTypeColor = selectedDungeon.typeLock ? (TYPE_COLORS[selectedDungeon.typeLock] || null) : null;
+      var arenaSrc = DUNGEON_ARENA[selectedDungeon.id] || '/images/pets/backgrounds/arena-dungeon.png';
+      if (bgImageCache[arenaSrc]) {
+        bgImage = bgImageCache[arenaSrc];
+      } else {
+        bgImage = null;
         var bgImg = new Image();
         bgImg.onload = function () {
+          bgImageCache[arenaSrc] = bgImg;
           bgImage = bgImg;
-          bgPattern = ctx.createPattern(bgImg, 'repeat');
           renderBattle();
         };
-        bgImg.src = bgSrc;
-      } else { bgImage = null; bgPattern = null; }
+        bgImg.src = arenaSrc;
+      }
       preloadVFX(function () {
         showScreen('battle');
         sizeCanvas();
@@ -742,6 +747,16 @@
     var tier = c.tier || 'common';
     var type = c.type || 'fire';
     var stats = calcCreatureStats(tier, type, level);
+    // Apply star bonuses from pet skills system
+    var petStars = (petState && petState.pets && petState.pets[creatureId]) ? (petState.pets[creatureId].stars || 0) : 0;
+    if (petStars > 0) {
+      var starMult = 1 + petStars * 0.10; // +10% per star
+      stats.hp = Math.floor(stats.hp * starMult);
+      stats.atk = Math.floor(stats.atk * starMult);
+      stats.def = Math.floor(stats.def * starMult);
+      stats.spd = Math.floor(stats.spd * starMult);
+      stats.cri += petStars * 2; // +2 CRI per star (flat)
+    }
     var gearStats = GearSystem.calcEquippedStats(creatureId);
     var setBonuses = GearSystem.calcSetBonuses(creatureId);
     // Merge set bonuses into gearStats
@@ -1208,20 +1223,26 @@
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     ctx.fillStyle = themeColors.bg;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-    // Tiled dungeon background texture
-    if (bgPattern) {
+    // Arena scene background
+    if (bgImage) {
       ctx.save();
       ctx.imageSmoothingEnabled = false;
-      ctx.globalAlpha = 0.15;
-      ctx.fillStyle = bgPattern;
+      ctx.drawImage(bgImage, 0, 0, CANVAS_W, CANVAS_H);
+      ctx.restore();
+    }
+    // Type color overlay (tints arena per dungeon type)
+    if (bgTypeColor) {
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = bgTypeColor;
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
       ctx.restore();
     }
     // Gradient overlay for depth
     var bgGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-    bgGrad.addColorStop(0, 'rgba(255,255,255,0.04)');
+    bgGrad.addColorStop(0, 'rgba(255,255,255,0.03)');
     bgGrad.addColorStop(0.5, 'rgba(0,0,0,0)');
-    bgGrad.addColorStop(1, 'rgba(0,0,0,0.12)');
+    bgGrad.addColorStop(1, 'rgba(0,0,0,0.15)');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
@@ -3394,19 +3415,20 @@
     if (spritesToLoad.length === 0) afterSpritesLoaded();
 
     function afterSpritesLoaded() {
-      // Preload dungeon background tile
-      var bgSrc = DUNGEON_BG[selectedDungeon.id];
-      if (bgSrc) {
-        var bgImg = new Image();
-        bgImg.onload = function () {
-          bgImage = bgImg;
-          bgPattern = ctx.createPattern(bgImg, 'repeat');
-          renderBattle();
-        };
-        bgImg.src = bgSrc;
+      // Load themed arena background for this dungeon
+      bgTypeColor = selectedDungeon.typeLock ? (TYPE_COLORS[selectedDungeon.typeLock] || null) : null;
+      var arenaSrc = DUNGEON_ARENA[selectedDungeon.id] || '/images/pets/backgrounds/arena-dungeon.png';
+      if (bgImageCache[arenaSrc]) {
+        bgImage = bgImageCache[arenaSrc];
       } else {
         bgImage = null;
-        bgPattern = null;
+        var bgImg = new Image();
+        bgImg.onload = function () {
+          bgImageCache[arenaSrc] = bgImg;
+          bgImage = bgImg;
+          renderBattle();
+        };
+        bgImg.src = arenaSrc;
       }
       // Fire-and-forget: preload UI assets in parallel
       preloadVFX(function () {
@@ -3931,8 +3953,7 @@
 
   if (backToDungeonsBtn) {
     backToDungeonsBtn.addEventListener('click', function () {
-      bgPattern = null;
-      bgImage = null;
+      bgTypeColor = null;
       showScreen('dungeon-select');
     });
   }
@@ -3993,8 +4014,7 @@
     resultsContinueBtn.addEventListener('click', function () {
       cleanupCelebration();
       resultsOverlay.classList.add('bt-hidden');
-      bgPattern = null;
-      bgImage = null;
+      bgTypeColor = null;
       // Return to the appropriate mode screen
       if (gameMode === 'faction') { showScreen('faction-screen'); }
       else if (gameMode === 'daily') { showScreen('daily-screen'); }
@@ -4012,8 +4032,7 @@
     if (!selectedDungeon) return;
     cleanupCelebration();
     resultsOverlay.classList.add('bt-hidden');
-    bgPattern = null;
-    bgImage = null;
+    bgTypeColor = null;
     showScreen('team-builder');
     renderTeamBuilder();
   });
