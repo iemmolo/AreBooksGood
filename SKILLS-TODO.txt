@@ -1,0 +1,118 @@
+Pet Skills Expansion — Phase 2
+================================
+
+## Phase A: Mini-Game Depth
+
+### A1: Mining — Combo + Gem Drops + Rock Respawn
+- [x] Track click rhythm (500-700ms = combo, max 10 = 2x multiplier)
+- [x] Show combo counter above rocks ("Combo x3!")
+- [x] 5% gem drop per mine → 5x dust, golden particle
+- [x] Rocks go .depleted after mining, respawn after 3s with countdown
+- [x] Each rock shows ore name label below
+
+### A2: Fishing — Catch Quality + Sizes + Power Meter
+- [x] Track reaction time from bite (< 300ms = "Golden" catch, 3x rewards)
+- [x] Random fish sizes: Tiny/Small/Normal/Large/Huge (level-weighted)
+- [x] 8% rare catch chance → 5x dust, "RARE!" text
+- [x] Hold-to-charge cast power meter (longer hold = shorter wait)
+
+### A3: Woodcutting — Rhythm Chops + Bird Nests
+- [x] Clicks within 350-450ms = "Double Chop!" (counts as 2 hits, gold flash)
+- [x] 10% bird nest drop on tree fell → 10x dust bonus, nest emoji particle
+- [x] Tree displays resource tier name above emoji
+
+### A4: Smithing — 5 Hits + Scaling Difficulty + Masterwork
+- [x] Increase from 3 to 5 timing hits
+- [x] Green zone shrinks with higher recipes (35% down to 10%)
+- [x] 5/5 perfect = "MASTERWORK!" → 5x bonus, golden flash
+- [x] Hammer glow intensifies with consecutive perfects (.glow-1 through .glow-5)
+
+### A5: Combat — Player HP + Dodge + Potions + Crits + Death
+- [x] Player HP bar (100 + level * 3)
+- [x] Enemy auto-attacks deal real damage
+- [x] Dodge button (click within 500ms window, 2s cooldown)
+- [x] 3 potions per encounter (heal 30% max HP)
+- [x] 15% crit chance = 2x damage, red flash + "CRIT!" text
+- [x] Death: lose streak, 3s respawn, greyed overlay + countdown
+
+## Phase B: Progression Feel
+
+### B1: Level-Up Effect
+- [x] Skill row accent glow pulse (.level-up-glow, 1.5s)
+- [x] Large "+1" text in game area center, fades up
+- [x] Brief 200ms screen flash on .skills-page
+- [x] Milestone banner at levels 10, 25, 50, 75, 99 (auto-dismiss 3s)
+- [x] Level 99 = special "MASTERED!" banner with gold styling
+
+### B2: Resource Unlock Toast
+- [x] On level up, check if new resources unlocked
+- [x] Show toast "NEW: Iron Ore unlocked!" — slides in, 3s dismiss
+- [x] Hook into addXp() — capture oldLevel before incrementing
+
+### B3: Star Shower (XP Multiplier Event)
+- [x] Track active play time (increment on mini-game action)
+- [x] Every 10 minutes active play: 30s "Star Shower" — 2x all XP + dust
+- [x] Golden glow border on game area, banner with countdown
+- [x] Reset active play timer after shower ends
+
+### B4: Mastery System
+- [x] Track state.mastered = {} — skill hits 99 = mastered
+- [x] Each mastered skill = +5% global dust bonus (multiplicative)
+- [x] Mastered skill rows get gold border + shimmer animation
+
+### B5: Milestones Panel
+- [x] Add milestones section to right panel in single.html
+- [x] Track totalActions per skill in state
+- [x] Render stats: total actions, total dust earned, highest level, mastered count
+- [x] State version bump to 2 with migration
+
+## Phase C: Pet Integration
+
+### C1: Pet Sprite in Game Area
+- [x] Use PetSprites.renderPreview() → position bottom-right
+- [x] React to actions: bounce on mine, wiggle on fish, cheer on tree fell
+- [x] 3 CSS keyframes: petBounce, petWiggle, petCheer
+- [x] Re-render on skill switch and pet assignment change
+
+### C2: Skill-Specific Speech Lines
+- [x] PET_SKILL_SPEECH object: 6 pet types x 5 skills
+- [x] 20% chance per action → PetSystem.speak(line)
+- [x] Also log to game log
+
+### C3: Pet Congratulations on Level-Up
+- [x] On level up: PetSystem.celebrate() + speak(congrats)
+- [x] On idle report: pet speaks "missed you!" or "been busy!"
+- [x] PET_LEVELUP_SPEECH array
+
+### C4: Pet Type Visual Particles
+- [x] Type-matched skill particles on action
+- [x] Fire+smithing: flame float-up, Aqua+fishing: water scatter
+- [x] Nature+woodcutting: leaf drift, Tech+mining: spark flash
+- [x] Shadow+combat: dark wisp
+- [x] 5 unique CSS @keyframes per type
+
+## Phase D: Visual Polish
+
+### D1: Resource Tier Colors
+- [x] TIER_COLORS array: grey → white → green → blue → purple → gold
+- [x] Color resource name in game header by tier index
+- [x] Emoji prefix per resource in log entries
+
+### D2: XP Bar Enhancement
+- [x] Increase bar height to 6px
+- [x] Glow effect when XP > 90% (.xp-near-level)
+- [x] Flash animation on level up (.xp-bar-flash, 500ms)
+
+### D3: Star Prestige Visuals
+- [x] Golden burst overlay on star up
+- [x] Star display pulses/shakes during animation
+- [x] PetSystem.celebrate() during star-up
+- [x] Pet star count in skill list rows
+
+### D4: Game Area Themed Backgrounds
+- [x] Set data-skill attribute on game area in switchSkill()
+- [x] CSS tints: mining=brown, fishing=blue, woodcutting=green, smithing=orange, combat=red
+
+### D5: Skill Row Star Indicators
+- [x] Show gold star count after level text in renderSkillList()
+- [x] .skill-star-indicator inline styling

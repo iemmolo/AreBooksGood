@@ -186,6 +186,11 @@
         var state = defaultPetState();
         state.activePet = saved.activePet || null;
         state.pets = saved.pets || {};
+        // Migrate: ensure all pets have stars field
+        var pids = Object.keys(state.pets);
+        for (var pi = 0; pi < pids.length; pi++) {
+          if (typeof state.pets[pids[pi]].stars !== 'number') state.pets[pids[pi]].stars = 0;
+        }
         if (saved.accessories) {
           state.accessories.owned = saved.accessories.owned || [];
           if (saved.accessories.equipped) {
@@ -235,6 +240,8 @@
               // Preserve skin data written by battle.js
               if (fresh.pets[pid].skin) petState.pets[pid].skin = fresh.pets[pid].skin;
               if (fresh.pets[pid].skinUnlocked) petState.pets[pid].skinUnlocked = fresh.pets[pid].skinUnlocked;
+              // Preserve stars written by skills.js
+              if (typeof fresh.pets[pid].stars === 'number') petState.pets[pid].stars = fresh.pets[pid].stars;
             }
           }
         }

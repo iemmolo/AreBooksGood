@@ -144,6 +144,12 @@
   <link rel="stylesheet" href="{{ $gigs.RelPermalink }}">
 {{- end }}
 
+{{/* Skills CSS */}}
+{{ if eq .Type "skills" -}}
+  {{- $skills := resources.Get "css/skills.css" | minify | fingerprint -}}
+  <link rel="stylesheet" href="{{ $skills.RelPermalink }}">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">

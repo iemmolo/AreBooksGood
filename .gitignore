@@ -10,6 +10,9 @@ node_modules/
 *.bmp
 *.zip
 
+# Asset packs (source/reference)
+_asset-pack/
+
 # Untracked asset packs
 DarkFantasyEnemies_FREE/
 FREE_Samurai 2D Pixel Art v1.2/
