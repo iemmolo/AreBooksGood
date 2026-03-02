@@ -1,0 +1,496 @@
+/* ============================================
+   RPG — Jack's RPG Adventure
+   ============================================ */
+
+/* ── Sub-Nav ─────────────────────────────────── */
+.rpg-sub-nav {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.rpg-sub-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rpg-sub-nav-links li { padding: 0; margin: 0; }
+.rpg-sub-nav-links li::marker { content: none; }
+
+.rpg-sub-nav-links a {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.rpg-sub-nav-links a:hover,
+.rpg-sub-nav-links a.active {
+  color: var(--accent);
+}
+
+/* ── Page Container ──────────────────────────── */
+.rpg-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ── Screens ─────────────────────────────────── */
+.rpg-screen {
+  animation: rpgFadeIn 0.2s ease;
+}
+
+@keyframes rpgFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Buttons ─────────────────────────────────── */
+.rpg-btn {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  padding: 10px 24px;
+  font-family: inherit;
+  font-size: 1em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.rpg-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rpg-btn-primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rpg-btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.rpg-btn-danger {
+  border-color: color-mix(in srgb, #ff4444 60%, transparent);
+  color: #ff4444;
+}
+
+.rpg-btn-danger:hover {
+  background: color-mix(in srgb, #ff4444 10%, transparent);
+}
+
+.rpg-btn-small {
+  padding: 5px 12px;
+  font-size: 0.85em;
+}
+
+.rpg-btn-back {
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  border-color: color-mix(in srgb, var(--foreground) 20%, transparent);
+}
+
+.rpg-btn-disabled,
+.rpg-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.rpg-btn-disabled:hover,
+.rpg-btn:disabled:hover {
+  border-color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  color: var(--foreground);
+  background: transparent;
+}
+
+/* ── Menu Screen ─────────────────────────────── */
+.rpg-title-block {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+
+.rpg-title {
+  font-size: 2.2em;
+  color: var(--accent);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 40%, transparent);
+  margin: 0 0 8px;
+}
+
+.rpg-subtitle {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  font-size: 1em;
+  margin: 0;
+}
+
+.rpg-menu-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.rpg-menu-buttons .rpg-btn {
+  width: 220px;
+  text-align: center;
+}
+
+/* ── Save Slots ──────────────────────────────── */
+.rpg-save-slots {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.rpg-slots-heading {
+  font-size: 1.1em;
+  color: var(--accent);
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.rpg-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rpg-slot-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.15s;
+}
+
+.rpg-slot-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.rpg-slot-empty {
+  justify-content: center;
+  min-height: 180px;
+}
+
+.rpg-slot-empty-label {
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  font-size: 0.9em;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.rpg-slot-info {
+  text-align: center;
+}
+
+.rpg-slot-name {
+  font-size: 1em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.rpg-slot-level {
+  font-size: 0.85em;
+  color: var(--foreground);
+}
+
+.rpg-slot-date {
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.rpg-slot-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Character Creation ──────────────────────── */
+.rpg-screen-heading {
+  font-size: 1.4em;
+  color: var(--accent);
+  margin: 24px 0 16px;
+  text-align: center;
+}
+
+.rpg-create-form {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.rpg-label {
+  display: block;
+  color: var(--accent);
+  font-size: 0.9em;
+  margin-bottom: 6px;
+}
+
+.rpg-input {
+  width: 100%;
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 1em;
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.rpg-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.rpg-create-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ── World Map ───────────────────────────────── */
+.rpg-world-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin-bottom: 20px;
+}
+
+.rpg-world-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rpg-world-name {
+  font-size: 1.1em;
+  color: var(--accent);
+}
+
+.rpg-world-total {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.rpg-locations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.rpg-location-tile {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.rpg-location-tile:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  transform: translateY(-2px);
+}
+
+.rpg-location-icon {
+  font-size: 2em;
+  margin-bottom: 8px;
+}
+
+.rpg-location-name {
+  font-size: 1em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.rpg-location-desc {
+  font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin-bottom: 6px;
+}
+
+.rpg-location-level {
+  font-size: 0.85em;
+  color: var(--foreground);
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+/* ── Location Screen ─────────────────────────── */
+.rpg-location-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background: var(--background);
+  z-index: 10;
+}
+
+.rpg-location-title {
+  font-size: 1.2em;
+  color: var(--accent);
+  margin: 0;
+}
+
+.rpg-location-content {
+  min-height: 300px;
+}
+
+/* ── Home / Character Sheet ──────────────────── */
+.rpg-home-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  margin-bottom: 20px;
+}
+
+.rpg-home-content {
+  text-align: center;
+}
+
+.rpg-home-name {
+  font-size: 1.3em;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.rpg-home-section-title {
+  font-size: 1em;
+  color: var(--accent);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  padding-bottom: 6px;
+  margin: 24px 0 12px;
+  text-align: left;
+}
+
+.rpg-home-skills-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rpg-home-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  text-align: left;
+}
+
+.rpg-home-skill-mastered {
+  border-color: color-mix(in srgb, #ffd700 40%, transparent);
+  background: color-mix(in srgb, #ffd700 5%, transparent);
+}
+
+.rpg-home-skill-icon {
+  font-size: 1.3em;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rpg-home-skill-name {
+  flex: 1;
+  font-size: 0.95em;
+}
+
+.rpg-home-skill-level {
+  font-size: 0.9em;
+  color: var(--accent);
+  width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rpg-home-skill-xp-bar {
+  width: 80px;
+  height: 4px;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  flex-shrink: 0;
+}
+
+.rpg-home-skill-xp-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.rpg-home-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+  text-align: left;
+}
+
+.rpg-home-inv-item {
+  padding: 6px 10px;
+  font-size: 0.85em;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: color-mix(in srgb, var(--foreground) 80%, transparent);
+}
+
+.rpg-home-empty {
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  text-align: center;
+  padding: 12px;
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 768px) {
+  .rpg-title { font-size: 1.6em; }
+  .rpg-title-block { padding: 40px 0 24px; }
+
+  .rpg-slots-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rpg-locations-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rpg-sub-nav-links {
+    flex-wrap: wrap;
+    gap: 0.5em 0.8em;
+    font-size: 0.85em;
+  }
+
+  .rpg-home-skill-xp-bar { width: 50px; }
+}
+
+@media (max-width: 480px) {
+  .rpg-page { padding: 0 8px; }
+
+  .rpg-locations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rpg-menu-buttons .rpg-btn { width: 100%; }
+
+  .rpg-create-actions {
+    flex-direction: column;
+  }
+
+  .rpg-create-actions .rpg-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -121,7 +121,16 @@
     {{- $gigs := resources.Get "js/gigs.js" | minify | fingerprint -}}
     <script src="{{ $gigs.RelPermalink }}"></script>
   {{- end }}
-  {{ if eq .Type "skills" -}}
+  {{ if eq .Type "rpg-game" -}}
+    {{- with resources.Get "js/rpg.js" -}}
+      {{- $rpg := . | minify | fingerprint -}}
+      <script src="{{ $rpg.RelPermalink }}"></script>
+    {{- end -}}
+    {{- with resources.Get "js/skills.js" -}}
+      {{- $skills := . | minify | fingerprint -}}
+      <script src="{{ $skills.RelPermalink }}"></script>
+    {{- end -}}
+  {{- else if eq .Type "skills" -}}
     {{- $skills := resources.Get "js/skills.js" | minify | fingerprint -}}
     <script src="{{ $skills.RelPermalink }}"></script>
   {{- end }}

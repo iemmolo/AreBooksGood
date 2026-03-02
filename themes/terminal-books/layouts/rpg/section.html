@@ -1,0 +1,16 @@
+{{ define "main" }}
+  <h1 class="page-title">{{ .Title }}</h1>
+  <div class="casino-intro">
+    <p>Jack's RPG Adventure — an OSRS-inspired idle RPG. Create a character, train skills, gather resources, and forge your legacy. No classes, no limits. Level what you want to 99.</p>
+  </div>
+
+  <div class="casino-tile-grid">
+    <a href="{{ "rpg/play/" | relURL }}" class="casino-tile">
+      <div class="casino-tile-visual">
+        &#9876;&#65039; &#9935;&#65039;<br>
+        &#127907;&#65039; &#129683;
+      </div>
+      <span class="casino-tile-label">> Play</span>
+    </a>
+  </div>
+{{ end }}

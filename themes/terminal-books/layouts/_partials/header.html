@@ -57,6 +57,13 @@
   </ul>
 </nav>
 {{ end }}
+{{ if eq .Section "rpg" }}
+<nav class="rpg-sub-nav">
+  <ul class="rpg-sub-nav-links">
+    <li><a href="{{ "rpg/play/" | relURL }}"{{ if eq .RelPermalink "/rpg/play/" }} class="active"{{ end }}>Play</a></li>
+  </ul>
+</nav>
+{{ end }}
 {{ if eq .Section "pets" }}
 <nav class="pets-sub-nav">
   <ul class="pets-sub-nav-links">

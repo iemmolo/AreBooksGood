@@ -175,11 +175,11 @@ AreBooksGood - Improvement TODO
 
 ### Phase 1 (Done)
 - [x] Page skeleton, layout, routing (`/pets/skills/`)
-- [x] Star Dust wallet (global, header widget)
+- [x] Star Dust wallet (global, header widget) — REMOVED (SD reworked later)
 - [x] All 5 mini-games (Mining, Fishing, Woodcutting, Smithing, Combat)
 - [x] XP/leveling system (1-99) with resource tiers
 - [x] Pet assignment + idle/offline progress (8h cap) + idle report modal
-- [x] Tool upgrades (5 tiers per skill, Star Dust cost)
+- [x] Tool upgrades (5 tiers per skill, Star Dust cost) — REMOVED (tools reworked later)
 - [x] Keyboard shortcuts (1-5 to select skills)
 
 ### Phase 2 (Done) — see SKILLS-TODO.txt for full checklist
@@ -260,10 +260,12 @@ AreBooksGood - Improvement TODO
 - [x] 16 mining ores, 12 smelting bars, alloy recipes, sprite fixes, Iron→Astral rename, v7 migration
 - [x] Mining ore selector dropdown, inventory hover tooltips
 
-### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
-- [ ] TOOL_BAR_COSTS replaces TOOL_COSTS (Tier 2 = 5 Iron Bars, Tier 3 = 10 Jade, Tier 4 = 8 Frost, Tier 5 = 5 Dragon)
-- [ ] Crafting UI shows bar requirement instead of SD cost
-- [ ] SD remains reward currency, just not spent on tools
+### Phase 6D: Tool Crafting via Bars (SD + tool system removed, to be rebuilt)
+- [x] Remove Star Dust currency system entirely (stardust.js deleted, all SD earning/spending removed)
+- [x] Remove tool upgrade system (5-tier speed upgrades removed from all skills)
+- [x] Star Shower now 2x XP only (was 2x XP+SD), Mastery now +5% XP (was +5% dust)
+- [x] Mining perks (Prospector, Gem Specialist, Mastery) updated to boost XP instead of dust
+- [ ] Rebuild tool system using bar crafting (TOOL_BAR_COSTS, crafting UI, inventory integration)
 
 ### Phase 6E: Combat Integration
 - [ ] Fish as food (consume from inventory → heal HP)
@@ -284,18 +286,31 @@ AreBooksGood - Improvement TODO
 - [ ] Cape perks: each cape gives a permanent passive bonus for that skill
 - [ ] Cape emote/animation on equip
 
-## Jack's RPG Adventure (Future — Major Feature)
+## Jack's RPG Adventure
 
-Full RPG game built into the site. Create a character, train skills, do quests, kill monsters, go on raids.
+### Phase 1: Menu + Character + World Map (Done)
+- [x] Menu screen (New Game / Continue)
+- [x] 3 save slots with character preview, total level, last played, delete
+- [x] Character creation (name + LPC appearance selection)
+- [x] World map with 6 location tiles (Town Hub, Mining, Fishing, Woodcutting, Smithy, Arena)
+- [x] Skill location entry: transplants skills panel, reinits skills.js with slot-specific storage key
+- [x] Home / character sheet screen (sprite, skill levels, XP bars, inventory summary)
+- [x] Save & Quit flow
+- [x] skills.js: configurable STORAGE_KEY, reinit(), cleanup, RPG-mode guard
+- [x] Extracted skills HTML to shared partial (rpg-skills-panel.html)
+- [x] CSS var themed, responsive, terminal aesthetic
+- [ ] LPC character sprites (user generates 6 characters from LPC generator tool)
 
-- [ ] Character creation (name, class/type selection, save/load state)
-- [ ] Menu screen with themed UI (new game, continue, settings)
-- [ ] Skill training system (multiple training methods per skill)
-- [ ] Quest system (NPC dialogue, objectives, rewards)
-- [ ] Monster combat (overworld encounters, boss fights)
-- [ ] Raid system (multi-stage dungeons, loot tables)
-- [ ] Character progression (levels, stats, equipment, inventory)
-- [ ] Save/load via localStorage with versioned state
+### Phase 2+ (Future)
+- [ ] Top-down tile-based overworld with LPC walk animations
+- [ ] Quest system (NPCs in Tavern give objectives + rewards)
+- [ ] Shop system in Town Hub (buy/sell, ties into Silk Road economy)
+- [ ] New skills as RPG locations: Cooking, Crafting, Magic/Alchemy
+- [ ] Dungeon system integration (battle.js dungeons as RPG location)
+- [ ] Equipment stat system (forged gear provides combat bonuses)
+- [ ] Per-slot pet companions (pets scoped to save slot)
+- [ ] LPC runtime layer compositing (equipment visually changes character sprite)
+- [ ] Achievement/milestone tracker across all skills
 
 ## Low Priority / Nice-to-Have
 

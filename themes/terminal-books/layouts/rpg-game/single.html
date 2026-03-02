@@ -1,0 +1,74 @@
+{{ define "main" }}
+<div class="rpg-page" id="rpg-page">
+
+  <!-- ═══ Menu Screen ═══ -->
+  <div class="rpg-screen" id="rpg-menu-screen">
+    <div class="rpg-title-block">
+      <h1 class="rpg-title">Jack's RPG Adventure</h1>
+      <p class="rpg-subtitle">An OSRS-inspired idle RPG</p>
+    </div>
+    <div class="rpg-menu-buttons">
+      <button class="rpg-btn rpg-btn-primary" id="rpg-btn-new">New Game</button>
+      <button class="rpg-btn" id="rpg-btn-continue">Continue</button>
+    </div>
+    <div class="rpg-save-slots" id="rpg-save-slots" style="display:none">
+      <h2 class="rpg-slots-heading">Save Slots</h2>
+      <div class="rpg-slots-grid" id="rpg-slots-grid"></div>
+      <button class="rpg-btn rpg-btn-back" id="rpg-slots-back">Back</button>
+    </div>
+  </div>
+
+  <!-- ═══ Character Creation Screen ═══ -->
+  <div class="rpg-screen" id="rpg-create-screen" style="display:none">
+    <h2 class="rpg-screen-heading">Create Your Character</h2>
+    <div class="rpg-create-form">
+      <label class="rpg-label" for="rpg-name-input">Name</label>
+      <input type="text" id="rpg-name-input" class="rpg-input" maxlength="16" placeholder="Enter name..." autocomplete="off">
+      <div class="rpg-create-actions">
+        <button class="rpg-btn rpg-btn-primary" id="rpg-btn-begin" disabled>Begin Adventure</button>
+        <button class="rpg-btn rpg-btn-back" id="rpg-create-back">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ World Map Screen ═══ -->
+  <div class="rpg-screen" id="rpg-world-screen" style="display:none">
+    <div class="rpg-world-header">
+      <div class="rpg-world-info">
+        <span class="rpg-world-name" id="rpg-world-name"></span>
+        <span class="rpg-world-total" id="rpg-world-total">Total Lv: 5</span>
+      </div>
+      <button class="rpg-btn rpg-btn-small" id="rpg-btn-save-quit">Save &amp; Quit</button>
+    </div>
+    <div class="rpg-locations-grid" id="rpg-locations-grid"></div>
+  </div>
+
+  <!-- ═══ Location Screen (skills injected here) ═══ -->
+  <div class="rpg-screen" id="rpg-location-screen" style="display:none">
+    <div class="rpg-location-header">
+      <button class="rpg-btn rpg-btn-back rpg-btn-small" id="rpg-btn-back-map">Back to Map</button>
+      <h2 class="rpg-location-title" id="rpg-location-title"></h2>
+    </div>
+    <div class="rpg-location-content" id="rpg-location-content"></div>
+  </div>
+
+  <!-- ═══ Home / Character Sheet Screen ═══ -->
+  <div class="rpg-screen" id="rpg-home-screen" style="display:none">
+    <div class="rpg-home-header">
+      <button class="rpg-btn rpg-btn-back rpg-btn-small" id="rpg-btn-back-world">Back to Map</button>
+      <h2 class="rpg-screen-heading">Character Sheet</h2>
+    </div>
+    <div class="rpg-home-content">
+      <div class="rpg-home-name" id="rpg-home-name"></div>
+      <div class="rpg-home-skills" id="rpg-home-skills"></div>
+      <div class="rpg-home-inventory" id="rpg-home-inventory"></div>
+    </div>
+  </div>
+
+  <!-- Hidden skills container (skills partial lives here, moved into location on demand) -->
+  <div id="rpg-skills-container" style="display:none">
+    {{ partial "rpg-skills-panel.html" . }}
+  </div>
+
+</div>
+{{ end }}

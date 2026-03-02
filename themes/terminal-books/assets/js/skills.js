@@ -2,7 +2,7 @@
   'use strict';
 
   // ── Constants ─────────────────────────────────
-  var STORAGE_KEY = 'arebooksgood-skills';
+  var STORAGE_KEY = window.__RPG_STORAGE_KEY || 'arebooksgood-skills';
   var PET_KEY = 'arebooksgood-pet';
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
@@ -3904,6 +3904,24 @@
     xhr3.send();
   }
 
+  // ── RPG integration: reinit + cleanup ──────
+  function reinit() {
+    STORAGE_KEY = window.__RPG_STORAGE_KEY || 'arebooksgood-skills';
+    cleanupActiveGame();
+    if (activeAutoTimer) { clearInterval(activeAutoTimer); activeAutoTimer = null; }
+    state = null;
+    activeSkill = 'mining';
+    starShowerActive = false;
+    if (starShowerTimer) { clearTimeout(starShowerTimer); starShowerTimer = null; }
+    init();
+  }
+  window.__RPG_SKILLS_CLEANUP = function () {
+    cleanupActiveGame();
+    if (activeAutoTimer) { clearInterval(activeAutoTimer); activeAutoTimer = null; }
+    if (starShowerTimer) { clearTimeout(starShowerTimer); starShowerTimer = null; }
+  };
+  window.addEventListener('rpg-skills-init', reinit);
+
   function init() {
     if (!$('skills-page')) return;
 
@@ -3984,7 +4002,9 @@
     });
   }
 
-  if (document.readyState === 'loading') {
+  if (window.__RPG_STORAGE_KEY) {
+    // RPG mode: wait for rpg-skills-init event, don't auto-init
+  } else if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();

@@ -256,15 +256,11 @@ Pet Skills Expansion — Phase 2
 - [x] Mining ore selector dropdown (pick any unlocked ore to mine)
 - [x] Inventory item hover tooltips (pet speech bubble style)
 
-### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
-- [ ] TOOL_BAR_COSTS replaces TOOL_COSTS
-  - Tier 2 = 5 Iron Bars
-  - Tier 3 = 10 Jade Bars
-  - Tier 4 = 8 Frost Bars
-  - Tier 5 = 5 Dragon Bars
-- [ ] Crafting UI shows bar requirement instead of SD cost
-- [ ] SD remains reward currency, just not spent on tools
-- [ ] Tool upgrade panel shows inventory bar count vs. requirement
+### Phase 6D: Tool Crafting via Bars (SD + tool system removed, to be rebuilt)
+- [x] Remove Star Dust currency system entirely (stardust.js deleted, all SD earning/spending removed)
+- [x] Remove tool upgrade system (5-tier speed upgrades removed from all skills)
+- [x] Star Shower → 2x XP only, Mastery → +5% XP, Mining perks → XP bonuses
+- [ ] Rebuild tool system using bar crafting (TOOL_BAR_COSTS, crafting UI, inventory integration)
 
 ### Phase 6E: Combat Integration
 - [ ] Fish as food (consume from inventory → heal HP in combat mini-game)
@@ -301,3 +297,14 @@ Pet Skills Expansion — Phase 2
 - [ ] Cape Hall page — trophy room showing all earned capes
 - [ ] Cape perks: each cape gives a permanent passive bonus for that skill
 - [ ] Cape emote/animation on equip
+
+## Jack's RPG Adventure Integration
+
+### Phase 1: Wrapper/Launcher (Done)
+- [x] rpg.js loads before skills.js on rpg-game pages
+- [x] Configurable STORAGE_KEY via window.__RPG_STORAGE_KEY
+- [x] reinit() / cleanup exports for skills.js
+- [x] RPG-mode guard prevents skills.js auto-init
+- [x] Shared skills partial (rpg-skills-panel.html) used by both /pets/skills/ and /rpg/play/
+- [x] 3 save slots with slot-specific localStorage keys (rpg-slot-N-skills)
+- [ ] LPC character sprites (manual step: generate from LPC tool)

@@ -145,9 +145,17 @@
 {{- end }}
 
 {{/* Skills CSS */}}
-{{ if eq .Type "skills" -}}
+{{ if or (eq .Type "skills") (eq .Type "rpg-game") -}}
   {{- $skills := resources.Get "css/skills.css" | minify | fingerprint -}}
   <link rel="stylesheet" href="{{ $skills.RelPermalink }}">
+{{- end }}
+
+{{/* RPG CSS */}}
+{{ if eq .Type "rpg-game" -}}
+  {{- with resources.Get "css/rpg.css" -}}
+    {{- $rpg := . | minify | fingerprint -}}
+    <link rel="stylesheet" href="{{ $rpg.RelPermalink }}">
+  {{- end -}}
 {{- end }}
 
 {{/* Open Graph */}}
