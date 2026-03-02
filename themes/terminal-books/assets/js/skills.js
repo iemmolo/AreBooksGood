@@ -2581,8 +2581,8 @@
     smeltTab.textContent = 'Smelting';
     smeltTab.addEventListener('click', function () {
       if (smithingState.mode === 'smelting') return;
-      if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
-      if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+      if (smithingState.cursorTimer) { clearInterval(smithingState.cursorTimer); smithingState.cursorTimer = null; }
+      if (smithingState.smeltTimer) { clearInterval(smithingState.smeltTimer); smithingState.smeltTimer = null; }
       if (smithingState.cooldownTimer) { clearTimeout(smithingState.cooldownTimer); smithingState.cooldownTimer = null; }
       smithingState.mode = 'smelting';
       smithingState.phase = 'idle';
@@ -2595,8 +2595,8 @@
     forgeTab.textContent = 'Forging';
     forgeTab.addEventListener('click', function () {
       if (smithingState.mode === 'forging') return;
-      if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
-      if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+      if (smithingState.cursorTimer) { clearInterval(smithingState.cursorTimer); smithingState.cursorTimer = null; }
+      if (smithingState.smeltTimer) { clearInterval(smithingState.smeltTimer); smithingState.smeltTimer = null; }
       if (smithingState.cooldownTimer) { clearTimeout(smithingState.cooldownTimer); smithingState.cooldownTimer = null; }
       smithingState.mode = 'forging';
       smithingState.phase = 'idle';
@@ -2681,7 +2681,7 @@
     smithingState.smeltTemp = 0;
     smithingState.smeltHolding = false;
     smithingState.phase = 'active';
-    if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+    if (smithingState.smeltTimer) { clearInterval(smithingState.smeltTimer); smithingState.smeltTimer = null; }
 
     var heatBtn = $('smelt-heat-btn');
     if (heatBtn) {
@@ -2703,11 +2703,11 @@
         onSmeltRelease();
       };
       heatBtn.addEventListener('mousedown', startHeat);
-      heatBtn.addEventListener('touchstart', startHeat);
+      heatBtn.addEventListener('touchstart', startHeat, {passive: false});
       heatBtn.addEventListener('mouseup', stopHeat);
       heatBtn.addEventListener('mouseleave', stopHeat);
-      heatBtn.addEventListener('touchend', stopHeat);
-      heatBtn.addEventListener('touchcancel', stopHeat);
+      heatBtn.addEventListener('touchend', stopHeat, {passive: false});
+      heatBtn.addEventListener('touchcancel', stopHeat, {passive: false});
     }
   }
 
@@ -2817,6 +2817,7 @@
 
     consumeSmeltingOres(barName);
     addItem(barName, 1);
+    updateSmeltMats();
 
     var bonusMult = isPerfect ? 5 : 1;
     var xpGain = Math.floor(res.xp * bonusMult * getStarShowerMult());
@@ -3091,6 +3092,7 @@
       // Consume materials and produce item
       consumeForgingMats(recipe);
       addItem(recipe.name, 1);
+      updateForgeMats();
 
       // Masterwork check (5/5 perfect)
       var isMasterwork = smithingState.bonusHits >= 5;
@@ -3695,6 +3697,7 @@
       }
 
       // 6C: Idle smelting for smithing (50% of actions → bars from available ores)
+      // Uses direct inventory manipulation to avoid O(n) saveState calls
       if (key === 'smithing') {
         var smeltActions = Math.floor(actions * 0.5);
         var smeltLevel = s.level;
@@ -3703,9 +3706,16 @@
           var smeltBar = SMELTING_ORDER[si];
           var smeltRecipe = SMELTING_RECIPES[smeltBar];
           if (smeltRecipe.level > smeltLevel) continue;
-          while (smeltActions > 0 && canSmelt(smeltBar) && getItemCount(smeltBar) < STACK_CAP) {
-            consumeSmeltingOres(smeltBar);
-            addItem(smeltBar, 1);
+          while (smeltActions > 0 && hasItem(smeltRecipe.inputs[0].item, smeltRecipe.inputs[0].qty) &&
+                 (smeltRecipe.inputs.length < 2 || hasItem(smeltRecipe.inputs[1].item, smeltRecipe.inputs[1].qty)) &&
+                 (state.inventory[smeltBar] || 0) < STACK_CAP) {
+            // Direct inventory manipulation (batched, single save after loop)
+            for (var inp = 0; inp < smeltRecipe.inputs.length; inp++) {
+              var ik = smeltRecipe.inputs[inp].item;
+              state.inventory[ik] = (state.inventory[ik] || 0) - smeltRecipe.inputs[inp].qty;
+              if (state.inventory[ik] <= 0) delete state.inventory[ik];
+            }
+            state.inventory[smeltBar] = (state.inventory[smeltBar] || 0) + 1;
             smeltActions--;
             var found = false;
             for (var bf = 0; bf < barsSmelted.length; bf++) {
@@ -3808,8 +3818,8 @@
           }
         }
 
-        // 6C: Active auto-train smelting for smithing
-        if (key === 'smithing') {
+        // 6C: Active auto-train smelting for smithing (skip if player is mid-game)
+        if (key === 'smithing' && !(key === activeSkill && smithingState.phase !== 'idle')) {
           var smeltLv = s.level;
           for (var asi = SMELTING_ORDER.length - 1; asi >= 0; asi--) {
             var asBar = SMELTING_ORDER[asi];
