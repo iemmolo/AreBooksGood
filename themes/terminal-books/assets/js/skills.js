@@ -7,7 +7,8 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 3;
+  var STATE_VERSION = 4;
+  var STACK_CAP = 999;
 
   // ── Tool tiers ────────────────────────────────
   var TOOL_COSTS = [500, 2000, 8000, 30000, 100000];
@@ -196,6 +197,70 @@
     woodcutting: { sheet: 'tools-t1', x: 48, y: 0 },    // Axe (row 0, col 3)
     smithing:    { sheet: 'tools-t1', x: 96, y: 0 },    // Pick/Hammer (row 0, col 6)
     combat:      { sheet: 'tools-t1', x: 32, y: 0 }     // Short Sword (row 0, col 2)
+  };
+
+  // ── Item Categories & Inventory Icon Map ─────
+  var ITEM_CATEGORIES = [
+    { label: 'Ores', items: ['Copper Ore', 'Tin Ore', 'Iron Ore', 'Coal', 'Gold Ore', 'Astral Ore', 'Jade Ore', 'Amethyst Ore', 'Dragon Ore', 'Star Ore'] },
+    { label: 'Gems', items: ['Ruby', 'Sapphire', 'Topaz', 'Emerald', 'Opal', 'Onyx', 'Diamond'] },
+    { label: 'Logs', items: ['Tree Log', 'Oak Log', 'Willow Log', 'Maple Log', 'Yew Log', 'Magic Log', 'Elder Log'] },
+    { label: 'Fish', items: ['Shrimp', 'Trout', 'Lobster', 'Swordfish', 'Shark', 'Dark Crab'] },
+    { label: 'Bars', items: ['Bronze Bar', 'Iron Bar', 'Steel Bar', 'Gold Bar', 'Astral Bar', 'Jade Bar', 'Amethyst Bar', 'Dragon Bar'] }
+  ];
+
+  // Unified item → sprite mapping for inventory icons
+  // Ores: ores.png row 0 (16px grid)
+  // Gems: gems.png (16px grid)
+  // Fish: fish.png (16px grid)
+  // Logs: wood.png (16px grid)
+  // Bars: ores.png row 2 (y=32)
+  var ITEM_ICON_MAP = {
+    'Copper Ore':    { sheet: 'ores', x: 0, y: 0 },
+    'Tin Ore':       { sheet: 'ores', x: 16, y: 0 },
+    'Iron Ore':      { sheet: 'ores', x: 32, y: 0 },
+    'Coal':          { sheet: 'ores', x: 48, y: 0 },
+    'Gold Ore':      { sheet: 'ores', x: 64, y: 0 },
+    'Astral Ore':    { sheet: 'ores', x: 80, y: 0 },
+    'Jade Ore':      { sheet: 'ores', x: 96, y: 0 },
+    'Amethyst Ore':  { sheet: 'ores', x: 112, y: 0 },
+    'Dragon Ore':    { sheet: 'ores', x: 128, y: 0 },
+    'Star Ore':      { sheet: 'ores', x: 144, y: 0 },
+    'Ruby':          { sheet: 'gems', x: 0, y: 0 },
+    'Sapphire':      { sheet: 'gems', x: 16, y: 0 },
+    'Topaz':         { sheet: 'gems', x: 32, y: 0 },
+    'Emerald':       { sheet: 'gems', x: 48, y: 0 },
+    'Opal':          { sheet: 'gems', x: 64, y: 0 },
+    'Onyx':          { sheet: 'gems', x: 0, y: 16 },
+    'Diamond':       { sheet: 'gems', x: 16, y: 16 },
+    'Tree Log':      { sheet: 'wood', x: 0, y: 0 },
+    'Oak Log':       { sheet: 'wood', x: 16, y: 0 },
+    'Willow Log':    { sheet: 'wood', x: 32, y: 0 },
+    'Maple Log':     { sheet: 'wood', x: 48, y: 0 },
+    'Yew Log':       { sheet: 'wood', x: 0, y: 16 },
+    'Magic Log':     { sheet: 'wood', x: 16, y: 16 },
+    'Elder Log':     { sheet: 'wood', x: 32, y: 16 },
+    'Shrimp':        { sheet: 'fish', x: 0, y: 0 },
+    'Trout':         { sheet: 'fish', x: 16, y: 0 },
+    'Lobster':       { sheet: 'fish', x: 32, y: 0 },
+    'Swordfish':     { sheet: 'fish', x: 48, y: 0 },
+    'Shark':         { sheet: 'fish', x: 64, y: 0 },
+    'Dark Crab':     { sheet: 'fish', x: 80, y: 0 },
+    'Bronze Bar':    { sheet: 'ores', x: 0, y: 32 },
+    'Iron Bar':      { sheet: 'ores', x: 16, y: 32 },
+    'Steel Bar':     { sheet: 'ores', x: 32, y: 32 },
+    'Gold Bar':      { sheet: 'ores', x: 48, y: 32 },
+    'Astral Bar':    { sheet: 'ores', x: 64, y: 32 },
+    'Jade Bar':      { sheet: 'ores', x: 80, y: 32 },
+    'Amethyst Bar':  { sheet: 'ores', x: 96, y: 32 },
+    'Dragon Bar':    { sheet: 'ores', x: 112, y: 32 }
+  };
+
+  // ── Gathering → Inventory Name Maps ──────────
+  var GEM_NAMES = ['Ruby', 'Sapphire', 'Topaz', 'Emerald', 'Opal', 'Onyx', 'Diamond'];
+
+  var LOG_NAMES = {
+    'Tree': 'Tree Log', 'Oak': 'Oak Log', 'Willow': 'Willow Log',
+    'Maple': 'Maple Log', 'Yew': 'Yew Log', 'Magic': 'Magic Log', 'Elder': 'Elder Log'
   };
 
   // ── Sprite Helper Functions ──────────────────
@@ -409,7 +474,7 @@
 
   // ── Load / Save ───────────────────────────────
   function defaultState() {
-    var s = { skills: {}, version: STATE_VERSION, mastered: {}, activePlayTime: 0, totalDustEarned: 0 };
+    var s = { skills: {}, version: STATE_VERSION, mastered: {}, activePlayTime: 0, totalDustEarned: 0, inventory: {} };
     for (var i = 0; i < SKILL_KEYS.length; i++) {
       var skillDef = {
         level: 1,
@@ -439,6 +504,8 @@
           s.mastered = saved.mastered || {};
           s.activePlayTime = saved.activePlayTime || 0;
           s.totalDustEarned = saved.totalDustEarned || 0;
+          // v4: inventory
+          s.inventory = saved.inventory || {};
           for (var i = 0; i < SKILL_KEYS.length; i++) {
             var key = SKILL_KEYS[i];
             if (saved.skills[key]) {
@@ -473,6 +540,42 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {}
+  }
+
+  // ── Inventory helpers ───────────────────────────
+  function addItem(key, count) {
+    if (!state || !key || count <= 0) return 0;
+    var cur = state.inventory[key] || 0;
+    var added = Math.min(count, STACK_CAP - cur);
+    if (added <= 0) return 0;
+    state.inventory[key] = cur + added;
+    saveState();
+    renderInventoryPanel();
+    return added;
+  }
+
+  function removeItem(key, count) {
+    if (!state || !key || count <= 0) return false;
+    var cur = state.inventory[key] || 0;
+    if (cur < count) return false;
+    cur -= count;
+    if (cur <= 0) {
+      delete state.inventory[key];
+    } else {
+      state.inventory[key] = cur;
+    }
+    saveState();
+    renderInventoryPanel();
+    return true;
+  }
+
+  function hasItem(key, count) {
+    count = count || 1;
+    return (state.inventory[key] || 0) >= count;
+  }
+
+  function getItemCount(key) {
+    return state.inventory[key] || 0;
   }
 
   // ── Pet state helpers ─────────────────────────
@@ -1178,6 +1281,9 @@
 
     // B5: Milestones panel
     renderMilestones();
+
+    // 6A: Inventory panel
+    renderInventoryPanel();
   }
 
   // ── B5: Milestones Rendering ──────────────────
@@ -1198,6 +1304,83 @@
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return String(n);
+  }
+
+  // ── Inventory Panel ──────────────────────────────
+  var invCollapsed = false;
+
+  function renderInventoryPanel() {
+    var emptyEl = $('skills-inv-empty');
+    var groupsEl = $('skills-inv-groups');
+    var toggleEl = $('skills-inv-toggle');
+    if (!groupsEl) return;
+
+    // Count total items
+    var totalCount = 0;
+    var inv = state.inventory;
+    for (var k in inv) {
+      if (inv.hasOwnProperty(k)) totalCount += inv[k];
+    }
+
+    if (totalCount === 0) {
+      if (emptyEl) emptyEl.style.display = '';
+      groupsEl.style.display = 'none';
+      return;
+    }
+
+    if (emptyEl) emptyEl.style.display = 'none';
+    groupsEl.style.display = '';
+    groupsEl.innerHTML = '';
+
+    for (var c = 0; c < ITEM_CATEGORIES.length; c++) {
+      var cat = ITEM_CATEGORIES[c];
+      // Filter to items player has
+      var hasAny = false;
+      for (var j = 0; j < cat.items.length; j++) {
+        if (inv[cat.items[j]]) { hasAny = true; break; }
+      }
+      if (!hasAny) continue;
+
+      var label = document.createElement('div');
+      label.className = 'skills-inv-group-label';
+      label.textContent = cat.label;
+      groupsEl.appendChild(label);
+
+      var grid = document.createElement('div');
+      grid.className = 'skills-inv-grid';
+      groupsEl.appendChild(grid);
+
+      for (var i = 0; i < cat.items.length; i++) {
+        var itemKey = cat.items[i];
+        var qty = inv[itemKey];
+        if (!qty) continue;
+        var iconData = ITEM_ICON_MAP[itemKey];
+        if (!iconData) continue;
+
+        var cell = document.createElement('div');
+        cell.className = 'skills-inv-cell';
+        cell.title = itemKey + ' \u00d7 ' + qty;
+
+        var sprite = createSpriteEl(iconData.sheet, iconData.x, iconData.y, 16, 16, 24, 24);
+        if (sprite) cell.appendChild(sprite);
+
+        var countEl = document.createElement('span');
+        countEl.className = 'skills-inv-count';
+        countEl.textContent = qty;
+        cell.appendChild(countEl);
+
+        grid.appendChild(cell);
+      }
+    }
+  }
+
+  function toggleInventoryPanel() {
+    var panel = $('skills-inv-panel');
+    var toggleEl = $('skills-inv-toggle');
+    if (!panel) return;
+    invCollapsed = !invCollapsed;
+    panel.style.display = invCollapsed ? 'none' : '';
+    if (toggleEl) toggleEl.textContent = invCollapsed ? '[+]' : '[\u2212]';
   }
 
   // ── Collection Log ─────────────────────────────
@@ -1495,6 +1678,10 @@
       var isGem = Math.random() < gemChance;
       if (isGem) {
         log.totalGems++;
+        // 6B: Add random gem to inventory
+        var gemIdx = Math.floor(Math.random() * GEM_NAMES.length);
+        addItem(GEM_NAMES[gemIdx], 1);
+        addLog('+1 ' + GEM_NAMES[gemIdx]);
         var gemMult = hasPerk('gemSpec') ? 10 : 5;
         dustGain *= gemMult;
         if (area) {
@@ -1519,6 +1706,11 @@
       addXp('mining', xpGain);
       if (window.StarDust) window.StarDust.add(dustGain);
       addLog('Mined ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)');
+
+      // 6B: Add ore to inventory
+      var oreQty = isDouble ? 2 : 1;
+      addItem(res.name, oreQty);
+      addLog('+' + oreQty + ' ' + res.name);
 
       onAction('mining', dustGain);
       animatePetAction('pet-bounce');
@@ -1669,6 +1861,9 @@
         var gemMult = hasPerk('gemSpec') ? 10 : 5;
         var dustGain = Math.floor(res.dust * dustMult * gemMult);
         if (window.StarDust) window.StarDust.add(dustGain);
+        // 6B: Add random gem to inventory
+        var gemIdx = Math.floor(Math.random() * GEM_NAMES.length);
+        addItem(GEM_NAMES[gemIdx], 1);
         if (area) {
           var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
           spawnSpriteParticle(area, 'gems', gem.x, gem.y);
@@ -1758,6 +1953,8 @@
             var res = getHighestResource('mining');
             var dustGain = Math.floor(res.dust * getDustMult() * 5);
             if (window.StarDust) window.StarDust.add(dustGain);
+            // 6B: Add ore to inventory
+            addItem(res.name, 1);
             addLog('Cave-In survived! 5x dust bonus! (+' + dustGain + ' SD)');
             if (area) spawnParticle(area, '5x! +' + dustGain + ' SD', 'dust');
             cleanupEvent();
@@ -1962,6 +2159,10 @@
     addXp('fishing', xpGain);
     if (window.StarDust) window.StarDust.add(dustGain);
 
+    // 6B: Add fish to inventory
+    addItem(res.name, 1);
+    addLog('+1 ' + res.name);
+
     var catchText = 'Caught ' + sizeName + ' ' + res.name + '!';
     if (isGolden) catchText = 'GOLDEN catch! ' + catchText;
     if (isRare) catchText = 'RARE! ' + catchText;
@@ -2109,6 +2310,12 @@
 
       addXp('woodcutting', xpGain);
       if (window.StarDust) window.StarDust.add(dustGain);
+
+      // 6B: Add log to inventory
+      var logName = LOG_NAMES[res.name] || (res.name + ' Log');
+      addItem(logName, 1);
+      addLog('+1 ' + logName);
+
       addLog('Chopped ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)');
 
       var gameArea2 = $('skills-game-area');
@@ -2867,6 +3074,16 @@
         actions: actions
       });
 
+      // 6B: Idle materials for gathering skills (50% of actions)
+      if (key === 'mining' || key === 'fishing' || key === 'woodcutting') {
+        var materialActions = Math.floor(actions * 0.5);
+        if (materialActions > 0) {
+          var matName = key === 'woodcutting' ? (LOG_NAMES[res.name] || res.name + ' Log') : res.name;
+          addItem(matName, materialActions);
+          rewards[rewards.length - 1].materials = { name: matName, qty: materialActions };
+        }
+      }
+
       s.lastActiveAt = now;
     }
 
@@ -2905,7 +3122,8 @@
       line.appendChild(sprite);
 
       var text = document.createElement('span');
-      text.textContent = petName + ' earned ' + formatNum(r.xp) + ' ' + SKILLS[r.skill].name + ' XP + ' + formatNum(r.dust) + ' SD';
+      var matText = r.materials ? ' + ' + r.materials.qty + ' ' + r.materials.name : '';
+      text.textContent = petName + ' earned ' + formatNum(r.xp) + ' ' + SKILLS[r.skill].name + ' XP + ' + formatNum(r.dust) + ' SD' + matText;
       line.appendChild(text);
 
       content.appendChild(line);
@@ -3055,6 +3273,11 @@
 
       var toolBtn = $('skills-upgrade-tool-btn');
       if (toolBtn) toolBtn.addEventListener('click', upgradeTool);
+
+      var invToggle = $('skills-inv-toggle');
+      if (invToggle) invToggle.addEventListener('click', toggleInventoryPanel);
+      var invTitle = $('skills-inv-title');
+      if (invTitle) invTitle.addEventListener('click', toggleInventoryPanel);
 
       var logBtn = $('skills-log-btn');
       if (logBtn) logBtn.addEventListener('click', showCollectionLog);

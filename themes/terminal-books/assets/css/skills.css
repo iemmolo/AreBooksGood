@@ -805,6 +805,73 @@
   font-size: 0.55rem;
 }
 
+/* ── Inventory Panel ─────────────────────────── */
+.skills-inv-title {
+  cursor: pointer;
+  user-select: none;
+}
+
+.skills-inv-toggle {
+  float: right;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.skills-inv-panel {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+}
+
+.skills-inv-empty {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  font-style: italic;
+  padding: 0.3rem 0;
+}
+
+.skills-inv-group-label {
+  font-family: monospace;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  margin: 0.3rem 0 0.15rem 0;
+}
+
+.skills-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+}
+
+.skills-inv-cell {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.skills-inv-cell:hover {
+  border-color: var(--accent);
+}
+
+.skills-inv-count {
+  position: absolute;
+  bottom: 0;
+  right: 1px;
+  font-family: monospace;
+  font-size: 0.5rem;
+  color: var(--accent);
+  line-height: 1;
+  text-shadow: 0 0 2px var(--background), 0 0 4px var(--background);
+}
+
 /* ── Collection Log ──────────────────────────── */
 .skills-log-btn {
   font-family: monospace;
@@ -1895,6 +1962,10 @@
   .skills-right-panel { padding: 0.25rem; overflow: hidden; min-width: 0; }
 
   .skills-perks-panel { max-height: 150px; overflow-y: auto; }
+
+  .skills-inv-grid { grid-template-columns: repeat(5, 1fr); }
+
+  .skills-inv-cell { width: 28px; height: 28px; }
 
   .skills-list-panel { overflow: hidden; min-width: 0; }
 

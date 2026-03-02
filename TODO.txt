@@ -229,18 +229,18 @@ AreBooksGood - Improvement TODO
 - [x] Copy potion sprites (253 PNGs) to static/images/skills/potions/
 
 ### Phase 6A: Material Inventory Foundation
-- [ ] Add `state.inventory` object (key→count map), bump STATE_VERSION to 4
-- [ ] addItem/removeItem/hasItem/getItemCount helpers
-- [ ] Inventory UI panel in right panel (collapsible, grouped by type)
-- [ ] Item sprites from new asset pack (16x16 icons)
-- [ ] 999 per stack cap
+- [x] Add `state.inventory` object (key→count map), bump STATE_VERSION to 4
+- [x] addItem/removeItem/hasItem/getItemCount helpers
+- [x] Inventory UI panel in right panel (collapsible, grouped by type)
+- [x] Item sprites from new asset pack (16x16 icons)
+- [x] 999 per stack cap
 
-### Phase 6B: Gathering Skills Produce Materials
-- [ ] Mining: ore depletion → addItem(ore, 1); gem proc → addItem(gem, 1)
-- [ ] Woodcutting: tree fell → addItem(log, 1)
-- [ ] Fishing: catch → addItem(fish, 1)
-- [ ] Material drop toasts with sprite icons
-- [ ] Idle mode also adds materials (capped)
+### Phase 6B: Gathering Skills Produce Materials (Done)
+- [x] Mining: ore depletion → addItem(ore, 1); gem proc → addItem(gem, 1)
+- [x] Woodcutting: tree fell → addItem(log, 1)
+- [x] Fishing: catch → addItem(fish, 1)
+- [x] Material drop toasts with sprite icons (reuses existing sprite particles + addLog)
+- [x] Idle mode also adds materials (capped at 50% of active rate)
 
 ### Phase 6C: Smithing Consumes Ores → Produces Bars
 - [ ] SMITHING_RECIPES: bar → required ores (e.g. Bronze Bar = 1 Copper + 1 Tin)

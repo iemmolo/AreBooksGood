@@ -184,18 +184,18 @@ Pet Skills Expansion — Phase 2
 - [x] Copy potion sprites (253 PNGs) to static/images/skills/potions/
 
 ### Phase 6A: Material Inventory Foundation
-- [ ] Add `state.inventory` object (key→count map), bump STATE_VERSION to 4
-- [ ] addItem(key, count) / removeItem(key, count) / hasItem(key, count) / getItemCount(key) helpers
-- [ ] Inventory UI panel in right panel (collapsible, grouped by type: ores, gems, logs, fish, bars)
-- [ ] Item icon rendering using sprites from static/images/skills/items/
-- [ ] 999 per stack cap, overflow warning toast
+- [x] Add `state.inventory` object (key→count map), bump STATE_VERSION to 4
+- [x] addItem(key, count) / removeItem(key, count) / hasItem(key, count) / getItemCount(key) helpers
+- [x] Inventory UI panel in right panel (collapsible, grouped by type: ores, gems, logs, fish, bars)
+- [x] Item icon rendering using sprites from static/images/skills/items/
+- [x] 999 per stack cap, overflow warning toast
 
-### Phase 6B: Gathering Skills Produce Materials
-- [ ] Mining: ore depletion → addItem(ore, 1); gem proc → addItem(gem, 1)
-- [ ] Woodcutting: tree fell → addItem(log, 1)
-- [ ] Fishing: catch → addItem(fish, 1)
-- [ ] Material drop toasts with sprite icons (reuse spawnSpriteParticle)
-- [ ] Idle mode also adds materials (capped at 50% of active rate)
+### Phase 6B: Gathering Skills Produce Materials (Done)
+- [x] Mining: ore depletion → addItem(ore, 1); gem proc → addItem(gem, 1)
+- [x] Woodcutting: tree fell → addItem(log, 1)
+- [x] Fishing: catch → addItem(fish, 1)
+- [x] Material drop toasts with sprite icons (reuses existing sprite particles + addLog)
+- [x] Idle mode also adds materials (capped at 50% of active rate)
 
 ### Phase 6C: Smithing Consumes Ores → Produces Bars
 - [ ] SMITHING_RECIPES constant: bar → { ores: [{key, count}], xp, dust }
