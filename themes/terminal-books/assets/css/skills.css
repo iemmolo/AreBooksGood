@@ -1328,6 +1328,142 @@
   font-weight: bold;
 }
 
+/* ── Mining Events ──────────────────────────── */
+.mining-event-rock {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: eventAppear 0.3s ease-out;
+  user-select: none;
+}
+
+@keyframes eventAppear {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.mining-event-label {
+  font-family: monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+}
+
+.mining-event-timer {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  overflow: hidden;
+}
+
+.mining-event-timer-fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.gem-vein {
+  border: 2px solid #ffd700;
+  background: color-mix(in srgb, #ffd700 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #ffd700 30%, transparent);
+  animation: eventAppear 0.3s ease-out, gemVeinPulse 1.5s ease-in-out infinite;
+}
+
+.gem-vein .mining-event-label { color: #ffd700; }
+
+@keyframes gemVeinPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #ffd700 30%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, #ffd700 50%, transparent); }
+}
+
+.shooting-star {
+  border: 2px solid #ce93d8;
+  background: color-mix(in srgb, #7b1fa2 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #ce93d8 30%, transparent);
+  animation: eventAppear 0.3s ease-out, shootingStarPulse 1s ease-in-out infinite;
+}
+
+.shooting-star .mining-event-label { color: #ce93d8; }
+
+@keyframes shootingStarPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #ce93d8 30%, transparent); }
+  50% { box-shadow: 0 0 18px color-mix(in srgb, #ffd700 40%, transparent); }
+}
+
+.deep-vein {
+  border: 2px solid #42a5f5;
+  background: color-mix(in srgb, #1565c0 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #42a5f5 30%, transparent);
+  animation: eventAppear 0.3s ease-out, deepVeinPulse 2s ease-in-out infinite;
+}
+
+.deep-vein .mining-event-label { color: #42a5f5; }
+
+@keyframes deepVeinPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #42a5f5 30%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, #7b1fa2 40%, transparent); }
+}
+
+.cave-in-rock {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border: 2px solid #ef5350;
+  background: color-mix(in srgb, #ef5350 15%, var(--background));
+  cursor: pointer;
+  top: -60px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-size: 1.5rem;
+  animation: caveFall 1.5s ease-in forwards;
+  user-select: none;
+}
+
+.cave-in-rock::after {
+  content: '\1FAA8';
+}
+
+.cave-in-rock.clicked {
+  opacity: 0.3;
+  pointer-events: none;
+  border-color: #66bb6a;
+}
+
+@keyframes caveFall {
+  0% { top: -60px; opacity: 0; }
+  20% { opacity: 1; }
+  100% { top: 70%; }
+}
+
+.skills-game-area.cave-shake {
+  animation: caveShake 0.5s ease-in-out;
+}
+
+@keyframes caveShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px) translateY(2px); }
+  20% { transform: translateX(4px) translateY(-2px); }
+  30% { transform: translateX(-3px) translateY(1px); }
+  40% { transform: translateX(3px) translateY(-1px); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+}
+
 /* ── A2: Fishing Enhancements ─────────────────── */
 .fishing-power-bar {
   width: 160px;

@@ -1471,9 +1471,251 @@
   }
 
   // ══════════════════════════════════════════════
-  // ── Mining Events (stub — Phase 3 fills in) ────
+  // ── Mining Events (random special encounters) ──
+  // ══════════════════════════════════════════════
+  var MINING_EVENTS = [
+    { id: 'gemVein', name: 'Gem Vein', weight: 40 },
+    { id: 'shootingStar', name: 'Shooting Star', weight: 35 },
+    { id: 'caveIn', name: 'Cave-In', weight: 25 }
+  ];
+
   function tryTriggerMiningEvent() {
-    // Phase 3 will implement this
+    if (miningEventActive) return;
+    if (Math.random() > 0.02) return; // 2% chance per depletion
+
+    // Build weighted pool (add Deep Vein if perk unlocked)
+    var pool = [];
+    var totalWeight = 0;
+    for (var i = 0; i < MINING_EVENTS.length; i++) {
+      pool.push(MINING_EVENTS[i]);
+      totalWeight += MINING_EVENTS[i].weight;
+    }
+    if (hasPerk('deepCore')) {
+      pool.push({ id: 'deepVein', name: 'Deep Vein', weight: 20 });
+      totalWeight += 20;
+    }
+
+    // Weighted random selection
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    var selected = pool[0];
+    for (var j = 0; j < pool.length; j++) {
+      cumulative += pool[j].weight;
+      if (roll < cumulative) { selected = pool[j]; break; }
+    }
+
+    miningEventActive = true;
+    addLog('EVENT: ' + selected.name + '!');
+
+    if (selected.id === 'gemVein') triggerGemVein();
+    else if (selected.id === 'shootingStar') triggerShootingStar();
+    else if (selected.id === 'caveIn') triggerCaveIn();
+    else if (selected.id === 'deepVein') triggerDeepVein();
+  }
+
+  function createEventRock(cssClass, label, timeLimit) {
+    var area = $('skills-game-area');
+    if (!area) return null;
+    var rock = document.createElement('div');
+    rock.className = 'mining-event-rock ' + cssClass;
+    rock.innerHTML = '<div class="mining-event-label">' + label + '</div>';
+
+    // Timer bar
+    var timerBar = document.createElement('div');
+    timerBar.className = 'mining-event-timer';
+    var timerFill = document.createElement('div');
+    timerFill.className = 'mining-event-timer-fill';
+    timerFill.style.width = '100%';
+    timerFill.style.transition = 'width ' + (timeLimit / 1000) + 's linear';
+    timerBar.appendChild(timerFill);
+    rock.appendChild(timerBar);
+
+    area.appendChild(rock);
+
+    // Start timer animation
+    setTimeout(function () { timerFill.style.width = '0%'; }, 50);
+
+    return rock;
+  }
+
+  function cleanupEvent() {
+    miningEventActive = false;
+    if (miningEventTimer) { clearTimeout(miningEventTimer); miningEventTimer = null; }
+    var evRocks = document.querySelectorAll('.mining-event-rock');
+    for (var i = 0; i < evRocks.length; i++) {
+      if (evRocks[i].parentNode) evRocks[i].parentNode.removeChild(evRocks[i]);
+    }
+    var caveRocks = document.querySelectorAll('.cave-in-rock');
+    for (var j = 0; j < caveRocks.length; j++) {
+      if (caveRocks[j].parentNode) caveRocks[j].parentNode.removeChild(caveRocks[j]);
+    }
+    var area = $('skills-game-area');
+    if (area) area.classList.remove('cave-shake');
+  }
+
+  function triggerGemVein() {
+    var rock = createEventRock('gem-vein', 'Gem Vein!', 10000);
+    if (!rock) { cleanupEvent(); return; }
+
+    rock.addEventListener('click', function () {
+      var area = $('skills-game-area');
+      var res = getHighestResource('mining');
+      var dustMult = getDustMult();
+      // 3 guaranteed gems
+      for (var i = 0; i < 3; i++) {
+        var gemMult = hasPerk('gemSpec') ? 10 : 5;
+        var dustGain = Math.floor(res.dust * dustMult * gemMult);
+        if (window.StarDust) window.StarDust.add(dustGain);
+        if (area) {
+          var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
+          spawnSpriteParticle(area, 'gems', gem.x, gem.y);
+        }
+      }
+      var totalDust = Math.floor(res.dust * dustMult * (hasPerk('gemSpec') ? 10 : 5) * 3);
+      addLog('Gem Vein! Found 3 gems! (+' + totalDust + ' SD)');
+      if (area) spawnParticle(area, '3 GEMS! +' + totalDust + ' SD', 'gem');
+      cleanupEvent();
+      renderRightPanel();
+    });
+
+    miningEventTimer = setTimeout(function () {
+      addLog('Gem Vein vanished...');
+      cleanupEvent();
+    }, 10000);
+  }
+
+  function triggerShootingStar() {
+    var rock = createEventRock('shooting-star', 'Shooting Star!', 8000);
+    if (!rock) { cleanupEvent(); return; }
+
+    var starHp = { hp: 3, maxHp: 3 };
+
+    // Add HP bar
+    var hpBar = document.createElement('div');
+    hpBar.className = 'rock-hp-bar';
+    hpBar.style.position = 'absolute';
+    hpBar.style.bottom = '2px';
+    hpBar.style.left = '4px';
+    hpBar.style.right = '4px';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'rock-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    rock.appendChild(hpBar);
+
+    rock.addEventListener('click', function () {
+      starHp.hp--;
+      hpFill.style.width = (starHp.hp / starHp.maxHp * 100) + '%';
+      rock.classList.add('hit');
+      setTimeout(function () { rock.classList.remove('hit'); }, 200);
+
+      if (starHp.hp <= 0) {
+        var area = $('skills-game-area');
+        var res = getHighestResource('mining');
+        var xpGain = Math.floor(res.xp * getStarShowerMult() * 10);
+        addXp('mining', xpGain);
+        addLog('Shooting Star mined! 10x XP bonus! (+' + xpGain + ' XP)');
+        if (area) spawnParticle(area, '+' + xpGain + ' XP (10x!)', 'xp');
+        cleanupEvent();
+        renderSkillList();
+        renderRightPanel();
+        updateGameHeader();
+      }
+    });
+
+    miningEventTimer = setTimeout(function () {
+      addLog('Shooting Star faded away...');
+      cleanupEvent();
+    }, 8000);
+  }
+
+  function triggerCaveIn() {
+    var area = $('skills-game-area');
+    if (!area) { cleanupEvent(); return; }
+
+    area.classList.add('cave-shake');
+    addLog('CAVE-IN! Click the falling rocks!');
+
+    var clicked = 0;
+    var total = 3;
+
+    for (var i = 0; i < total; i++) {
+      var rock = document.createElement('div');
+      rock.className = 'cave-in-rock';
+      rock.style.left = (15 + Math.random() * 60) + '%';
+      rock.style.animationDelay = (i * 0.3) + 's';
+      rock.addEventListener('click', (function (el) {
+        return function () {
+          if (el.classList.contains('clicked')) return;
+          el.classList.add('clicked');
+          clicked++;
+          if (clicked >= total) {
+            var res = getHighestResource('mining');
+            var dustGain = Math.floor(res.dust * getDustMult() * 5);
+            if (window.StarDust) window.StarDust.add(dustGain);
+            addLog('Cave-In survived! 5x dust bonus! (+' + dustGain + ' SD)');
+            if (area) spawnParticle(area, '5x! +' + dustGain + ' SD', 'dust');
+            cleanupEvent();
+            renderRightPanel();
+          }
+        };
+      })(rock));
+      area.appendChild(rock);
+    }
+
+    miningEventTimer = setTimeout(function () {
+      if (clicked < total) {
+        miningCombo.count = 0;
+        var comboEl = $('mining-combo');
+        if (comboEl) comboEl.style.display = 'none';
+        addLog('Cave-In! Rocks crushed you. Combo lost.');
+      }
+      cleanupEvent();
+    }, 5000);
+  }
+
+  function triggerDeepVein() {
+    var rock = createEventRock('deep-vein', 'Deep Vein!', 15000);
+    if (!rock) { cleanupEvent(); return; }
+
+    var veinHp = { hp: 5, maxHp: 5 };
+
+    var hpBar = document.createElement('div');
+    hpBar.className = 'rock-hp-bar';
+    hpBar.style.position = 'absolute';
+    hpBar.style.bottom = '2px';
+    hpBar.style.left = '4px';
+    hpBar.style.right = '4px';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'rock-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    rock.appendChild(hpBar);
+
+    rock.addEventListener('click', function () {
+      veinHp.hp--;
+      hpFill.style.width = (veinHp.hp / veinHp.maxHp * 100) + '%';
+      rock.classList.add('hit');
+      setTimeout(function () { rock.classList.remove('hit'); }, 200);
+
+      if (veinHp.hp <= 0) {
+        var area = $('skills-game-area');
+        var res = getHighestResource('mining');
+        var xpGain = Math.floor(res.xp * getStarShowerMult() * 5);
+        addXp('mining', xpGain);
+        addLog('Deep Vein mined! 5x XP bonus! (+' + xpGain + ' XP)');
+        if (area) spawnParticle(area, '+' + xpGain + ' XP (5x!)', 'xp');
+        cleanupEvent();
+        renderSkillList();
+        renderRightPanel();
+        updateGameHeader();
+      }
+    });
+
+    miningEventTimer = setTimeout(function () {
+      addLog('Deep Vein collapsed...');
+      cleanupEvent();
+    }, 15000);
   }
 
   // ── FISHING MINI-GAME (A2 enhanced) ────────────
