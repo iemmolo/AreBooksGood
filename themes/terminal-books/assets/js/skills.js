@@ -33,6 +33,16 @@
     { id: 'mastery', name: 'Mining Mastery', level: 99, desc: 'Permanent 2x SD from all mining' }
   ];
 
+  // ── Rock HP (multi-hit mining) ─────────────────
+  var ROCK_HP = {
+    'Copper Ore': 1, 'Tin Ore': 1,
+    'Iron Ore': 2, 'Coal': 2,
+    'Gold Ore': 3, 'Mithril Ore': 3,
+    'Adamant Ore': 4, 'Runite Ore': 4,
+    'Dragon Ore': 5, 'Star Ore': 5
+  };
+  var rockState = []; // { hp, maxHp } per rock
+
   // ── Resource tier colors (D1) ─────────────────
   var TIER_COLORS = ['#888', '#ccc', '#4caf50', '#2196f3', '#9c27b0', '#ffd700'];
 
@@ -1218,10 +1228,14 @@
     area.innerHTML = '';
     miningCombo = { count: 0, lastClickTime: 0 };
     var res = getHighestResource('mining');
+    var maxHp = ROCK_HP[res.name] || 1;
+    rockState = [];
 
     var div = document.createElement('div');
     div.className = 'mining-rocks';
     for (var i = 0; i < 3; i++) {
+      rockState.push({ hp: maxHp, maxHp: maxHp });
+
       var rockWrap = document.createElement('div');
       rockWrap.style.position = 'relative';
       rockWrap.style.display = 'inline-block';
@@ -1239,6 +1253,19 @@
       } else {
         rock.textContent = '\uD83E\uDEA8';
       }
+
+      // HP bar (hidden when maxHp === 1)
+      if (maxHp > 1) {
+        var hpBar = document.createElement('div');
+        hpBar.className = 'rock-hp-bar';
+        hpBar.id = 'rock-hp-bar-' + i;
+        var hpFill = document.createElement('div');
+        hpFill.className = 'rock-hp-fill';
+        hpFill.style.width = '100%';
+        hpBar.appendChild(hpFill);
+        rock.appendChild(hpBar);
+      }
+
       rock.addEventListener('click', onMineClick);
       rockWrap.appendChild(rock);
 
@@ -1267,14 +1294,25 @@
   var miningEventActive = false;
   var miningEventTimer = null;
 
+  function updateRockHpBar(idx) {
+    var bar = $('rock-hp-bar-' + idx);
+    if (!bar) return;
+    var fill = bar.querySelector('.rock-hp-fill');
+    if (!fill) return;
+    var rs = rockState[idx];
+    fill.style.width = (rs.hp / rs.maxHp * 100) + '%';
+  }
+
   function onMineClick(e) {
     if (miningCooldown) return;
     if (miningEventActive) return;
     var rock = e.currentTarget;
     if (rock.classList.contains('depleted')) return;
 
+    var idx = parseInt(rock.getAttribute('data-idx'));
     var res = getHighestResource('mining');
     var now = Date.now();
+    var rs = rockState[idx];
 
     // A1: Combo tracking (freeze during events)
     var timeSinceLast = now - miningCombo.lastClickTime;
@@ -1296,15 +1334,51 @@
       }
     }
 
+    // Critical hit check: min(1% + level*0.2%, 20%)
+    var level = state.skills.mining.level;
+    var critChance = Math.min(0.01 + level * 0.002, 0.20);
+    var isCrit = Math.random() < critChance;
+
     miningCooldown = true;
-    rock.classList.add('shaking');
+
+    if (isCrit) {
+      // Critical hit — instant break regardless of HP
+      rs.hp = 0;
+      rock.classList.add('cracking');
+      var area = $('skills-game-area');
+      if (area) spawnParticle(area, 'CRIT!', 'crit');
+      addLog('Critical hit!');
+    } else {
+      // Normal hit — decrement HP
+      rs.hp = Math.max(rs.hp - 1, 0);
+      rock.classList.add(rs.hp > 0 ? 'hit' : 'cracking');
+    }
+    updateRockHpBar(idx);
 
     setTimeout(function () {
-      rock.classList.remove('shaking');
-      rock.classList.add('cracking');
+      rock.classList.remove('shaking', 'hit', 'cracking');
 
       var area = $('skills-game-area');
       var dustMult = getDustMult() * comboMult;
+
+      if (rs.hp > 0) {
+        // Partial hit — award fraction of XP/dust, keep combo, don't deplete
+        var partialXp = Math.max(1, Math.floor(res.xp * getStarShowerMult() / rs.maxHp));
+        var partialDust = Math.max(1, Math.floor(res.dust * dustMult / rs.maxHp));
+        if (area) {
+          spawnParticle(area, '+' + partialXp + ' XP', 'xp');
+          setTimeout(function () { spawnParticle(area, '+' + partialDust + ' SD', 'dust'); }, 150);
+        }
+        addXp('mining', partialXp);
+        if (window.StarDust) window.StarDust.add(partialDust);
+        animatePetAction('pet-bounce');
+        miningCooldown = false;
+        renderSkillList();
+        renderRightPanel();
+        return;
+      }
+
+      // Rock depleted — full rewards
       var xpGain = Math.floor(res.xp * getStarShowerMult());
       var dustGain = Math.floor(res.dust * dustMult);
 
@@ -1320,7 +1394,6 @@
       var gemChance = hasPerk('keenEye') ? 0.10 : 0.05;
       var isGem = Math.random() < gemChance;
       if (isGem) {
-        // Perk: Gem Specialist — gem bonus 5x→10x
         var gemMult = hasPerk('gemSpec') ? 10 : 5;
         dustGain *= gemMult;
         if (area) {
@@ -1346,19 +1419,12 @@
       if (window.StarDust) window.StarDust.add(dustGain);
       addLog('Mined ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)');
 
-      // Common action hook
       onAction('mining', dustGain);
-
-      // C1: Pet bounce
       animatePetAction('pet-bounce');
 
-      // A1: Rock depleted + respawn
-      rock.classList.remove('cracking');
+      // Deplete + respawn
       rock.classList.add('depleted');
-
-      // Perk: Ore Sense — respawn 3s→2s
       var respawnTime = hasPerk('oreSense') ? 2 : 3;
-
       var timerEl = document.createElement('div');
       timerEl.className = 'mining-respawn-timer';
       timerEl.textContent = respawnTime + 's';
@@ -1371,12 +1437,15 @@
           clearInterval(respawnInterval);
           rock.classList.remove('depleted');
           if (timerEl.parentNode) timerEl.parentNode.removeChild(timerEl);
+          // Reset HP
+          rs.hp = rs.maxHp;
+          updateRockHpBar(idx);
         } else {
           timerEl.textContent = remaining + 's';
         }
       }, 1000);
 
-      // Perk: Vein Miner — 20% chance to auto-mine an adjacent non-depleted rock
+      // Perk: Vein Miner
       if (hasPerk('veinMiner') && !veinMinerTriggered && Math.random() < 0.20) {
         veinMinerTriggered = true;
         var allRocks = document.querySelectorAll('.mining-rock:not(.depleted)');
@@ -1392,7 +1461,6 @@
         }
       }
 
-      // Try mining events (~2% per depletion)
       tryTriggerMiningEvent();
 
       miningCooldown = false;
