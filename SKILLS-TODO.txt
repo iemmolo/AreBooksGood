@@ -113,6 +113,56 @@ Pet Skills Expansion — Phase 2
 - [x] Set data-skill attribute on game area in switchSkill()
 - [x] CSS tints: mining=brown, fishing=blue, woodcutting=green, smithing=orange, combat=red
 
-### D5: Skill Row Star Indicators
+### D5: Skill Row Star Indicators (REMOVED — star prestige system removed)
 - [x] Show gold star count after level text in renderSkillList()
 - [x] .skill-star-indicator inline styling
+
+## Phase 4: Mining Progression Rework
+
+### Phase 0: Remove Star Prestige
+- [x] Delete STAR_COSTS, savePetStars, getPetStars, getStarAutoMult, initiateStarUp, confirmStarUp
+- [x] Remove star prestige panel from right panel UI and HTML
+- [x] Remove star confirm modal
+- [x] Remove star indicators from skill list rows
+- [x] Replace getStarAutoMult calls with 1 in idle/auto-train
+- [x] Delete all star-related CSS
+- [x] Bump STATE_VERSION to 3
+
+### Phase 1: Mining Perks (8 Level-Gated Passives)
+- [x] MINING_PERKS constant, hasPerk() helper, renderMiningPerks()
+- [x] Keen Eye (Lv10): gem chance 5%→10%
+- [x] Double Strike (Lv20): 10% chance for 2x yield
+- [x] Prospector's Luck (Lv30): +25% dust from mining
+- [x] Ore Sense (Lv45): rock respawn 3s→2s
+- [x] Gem Specialist (Lv60): gem bonus 5x→10x
+- [x] Vein Miner (Lv75): 20% chance auto-mine adjacent rock
+- [x] Deep Core (Lv85): enables deep vein events
+- [x] Mining Mastery (Lv99): permanent 2x SD
+- [x] Perk unlock toast on level-up
+- [x] Perks panel in right panel (locked/unlocked styling)
+
+### Phase 2: Rock HP System (Multi-Hit Mining)
+- [x] ROCK_HP constant: Copper/Tin=1, Iron/Coal=2, Gold/Mithril=3, Adamant/Runite=4, Dragon/Star=5
+- [x] rockState array tracking per-rock HP
+- [x] HP bars inside rocks (hidden for 1-HP ores)
+- [x] Partial XP/dust per hit, full rewards on depletion
+- [x] Critical hits: min(1%+level*0.2%, 20%) instant-break
+- [x] "CRIT!" red particle, "hit" animation for partial hits
+- [x] HP reset on rock respawn
+
+### Phase 3: Mining Events (Random Encounters)
+- [x] tryTriggerMiningEvent() — 2% per depletion, weighted random
+- [x] Gem Vein (weight 40): gold rock, 10s, 3 guaranteed gems
+- [x] Shooting Star (weight 35): purple rock, 3 HP, 8s, 10x XP
+- [x] Cave-In (weight 25): screen shake, 3 falling rocks, 5s, 5x dust
+- [x] Deep Vein (perk-gated Lv85): blue rock, 5 HP, 15s, 5x XP
+- [x] Event rocks with CSS glows, timer bars, cleanup on skill switch
+- [x] miningEventActive flag blocks normal mining during events
+
+### Phase 4: Collection Log
+- [x] mining.log state: oresMined, totalGems, events, criticalHits, totalClicks
+- [x] v3 state migration with getMiningLog() safe accessor
+- [x] Track all stats in onMineClick and event handlers
+- [x] renderCollectionLog() builds modal with tables
+- [x] Log button in right panel (mining-only)
+- [x] Modal overlay with ore counts, stats, event counts
