@@ -171,7 +171,7 @@ AreBooksGood - Improvement TODO
 - [x] Per-difficulty completion badges on dungeon cards — shipped dcb2421
 - [x] Fix Titan boss animation (double-rendering, flashing) — rework to use demon slime asset pack
 
-## Pet Skills (Phase 1 & 2 shipped)
+## Pet Skills (Phase 1-4 shipped)
 
 ### Phase 1 (Done)
 - [x] Page skeleton, layout, routing (`/pets/skills/`)
@@ -179,8 +179,6 @@ AreBooksGood - Improvement TODO
 - [x] All 5 mini-games (Mining, Fishing, Woodcutting, Smithing, Combat)
 - [x] XP/leveling system (1-99) with resource tiers
 - [x] Pet assignment + idle/offline progress (8h cap) + idle report modal
-- [x] Star prestige system (5 stars, soft reset, escalating costs)
-- [x] Battle stat integration (+10%/star HP/ATK/DEF/SPD, +2 CRI/star)
 - [x] Tool upgrades (5 tiers per skill, Star Dust cost)
 - [x] Keyboard shortcuts (1-5 to select skills)
 
@@ -188,9 +186,29 @@ AreBooksGood - Improvement TODO
 - [x] Mini-game depth: mining combo+gems+respawn, fishing quality+sizes+power, woodcutting rhythm+nests, smithing 5-hit+masterwork, combat player HP+dodge+potions+crits+death
 - [x] Progression: level-up effects, resource unlock toasts, star shower 2x events, mastery system, milestones panel
 - [x] Pet integration: pet sprite in game area, skill-specific speech, level-up congrats, type visual particles
-- [x] Visual polish: tier colors, themed backgrounds, XP bar glow, star prestige burst, skill row star indicators
-- [ ] Economy balancing pass — target: level 99 ≈ 40-60h active, first star in 2-3h, fifth star multi-week
+- [x] Visual polish: tier colors, themed backgrounds, XP bar glow
+- [ ] Economy balancing pass — target: level 99 ≈ 40-60h active
 - [ ] Mobile polish — bottom sheet pet picker, stacked layout tuning, touch-friendly mini-game sizing
+
+### Phase 3 (Done) — Pixel Art Sprite Upgrade
+- [x] 12 sprite sheets copied from Farm RPG asset pack to static/images/skills/
+- [x] Sprite infrastructure: createSpriteEl(), spawnSpriteParticle(), sheet meta + position maps
+- [x] Mining: pixel art mineral rocks (10 tiers), ore+gem sprite drop particles
+- [x] Woodcutting: pixel art trees (7 tiers), wood log drop particles
+- [x] Smithing: pixel art anvils (8 recipes), bar sprite drop particles
+- [x] Fishing: fish sprite catch particles (6 species)
+- [x] Combat: expanded enemy sprite mapping, training dummy tool sprite
+- [x] Skill list icons: pixel art tool sprites replace emoji in left panel
+- [x] Tool sprite preview in right panel (updates per skill + tier)
+- [x] CSS sprite container styles, font-size overrides, particle styles
+
+### Phase 4 (Done) — Mining Progression Rework
+- [x] Removed star prestige system (levels 1-99 permanent)
+- [x] 8 mining perks (level-gated passives: Keen Eye, Double Strike, Prospector, Ore Sense, Gem Specialist, Vein Miner, Deep Core, Mining Mastery)
+- [x] Rock HP system (multi-hit mining, 1-5 HP per tier, HP bars, critical hits)
+- [x] Mining events (Gem Vein, Shooting Star, Cave-In, Deep Vein) — 2% trigger per depletion
+- [x] Collection log modal (ore counts, gem stats, event counts, crit rate)
+- [x] Fixed rock sizing inconsistency (uniform dimensions, no scale transforms)
 
 ## Pet UI
 
@@ -200,6 +218,24 @@ AreBooksGood - Improvement TODO
 
 - [x] Add pet sprite previews to casino tile cards
 - [ ] Integrate pet sprites into existing casino games (poker, blackjack, casino wars, slots)
+
+## Cross-Skill Resource System (Future)
+
+- [ ] Resource inventory (track ores, gems, logs, fish, bars as collectible items)
+- [ ] Mining gems → usable in smithing (encrusted bars, bonus XP) and combat (gem weapons, temp damage boost)
+- [ ] Woodcutting logs → smithing fuel requirement, craft fishing rods
+- [ ] Fishing catch → combat food (healing), cook for bonus XP
+- [ ] Mining ores → smithing requirement (ores needed to smith bars)
+- [ ] Smithing bars → combat gear crafting, temporary tool enchants
+- [ ] Resource trading between skills via a central inventory panel
+
+## 99 Cape System (Future)
+
+- [ ] Skill cape unlock on reaching level 99 (one per skill)
+- [ ] Cape visuals: unique pixel art per skill, worn by pet sprite
+- [ ] Cape Hall page — trophy room showing all earned capes
+- [ ] Cape perks: each cape gives a permanent passive bonus for that skill
+- [ ] Cape emote/animation on equip
 
 ## Low Priority / Nice-to-Have
 

@@ -3,6 +3,8 @@
   max-width: 960px;
   margin: 0 auto;
   padding: 0.5rem;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .skills-topbar {
@@ -180,12 +182,25 @@
   gap: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mining-rock-wrap {
+  position: relative;
+  width: 80px;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .mining-rock {
   width: 80px;
   height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -193,9 +208,10 @@
   cursor: pointer;
   border: 2px solid color-mix(in srgb, var(--foreground) 25%, transparent);
   background: color-mix(in srgb, var(--background) 85%, var(--foreground));
-  transition: transform 0.1s, border-color 0.15s;
+  transition: border-color 0.15s;
   position: relative;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .mining-rock:hover {
@@ -203,7 +219,7 @@
 }
 
 .mining-rock:active {
-  transform: scale(0.95);
+  filter: brightness(1.3);
 }
 
 .mining-rock.shaking {
@@ -215,7 +231,8 @@
 }
 
 .mining-rock.depleted {
-  opacity: 0.3;
+  opacity: 0.4;
+  filter: grayscale(0.6);
   pointer-events: none;
 }
 
@@ -228,9 +245,10 @@
 }
 
 @keyframes rockCrack {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); filter: brightness(1.5); }
-  100% { transform: scale(1); opacity: 0.5; }
+  0% { transform: translateX(0); filter: brightness(1); }
+  30% { transform: translateX(-3px); filter: brightness(1.8); }
+  60% { transform: translateX(3px); filter: brightness(1.5); }
+  100% { transform: translateX(0); filter: brightness(0.6); }
 }
 
 /* Rock HP bar */
@@ -1374,7 +1392,8 @@
 }
 
 .mining-rock.depleted {
-  opacity: 0.3;
+  opacity: 0.4;
+  filter: grayscale(0.6);
   pointer-events: none;
 }
 
@@ -1857,9 +1876,42 @@
     order: 3;
   }
 
+  .skills-page { padding: 0.25rem; max-width: 100%; }
+
+  .skills-game-panel { overflow: hidden; min-width: 0; }
+
+  .skills-game-header { gap: 0.5rem; overflow: hidden; }
+
+  .skills-game-header h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  .skills-game-resource { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; min-width: 0; }
+
+  .skills-game-area { min-height: 240px; }
+
+  .mining-rocks { gap: 0.75rem; }
+
+  .mining-rock, .mining-rock-wrap { width: 64px; min-width: 64px; height: 64px; min-height: 64px; }
+
+  .skills-right-panel { padding: 0.25rem; overflow: hidden; min-width: 0; }
+
+  .skills-perks-panel { max-height: 150px; overflow-y: auto; }
+
+  .skills-list-panel { overflow: hidden; min-width: 0; }
+
   .skills-topbar {
     flex-direction: column;
     gap: 0.25rem;
     text-align: center;
   }
+}
+
+/* ── Small Phone Layout ──────────────────────── */
+@media (max-width: 480px) {
+  .mining-rocks { gap: 0.5rem; }
+
+  .mining-rock, .mining-rock-wrap { width: 56px; min-width: 56px; height: 56px; min-height: 56px; }
+
+  .skill-row { min-width: 60px; padding: 0.2rem; }
+
+  .skill-name { font-size: 0.7rem; }
 }

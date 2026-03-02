@@ -37,8 +37,8 @@
   var ROCK_HP = {
     'Copper Ore': 1, 'Tin Ore': 1,
     'Iron Ore': 2, 'Coal': 2,
-    'Gold Ore': 3, 'Mithril Ore': 3,
-    'Adamant Ore': 4, 'Runite Ore': 4,
+    'Gold Ore': 3, 'Astral Ore': 3,
+    'Jade Ore': 4, 'Amethyst Ore': 4,
     'Dragon Ore': 5, 'Star Ore': 5
   };
   var rockState = []; // { hp, maxHp } per rock
@@ -85,9 +85,9 @@
     'Iron Ore':    { x: 128, y: 32 },   // dark crystal
     'Coal':        { x: 128, y: 32 },   // dark crystal
     'Gold Ore':    { x: 32, y: 32 },    // gold crystal
-    'Mithril Ore': { x: 112, y: 32 },   // blue crystal
-    'Adamant Ore': { x: 96, y: 32 },    // green crystal
-    'Runite Ore':  { x: 64, y: 32 },    // purple crystal
+    'Astral Ore':    { x: 112, y: 32 },   // blue crystal
+    'Jade Ore':      { x: 96, y: 32 },    // green crystal
+    'Amethyst Ore':  { x: 64, y: 32 },    // purple crystal
     'Dragon Ore':  { x: 80, y: 32 },    // red crystal
     'Star Ore':    { x: 144, y: 32 }    // pink crystal
   };
@@ -100,9 +100,9 @@
     'Iron Ore':    { x: 32, y: 0 },
     'Coal':        { x: 48, y: 0 },
     'Gold Ore':    { x: 64, y: 0 },
-    'Mithril Ore': { x: 80, y: 0 },
-    'Adamant Ore': { x: 96, y: 0 },
-    'Runite Ore':  { x: 112, y: 0 },
+    'Astral Ore':    { x: 80, y: 0 },
+    'Jade Ore':      { x: 96, y: 0 },
+    'Amethyst Ore':  { x: 112, y: 0 },
     'Dragon Ore':  { x: 128, y: 0 },
     'Star Ore':    { x: 144, y: 0 }
   };
@@ -149,9 +149,9 @@
     'Iron Bar':    { x: 0, y: 16 },   // row 1 = grey (iron)
     'Steel Bar':   { x: 0, y: 0 },    // row 0 = blue-grey (steel)
     'Gold Bar':    { x: 0, y: 48 },   // row 3 = gold
-    'Mithril Bar': { x: 0, y: 80 },   // row 5 = blue-grey (mithril)
-    'Adamant Bar': { x: 0, y: 16 },   // row 1 = grey (closest to green)
-    'Rune Bar':    { x: 0, y: 64 },   // row 4 = purple (rune)
+    'Astral Bar':    { x: 0, y: 80 },   // row 5 = blue-grey (astral)
+    'Jade Bar':      { x: 0, y: 16 },   // row 1 = grey (closest to green)
+    'Amethyst Bar':  { x: 0, y: 64 },   // row 4 = purple (amethyst)
     'Dragon Bar':  { x: 0, y: 32 }    // row 2 = orange (dragon red-ish)
   };
 
@@ -161,9 +161,9 @@
     'Iron Bar':    { x: 16, y: 32 },
     'Steel Bar':   { x: 32, y: 32 },
     'Gold Bar':    { x: 48, y: 32 },
-    'Mithril Bar': { x: 64, y: 32 },
-    'Adamant Bar': { x: 80, y: 32 },
-    'Rune Bar':    { x: 96, y: 32 },
+    'Astral Bar':    { x: 64, y: 32 },
+    'Jade Bar':      { x: 80, y: 32 },
+    'Amethyst Bar':  { x: 96, y: 32 },
     'Dragon Bar':  { x: 112, y: 32 }
   };
 
@@ -324,9 +324,9 @@
         { name: 'Iron Ore', level: 20, xp: 30, dust: 7, clickTime: 1000 },
         { name: 'Coal', level: 30, xp: 50, dust: 12, clickTime: 900 },
         { name: 'Gold Ore', level: 40, xp: 80, dust: 20, clickTime: 850 },
-        { name: 'Mithril Ore', level: 50, xp: 130, dust: 35, clickTime: 800 },
-        { name: 'Adamant Ore', level: 60, xp: 200, dust: 55, clickTime: 750 },
-        { name: 'Runite Ore', level: 70, xp: 320, dust: 90, clickTime: 700 },
+        { name: 'Astral Ore', level: 50, xp: 130, dust: 35, clickTime: 800 },
+        { name: 'Jade Ore', level: 60, xp: 200, dust: 55, clickTime: 750 },
+        { name: 'Amethyst Ore', level: 70, xp: 320, dust: 90, clickTime: 700 },
         { name: 'Dragon Ore', level: 80, xp: 500, dust: 150, clickTime: 650 },
         { name: 'Star Ore', level: 90, xp: 800, dust: 250, clickTime: 600 }
       ]
@@ -361,9 +361,9 @@
         { name: 'Iron Bar', level: 20, xp: 35, dust: 8, clickTime: 1400 },
         { name: 'Steel Bar', level: 30, xp: 60, dust: 15, clickTime: 1300 },
         { name: 'Gold Bar', level: 40, xp: 100, dust: 25, clickTime: 1200 },
-        { name: 'Mithril Bar', level: 50, xp: 160, dust: 42, clickTime: 1100 },
-        { name: 'Adamant Bar', level: 60, xp: 250, dust: 65, clickTime: 1000 },
-        { name: 'Rune Bar', level: 70, xp: 400, dust: 110, clickTime: 900 },
+        { name: 'Astral Bar', level: 50, xp: 160, dust: 42, clickTime: 1100 },
+        { name: 'Jade Bar', level: 60, xp: 250, dust: 65, clickTime: 1000 },
+        { name: 'Amethyst Bar', level: 70, xp: 400, dust: 110, clickTime: 900 },
         { name: 'Dragon Bar', level: 80, xp: 650, dust: 200, clickTime: 800 }
       ]
     },
@@ -451,6 +451,12 @@
               // v3: mining collection log
               if (key === 'mining') {
                 s.skills[key].log = saved.skills[key].log || { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
+                // Migrate renamed ores in collection log
+                var oreRenames = { 'Mithril Ore': 'Astral Ore', 'Adamant Ore': 'Jade Ore', 'Runite Ore': 'Amethyst Ore' };
+                var om = s.skills[key].log.oresMined;
+                for (var oldName in oreRenames) {
+                  if (om[oldName]) { om[oreRenames[oldName]] = (om[oreRenames[oldName]] || 0) + om[oldName]; delete om[oldName]; }
+                }
               }
             }
           }
@@ -1328,8 +1334,7 @@
       rockState.push({ hp: maxHp, maxHp: maxHp });
 
       var rockWrap = document.createElement('div');
-      rockWrap.style.position = 'relative';
-      rockWrap.style.display = 'inline-block';
+      rockWrap.className = 'mining-rock-wrap';
 
       var rock = document.createElement('div');
       rock.className = 'mining-rock';

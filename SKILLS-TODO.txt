@@ -166,3 +166,28 @@ Pet Skills Expansion — Phase 2
 - [x] renderCollectionLog() builds modal with tables
 - [x] Log button in right panel (mining-only)
 - [x] Modal overlay with ore counts, stats, event counts
+
+### Phase 5: Bug Fixes & Polish
+- [x] Fix rock sizing inconsistency (rocks appearing at different sizes)
+- [x] Remove scale transforms from rockCrack/active animations
+- [x] Add fixed dimensions to rock wrapper (mining-rock-wrap class)
+- [x] Increase depleted opacity 0.3→0.4, add grayscale filter
+- [x] Rename ores: Mithril→Astral, Adamant→Jade, Runite→Amethyst (ores + bars)
+- [x] State migration for renamed ore keys in collection log
+- [x] Fix mobile horizontal overflow (overflow-x, rock sizing breakpoints)
+
+### Phase 6: Cross-Skill Resource System (Planned)
+- [ ] Resource inventory system (track ores, gems, logs, fish, bars as collectible items)
+- [ ] Mining gems → usable in smithing (encrusted bars, bonus XP) and combat (gem weapons, temp boost)
+- [ ] Woodcutting logs → smithing fuel requirement, craft fishing rods
+- [ ] Fishing catch → combat food (healing), cook for bonus XP
+- [ ] Mining ores → smithing requirement (ores needed to smith bars)
+- [ ] Smithing bars → combat gear crafting, temporary tool enchants
+- [ ] Central inventory panel for resource trading between skills
+
+### Phase 7: 99 Capes (Planned)
+- [ ] Skill cape unlock on reaching level 99 (one per skill)
+- [ ] Cape visuals: unique pixel art per skill, worn by pet sprite
+- [ ] Cape Hall page — trophy room showing all earned capes
+- [ ] Cape perks: each cape gives a permanent passive bonus for that skill
+- [ ] Cape emote/animation on equip
