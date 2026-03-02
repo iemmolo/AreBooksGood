@@ -176,14 +176,54 @@ Pet Skills Expansion — Phase 2
 - [x] State migration for renamed ore keys in collection log
 - [x] Fix mobile horizontal overflow (overflow-x, rock sizing breakpoints)
 
-### Phase 6: Cross-Skill Resource System (Planned)
-- [ ] Resource inventory system (track ores, gems, logs, fish, bars as collectible items)
-- [ ] Mining gems → usable in smithing (encrusted bars, bonus XP) and combat (gem weapons, temp boost)
-- [ ] Woodcutting logs → smithing fuel requirement, craft fishing rods
-- [ ] Fishing catch → combat food (healing), cook for bonus XP
-- [ ] Mining ores → smithing requirement (ores needed to smith bars)
-- [ ] Smithing bars → combat gear crafting, temporary tool enchants
-- [ ] Central inventory panel for resource trading between skills
+### Phase 5: Star System Cleanup (Done)
+- [x] Remove star stat bonuses from battle.js createPlayerFighter()
+- [x] Remove star migration from pet.js loadPetState()
+- [x] Remove star preservation from pet.js savePetState()
+- [x] Copy item sprites (1244 PNGs) to static/images/skills/items/
+- [x] Copy potion sprites (253 PNGs) to static/images/skills/potions/
+
+### Phase 6A: Material Inventory Foundation
+- [ ] Add `state.inventory` object (key→count map), bump STATE_VERSION to 4
+- [ ] addItem(key, count) / removeItem(key, count) / hasItem(key, count) / getItemCount(key) helpers
+- [ ] Inventory UI panel in right panel (collapsible, grouped by type: ores, gems, logs, fish, bars)
+- [ ] Item icon rendering using sprites from static/images/skills/items/
+- [ ] 999 per stack cap, overflow warning toast
+
+### Phase 6B: Gathering Skills Produce Materials
+- [ ] Mining: ore depletion → addItem(ore, 1); gem proc → addItem(gem, 1)
+- [ ] Woodcutting: tree fell → addItem(log, 1)
+- [ ] Fishing: catch → addItem(fish, 1)
+- [ ] Material drop toasts with sprite icons (reuse spawnSpriteParticle)
+- [ ] Idle mode also adds materials (capped at 50% of active rate)
+
+### Phase 6C: Smithing Consumes Ores → Produces Bars
+- [ ] SMITHING_RECIPES constant: bar → { ores: [{key, count}], xp, dust }
+  - Bronze Bar = 1 Copper Ore + 1 Tin Ore
+  - Iron Bar = 2 Iron Ore
+  - Steel Bar = 1 Iron Bar + 2 Coal
+  - Astral Bar = 3 Astral Ore + 1 Coal
+  - Jade Bar = 4 Jade Ore + 2 Coal
+  - Amethyst Bar = 5 Amethyst Ore + 3 Coal
+  - Dragon Bar = 5 Dragon Ore + 5 Coal
+- [ ] Can only smith if ores in inventory (grey out unavailable recipes)
+- [ ] Bars go to inventory on successful smith
+- [ ] Recipe UI shows required materials with have/need counts
+
+### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
+- [ ] TOOL_BAR_COSTS replaces TOOL_COSTS
+  - Tier 2 = 5 Iron Bars
+  - Tier 3 = 10 Steel Bars
+  - Tier 4 = 8 Astral Bars
+  - Tier 5 = 5 Dragon Bars
+- [ ] Crafting UI shows bar requirement instead of SD cost
+- [ ] SD remains reward currency, just not spent on tools
+- [ ] Tool upgrade panel shows inventory bar count vs. requirement
+
+### Phase 6E: Combat Integration
+- [ ] Fish as food (consume from inventory → heal HP in combat mini-game)
+- [ ] Potions craftable or buyable (using sprites from static/images/skills/potions/)
+- [ ] Gear buffs from smithed bars (temporary combat stat boosts)
 
 ### Phase 7: 99 Capes (Planned)
 - [ ] Skill cape unlock on reaching level 99 (one per skill)

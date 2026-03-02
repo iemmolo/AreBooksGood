@@ -747,16 +747,6 @@
     var tier = c.tier || 'common';
     var type = c.type || 'fire';
     var stats = calcCreatureStats(tier, type, level);
-    // Apply star bonuses from pet skills system
-    var petStars = (petState && petState.pets && petState.pets[creatureId]) ? (petState.pets[creatureId].stars || 0) : 0;
-    if (petStars > 0) {
-      var starMult = 1 + petStars * 0.10; // +10% per star
-      stats.hp = Math.floor(stats.hp * starMult);
-      stats.atk = Math.floor(stats.atk * starMult);
-      stats.def = Math.floor(stats.def * starMult);
-      stats.spd = Math.floor(stats.spd * starMult);
-      stats.cri += petStars * 2; // +2 CRI per star (flat)
-    }
     var gearStats = GearSystem.calcEquippedStats(creatureId);
     var setBonuses = GearSystem.calcSetBonuses(creatureId);
     // Merge set bonuses into gearStats
