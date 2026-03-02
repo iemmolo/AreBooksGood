@@ -7,10 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 2;
-
-  // ── Star prestige costs ───────────────────────
-  var STAR_COSTS = [1000, 10000, 100000, 1000000, 10000000];
+  var STATE_VERSION = 3;
 
   // ── Tool tiers ────────────────────────────────
   var TOOL_COSTS = [500, 2000, 8000, 30000, 100000];
@@ -26,6 +23,194 @@
 
   // ── Resource tier colors (D1) ─────────────────
   var TIER_COLORS = ['#888', '#ccc', '#4caf50', '#2196f3', '#9c27b0', '#ffd700'];
+
+  // ── Sprite Sheet Paths & Meta (Phase 3) ──────
+  var SKILL_SPRITE_PATHS = {
+    rocks: '/images/skills/rocks.png',
+    ores: '/images/skills/ores.png',
+    gems: '/images/skills/gems.png',
+    fish: '/images/skills/fish.png',
+    trees: '/images/skills/trees.png',
+    wood: '/images/skills/wood.png',
+    anvil: '/images/skills/anvil.png',
+    furnace: '/images/skills/furnace.png',
+    'tools-t1': '/images/skills/tools-t1.png',
+    'tools-t2': '/images/skills/tools-t2.png',
+    'tools-t3': '/images/skills/tools-t3.png',
+    stones: '/images/skills/stones.png'
+  };
+
+  var SKILL_SHEET_META = {
+    rocks: { w: 176, h: 272 },
+    ores: { w: 256, h: 64 },
+    gems: { w: 112, h: 64 },
+    fish: { w: 160, h: 240 },
+    trees: { w: 288, h: 192 },
+    wood: { w: 64, h: 48 },
+    anvil: { w: 128, h: 96 },
+    furnace: { w: 160, h: 64 },
+    'tools-t1': { w: 320, h: 48 },
+    'tools-t2': { w: 288, h: 48 },
+    'tools-t3': { w: 288, h: 48 },
+    stones: { w: 64, h: 32 }
+  };
+
+  // Mining rocks: map resource name → { x, y } on rocks.png (16×16 crystal minerals from y=32 row)
+  // Row 2 crystals: grey(x16), gold(x32), silver(x48), purple(x64), red(x80), green(x96), blue(x112), dark(x128), pink(x144)
+  var MINING_ROCK_SPRITES = {
+    'Copper Ore':  { x: 16, y: 32 },    // grey crystal
+    'Tin Ore':     { x: 48, y: 32 },    // silver crystal
+    'Iron Ore':    { x: 128, y: 32 },   // dark crystal
+    'Coal':        { x: 128, y: 32 },   // dark crystal
+    'Gold Ore':    { x: 32, y: 32 },    // gold crystal
+    'Mithril Ore': { x: 112, y: 32 },   // blue crystal
+    'Adamant Ore': { x: 96, y: 32 },    // green crystal
+    'Runite Ore':  { x: 64, y: 32 },    // purple crystal
+    'Dragon Ore':  { x: 80, y: 32 },    // red crystal
+    'Star Ore':    { x: 144, y: 32 }    // pink crystal
+  };
+
+  // Ore drop particles: map resource → { x, y } on ores.png (16px grid)
+  // Row 0 = raw ores, row 2 = bars
+  var ORE_DROP_SPRITES = {
+    'Copper Ore':  { x: 0, y: 0 },
+    'Tin Ore':     { x: 16, y: 0 },
+    'Iron Ore':    { x: 32, y: 0 },
+    'Coal':        { x: 48, y: 0 },
+    'Gold Ore':    { x: 64, y: 0 },
+    'Mithril Ore': { x: 80, y: 0 },
+    'Adamant Ore': { x: 96, y: 0 },
+    'Runite Ore':  { x: 112, y: 0 },
+    'Dragon Ore':  { x: 128, y: 0 },
+    'Star Ore':    { x: 144, y: 0 }
+  };
+
+  // Gem drop sprites: 7 gems on gems.png (16px grid)
+  var GEM_SPRITES = [
+    { x: 0, y: 0 },   // red gem
+    { x: 16, y: 0 },  // blue gem
+    { x: 32, y: 0 },  // pink gem
+    { x: 48, y: 0 },  // yellow gem
+    { x: 64, y: 0 },  // green gem
+    { x: 0, y: 16 },  // brown gem
+    { x: 16, y: 16 }  // dark gem
+  ];
+
+  // Fish sprites: map name → { x, y } on fish.png (16px grid, 10 cols × 15 rows)
+  var FISH_SPRITES = {
+    'Shrimp':    { x: 0, y: 0 },
+    'Trout':     { x: 16, y: 0 },
+    'Lobster':   { x: 32, y: 0 },
+    'Swordfish': { x: 48, y: 0 },
+    'Shark':     { x: 64, y: 0 },
+    'Dark Crab': { x: 80, y: 0 }
+  };
+
+  // Tree sprites: map name → { x, y, w, h } crop region on trees.png (288×192)
+  // Full trees at y=36, 32×60 (trimmed 4px from top to exclude floating birds/decorations)
+  // Base reference: extract-farm-sprites.py uses y=32..96, we trim top 4px
+  var TREE_SPRITES = {
+    'Tree':   { x: 0, y: 36, w: 32, h: 60 },     // green basic tree (col 0, bird trimmed)
+    'Oak':    { x: 32, y: 36, w: 32, h: 60 },     // green variant
+    'Willow': { x: 64, y: 36, w: 32, h: 60 },     // orange/autumn tree
+    'Maple':  { x: 96, y: 36, w: 32, h: 60 },     // white/winter tree
+    'Yew':    { x: 160, y: 36, w: 32, h: 60 },    // green with blue cap
+    'Magic':  { x: 192, y: 36, w: 32, h: 60 },    // green with base item
+    'Elder':  { x: 224, y: 36, w: 32, h: 60 }     // green with golden fruit
+  };
+
+  // Anvil sprites: map recipe → { x, y } on anvil.png (128×96, 16×16 cells, 8 cols × 6 rows)
+  // Rows by color: 0=blue-grey, 1=grey, 2=orange, 3=gold, 4=purple, 5=blue-grey
+  // Use col 0 per row, vary row for color matching ore tier
+  var ANVIL_SPRITES = {
+    'Bronze Bar':  { x: 0, y: 32 },   // row 2 = orange (bronze)
+    'Iron Bar':    { x: 0, y: 16 },   // row 1 = grey (iron)
+    'Steel Bar':   { x: 0, y: 0 },    // row 0 = blue-grey (steel)
+    'Gold Bar':    { x: 0, y: 48 },   // row 3 = gold
+    'Mithril Bar': { x: 0, y: 80 },   // row 5 = blue-grey (mithril)
+    'Adamant Bar': { x: 0, y: 16 },   // row 1 = grey (closest to green)
+    'Rune Bar':    { x: 0, y: 64 },   // row 4 = purple (rune)
+    'Dragon Bar':  { x: 0, y: 32 }    // row 2 = orange (dragon red-ish)
+  };
+
+  // Bar drop particles: ores.png row 2 (y=32)
+  var BAR_DROP_SPRITES = {
+    'Bronze Bar':  { x: 0, y: 32 },
+    'Iron Bar':    { x: 16, y: 32 },
+    'Steel Bar':   { x: 32, y: 32 },
+    'Gold Bar':    { x: 48, y: 32 },
+    'Mithril Bar': { x: 64, y: 32 },
+    'Adamant Bar': { x: 80, y: 32 },
+    'Rune Bar':    { x: 96, y: 32 },
+    'Dragon Bar':  { x: 112, y: 32 }
+  };
+
+  // Wood log drop: wood.png (16px grid, 4 cols × 3 rows)
+  var WOOD_DROP_SPRITES = [
+    { x: 0, y: 0 },
+    { x: 16, y: 0 },
+    { x: 32, y: 0 },
+    { x: 48, y: 0 }
+  ];
+
+  // Tool sprites: map { skill, tier } → { sheet, x, y } on tools-t1/t2/t3 (16px grid)
+  // Confirmed via dungeongear.json (gear-weapons.png = tools-t1.png, identical MD5):
+  //   Row 0: col0=WateringCan, col1=Pickaxe, col2=Sword, col3=Axe, col4=Bow, col5=Arrow, col6=Pick/Hammer, col7=Spear, col8=Sickle
+  //   Row 1: col4=FishingRod, col14=EnchantedRod
+  // Tier layout: t1-firstHalf=Basic, t1-secondHalf(+10)=Iron, t2-firstHalf=Steel, t2-secondHalf(+9)=Mithril, t3-firstHalf=Dragon
+  var TOOL_SPRITES = {
+    mining:      [{ sheet: 'tools-t1', x: 16, y: 0 },  { sheet: 'tools-t1', x: 176, y: 0 }, { sheet: 'tools-t2', x: 16, y: 0 },  { sheet: 'tools-t2', x: 160, y: 0 }, { sheet: 'tools-t3', x: 16, y: 0 }],
+    fishing:     [{ sheet: 'tools-t1', x: 64, y: 16 }, { sheet: 'tools-t1', x: 224, y: 16 }, { sheet: 'tools-t2', x: 64, y: 16 }, { sheet: 'tools-t2', x: 208, y: 16 }, { sheet: 'tools-t3', x: 64, y: 16 }],
+    woodcutting: [{ sheet: 'tools-t1', x: 48, y: 0 },  { sheet: 'tools-t1', x: 208, y: 0 }, { sheet: 'tools-t2', x: 48, y: 0 },  { sheet: 'tools-t2', x: 192, y: 0 }, { sheet: 'tools-t3', x: 48, y: 0 }],
+    smithing:    [{ sheet: 'tools-t1', x: 96, y: 0 },  { sheet: 'tools-t1', x: 256, y: 0 }, { sheet: 'tools-t2', x: 96, y: 0 },  { sheet: 'tools-t2', x: 240, y: 0 }, { sheet: 'tools-t3', x: 96, y: 0 }],
+    combat:      [{ sheet: 'tools-t1', x: 32, y: 0 },  { sheet: 'tools-t1', x: 192, y: 0 }, { sheet: 'tools-t2', x: 32, y: 0 },  { sheet: 'tools-t2', x: 176, y: 0 }, { sheet: 'tools-t3', x: 32, y: 0 }]
+  };
+
+  // Skill icons for left panel: one iconic tool per skill from tools-t1
+  // Positions confirmed via dungeongear.json labels matching gear-weapons.png
+  var SKILL_ICON_SPRITES = {
+    mining:      { sheet: 'tools-t1', x: 16, y: 0 },   // Pickaxe (row 0, col 1)
+    fishing:     { sheet: 'tools-t1', x: 64, y: 16 },   // Fishing Rod (row 1, col 4)
+    woodcutting: { sheet: 'tools-t1', x: 48, y: 0 },    // Axe (row 0, col 3)
+    smithing:    { sheet: 'tools-t1', x: 96, y: 0 },    // Pick/Hammer (row 0, col 6)
+    combat:      { sheet: 'tools-t1', x: 32, y: 0 }     // Short Sword (row 0, col 2)
+  };
+
+  // ── Sprite Helper Functions ──────────────────
+  function createSpriteEl(sheetKey, sx, sy, sw, sh, displayW, displayH) {
+    var meta = SKILL_SHEET_META[sheetKey];
+    if (!meta) return null;
+    sw = sw || 16;
+    sh = sh || 16;
+    displayW = displayW || sw * 3;
+    displayH = displayH || sh * 3;
+
+    var el = document.createElement('div');
+    el.className = 'skill-sprite';
+    el.style.width = displayW + 'px';
+    el.style.height = displayH + 'px';
+    el.style.backgroundImage = 'url(' + SKILL_SPRITE_PATHS[sheetKey] + ')';
+
+    var scaleX = displayW / sw;
+    var scaleY = displayH / sh;
+    el.style.backgroundSize = (meta.w * scaleX) + 'px ' + (meta.h * scaleY) + 'px';
+    el.style.backgroundPosition = (-sx * scaleX) + 'px ' + (-sy * scaleY) + 'px';
+    el.style.imageRendering = 'pixelated';
+    el.style.backgroundRepeat = 'no-repeat';
+    return el;
+  }
+
+  function spawnSpriteParticle(parentEl, sheetKey, sx, sy, sw, sh) {
+    sw = sw || 16;
+    sh = sh || 16;
+    var el = createSpriteEl(sheetKey, sx, sy, sw, sh, 32, 32);
+    if (!el) return;
+    el.className = 'ore-particle sprite-particle';
+    el.style.left = (Math.random() * 60 + 20) + '%';
+    el.style.top = '40%';
+    parentEl.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1200);
+  }
 
   // ── Milestone levels (B1) ─────────────────────
   var MILESTONE_LEVELS = [10, 25, 50, 75, 99];
@@ -260,26 +445,6 @@
       if (raw) return JSON.parse(raw);
     } catch (e) {}
     return null;
-  }
-
-  function savePetStars(petId, stars) {
-    try {
-      var raw = localStorage.getItem(PET_KEY);
-      if (!raw) return;
-      var ps = JSON.parse(raw);
-      if (ps.pets && ps.pets[petId]) {
-        ps.pets[petId].stars = stars;
-        localStorage.setItem(PET_KEY, JSON.stringify(ps));
-      }
-    } catch (e) {}
-  }
-
-  function getPetStars(petId) {
-    var ps = loadPetState();
-    if (ps && ps.pets && ps.pets[petId]) {
-      return ps.pets[petId].stars || 0;
-    }
-    return 0;
   }
 
   function getPetType(petId) {
@@ -576,13 +741,6 @@
     return Math.floor(baseCooldown * getToolSpeedMult(skill));
   }
 
-  // ── Star auto-production multiplier ───────────
-  function getStarAutoMult(petId) {
-    var stars = getPetStars(petId);
-    if (stars <= 0) return 1;
-    return Math.pow(2, stars);
-  }
-
   // ── UI helpers ────────────────────────────────
   function $(id) { return document.getElementById(id); }
 
@@ -754,23 +912,7 @@
         }
       }
 
-      // D5: Star indicators
-      var starText = '';
-      var petId = s.assignedPet;
-      if (petId) {
-        var stars = getPetStars(petId);
-        if (stars > 0) {
-          starText = ' ';
-          for (var si = 0; si < stars; si++) starText += '\u2605';
-        }
-      }
       levelSpan.textContent = 'Lv ' + s.level;
-      if (starText) {
-        var indicator = document.createElement('span');
-        indicator.className = 'skill-star-indicator';
-        indicator.textContent = starText;
-        levelSpan.appendChild(indicator);
-      }
 
       // B4: Mastery styling
       if (state.mastered && state.mastered[key]) {
@@ -803,10 +945,7 @@
       var c = catalog.creatures[petId];
       var nameEl = $('skills-pet-name');
       if (nameEl) {
-        var starsStr = '';
-        var petStars = getPetStars(petId);
-        for (var si = 0; si < 5; si++) starsStr += si < petStars ? '\u2605' : '\u2606';
-        nameEl.textContent = c.name + ' ' + starsStr;
+        nameEl.textContent = c.name;
       }
       var bonusEl = $('skills-pet-type-bonus');
       if (bonusEl) {
@@ -840,9 +979,8 @@
         var verb = skillVerbs[activeSkill] || 'Training';
         var tierMult = getTierMult(petId);
         var typeBonus2 = getTypeBonus(petId, activeSkill);
-        var starMult = getStarAutoMult(petId);
-        var idleDust = Math.floor(res.dust * tierMult * typeBonus2 * starMult);
-        var idleXp = Math.floor(res.xp * tierMult * typeBonus2 * starMult);
+        var idleDust = Math.floor(res.dust * tierMult * typeBonus2);
+        var idleXp = Math.floor(res.xp * tierMult * typeBonus2);
         activityEl.textContent = verb + ' ' + res.name + ' (' + idleXp + ' XP + ' + idleDust + ' SD/action)';
       }
     } else {
@@ -883,31 +1021,6 @@
       }
     }
 
-    // Star prestige
-    var stars = petId ? getPetStars(petId) : 0;
-    var starsEl = $('skills-stars-display');
-    if (starsEl) {
-      var starStr = '';
-      for (var i = 0; i < 5; i++) starStr += i < stars ? '\u2605' : '\u2606';
-      starsEl.textContent = starStr;
-      starsEl.className = 'skills-stars-display';
-      if (stars > 0) starsEl.classList.add('glow-' + stars);
-    }
-    var costEl = $('skills-star-cost');
-    var starBtn = $('skills-starup-btn');
-    if (costEl) {
-      if (!petId) {
-        costEl.textContent = 'Assign a pet first';
-      } else if (stars >= 5) {
-        costEl.textContent = 'Max Stars!';
-      } else {
-        costEl.textContent = 'Next: ' + formatNum(STAR_COSTS[stars]) + ' SD';
-      }
-    }
-    if (starBtn) {
-      starBtn.disabled = !petId || stars >= 5 || !window.StarDust || !window.StarDust.canAfford(STAR_COSTS[stars] || Infinity);
-    }
-
     // Idle status
     var idleEl = $('skills-idle-status');
     if (idleEl) {
@@ -928,6 +1041,9 @@
     if (dustEl && window.StarDust) {
       dustEl.textContent = window.StarDust.formatDust(window.StarDust.getBalance());
     }
+
+    // Phase 3: Tool sprite preview
+    updateToolSprite();
 
     // B5: Milestones panel
     renderMilestones();
@@ -951,6 +1067,39 @@
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return String(n);
+  }
+
+  // ── Phase 3: Replace skill icons with sprites ──
+  function replaceSkillIcons() {
+    var rows = document.querySelectorAll('.skill-row');
+    for (var i = 0; i < rows.length; i++) {
+      var key = rows[i].getAttribute('data-skill');
+      var iconSpan = rows[i].querySelector('.skill-icon');
+      if (!iconSpan || !SKILL_ICON_SPRITES[key]) continue;
+      var info = SKILL_ICON_SPRITES[key];
+      var sprite = createSpriteEl(info.sheet, info.x, info.y, 16, 16, 24, 24);
+      if (sprite) {
+        sprite.className = 'skill-sprite skill-icon-sprite';
+        iconSpan.textContent = '';
+        iconSpan.appendChild(sprite);
+      }
+    }
+  }
+
+  // ── Phase 3: Update tool sprite in right panel ──
+  function updateToolSprite() {
+    var container = $('skills-tool-sprite');
+    if (!container) return;
+    container.innerHTML = '';
+    var tier = state.skills[activeSkill].toolTier || 0;
+    var toolMap = TOOL_SPRITES[activeSkill];
+    if (!toolMap || !toolMap[tier]) return;
+    var info = toolMap[tier];
+    var sprite = createSpriteEl(info.sheet, info.x, info.y, 16, 16, 48, 48);
+    if (sprite) {
+      sprite.className = 'skill-sprite';
+      container.appendChild(sprite);
+    }
   }
 
   // ── Game header update (D1) ───────────────────
@@ -985,8 +1134,17 @@
 
       var rock = document.createElement('div');
       rock.className = 'mining-rock';
-      rock.textContent = '\uD83E\uDEA8';
       rock.setAttribute('data-idx', i);
+
+      // Phase 3: Pixel art rock sprite
+      var rockPos = MINING_ROCK_SPRITES[res.name] || { x: 16, y: 32 };
+      var rockSprite = createSpriteEl('rocks', rockPos.x, rockPos.y, 16, 16, 64, 64);
+      if (rockSprite) {
+        rockSprite.className = 'skill-sprite mining-rock-sprite';
+        rock.appendChild(rockSprite);
+      } else {
+        rock.textContent = '\uD83E\uDEA8';
+      }
       rock.addEventListener('click', onMineClick);
       rockWrap.appendChild(rock);
 
@@ -1056,13 +1214,19 @@
       var isGem = Math.random() < 0.05;
       if (isGem) {
         dustGain *= 5;
-        if (area) spawnParticle(area, 'GEM! +' + dustGain + ' SD', 'gem');
+        if (area) {
+          var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
+          spawnSpriteParticle(area, 'gems', gem.x, gem.y);
+          spawnParticle(area, 'GEM! +' + dustGain + ' SD', 'gem');
+        }
         addLog('Found a gem! 5x dust bonus!');
       }
 
       if (area) {
         spawnParticle(area, '+' + xpGain + ' XP', 'xp');
         if (!isGem) {
+          var orePos = ORE_DROP_SPRITES[res.name];
+          if (orePos) spawnSpriteParticle(area, 'ores', orePos.x, orePos.y);
           setTimeout(function () {
             spawnParticle(area, '+' + dustGain + ' SD', 'dust');
           }, 200);
@@ -1120,7 +1284,7 @@
     div.innerHTML =
       '<div class="fishing-water">' +
         '<div class="fishing-line" id="fishing-line"></div>' +
-        '<div class="fishing-bobber" id="fishing-bobber">\uD83C\uDFA3</div>' +
+        '<div class="fishing-bobber" id="fishing-bobber"><span class="fishing-bobber-emoji">\uD83C\uDFA3</span></div>' +
         '<div class="fishing-exclaim" id="fishing-exclaim">!</div>' +
       '</div>' +
       '<div class="fishing-power-bar" id="fishing-power-bar" style="display:none">' +
@@ -1262,6 +1426,9 @@
 
     var gameArea = $('skills-game-area');
     if (gameArea) {
+      // Phase 3: Fish sprite particle
+      var fishPos = FISH_SPRITES[res.name];
+      if (fishPos) spawnSpriteParticle(gameArea, 'fish', fishPos.x, fishPos.y);
       spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
       setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
     }
@@ -1312,11 +1479,22 @@
     // A3: Tree tier label
     div.innerHTML =
       '<div class="wc-tree-label" id="wc-tree-label">' + res.name + '</div>' +
-      '<div class="wc-tree" id="wc-tree">\uD83C\uDF33</div>' +
+      '<div class="wc-tree" id="wc-tree"></div>' +
       '<div class="wc-hits-bar"><div class="wc-hits-fill" id="wc-hits-fill" style="width:0%"></div></div>' +
       '<div class="wc-hit-count" id="wc-hit-count">0 / ' + hitsNeeded + ' chops</div>';
     area.appendChild(div);
-    $('wc-tree').addEventListener('click', onChopClick);
+
+    // Phase 3: Tree sprite
+    var treeEl = $('wc-tree');
+    var treePos = TREE_SPRITES[res.name] || { x: 0, y: 36, w: 32, h: 60 };
+    var treeSprite = createSpriteEl('trees', treePos.x, treePos.y, treePos.w, treePos.h, 72, 135);
+    if (treeSprite) {
+      treeSprite.className = 'skill-sprite wc-tree-sprite';
+      treeEl.appendChild(treeSprite);
+    } else {
+      treeEl.textContent = '\uD83C\uDF33';
+    }
+    treeEl.addEventListener('click', onChopClick);
 
     // C1: Render pet
     renderPetInGameArea();
@@ -1384,6 +1562,9 @@
 
       var gameArea2 = $('skills-game-area');
       if (gameArea2) {
+        // Phase 3: Wood log sprite particle
+        var woodDrop = WOOD_DROP_SPRITES[Math.floor(Math.random() * WOOD_DROP_SPRITES.length)];
+        spawnSpriteParticle(gameArea2, 'wood', woodDrop.x, woodDrop.y);
         spawnParticle(gameArea2, '+' + xpGain + ' XP', 'xp');
         if (!isNest) {
           setTimeout(function () { spawnParticle(gameArea2, '+' + dustGain + ' SD', 'dust'); }, 200);
@@ -1441,7 +1622,7 @@
 
     div.innerHTML =
       '<select class="smithing-recipe-select" id="smithing-recipe">' + options + '</select>' +
-      '<div class="smithing-anvil" id="smithing-anvil">\uD83D\uDD28</div>' +
+      '<div class="smithing-anvil" id="smithing-anvil"></div>' +
       '<div class="smithing-timing-bar" id="smithing-timing-bar">' +
         '<div class="smithing-timing-zone" id="smithing-zone" style="left:' + zoneLeft + '%;width:' + zoneWidth + '%"></div>' +
         '<div class="smithing-timing-cursor" id="smithing-cursor" style="left:0%"></div>' +
@@ -1470,9 +1651,21 @@
       });
     }
 
+    // Phase 3: Anvil sprite
+    var anvilEl = $('smithing-anvil');
+    var highestRes = SKILLS.smithing.resources[highestIdx];
+    var anvilPos = ANVIL_SPRITES[highestRes.name] || { x: 0, y: 0 };
+    var anvilSprite = createSpriteEl('anvil', anvilPos.x, anvilPos.y, 16, 16, 64, 64);
+    if (anvilSprite) {
+      anvilSprite.className = 'skill-sprite smithing-anvil-sprite';
+      anvilEl.appendChild(anvilSprite);
+    } else {
+      anvilEl.textContent = '\uD83D\uDD28';
+    }
+
     smithingState = { phase: 'active', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0 };
     startSmithingCursor();
-    $('smithing-anvil').addEventListener('click', onSmithClick);
+    anvilEl.addEventListener('click', onSmithClick);
 
     // C1: Render pet
     renderPetInGameArea();
@@ -1549,6 +1742,9 @@
 
       var gameArea = $('skills-game-area');
       if (gameArea) {
+        // Phase 3: Bar sprite particle
+        var barPos = BAR_DROP_SPRITES[res.name];
+        if (barPos) spawnSpriteParticle(gameArea, 'ores', barPos.x, barPos.y);
         spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
         setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
       }
@@ -1654,7 +1850,7 @@
         'Goblin': 'goblin-basic',
         'Skeleton': 'goblin-dagger',
         'Demon': 'red-slime',
-        'Dragon': 'blue-slime',
+        'Dragon': 'sprout-slime',
         'Titan': 'myconid-brown'
       };
       var eid = enemySprites[res.name];
@@ -1665,6 +1861,18 @@
         spriteEl.style.fontSize = '';
         spriteEl.style.display = '';
         spriteEl.textContent = '';
+      } else if (res.name === 'Training Dummy') {
+        // Phase 3: Training dummy uses helm sprite as target placeholder (row 2, col 0)
+        var dummySprite = createSpriteEl('tools-t1', 0, 32, 16, 16, 48, 48);
+        if (dummySprite) {
+          spriteEl.textContent = '';
+          spriteEl.style.backgroundImage = '';
+          spriteEl.style.fontSize = '';
+          spriteEl.style.display = 'flex';
+          spriteEl.style.alignItems = 'center';
+          spriteEl.style.justifyContent = 'center';
+          spriteEl.appendChild(dummySprite);
+        }
       } else {
         spriteEl.style.backgroundImage = '';
         spriteEl.textContent = '\u2694';
@@ -1998,10 +2206,7 @@
 
       var nameDiv = document.createElement('div');
       nameDiv.className = 'skills-pet-pick-name';
-      var stars = getPetStars(id);
-      var starStr = '';
-      for (var s = 0; s < stars; s++) starStr += '\u2605';
-      nameDiv.textContent = c.name + (starStr ? ' ' + starStr : '');
+      nameDiv.textContent = c.name;
       card.appendChild(nameDiv);
 
       var typeDiv = document.createElement('div');
@@ -2065,73 +2270,6 @@
   }
 
   // ══════════════════════════════════════════════
-  // ── STAR PRESTIGE (D3 enhanced) ───────────────
-  // ══════════════════════════════════════════════
-  function initiateStarUp() {
-    var s = state.skills[activeSkill];
-    var petId = s.assignedPet;
-    if (!petId) return;
-    var stars = getPetStars(petId);
-    if (stars >= 5) return;
-    var cost = STAR_COSTS[stars];
-    if (!window.StarDust || !window.StarDust.canAfford(cost)) return;
-
-    var petName = (catalog && catalog.creatures[petId]) ? catalog.creatures[petId].name : petId;
-    var text = petName + ' will gain Star ' + (stars + 1) + '.\n\n' +
-      'Cost: ' + formatNum(cost) + ' Star Dust\n' +
-      'Bonus: ' + (stars + 1) + '0% all battle stats, x' + Math.pow(2, stars + 1) + ' auto-production\n\n' +
-      'WARNING: ' + SKILLS[activeSkill].name + ' resets to Level 1!';
-
-    var textEl = $('skills-confirm-text');
-    if (textEl) textEl.textContent = text;
-    $('skills-confirm-overlay').style.display = '';
-  }
-
-  function confirmStarUp() {
-    var s = state.skills[activeSkill];
-    var petId = s.assignedPet;
-    if (!petId) return;
-    var stars = getPetStars(petId);
-    if (stars >= 5) return;
-    var cost = STAR_COSTS[stars];
-
-    window.StarDust.deduct(cost);
-    savePetStars(petId, stars + 1);
-
-    // Soft reset: skill back to level 1
-    s.level = 1;
-    s.xp = 0;
-    saveState();
-
-    $('skills-confirm-overlay').style.display = 'none';
-
-    // D3: Golden burst overlay
-    var burst = document.createElement('div');
-    burst.className = 'star-up-burst';
-    document.body.appendChild(burst);
-    setTimeout(function () { if (burst.parentNode) burst.parentNode.removeChild(burst); }, 800);
-
-    // D3: Star display shake
-    var starsEl = $('skills-stars-display');
-    if (starsEl) {
-      starsEl.classList.add('star-shake');
-      setTimeout(function () { starsEl.classList.remove('star-shake'); }, 500);
-    }
-
-    // D3: Pet celebrate
-    if (window.PetSystem && window.PetSystem.celebrate) window.PetSystem.celebrate();
-
-    var petName = (catalog && catalog.creatures[petId]) ? catalog.creatures[petId].name : petId;
-    addLog(petName + ' is now ' + (stars + 1) + '-star! ' + SKILLS[activeSkill].name + ' reset to Lv 1.');
-
-    renderSkillList();
-    renderRightPanel();
-    updateGameHeader();
-    var renderer = SKILL_RENDERERS[activeSkill];
-    if (renderer) renderer();
-  }
-
-  // ══════════════════════════════════════════════
   // ── IDLE / OFFLINE PROGRESS ───────────────────
   // ══════════════════════════════════════════════
   function calculateIdleRewards() {
@@ -2146,7 +2284,7 @@
       if (!s.assignedPet || !s.lastActiveAt) continue;
 
       var elapsed = Math.min(now - s.lastActiveAt, IDLE_CAP_MS);
-      if (elapsed < 30000) continue;
+      if (elapsed < 300000) continue; // 5 min minimum before idle report
 
       var actionInterval = 30000 / (1 + s.level * 0.02);
       var actions = Math.floor(elapsed / actionInterval);
@@ -2155,10 +2293,9 @@
       var res = getHighestResource(key);
       var tierMult = getTierMult(s.assignedPet);
       var typeBonus = getTypeBonus(s.assignedPet, key);
-      var starMult = getStarAutoMult(s.assignedPet);
 
-      var xpPerAction = Math.floor(res.xp * tierMult * typeBonus * starMult);
-      var dustPerAction = Math.floor(res.dust * tierMult * typeBonus * starMult);
+      var xpPerAction = Math.floor(res.xp * tierMult * typeBonus);
+      var dustPerAction = Math.floor(res.dust * tierMult * typeBonus);
 
       var xpTotal = actions * xpPerAction;
       var dustTotal = actions * dustPerAction;
@@ -2241,10 +2378,9 @@
         var res = getHighestResource(key);
         var tierMult = getTierMult(s.assignedPet);
         var typeBonus = getTypeBonus(s.assignedPet, key);
-        var starMult = getStarAutoMult(s.assignedPet);
 
-        var xp = Math.floor(res.xp * tierMult * typeBonus * starMult * 0.5);
-        var dust = Math.floor(res.dust * tierMult * typeBonus * starMult * 0.5);
+        var xp = Math.floor(res.xp * tierMult * typeBonus * 0.5);
+        var dust = Math.floor(res.dust * tierMult * typeBonus * 0.5);
 
         if (xp > 0) addXp(key, xp);
         if (dust > 0 && window.StarDust) window.StarDust.add(dust);
@@ -2334,6 +2470,9 @@
       updateGameHeader();
       renderMining();
 
+      // Phase 3: Replace emoji skill icons with sprites
+      replaceSkillIcons();
+
       // Show idle report if any
       if (idleResult.rewards.length > 0) {
         showIdleReport(idleResult);
@@ -2363,17 +2502,6 @@
 
       var toolBtn = $('skills-upgrade-tool-btn');
       if (toolBtn) toolBtn.addEventListener('click', upgradeTool);
-
-      var starBtn = $('skills-starup-btn');
-      if (starBtn) starBtn.addEventListener('click', initiateStarUp);
-
-      var confirmYes = $('skills-confirm-yes');
-      if (confirmYes) confirmYes.addEventListener('click', confirmStarUp);
-
-      var confirmNo = $('skills-confirm-no');
-      if (confirmNo) confirmNo.addEventListener('click', function () {
-        $('skills-confirm-overlay').style.display = 'none';
-      });
 
       var idleOk = $('skills-idle-report-ok');
       if (idleOk) idleOk.addEventListener('click', function () {
