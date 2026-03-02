@@ -10,28 +10,16 @@
   var STATE_VERSION = 7;
   var STACK_CAP = 999;
 
-  // ── Tool tiers ────────────────────────────────
-  var TOOL_COSTS = [500, 2000, 8000, 30000, 100000];
-  var TOOL_LEVEL_REQS = [1, 20, 40, 60, 80];
-  var TOOL_SPEED_MULT = 0.85; // each tier multiplies cooldown by this (15% faster)
-  var TOOL_NAMES = {
-    mining: ['Basic Pickaxe', 'Iron Pickaxe', 'Steel Pickaxe', 'Mithril Pickaxe', 'Dragon Pickaxe'],
-    fishing: ['Basic Rod', 'Iron Rod', 'Steel Rod', 'Mithril Rod', 'Dragon Rod'],
-    woodcutting: ['Basic Axe', 'Iron Axe', 'Steel Axe', 'Mithril Axe', 'Dragon Axe'],
-    smithing: ['Basic Hammer', 'Iron Hammer', 'Steel Hammer', 'Mithril Hammer', 'Dragon Hammer'],
-    combat: ['Basic Sword', 'Iron Sword', 'Steel Sword', 'Mithril Sword', 'Dragon Sword']
-  };
-
   // ── Mining Perks (level-gated passives) ────────
   var MINING_PERKS = [
     { id: 'keenEye', name: 'Keen Eye', level: 10, desc: 'Gem chance 5% \u2192 10%' },
     { id: 'doubleStrike', name: 'Double Strike', level: 20, desc: '10% chance for 2x ore yield' },
-    { id: 'prospector', name: "Prospector's Luck", level: 30, desc: '+25% dust from mining' },
+    { id: 'prospector', name: "Prospector's Luck", level: 30, desc: '+25% XP from mining' },
     { id: 'oreSense', name: 'Ore Sense', level: 45, desc: 'Rock respawn 3s \u2192 2s' },
-    { id: 'gemSpec', name: 'Gem Specialist', level: 60, desc: 'Gem bonus 5x \u2192 10x dust' },
+    { id: 'gemSpec', name: 'Gem Specialist', level: 60, desc: 'Gem bonus 5x \u2192 10x XP' },
     { id: 'veinMiner', name: 'Vein Miner', level: 75, desc: '20% chance to auto-mine adjacent rock' },
     { id: 'deepCore', name: 'Deep Core', level: 85, desc: 'Enables rare deep vein events (5x XP)' },
-    { id: 'mastery', name: 'Mining Mastery', level: 99, desc: 'Permanent 2x SD from all mining' }
+    { id: 'mastery', name: 'Mining Mastery', level: 99, desc: 'Permanent 2x XP from all mining' }
   ];
 
   // ── Rock HP (multi-hit mining) ─────────────────
@@ -213,19 +201,6 @@
     { sheet: 'items_sheet', x: 368, y: 432 },  // Yew Log
     { sheet: 'items_sheet', x: 384, y: 432 }   // Elder Log
   ];
-
-  // Tool sprites: map { skill, tier } → { sheet, x, y } on tools-t1/t2/t3 (16px grid)
-  // Confirmed via dungeongear.json (gear-weapons.png = tools-t1.png, identical MD5):
-  //   Row 0: col0=WateringCan, col1=Pickaxe, col2=Sword, col3=Axe, col4=Bow, col5=Arrow, col6=Pick/Hammer, col7=Spear, col8=Sickle
-  //   Row 1: col4=FishingRod, col14=EnchantedRod
-  // Tier layout: t1-firstHalf=Basic, t1-secondHalf(+10)=Iron, t2-firstHalf=Steel, t2-secondHalf(+9)=Mithril, t3-firstHalf=Dragon
-  var TOOL_SPRITES = {
-    mining:      [{ sheet: 'tools-t1', x: 16, y: 0 },  { sheet: 'tools-t1', x: 176, y: 0 }, { sheet: 'tools-t2', x: 16, y: 0 },  { sheet: 'tools-t2', x: 160, y: 0 }, { sheet: 'tools-t3', x: 16, y: 0 }],
-    fishing:     [{ sheet: 'tools-t1', x: 64, y: 16 }, { sheet: 'tools-t1', x: 224, y: 16 }, { sheet: 'tools-t2', x: 64, y: 16 }, { sheet: 'tools-t2', x: 208, y: 16 }, { sheet: 'tools-t3', x: 64, y: 16 }],
-    woodcutting: [{ sheet: 'tools-t1', x: 48, y: 0 },  { sheet: 'tools-t1', x: 208, y: 0 }, { sheet: 'tools-t2', x: 48, y: 0 },  { sheet: 'tools-t2', x: 192, y: 0 }, { sheet: 'tools-t3', x: 48, y: 0 }],
-    smithing:    [{ sheet: 'tools-t1', x: 96, y: 0 },  { sheet: 'tools-t1', x: 256, y: 0 }, { sheet: 'tools-t2', x: 96, y: 0 },  { sheet: 'tools-t2', x: 240, y: 0 }, { sheet: 'tools-t3', x: 96, y: 0 }],
-    combat:      [{ sheet: 'tools-t1', x: 32, y: 0 },  { sheet: 'tools-t1', x: 192, y: 0 }, { sheet: 'tools-t2', x: 32, y: 0 },  { sheet: 'tools-t2', x: 176, y: 0 }, { sheet: 'tools-t3', x: 32, y: 0 }]
-  };
 
   // Skill icons for left panel: one iconic tool per skill from tools-t1
   // Positions confirmed via dungeongear.json labels matching gear-weapons.png
@@ -477,81 +452,81 @@
     mining: {
       name: 'Mining', icon: '\u26CF',
       resources: [
-        { name: 'Copper Ore', level: 1, xp: 8, dust: 2, clickTime: 1200 },
-        { name: 'Crimson Ore', level: 5, xp: 12, dust: 3, clickTime: 1165 },
-        { name: 'Coal', level: 10, xp: 18, dust: 5, clickTime: 1130 },
-        { name: 'Iron Ore', level: 18, xp: 26, dust: 7, clickTime: 1095 },
-        { name: 'Gold Ore', level: 24, xp: 36, dust: 10, clickTime: 1060 },
-        { name: 'Silver Ore', level: 30, xp: 48, dust: 14, clickTime: 1025 },
-        { name: 'Astral Ore', level: 36, xp: 64, dust: 18, clickTime: 990 },
-        { name: 'Shadow Ore', level: 42, xp: 84, dust: 24, clickTime: 955 },
-        { name: 'Emerald Ore', level: 48, xp: 110, dust: 32, clickTime: 920 },
-        { name: 'Slate Ore', level: 54, xp: 145, dust: 42, clickTime: 885 },
-        { name: 'Mithril Ore', level: 60, xp: 190, dust: 55, clickTime: 850 },
-        { name: 'Amethyst Ore', level: 66, xp: 245, dust: 70, clickTime: 815 },
-        { name: 'Cobalt Ore', level: 72, xp: 315, dust: 92, clickTime: 780 },
-        { name: 'Molten Ore', level: 78, xp: 400, dust: 120, clickTime: 745 },
-        { name: 'Frost Ore', level: 85, xp: 520, dust: 160, clickTime: 710 },
-        { name: 'Obsidian Ore', level: 92, xp: 680, dust: 210, clickTime: 675 }
+        { name: 'Copper Ore', level: 1, xp: 8, clickTime: 1200 },
+        { name: 'Crimson Ore', level: 5, xp: 12, clickTime: 1165 },
+        { name: 'Coal', level: 10, xp: 18, clickTime: 1130 },
+        { name: 'Iron Ore', level: 18, xp: 26, clickTime: 1095 },
+        { name: 'Gold Ore', level: 24, xp: 36, clickTime: 1060 },
+        { name: 'Silver Ore', level: 30, xp: 48, clickTime: 1025 },
+        { name: 'Astral Ore', level: 36, xp: 64, clickTime: 990 },
+        { name: 'Shadow Ore', level: 42, xp: 84, clickTime: 955 },
+        { name: 'Emerald Ore', level: 48, xp: 110, clickTime: 920 },
+        { name: 'Slate Ore', level: 54, xp: 145, clickTime: 885 },
+        { name: 'Mithril Ore', level: 60, xp: 190, clickTime: 850 },
+        { name: 'Amethyst Ore', level: 66, xp: 245, clickTime: 815 },
+        { name: 'Cobalt Ore', level: 72, xp: 315, clickTime: 780 },
+        { name: 'Molten Ore', level: 78, xp: 400, clickTime: 745 },
+        { name: 'Frost Ore', level: 85, xp: 520, clickTime: 710 },
+        { name: 'Obsidian Ore', level: 92, xp: 680, clickTime: 675 }
       ]
     },
     fishing: {
       name: 'Fishing', icon: '\uD83C\uDFA3',
       resources: [
-        { name: 'Minnow', level: 1, xp: 8, dust: 2, clickTime: 2000 },
-        { name: 'Shrimp', level: 5, xp: 12, dust: 3, clickTime: 1900 },
-        { name: 'Perch', level: 10, xp: 18, dust: 4, clickTime: 1800 },
-        { name: 'Trout', level: 20, xp: 30, dust: 7, clickTime: 1700 },
-        { name: 'Bass', level: 30, xp: 50, dust: 12, clickTime: 1600 },
-        { name: 'Salmon', level: 40, xp: 80, dust: 20, clickTime: 1500 },
-        { name: 'Catfish', level: 50, xp: 120, dust: 32, clickTime: 1400 },
-        { name: 'Swordfish', level: 60, xp: 180, dust: 48, clickTime: 1300 },
-        { name: 'Lobster', level: 65, xp: 220, dust: 60, clickTime: 1250 },
-        { name: 'Shark', level: 75, xp: 320, dust: 90, clickTime: 1150 },
-        { name: 'Anglerfish', level: 85, xp: 500, dust: 150, clickTime: 1050 },
-        { name: 'Leviathan', level: 95, xp: 800, dust: 250, clickTime: 1000 }
+        { name: 'Minnow', level: 1, xp: 8, clickTime: 2000 },
+        { name: 'Shrimp', level: 5, xp: 12, clickTime: 1900 },
+        { name: 'Perch', level: 10, xp: 18, clickTime: 1800 },
+        { name: 'Trout', level: 20, xp: 30, clickTime: 1700 },
+        { name: 'Bass', level: 30, xp: 50, clickTime: 1600 },
+        { name: 'Salmon', level: 40, xp: 80, clickTime: 1500 },
+        { name: 'Catfish', level: 50, xp: 120, clickTime: 1400 },
+        { name: 'Swordfish', level: 60, xp: 180, clickTime: 1300 },
+        { name: 'Lobster', level: 65, xp: 220, clickTime: 1250 },
+        { name: 'Shark', level: 75, xp: 320, clickTime: 1150 },
+        { name: 'Anglerfish', level: 85, xp: 500, clickTime: 1050 },
+        { name: 'Leviathan', level: 95, xp: 800, clickTime: 1000 }
       ]
     },
     woodcutting: {
       name: 'Woodcutting', icon: '\uD83E\uDE93',
       resources: [
-        { name: 'Pine', level: 1, xp: 10, dust: 2, clickTime: 1200 },
-        { name: 'Oak', level: 10, xp: 20, dust: 5, clickTime: 1100 },
-        { name: 'Birch', level: 20, xp: 35, dust: 8, clickTime: 1050 },
-        { name: 'Maple', level: 35, xp: 65, dust: 16, clickTime: 1000 },
-        { name: 'Walnut', level: 50, xp: 120, dust: 30, clickTime: 900 },
-        { name: 'Mahogany', level: 65, xp: 220, dust: 60, clickTime: 800 },
-        { name: 'Yew', level: 80, xp: 400, dust: 110, clickTime: 700 },
-        { name: 'Elder', level: 92, xp: 700, dust: 220, clickTime: 600 }
+        { name: 'Pine', level: 1, xp: 10, clickTime: 1200 },
+        { name: 'Oak', level: 10, xp: 20, clickTime: 1100 },
+        { name: 'Birch', level: 20, xp: 35, clickTime: 1050 },
+        { name: 'Maple', level: 35, xp: 65, clickTime: 1000 },
+        { name: 'Walnut', level: 50, xp: 120, clickTime: 900 },
+        { name: 'Mahogany', level: 65, xp: 220, clickTime: 800 },
+        { name: 'Yew', level: 80, xp: 400, clickTime: 700 },
+        { name: 'Elder', level: 92, xp: 700, clickTime: 600 }
       ]
     },
     smithing: {
       name: 'Smithing', icon: '\uD83D\uDD28',
       resources: [
-        { name: 'Copper Bar', level: 1, xp: 10, dust: 3, clickTime: 1500 },
-        { name: 'Bronze Bar', level: 8, xp: 18, dust: 5, clickTime: 1460 },
-        { name: 'Gold Bar', level: 18, xp: 32, dust: 9, clickTime: 1420 },
-        { name: 'Astral Bar', level: 25, xp: 50, dust: 14, clickTime: 1380 },
-        { name: 'Silver Bar', level: 32, xp: 75, dust: 20, clickTime: 1340 },
-        { name: 'Emerald Bar', level: 42, xp: 110, dust: 30, clickTime: 1280 },
-        { name: 'Mithril Bar', level: 52, xp: 160, dust: 44, clickTime: 1220 },
-        { name: 'Amethyst Bar', level: 62, xp: 225, dust: 62, clickTime: 1160 },
-        { name: 'Cobalt Bar', level: 72, xp: 310, dust: 86, clickTime: 1100 },
-        { name: 'Molten Bar', level: 80, xp: 420, dust: 116, clickTime: 1040 },
-        { name: 'Frost Bar', level: 88, xp: 560, dust: 156, clickTime: 980 },
-        { name: 'Obsidian Bar', level: 94, xp: 700, dust: 200, clickTime: 920 }
+        { name: 'Copper Bar', level: 1, xp: 10, clickTime: 1500 },
+        { name: 'Bronze Bar', level: 8, xp: 18, clickTime: 1460 },
+        { name: 'Gold Bar', level: 18, xp: 32, clickTime: 1420 },
+        { name: 'Astral Bar', level: 25, xp: 50, clickTime: 1380 },
+        { name: 'Silver Bar', level: 32, xp: 75, clickTime: 1340 },
+        { name: 'Emerald Bar', level: 42, xp: 110, clickTime: 1280 },
+        { name: 'Mithril Bar', level: 52, xp: 160, clickTime: 1220 },
+        { name: 'Amethyst Bar', level: 62, xp: 225, clickTime: 1160 },
+        { name: 'Cobalt Bar', level: 72, xp: 310, clickTime: 1100 },
+        { name: 'Molten Bar', level: 80, xp: 420, clickTime: 1040 },
+        { name: 'Frost Bar', level: 88, xp: 560, clickTime: 980 },
+        { name: 'Obsidian Bar', level: 94, xp: 700, clickTime: 920 }
       ]
     },
     combat: {
       name: 'Combat', icon: '\u2694',
       resources: [
-        { name: 'Training Dummy', level: 1, xp: 8, dust: 2, clickTime: 2000 },
-        { name: 'Slime', level: 10, xp: 18, dust: 5, clickTime: 1800 },
-        { name: 'Goblin', level: 25, xp: 40, dust: 10, clickTime: 1600 },
-        { name: 'Skeleton', level: 40, xp: 85, dust: 22, clickTime: 1400 },
-        { name: 'Demon', level: 55, xp: 170, dust: 45, clickTime: 1200 },
-        { name: 'Dragon', level: 70, xp: 350, dust: 100, clickTime: 1000 },
-        { name: 'Titan', level: 85, xp: 600, dust: 190, clickTime: 900 }
+        { name: 'Training Dummy', level: 1, xp: 8, clickTime: 2000 },
+        { name: 'Slime', level: 10, xp: 18, clickTime: 1800 },
+        { name: 'Goblin', level: 25, xp: 40, clickTime: 1600 },
+        { name: 'Skeleton', level: 40, xp: 85, clickTime: 1400 },
+        { name: 'Demon', level: 55, xp: 170, clickTime: 1200 },
+        { name: 'Dragon', level: 70, xp: 350, clickTime: 1000 },
+        { name: 'Titan', level: 85, xp: 600, clickTime: 900 }
       ]
     }
   };
@@ -578,37 +553,37 @@
   // ── Forging Recipes (Phase 6C) ─────────────────
   var FORGING_RECIPES = [
     // Copper Tier
-    { name: 'Copper Sword',        level: 1,  xp: 15,  dust: 4,   inputs: [{ item: 'Copper Bar', qty: 3 }],                                  sprite: { x: 0, y: 0 } },
-    { name: 'Copper Shield',       level: 1,  xp: 12,  dust: 3,   inputs: [{ item: 'Copper Bar', qty: 2 }],                                  sprite: { x: 0, y: 80 } },
+    { name: 'Copper Sword',        level: 1,  xp: 15,   inputs: [{ item: 'Copper Bar', qty: 3 }],                                  sprite: { x: 0, y: 0 } },
+    { name: 'Copper Shield',       level: 1,  xp: 12,   inputs: [{ item: 'Copper Bar', qty: 2 }],                                  sprite: { x: 0, y: 80 } },
     // Bronze Tier
-    { name: 'Bronze Dagger',       level: 8,  xp: 22,  dust: 6,   inputs: [{ item: 'Bronze Bar', qty: 2 }],                                  sprite: { x: 32, y: 0 } },
-    { name: 'Bronze Helmet',       level: 8,  xp: 25,  dust: 7,   inputs: [{ item: 'Bronze Bar', qty: 3 }],                                  sprite: { x: 128, y: 80 } },
+    { name: 'Bronze Dagger',       level: 8,  xp: 22,   inputs: [{ item: 'Bronze Bar', qty: 2 }],                                  sprite: { x: 32, y: 0 } },
+    { name: 'Bronze Helmet',       level: 8,  xp: 25,   inputs: [{ item: 'Bronze Bar', qty: 3 }],                                  sprite: { x: 128, y: 80 } },
     // Astral Tier
-    { name: 'Astral Sword',        level: 28, xp: 40,  dust: 10,  inputs: [{ item: 'Astral Bar', qty: 3 }],                                  sprite: { x: 288, y: 0 } },
-    { name: 'Astral Axe',          level: 28, xp: 45,  dust: 12,  inputs: [{ item: 'Astral Bar', qty: 4 }],                                  sprite: { x: 384, y: 0 } },
-    { name: 'Astral Chestplate',   level: 30, xp: 55,  dust: 14,  inputs: [{ item: 'Astral Bar', qty: 5 }],                                  sprite: { x: 0, y: 96 } },
+    { name: 'Astral Sword',        level: 28, xp: 40,  inputs: [{ item: 'Astral Bar', qty: 3 }],                                  sprite: { x: 288, y: 0 } },
+    { name: 'Astral Axe',          level: 28, xp: 45,  inputs: [{ item: 'Astral Bar', qty: 4 }],                                  sprite: { x: 384, y: 0 } },
+    { name: 'Astral Chestplate',   level: 30, xp: 55,  inputs: [{ item: 'Astral Bar', qty: 5 }],                                  sprite: { x: 0, y: 96 } },
     // Gold Tier
-    { name: 'Gold Sword',          level: 28, xp: 70,  dust: 18,  inputs: [{ item: 'Gold Bar', qty: 3 }, { item: 'Topaz', qty: 1 }],         sprite: { x: 64, y: 16 } },
-    { name: 'Gold Shield',         level: 28, xp: 65,  dust: 16,  inputs: [{ item: 'Gold Bar', qty: 3 }],                                    sprite: { x: 256, y: 80 } },
+    { name: 'Gold Sword',          level: 28, xp: 70,  inputs: [{ item: 'Gold Bar', qty: 3 }, { item: 'Topaz', qty: 1 }],         sprite: { x: 64, y: 16 } },
+    { name: 'Gold Shield',         level: 28, xp: 65,  inputs: [{ item: 'Gold Bar', qty: 3 }],                                    sprite: { x: 256, y: 80 } },
     // Silver Tier
-    { name: 'Silver Spear',        level: 38, xp: 110, dust: 28,  inputs: [{ item: 'Silver Bar', qty: 4 }, { item: 'Sapphire', qty: 1 }],    sprite: { x: 352, y: 80 } },
-    { name: 'Silver Chestplate',   level: 38, xp: 120, dust: 30,  inputs: [{ item: 'Silver Bar', qty: 5 }],                                  sprite: { x: 288, y: 96 } },
+    { name: 'Silver Spear',        level: 38, xp: 110,  inputs: [{ item: 'Silver Bar', qty: 4 }, { item: 'Sapphire', qty: 1 }],    sprite: { x: 352, y: 80 } },
+    { name: 'Silver Chestplate',   level: 38, xp: 120,  inputs: [{ item: 'Silver Bar', qty: 5 }],                                  sprite: { x: 288, y: 96 } },
     // Emerald Tier
-    { name: 'Emerald Staff',       level: 48, xp: 170, dust: 44,  inputs: [{ item: 'Emerald Bar', qty: 4 }, { item: 'Emerald', qty: 1 }],    sprite: { x: 0, y: 32 } },
-    { name: 'Emerald Chestplate',  level: 50, xp: 180, dust: 46,  inputs: [{ item: 'Emerald Bar', qty: 5 }],                                 sprite: { x: 416, y: 96 } },
-    { name: 'Emerald Crown',       level: 50, xp: 160, dust: 40,  inputs: [{ item: 'Emerald Bar', qty: 3 }, { item: 'Moonstone', qty: 1 }],  sprite: { x: 0, y: 128 } },
+    { name: 'Emerald Staff',       level: 48, xp: 170,  inputs: [{ item: 'Emerald Bar', qty: 4 }, { item: 'Emerald', qty: 1 }],    sprite: { x: 0, y: 32 } },
+    { name: 'Emerald Chestplate',  level: 50, xp: 180,  inputs: [{ item: 'Emerald Bar', qty: 5 }],                                 sprite: { x: 416, y: 96 } },
+    { name: 'Emerald Crown',       level: 50, xp: 160,  inputs: [{ item: 'Emerald Bar', qty: 3 }, { item: 'Moonstone', qty: 1 }],  sprite: { x: 0, y: 128 } },
     // Amethyst Tier
-    { name: 'Amethyst Dagger',     level: 62, xp: 260, dust: 66,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Ruby', qty: 1 }],      sprite: { x: 448, y: 0 } },
-    { name: 'Amethyst Bow',        level: 62, xp: 270, dust: 68,  inputs: [{ item: 'Amethyst Bar', qty: 5 }],                                sprite: { x: 0, y: 64 } },
-    { name: 'Amethyst Helmet',     level: 65, xp: 250, dust: 64,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Onyx', qty: 1 }],      sprite: { x: 416, y: 80 } },
+    { name: 'Amethyst Dagger',     level: 62, xp: 260,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Ruby', qty: 1 }],      sprite: { x: 448, y: 0 } },
+    { name: 'Amethyst Bow',        level: 62, xp: 270,  inputs: [{ item: 'Amethyst Bar', qty: 5 }],                                sprite: { x: 0, y: 64 } },
+    { name: 'Amethyst Helmet',     level: 65, xp: 250,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Onyx', qty: 1 }],      sprite: { x: 416, y: 80 } },
     // Cobalt Tier
-    { name: 'Cobalt Sword',        level: 78, xp: 430, dust: 110, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Aquamarine', qty: 1 }],  sprite: { x: 144, y: 0 } },
-    { name: 'Cobalt Chestplate',   level: 78, xp: 450, dust: 116, inputs: [{ item: 'Cobalt Bar', qty: 6 }],                                  sprite: { x: 80, y: 96 } },
-    { name: 'Cobalt Spear',        level: 80, xp: 460, dust: 118, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Diamond', qty: 1 }],     sprite: { x: 192, y: 80 } },
+    { name: 'Cobalt Sword',        level: 78, xp: 430, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Aquamarine', qty: 1 }],  sprite: { x: 144, y: 0 } },
+    { name: 'Cobalt Chestplate',   level: 78, xp: 450, inputs: [{ item: 'Cobalt Bar', qty: 6 }],                                  sprite: { x: 80, y: 96 } },
+    { name: 'Cobalt Spear',        level: 80, xp: 460, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Diamond', qty: 1 }],     sprite: { x: 192, y: 80 } },
     // Frost Tier
-    { name: 'Frost Sword',         level: 88, xp: 700, dust: 180, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Diamond', qty: 2 }],      sprite: { x: 272, y: 0 } },
-    { name: 'Frost Axe',           level: 88, xp: 720, dust: 184, inputs: [{ item: 'Frost Bar', qty: 6 }, { item: 'Opal', qty: 1 }],         sprite: { x: 560, y: 16 } },
-    { name: 'Frost Chestplate',    level: 90, xp: 800, dust: 200, inputs: [{ item: 'Frost Bar', qty: 7 }, { item: 'Ruby', qty: 2 }],         sprite: { x: 560, y: 96 } }
+    { name: 'Frost Sword',         level: 88, xp: 700, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Diamond', qty: 2 }],      sprite: { x: 272, y: 0 } },
+    { name: 'Frost Axe',           level: 88, xp: 720, inputs: [{ item: 'Frost Bar', qty: 6 }, { item: 'Opal', qty: 1 }],         sprite: { x: 560, y: 16 } },
+    { name: 'Frost Chestplate',    level: 90, xp: 800, inputs: [{ item: 'Frost Bar', qty: 7 }, { item: 'Ruby', qty: 2 }],         sprite: { x: 560, y: 96 } }
   ];
 
   // ── State ─────────────────────────────────────
@@ -638,12 +613,11 @@
 
   // ── Load / Save ───────────────────────────────
   function defaultState() {
-    var s = { skills: {}, version: STATE_VERSION, mastered: {}, activePlayTime: 0, totalDustEarned: 0, inventory: {} };
+    var s = { skills: {}, version: STATE_VERSION, mastered: {}, activePlayTime: 0, inventory: {} };
     for (var i = 0; i < SKILL_KEYS.length; i++) {
       var skillDef = {
         level: 1,
         xp: 0,
-        toolTier: 0,
         assignedPet: null,
         lastActiveAt: null,
         totalActions: 0
@@ -667,7 +641,6 @@
           // Migrate v1 → v2
           s.mastered = saved.mastered || {};
           s.activePlayTime = saved.activePlayTime || 0;
-          s.totalDustEarned = saved.totalDustEarned || 0;
           // v4/v5: inventory
           s.inventory = saved.inventory || {};
           // v5: Migrate renamed items (only for pre-v5 saves)
@@ -728,7 +701,6 @@
             if (saved.skills[key]) {
               s.skills[key].level = saved.skills[key].level || 1;
               s.skills[key].xp = saved.skills[key].xp || 0;
-              s.skills[key].toolTier = saved.skills[key].toolTier || 0;
               s.skills[key].assignedPet = saved.skills[key].assignedPet || null;
               s.skills[key].lastActiveAt = saved.skills[key].lastActiveAt || null;
               s.skills[key].totalActions = saved.skills[key].totalActions || 0;
@@ -1112,7 +1084,7 @@
       var banner = document.createElement('div');
       banner.className = 'star-shower-banner';
       banner.id = 'star-shower-banner';
-      banner.textContent = 'STAR SHOWER! 2x XP+SD (30s)';
+      banner.textContent = 'STAR SHOWER! 2x XP (30s)';
       area.appendChild(banner);
     }
 
@@ -1142,7 +1114,7 @@
     if (!state.mastered[skill]) {
       state.mastered[skill] = true;
       saveState();
-      addLog(SKILLS[skill].name + ' MASTERED! +5% global dust bonus.');
+      addLog(SKILLS[skill].name + ' MASTERED! +5% global XP bonus.');
     }
   }
 
@@ -1226,8 +1198,8 @@
     }
   }
 
-  // ── Combined dust multiplier ──────────────────
-  function getDustMult() {
+  // ── Combined XP multiplier ──────────────────
+  function getXpMult() {
     var mult = getStarShowerMult() * getMasteryBonus();
     if (activeSkill === 'mining') {
       if (hasPerk('prospector')) mult *= 1.25;
@@ -1282,14 +1254,8 @@
     return highest;
   }
 
-  // ── Tool helpers ──────────────────────────────
-  function getToolSpeedMult(skill) {
-    var tier = state.skills[skill].toolTier || 0;
-    return Math.pow(TOOL_SPEED_MULT, tier);
-  }
-
   function getToolCooldown(skill, baseCooldown) {
-    return Math.floor(baseCooldown * getToolSpeedMult(skill));
+    return baseCooldown;
   }
 
   // ── UI helpers ────────────────────────────────
@@ -1426,12 +1392,9 @@
   }
 
   // ── Common action hook ────────────────────────
-  function onAction(skill, dustAmount) {
+  function onAction(skill) {
     // Track total actions (B5)
     state.skills[skill].totalActions = (state.skills[skill].totalActions || 0) + 1;
-
-    // Track total dust earned (B5)
-    state.totalDustEarned = (state.totalDustEarned || 0) + dustAmount;
 
     // Track active play time (B3)
     trackActivePlay();
@@ -1530,46 +1493,12 @@
         var verb = skillVerbs[activeSkill] || 'Training';
         var tierMult = getTierMult(petId);
         var typeBonus2 = getTypeBonus(petId, activeSkill);
-        var idleDust = Math.floor(res.dust * tierMult * typeBonus2);
         var idleXp = Math.floor(res.xp * tierMult * typeBonus2);
-        activityEl.textContent = verb + ' ' + res.name + ' (' + idleXp + ' XP + ' + idleDust + ' SD/action)';
+        activityEl.textContent = verb + ' ' + res.name + ' (' + idleXp + ' XP/action)';
       }
     } else {
       if (emptyEl) emptyEl.style.display = '';
       if (assignedEl) assignedEl.style.display = 'none';
-    }
-
-    // Tool info
-    var toolNameEl = $('skills-tool-name');
-    var toolTierEl = $('skills-tool-tier');
-    var toolBtn = $('skills-upgrade-tool-btn');
-    var toolHint = $('skills-tool-hint');
-    var tier = s.toolTier || 0;
-    if (toolNameEl) toolNameEl.textContent = TOOL_NAMES[activeSkill][tier];
-    if (toolTierEl) toolTierEl.textContent = 'Tier ' + (tier + 1) + '/5';
-    if (toolBtn) {
-      if (tier >= 5) {
-        toolBtn.textContent = 'Max Tier';
-        toolBtn.disabled = true;
-      } else {
-        var cost = TOOL_COSTS[tier];
-        toolBtn.textContent = 'Upgrade (' + formatNum(cost) + ' SD)';
-        toolBtn.disabled = !window.StarDust || !window.StarDust.canAfford(cost) || s.level < TOOL_LEVEL_REQS[tier];
-      }
-    }
-    // Tool upgrade hint
-    if (toolHint) {
-      if (tier >= 5) {
-        toolHint.textContent = 'Max tier reached — 15% speed per tier stacked!';
-      } else {
-        var nextName = TOOL_NAMES[activeSkill][tier + 1] || '';
-        var totalSpeedBonus = Math.round((1 - Math.pow(TOOL_SPEED_MULT, tier + 1)) * 100);
-        var hintText = 'Next: <span class="tool-next-name">' + nextName + '</span> — ' + totalSpeedBonus + '% faster';
-        if (s.level < TOOL_LEVEL_REQS[tier]) {
-          hintText += '<br>Requires Lv ' + TOOL_LEVEL_REQS[tier];
-        }
-        toolHint.innerHTML = hintText;
-      }
     }
 
     // Idle status
@@ -1586,15 +1515,6 @@
         }
       }
     }
-
-    // Dust display
-    var dustEl = $('skills-dust-display');
-    if (dustEl && window.StarDust) {
-      dustEl.textContent = window.StarDust.formatDust(window.StarDust.getBalance());
-    }
-
-    // Phase 3: Tool sprite preview
-    updateToolSprite();
 
     // Mining perks panel
     renderMiningPerks();
@@ -1613,13 +1533,11 @@
   // ── B5: Milestones Rendering ──────────────────
   function renderMilestones() {
     var actionsEl = $('ms-total-actions');
-    var dustEl = $('ms-total-dust');
     var highestEl = $('ms-highest-level');
     var masteredEl = $('ms-mastered-count');
 
     var s = state.skills[activeSkill];
     if (actionsEl) actionsEl.textContent = formatNum(s.totalActions || 0);
-    if (dustEl) dustEl.textContent = formatNum(state.totalDustEarned || 0);
     if (highestEl) highestEl.textContent = getHighestLevel();
     if (masteredEl) masteredEl.textContent = getMasteredCount();
   }
@@ -1814,22 +1732,6 @@
     }
   }
 
-  // ── Phase 3: Update tool sprite in right panel ──
-  function updateToolSprite() {
-    var container = $('skills-tool-sprite');
-    if (!container) return;
-    container.innerHTML = '';
-    var tier = state.skills[activeSkill].toolTier || 0;
-    var toolMap = TOOL_SPRITES[activeSkill];
-    if (!toolMap || !toolMap[tier]) return;
-    var info = toolMap[tier];
-    var sprite = createSpriteEl(info.sheet, info.x, info.y, 16, 16, 48, 48);
-    if (sprite) {
-      sprite.className = 'skill-sprite';
-      container.appendChild(sprite);
-    }
-  }
-
   // ── Game header update (D1) ───────────────────
   function updateGameHeader() {
     var titleEl = $('skills-game-title');
@@ -2017,18 +1919,15 @@
       rock.classList.remove('shaking', 'hit', 'cracking');
 
       var area = $('skills-game-area');
-      var dustMult = getDustMult() * comboMult;
+      var xpMult = getXpMult() * comboMult;
 
       if (rs.hp > 0) {
-        // Partial hit — award fraction of XP/dust, keep combo, don't deplete
-        var partialXp = Math.max(1, Math.floor(res.xp * getStarShowerMult() / rs.maxHp));
-        var partialDust = Math.max(1, Math.floor(res.dust * dustMult / rs.maxHp));
+        // Partial hit — award fraction of XP, keep combo, don't deplete
+        var partialXp = Math.max(1, Math.floor(res.xp * xpMult / rs.maxHp));
         if (area) {
           spawnParticle(area, '+' + partialXp + ' XP', 'xp');
-          setTimeout(function () { spawnParticle(area, '+' + partialDust + ' SD', 'dust'); }, 150);
         }
         addXp('mining', partialXp);
-        if (window.StarDust) window.StarDust.add(partialDust);
         animatePetAction('pet-bounce');
         miningCooldown = false;
         renderSkillList();
@@ -2038,15 +1937,13 @@
 
       // Rock depleted — full rewards
       log.oresMined[res.name] = (log.oresMined[res.name] || 0) + 1;
-      var xpGain = Math.floor(res.xp * getStarShowerMult());
-      var dustGain = Math.floor(res.dust * dustMult);
+      var xpGain = Math.floor(res.xp * xpMult);
 
       // Perk: Double Strike — 10% chance for 2x yield
       var isDouble = hasPerk('doubleStrike') && Math.random() < 0.10;
       if (isDouble) {
         xpGain *= 2;
-        dustGain *= 2;
-        if (area) spawnParticle(area, '2x!', 'dust');
+        if (area) spawnParticle(area, '2x!', 'xp');
       }
 
       // Perk: Keen Eye — gem chance 5%→10%
@@ -2059,13 +1956,13 @@
         addItem(GEM_NAMES[gemIdx], 1);
         addLog('+1 ' + GEM_NAMES[gemIdx]);
         var gemMult = hasPerk('gemSpec') ? 10 : 5;
-        dustGain *= gemMult;
+        xpGain *= gemMult;
         if (area) {
           var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
           spawnSpriteParticle(area, gem.sheet || 'gems', gem.x, gem.y);
-          spawnParticle(area, 'GEM! +' + dustGain + ' SD', 'gem');
+          spawnParticle(area, 'GEM! ' + gemMult + 'x XP!', 'gem');
         }
-        addLog('Found a gem! ' + gemMult + 'x dust bonus!');
+        addLog('Found a gem! ' + gemMult + 'x XP bonus!');
       }
 
       if (area) {
@@ -2073,22 +1970,18 @@
         if (!isGem) {
           var orePos = ORE_DROP_SPRITES[res.name];
           if (orePos) spawnSpriteParticle(area, orePos.sheet || 'ores', orePos.x, orePos.y);
-          setTimeout(function () {
-            spawnParticle(area, '+' + dustGain + ' SD', 'dust');
-          }, 200);
         }
       }
 
       addXp('mining', xpGain);
-      if (window.StarDust) window.StarDust.add(dustGain);
-      addLog('Mined ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)');
+      addLog('Mined ' + res.name + ' (+' + xpGain + ' XP)');
 
       // 6B: Add ore to inventory
       var oreQty = isDouble ? 2 : 1;
       addItem(res.name, oreQty);
       addLog('+' + oreQty + ' ' + res.name);
 
-      onAction('mining', dustGain);
+      onAction('mining');
       animatePetAction('pet-bounce');
 
       // Deplete + respawn
@@ -2231,12 +2124,11 @@
       getMiningLog().totalGems += 3;
       var area = $('skills-game-area');
       var res = getSelectedMiningResource();
-      var dustMult = getDustMult();
+      var xpMult = getXpMult();
+      var gemMult = hasPerk('gemSpec') ? 10 : 5;
+      var totalXp = Math.floor(res.xp * xpMult * gemMult * 3);
       // 3 guaranteed gems
       for (var i = 0; i < 3; i++) {
-        var gemMult = hasPerk('gemSpec') ? 10 : 5;
-        var dustGain = Math.floor(res.dust * dustMult * gemMult);
-        if (window.StarDust) window.StarDust.add(dustGain);
         // 6B: Add random gem to inventory
         var gemIdx = Math.floor(Math.random() * GEM_NAMES.length);
         addItem(GEM_NAMES[gemIdx], 1);
@@ -2245,10 +2137,11 @@
           spawnSpriteParticle(area, gem.sheet || 'gems', gem.x, gem.y);
         }
       }
-      var totalDust = Math.floor(res.dust * dustMult * (hasPerk('gemSpec') ? 10 : 5) * 3);
-      addLog('Gem Vein! Found 3 gems! (+' + totalDust + ' SD)');
-      if (area) spawnParticle(area, '3 GEMS! +' + totalDust + ' SD', 'gem');
+      addXp('mining', totalXp);
+      addLog('Gem Vein! Found 3 gems! (+' + totalXp + ' XP)');
+      if (area) spawnParticle(area, '3 GEMS! +' + totalXp + ' XP', 'gem');
       cleanupEvent();
+      renderSkillList();
       renderRightPanel();
     });
 
@@ -2327,13 +2220,14 @@
           if (clicked >= total) {
             getMiningLog().events.caveIn++;
             var res = getSelectedMiningResource();
-            var dustGain = Math.floor(res.dust * getDustMult() * 5);
-            if (window.StarDust) window.StarDust.add(dustGain);
+            var xpGain = Math.floor(res.xp * getXpMult() * 5);
+            addXp('mining', xpGain);
             // 6B: Add ore to inventory
             addItem(res.name, 1);
-            addLog('Cave-In survived! 5x dust bonus! (+' + dustGain + ' SD)');
-            if (area) spawnParticle(area, '5x! +' + dustGain + ' SD', 'dust');
+            addLog('Cave-In survived! 5x XP bonus! (+' + xpGain + ' XP)');
+            if (area) spawnParticle(area, '5x! +' + xpGain + ' XP', 'xp');
             cleanupEvent();
+            renderSkillList();
             renderRightPanel();
           }
         };
@@ -2528,12 +2422,9 @@
     var isRare = Math.random() < 0.08;
     var rareMult = isRare ? 5 : 1;
 
-    var dustMult = getDustMult() * sizeMult * goldenMult * rareMult;
-    var xpGain = Math.floor(res.xp * getStarShowerMult() * sizeMult * goldenMult);
-    var dustGain = Math.floor(res.dust * dustMult);
+    var xpGain = Math.floor(res.xp * getXpMult() * sizeMult * goldenMult * rareMult);
 
     addXp('fishing', xpGain);
-    if (window.StarDust) window.StarDust.add(dustGain);
 
     // 6B: Add fish to inventory
     addItem(res.name, 1);
@@ -2542,7 +2433,7 @@
     var catchText = 'Caught ' + sizeName + ' ' + res.name + '!';
     if (isGolden) catchText = 'GOLDEN catch! ' + catchText;
     if (isRare) catchText = 'RARE! ' + catchText;
-    addLog(catchText + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)');
+    addLog(catchText + ' (+' + xpGain + ' XP)');
 
     if (status) {
       status.textContent = catchText;
@@ -2558,11 +2449,10 @@
       var fishPos = FISH_SPRITES[res.name];
       if (fishPos) spawnSpriteParticle(gameArea, fishPos.sheet || 'fish', fishPos.x, fishPos.y);
       spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
-      setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
     }
 
     // Common action hook
-    onAction('fishing', dustGain);
+    onAction('fishing');
 
     // C1: Pet wiggle
     animatePetAction('pet-wiggle');
@@ -2672,27 +2562,25 @@
       tree.classList.remove('chopping');
       tree.classList.add('falling');
       var res = getHighestResource('woodcutting');
-      var xpGain = Math.floor(res.xp * getStarShowerMult());
-      var dustGain = Math.floor(res.dust * getDustMult());
+      var xpGain = Math.floor(res.xp * getXpMult());
 
       // A3: 10% bird nest drop
       var isNest = Math.random() < 0.1;
       if (isNest) {
-        dustGain *= 10;
-        addLog('Found a bird nest! 10x dust bonus!');
+        xpGain *= 10;
+        addLog('Found a bird nest! 10x XP bonus!');
         var gameArea = $('skills-game-area');
         if (gameArea) spawnParticle(gameArea, '\uD83E\uDD5A Nest!', 'nest');
       }
 
       addXp('woodcutting', xpGain);
-      if (window.StarDust) window.StarDust.add(dustGain);
 
       // 6B: Add log to inventory
       var logName = LOG_NAMES[res.name] || (res.name + ' Log');
       addItem(logName, 1);
       addLog('+1 ' + logName);
 
-      addLog('Chopped ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)');
+      addLog('Chopped ' + res.name + ' (+' + xpGain + ' XP)');
 
       var gameArea2 = $('skills-game-area');
       if (gameArea2) {
@@ -2700,13 +2588,10 @@
         var woodDrop = WOOD_DROP_SPRITES[Math.floor(Math.random() * WOOD_DROP_SPRITES.length)];
         spawnSpriteParticle(gameArea2, woodDrop.sheet || 'wood', woodDrop.x, woodDrop.y);
         spawnParticle(gameArea2, '+' + xpGain + ' XP', 'xp');
-        if (!isNest) {
-          setTimeout(function () { spawnParticle(gameArea2, '+' + dustGain + ' SD', 'dust'); }, 200);
-        }
       }
 
       // Common action hook
-      onAction('woodcutting', dustGain);
+      onAction('woodcutting');
 
       // C1: Pet cheer
       animatePetAction('pet-cheer');
@@ -2981,15 +2866,13 @@
     updateSmeltMats();
 
     var bonusMult = isPerfect ? 5 : 1;
-    var xpGain = Math.floor(res.xp * bonusMult * getStarShowerMult());
-    var dustGain = Math.floor(res.dust * bonusMult * getDustMult());
+    var xpGain = Math.floor(res.xp * bonusMult * getXpMult());
 
     addXp('smithing', xpGain);
-    if (window.StarDust) window.StarDust.add(dustGain);
 
     var logText = isPerfect
-      ? 'PERFECT SMELT! ' + barName + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)'
-      : 'Smelted ' + barName + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)';
+      ? 'PERFECT SMELT! ' + barName + ' (+' + xpGain + ' XP)'
+      : 'Smelted ' + barName + ' (+' + xpGain + ' XP)';
     addLog(logText);
 
     var gameArea = $('skills-game-area');
@@ -2997,7 +2880,6 @@
       var barPos = BAR_DROP_SPRITES[barName];
       if (barPos) spawnSpriteParticle(gameArea, barPos.sheet || 'ores', barPos.x, barPos.y);
       spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
-      setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
     }
 
     if (isPerfect && gameArea) {
@@ -3012,9 +2894,9 @@
     }
 
     if (progress) progress.textContent = isPerfect ? 'Perfect temperature! ' + barName + ' smelted!' : barName + ' smelted!';
-    if (status) status.textContent = '+' + xpGain + ' XP, +' + dustGain + ' SD';
+    if (status) status.textContent = '+' + xpGain + ' XP';
 
-    onAction('smithing', dustGain);
+    onAction('smithing');
     animatePetAction('pet-bounce');
 
     // Furnace glow
@@ -3258,15 +3140,13 @@
       // Masterwork check (5/5 perfect)
       var isMasterwork = smithingState.bonusHits >= 5;
       var bonusMult = isMasterwork ? 5 : (1 + (smithingState.bonusHits * 0.25));
-      var xpGain = Math.floor(recipe.xp * bonusMult * getStarShowerMult());
-      var dustGain = Math.floor(recipe.dust * bonusMult * getDustMult());
+      var xpGain = Math.floor(recipe.xp * bonusMult * getXpMult());
 
       addXp('smithing', xpGain);
-      if (window.StarDust) window.StarDust.add(dustGain);
 
       var logText = isMasterwork
-        ? 'MASTERWORK! Forged ' + recipe.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD) [5/5 perfect]'
-        : 'Forged ' + recipe.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD) [' + smithingState.bonusHits + '/5 perfect]';
+        ? 'MASTERWORK! Forged ' + recipe.name + ' (+' + xpGain + ' XP) [5/5 perfect]'
+        : 'Forged ' + recipe.name + ' (+' + xpGain + ' XP) [' + smithingState.bonusHits + '/5 perfect]';
       addLog(logText);
 
       var gameArea = $('skills-game-area');
@@ -3276,7 +3156,6 @@
           spawnSpriteParticle(gameArea, 'items_sheet', recipe.sprite.x, recipe.sprite.y);
         }
         spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
-        setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
       }
 
       // Masterwork flash
@@ -3294,7 +3173,7 @@
       var status = $('forge-status');
       if (status) status.textContent = isMasterwork ? 'MASTERWORK! 5/5 perfect!' : smithingState.bonusHits + '/5 perfect hits!';
 
-      onAction('smithing', dustGain);
+      onAction('smithing');
       animatePetAction('pet-bounce');
 
       var cooldown = getToolCooldown('smithing', 1000);
@@ -3596,21 +3475,18 @@
       combatState.streak++;
       var res = getHighestResource('combat');
       var streakBonus = 1 + Math.min(combatState.streak * 0.05, 0.5);
-      var xpGain = Math.floor(res.xp * streakBonus * getStarShowerMult());
-      var dustGain = Math.floor(res.dust * streakBonus * getDustMult());
+      var xpGain = Math.floor(res.xp * streakBonus * getXpMult());
 
       addXp('combat', xpGain);
-      if (window.StarDust) window.StarDust.add(dustGain);
-      addLog('Defeated ' + res.name + '! (+' + xpGain + ' XP, +' + dustGain + ' SD) [streak: ' + combatState.streak + ']');
+      addLog('Defeated ' + res.name + '! (+' + xpGain + ' XP) [streak: ' + combatState.streak + ']');
 
       var gameArea = $('skills-game-area');
       if (gameArea) {
         spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
-        setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
       }
 
       // Common action hook
-      onAction('combat', dustGain);
+      onAction('combat');
 
       // C1: Pet bounce
       animatePetAction('pet-bounce');
@@ -3786,30 +3662,12 @@
   }
 
   // ══════════════════════════════════════════════
-  // ── TOOL UPGRADES ─────────────────────────────
-  // ══════════════════════════════════════════════
-  function upgradeTool() {
-    var s = state.skills[activeSkill];
-    var tier = s.toolTier || 0;
-    if (tier >= 5) return;
-    var cost = TOOL_COSTS[tier];
-    if (!window.StarDust || !window.StarDust.canAfford(cost)) return;
-    if (s.level < TOOL_LEVEL_REQS[tier]) return;
-    window.StarDust.deduct(cost);
-    s.toolTier = tier + 1;
-    saveState();
-    renderRightPanel();
-    addLog('Upgraded to ' + TOOL_NAMES[activeSkill][s.toolTier] + '!');
-  }
-
-  // ══════════════════════════════════════════════
   // ── IDLE / OFFLINE PROGRESS ───────────────────
   // ══════════════════════════════════════════════
   function calculateIdleRewards() {
     var now = Date.now();
     var rewards = [];
     var totalXp = 0;
-    var totalDust = 0;
 
     for (var i = 0; i < SKILL_KEYS.length; i++) {
       var key = SKILL_KEYS[i];
@@ -3828,22 +3686,16 @@
       var typeBonus = getTypeBonus(s.assignedPet, key);
 
       var xpPerAction = Math.floor(res.xp * tierMult * typeBonus);
-      var dustPerAction = Math.floor(res.dust * tierMult * typeBonus);
-
       var xpTotal = actions * xpPerAction;
-      var dustTotal = actions * dustPerAction;
 
       addXp(key, xpTotal);
-      if (window.StarDust) window.StarDust.add(dustTotal);
 
       totalXp += xpTotal;
-      totalDust += dustTotal;
 
       rewards.push({
         skill: key,
         petId: s.assignedPet,
         xp: xpTotal,
-        dust: dustTotal,
         actions: actions
       });
 
@@ -3898,7 +3750,7 @@
     }
 
     saveState();
-    return { rewards: rewards, totalXp: totalXp, totalDust: totalDust };
+    return { rewards: rewards, totalXp: totalXp };
   }
 
   function showIdleReport(result) {
@@ -3934,7 +3786,7 @@
       var text = document.createElement('span');
       var matText = r.materials ? ' + ' + r.materials.qty + ' ' + r.materials.name : '';
       if (r.smelted) matText += ' + Smelted: ' + r.smelted;
-      text.textContent = petName + ' earned ' + formatNum(r.xp) + ' ' + SKILLS[r.skill].name + ' XP + ' + formatNum(r.dust) + ' SD' + matText;
+      text.textContent = petName + ' earned ' + formatNum(r.xp) + ' ' + SKILLS[r.skill].name + ' XP' + matText;
       line.appendChild(text);
 
       content.appendChild(line);
@@ -3942,7 +3794,7 @@
 
     var totalLine = document.createElement('div');
     totalLine.className = 'idle-total';
-    totalLine.textContent = 'Total: ' + formatNum(result.totalXp) + ' XP, ' + formatNum(result.totalDust) + ' Star Dust';
+    totalLine.textContent = 'Total: ' + formatNum(result.totalXp) + ' XP';
     content.appendChild(totalLine);
 
     $('skills-idle-report').style.display = '';
@@ -3962,13 +3814,11 @@
         var typeBonus = getTypeBonus(s.assignedPet, key);
 
         var xp = Math.floor(res.xp * tierMult * typeBonus * 0.5);
-        var dust = Math.floor(res.dust * tierMult * typeBonus * 0.5);
 
         if (xp > 0) addXp(key, xp);
-        if (dust > 0 && window.StarDust) window.StarDust.add(dust);
 
-        if (key === activeSkill && (xp > 0 || dust > 0)) {
-          spawnAutoFloat('+' + xp + ' XP +' + dust + ' SD');
+        if (key === activeSkill && xp > 0) {
+          spawnAutoFloat('+' + xp + ' XP');
         }
 
         // 6B: Active auto-train materials for gathering skills
@@ -4102,9 +3952,6 @@
       if (pickerClose) pickerClose.addEventListener('click', function () {
         $('skills-pet-picker').style.display = 'none';
       });
-
-      var toolBtn = $('skills-upgrade-tool-btn');
-      if (toolBtn) toolBtn.addEventListener('click', upgradeTool);
 
       var invToggle = $('skills-inv-toggle');
       if (invToggle) invToggle.addEventListener('click', toggleInventoryPanel);

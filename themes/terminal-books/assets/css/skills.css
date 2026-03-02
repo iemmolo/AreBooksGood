@@ -19,10 +19,6 @@
   font-size: 0.9rem;
 }
 
-.skills-dust-icon {
-  color: #ffd700;
-  margin-right: 0.25rem;
-}
 
 .skills-topbar-left {
   color: #ffd700;
@@ -297,10 +293,6 @@
 
 .ore-particle.xp {
   color: #4fc3f7;
-}
-
-.ore-particle.dust {
-  color: #ffd700;
 }
 
 @keyframes oreFloat {
@@ -713,54 +705,6 @@
   color: color-mix(in srgb, var(--foreground) 50%, transparent);
   margin: 0.2rem 0 0.4rem;
   font-style: italic;
-}
-
-/* Tool slot */
-.skills-tool-slot {
-  margin-bottom: 0.75rem;
-  padding: 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
-}
-
-.skills-tool-info {
-  display: flex;
-  justify-content: space-between;
-  font-family: monospace;
-  font-size: 0.7rem;
-  color: color-mix(in srgb, var(--foreground) 60%, transparent);
-  margin-bottom: 0.3rem;
-}
-
-.skills-tool-hint {
-  font-family: monospace;
-  font-size: 0.6rem;
-  color: color-mix(in srgb, var(--foreground) 45%, transparent);
-  margin: 0.2rem 0;
-  line-height: 1.4;
-}
-
-.skills-tool-hint .tool-next-name {
-  color: var(--accent);
-}
-
-.skills-upgrade-tool-btn {
-  font-family: monospace;
-  font-size: 0.7rem;
-  padding: 0.3rem 0.5rem;
-  border: 1px solid #ffd700;
-  background: color-mix(in srgb, #ffd700 10%, transparent);
-  color: var(--foreground);
-  cursor: pointer;
-  width: 100%;
-}
-
-.skills-upgrade-tool-btn:hover {
-  background: color-mix(in srgb, #ffd700 25%, transparent);
-}
-
-.skills-upgrade-tool-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* ── Mining Perks Panel ──────────────────────── */
@@ -2050,13 +1994,6 @@
   font-size: 0;
 }
 
-/* Tool sprite preview in right panel */
-.skills-tool-sprite-preview {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 0.4rem;
-  min-height: 48px;
-}
 
 /* ── Mobile Layout ────────────────────────────── */
 @media (max-width: 768px) {

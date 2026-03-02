@@ -65,8 +65,6 @@
   <script src="{{ $pet.RelPermalink }}"></script>
   {{- $jb := resources.Get "js/jackbucks.js" | minify | fingerprint -}}
   <script src="{{ $jb.RelPermalink }}"></script>
-  {{- $sd := resources.Get "js/stardust.js" | minify | fingerprint -}}
-  <script src="{{ $sd.RelPermalink }}"></script>
   {{- $farm := resources.Get "js/farm.js" | minify | fingerprint -}}
   <script src="{{ $farm.RelPermalink }}"></script>
   {{- $farmRes := resources.Get "js/farm-resources.js" | minify | fingerprint -}}
