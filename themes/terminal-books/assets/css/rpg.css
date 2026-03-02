@@ -33,10 +33,15 @@
 }
 
 /* ── Page Container ──────────────────────────── */
+/* Widen site container for RPG 3-panel layout */
+.site-container:has(.rpg-page) {
+  max-width: 1100px;
+}
+
 .rpg-page {
-  max-width: 960px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0;
 }
 
 /* ── Screens ─────────────────────────────────── */
@@ -290,18 +295,18 @@
 
 /* ── World Map Container (in center panel) ───── */
 .rpg-world-map-container {
-  padding: 16px 8px;
+  padding: 12px 4px;
 }
 
 .rpg-locations-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 8px;
 }
 
 .rpg-location-tile {
   border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
-  padding: 20px 16px;
+  padding: 12px 8px;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, transform 0.1s;
@@ -314,20 +319,20 @@
 }
 
 .rpg-location-icon {
-  font-size: 2em;
-  margin-bottom: 8px;
-}
-
-.rpg-location-name {
-  font-size: 1em;
-  color: var(--accent);
+  font-size: 1.6em;
   margin-bottom: 4px;
 }
 
+.rpg-location-name {
+  font-size: 0.9em;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
 .rpg-location-desc {
-  font-size: 0.8em;
+  font-size: 0.75em;
   color: color-mix(in srgb, var(--foreground) 50%, transparent);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .rpg-location-level {
@@ -357,7 +362,14 @@
 }
 
 /* ── Responsive ──────────────────────────────── */
+
+/* Mobile: panels stack vertically via skills.css; adjust RPG-specific elements */
 @media (max-width: 768px) {
+  .site-container:has(.rpg-page) {
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
   .rpg-title { font-size: 1.6em; }
   .rpg-title-block { padding: 40px 0 24px; }
 
@@ -365,8 +377,21 @@
     grid-template-columns: 1fr;
   }
 
+  /* World map: 3 columns in stacked mode since center panel is full-width */
   .rpg-locations-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .rpg-game-topbar {
+    padding: 8px 4px;
+    gap: 8px;
+  }
+
+  .rpg-game-topbar-name { font-size: 1em; }
+
+  /* World Map button: show as compact bar when panels stack */
+  .rpg-map-nav-btn {
+    margin-bottom: 4px;
   }
 
   .rpg-sub-nav-links {
@@ -377,10 +402,8 @@
 }
 
 @media (max-width: 480px) {
-  .rpg-page { padding: 0 8px; }
-
   .rpg-locations-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .rpg-menu-buttons .rpg-btn { width: 100%; }
@@ -393,4 +416,24 @@
     width: 100%;
     text-align: center;
   }
+
+  .rpg-location-tile { padding: 10px 6px; }
+  .rpg-location-icon { font-size: 1.3em; }
+  .rpg-location-name { font-size: 0.85em; }
+  .rpg-location-desc { display: none; }
+}
+
+/* Landscape phones: keep 3-panel layout if width allows */
+@media (max-width: 900px) and (orientation: landscape) {
+  .site-container:has(.rpg-page) {
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .rpg-game-topbar { padding: 4px 4px; }
+  .rpg-world-map-container { padding: 4px 2px; }
+  .rpg-locations-grid { gap: 6px; }
+  .rpg-location-tile { padding: 8px 4px; }
+  .rpg-location-icon { font-size: 1.2em; margin-bottom: 2px; }
+  .rpg-location-desc { display: none; }
 }
