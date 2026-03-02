@@ -712,6 +712,69 @@
   cursor: not-allowed;
 }
 
+/* ── Mining Perks Panel ──────────────────────── */
+.skills-perks-panel {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+}
+
+.perk-row {
+  display: flex;
+  flex-direction: column;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  margin-bottom: 0.2rem;
+  font-family: monospace;
+  font-size: 0.6rem;
+  transition: border-color 0.2s, opacity 0.2s;
+}
+
+.perk-row .perk-name {
+  font-weight: bold;
+  font-size: 0.65rem;
+  color: var(--foreground);
+}
+
+.perk-row .perk-desc {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin-top: 0.1rem;
+}
+
+.perk-row.perk-unlocked {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.perk-row.perk-unlocked .perk-name {
+  color: var(--accent);
+}
+
+.perk-row.perk-locked {
+  opacity: 0.4;
+}
+
+.perk-row .perk-req {
+  color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  font-size: 0.55rem;
+}
+
+.skills-perk-toast {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, #ffd700 15%, var(--background));
+  border: 1px solid #ffd700;
+  padding: 0.4rem 0.75rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #ffd700;
+  z-index: 15;
+  animation: toastSlide 0.3s ease-out;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+}
+
 /* Idle status */
 .skills-idle-status {
   padding: 0.3rem;

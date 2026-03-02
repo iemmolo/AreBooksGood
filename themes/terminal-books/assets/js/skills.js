@@ -21,6 +21,18 @@
     combat: ['Basic Sword', 'Iron Sword', 'Steel Sword', 'Mithril Sword', 'Dragon Sword']
   };
 
+  // ── Mining Perks (level-gated passives) ────────
+  var MINING_PERKS = [
+    { id: 'keenEye', name: 'Keen Eye', level: 10, desc: 'Gem chance 5% \u2192 10%' },
+    { id: 'doubleStrike', name: 'Double Strike', level: 20, desc: '10% chance for 2x ore yield' },
+    { id: 'prospector', name: "Prospector's Luck", level: 30, desc: '+25% dust from mining' },
+    { id: 'oreSense', name: 'Ore Sense', level: 45, desc: 'Rock respawn 3s \u2192 2s' },
+    { id: 'gemSpec', name: 'Gem Specialist', level: 60, desc: 'Gem bonus 5x \u2192 10x dust' },
+    { id: 'veinMiner', name: 'Vein Miner', level: 75, desc: '20% chance to auto-mine adjacent rock' },
+    { id: 'deepCore', name: 'Deep Core', level: 85, desc: 'Enables rare deep vein events (5x XP)' },
+    { id: 'mastery', name: 'Mining Mastery', level: 99, desc: 'Permanent 2x SD from all mining' }
+  ];
+
   // ── Resource tier colors (D1) ─────────────────
   var TIER_COLORS = ['#888', '#ccc', '#4caf50', '#2196f3', '#9c27b0', '#ffd700'];
 
@@ -534,6 +546,15 @@
       addLog('Pet: "' + line + '"');
     }
 
+    // Mining perk unlock check
+    if (skill === 'mining') {
+      for (var pi = 0; pi < MINING_PERKS.length; pi++) {
+        if (MINING_PERKS[pi].level > oldLevel && MINING_PERKS[pi].level <= newLevel) {
+          showPerkUnlockToast(MINING_PERKS[pi]);
+        }
+      }
+    }
+
     // B4: Mastery check
     if (newLevel >= MAX_LEVEL) {
       checkMastery(skill);
@@ -612,6 +633,19 @@
     }
   }
 
+  // ── Perk Unlock Toast ──────────────────────────
+  function showPerkUnlockToast(perk) {
+    var area = $('skills-game-area');
+    if (area) {
+      var toast = document.createElement('div');
+      toast.className = 'skills-perk-toast';
+      toast.textContent = 'PERK UNLOCKED: ' + perk.name + ' — ' + perk.desc;
+      area.appendChild(toast);
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
+    }
+    addLog('Perk unlocked: ' + perk.name + '!');
+  }
+
   // ── B3: Star Shower ───────────────────────────
   function trackActivePlay() {
     if (!state) return;
@@ -688,9 +722,66 @@
     return count;
   }
 
+  // ── Mining Perk helpers ──────────────────────
+  function hasPerk(perkId) {
+    var level = state.skills.mining.level;
+    for (var i = 0; i < MINING_PERKS.length; i++) {
+      if (MINING_PERKS[i].id === perkId) return level >= MINING_PERKS[i].level;
+    }
+    return false;
+  }
+
+  function renderMiningPerks() {
+    var panel = $('skills-perks-panel');
+    var title = $('skills-perks-title');
+    if (!panel || !title) return;
+
+    if (activeSkill !== 'mining') {
+      panel.style.display = 'none';
+      title.style.display = 'none';
+      return;
+    }
+
+    panel.style.display = '';
+    title.style.display = '';
+    panel.innerHTML = '';
+
+    var level = state.skills.mining.level;
+    for (var i = 0; i < MINING_PERKS.length; i++) {
+      var perk = MINING_PERKS[i];
+      var unlocked = level >= perk.level;
+      var row = document.createElement('div');
+      row.className = 'perk-row ' + (unlocked ? 'perk-unlocked' : 'perk-locked');
+
+      var name = document.createElement('div');
+      name.className = 'perk-name';
+      name.textContent = (unlocked ? '\u2713 ' : '') + perk.name;
+      row.appendChild(name);
+
+      var desc = document.createElement('div');
+      desc.className = 'perk-desc';
+      desc.textContent = perk.desc;
+      row.appendChild(desc);
+
+      if (!unlocked) {
+        var req = document.createElement('div');
+        req.className = 'perk-req';
+        req.textContent = 'Requires Lv ' + perk.level;
+        row.appendChild(req);
+      }
+
+      panel.appendChild(row);
+    }
+  }
+
   // ── Combined dust multiplier ──────────────────
   function getDustMult() {
-    return getStarShowerMult() * getMasteryBonus();
+    var mult = getStarShowerMult() * getMasteryBonus();
+    if (activeSkill === 'mining') {
+      if (hasPerk('prospector')) mult *= 1.25;
+      if (hasPerk('mastery')) mult *= 2;
+    }
+    return mult;
   }
 
   function getHighestResource(skill) {
@@ -1045,6 +1136,9 @@
     // Phase 3: Tool sprite preview
     updateToolSprite();
 
+    // Mining perks panel
+    renderMiningPerks();
+
     // B5: Milestones panel
     renderMilestones();
   }
@@ -1169,16 +1263,20 @@
     renderPetInGameArea();
   }
 
+  var veinMinerTriggered = false;
+  var miningEventActive = false;
+  var miningEventTimer = null;
+
   function onMineClick(e) {
     if (miningCooldown) return;
+    if (miningEventActive) return;
     var rock = e.currentTarget;
     if (rock.classList.contains('depleted')) return;
 
     var res = getHighestResource('mining');
-    var cooldown = getToolCooldown('mining', res.clickTime);
     var now = Date.now();
 
-    // A1: Combo tracking
+    // A1: Combo tracking (freeze during events)
     var timeSinceLast = now - miningCombo.lastClickTime;
     if (timeSinceLast >= 500 && timeSinceLast <= 700) {
       miningCombo.count = Math.min(miningCombo.count + 1, 10);
@@ -1210,16 +1308,27 @@
       var xpGain = Math.floor(res.xp * getStarShowerMult());
       var dustGain = Math.floor(res.dust * dustMult);
 
-      // A1: 5% gem drop
-      var isGem = Math.random() < 0.05;
+      // Perk: Double Strike — 10% chance for 2x yield
+      var isDouble = hasPerk('doubleStrike') && Math.random() < 0.10;
+      if (isDouble) {
+        xpGain *= 2;
+        dustGain *= 2;
+        if (area) spawnParticle(area, '2x!', 'dust');
+      }
+
+      // Perk: Keen Eye — gem chance 5%→10%
+      var gemChance = hasPerk('keenEye') ? 0.10 : 0.05;
+      var isGem = Math.random() < gemChance;
       if (isGem) {
-        dustGain *= 5;
+        // Perk: Gem Specialist — gem bonus 5x→10x
+        var gemMult = hasPerk('gemSpec') ? 10 : 5;
+        dustGain *= gemMult;
         if (area) {
           var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
           spawnSpriteParticle(area, 'gems', gem.x, gem.y);
           spawnParticle(area, 'GEM! +' + dustGain + ' SD', 'gem');
         }
-        addLog('Found a gem! 5x dust bonus!');
+        addLog('Found a gem! ' + gemMult + 'x dust bonus!');
       }
 
       if (area) {
@@ -1247,13 +1356,15 @@
       rock.classList.remove('cracking');
       rock.classList.add('depleted');
 
-      // Show respawn timer inside the rock itself (position: relative)
+      // Perk: Ore Sense — respawn 3s→2s
+      var respawnTime = hasPerk('oreSense') ? 2 : 3;
+
       var timerEl = document.createElement('div');
       timerEl.className = 'mining-respawn-timer';
-      timerEl.textContent = '3s';
+      timerEl.textContent = respawnTime + 's';
       rock.appendChild(timerEl);
 
-      var remaining = 3;
+      var remaining = respawnTime;
       var respawnInterval = setInterval(function () {
         remaining--;
         if (remaining <= 0) {
@@ -1265,6 +1376,25 @@
         }
       }, 1000);
 
+      // Perk: Vein Miner — 20% chance to auto-mine an adjacent non-depleted rock
+      if (hasPerk('veinMiner') && !veinMinerTriggered && Math.random() < 0.20) {
+        veinMinerTriggered = true;
+        var allRocks = document.querySelectorAll('.mining-rock:not(.depleted)');
+        if (allRocks.length > 0) {
+          var target = allRocks[Math.floor(Math.random() * allRocks.length)];
+          setTimeout(function () {
+            target.click();
+            veinMinerTriggered = false;
+          }, 400);
+          addLog('Vein Miner triggered!');
+        } else {
+          veinMinerTriggered = false;
+        }
+      }
+
+      // Try mining events (~2% per depletion)
+      tryTriggerMiningEvent();
+
       miningCooldown = false;
       renderSkillList();
       renderRightPanel();
@@ -1273,6 +1403,11 @@
   }
 
   // ══════════════════════════════════════════════
+  // ── Mining Events (stub — Phase 3 fills in) ────
+  function tryTriggerMiningEvent() {
+    // Phase 3 will implement this
+  }
+
   // ── FISHING MINI-GAME (A2 enhanced) ────────────
   // ══════════════════════════════════════════════
   function renderFishing() {
@@ -2141,6 +2276,8 @@
   function cleanupActiveGame() {
     miningCooldown = false;
     miningCombo = { count: 0, lastClickTime: 0 };
+    miningEventActive = false;
+    if (miningEventTimer) { clearTimeout(miningEventTimer); miningEventTimer = null; }
     if (fishingState.timer) clearTimeout(fishingState.timer);
     if (fishingState.biteTimeout) clearTimeout(fishingState.biteTimeout);
     if (fishingState.castTimer) clearInterval(fishingState.castTimer);
