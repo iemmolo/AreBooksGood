@@ -430,8 +430,9 @@
   function onSaveQuit() {
     if (activeSlot >= 0 && meta.slots[activeSlot]) {
       meta.slots[activeSlot].lastPlayed = Date.now();
-      saveMeta();
     }
+    meta.currentSlot = -1;
+    saveMeta();
 
     // Clean up skills if active
     if (typeof window.__RPG_SKILLS_CLEANUP === 'function') {
@@ -516,8 +517,13 @@
       }
     });
 
-    renderMenuScreen();
-    showScreen('rpg-menu-screen');
+    // Auto-resume last active slot on page refresh
+    if (meta.currentSlot >= 0 && meta.slots[meta.currentSlot]) {
+      enterGame(meta.currentSlot);
+    } else {
+      renderMenuScreen();
+      showScreen('rpg-menu-screen');
+    }
   }
 
   if (document.readyState === 'loading') {

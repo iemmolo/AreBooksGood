@@ -301,7 +301,19 @@ AreBooksGood - Improvement TODO
 - [x] CSS var themed, responsive, terminal aesthetic
 - [ ] LPC character sprites (user generates 6 characters from LPC generator tool)
 
-### Phase 2+ (Future)
+### Phase 2: OSRS-Style Single-Screen Layout (Done)
+- [x] Replace 5-screen nav with 3-screen (menu/create/game) + center panel toggle
+- [x] Persistent 3-panel game screen: skills left, game/map center, inventory right
+- [x] World map renders inside center panel (showCenterContent toggle)
+- [x] Remove DOM transplanting — skills panel stays in place
+- [x] RPG topbar (character name + total level + Save & Quit)
+- [x] World Map button in left panel, character info in right panel
+- [x] Skill row click + keyboard (1-5) interceptors switch center to skill view
+- [x] listenersAttached guard in skills.js prevents duplicate handlers on reinit
+- [x] Widen site-container to 1100px for RPG pages (:has() selector)
+- [x] Mobile responsive: portrait stacks, landscape preserves 3-panel
+
+### Phase 3+ (Future)
 - [ ] Top-down tile-based overworld with LPC walk animations
 - [ ] Quest system (NPCs in Tavern give objectives + rewards)
 - [ ] Shop system in Town Hub (buy/sell, ties into Silk Road economy)
