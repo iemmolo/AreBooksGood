@@ -787,6 +787,93 @@
   font-size: 0.55rem;
 }
 
+/* ── Collection Log ──────────────────────────── */
+.skills-log-btn {
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.skills-log-btn:hover {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.skills-log-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  z-index: 9001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skills-log-modal {
+  background: var(--background);
+  border: 2px solid var(--accent);
+  padding: 1.25rem;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.skills-log-modal h3 {
+  font-family: monospace;
+  color: var(--accent);
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.skills-log-section-title {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0.75rem 0 0.3rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.skills-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+.skills-log-table td {
+  padding: 0.15rem 0.3rem;
+  color: var(--foreground);
+}
+
+.skills-log-table td:last-child {
+  text-align: right;
+  color: var(--accent);
+}
+
+.skills-log-close {
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 0.4rem 1.5rem;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
 .skills-perk-toast {
   position: absolute;
   top: 0;

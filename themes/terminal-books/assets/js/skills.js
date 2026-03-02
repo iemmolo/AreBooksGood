@@ -411,7 +411,7 @@
   function defaultState() {
     var s = { skills: {}, version: STATE_VERSION, mastered: {}, activePlayTime: 0, totalDustEarned: 0 };
     for (var i = 0; i < SKILL_KEYS.length; i++) {
-      s.skills[SKILL_KEYS[i]] = {
+      var skillDef = {
         level: 1,
         xp: 0,
         toolTier: 0,
@@ -419,6 +419,11 @@
         lastActiveAt: null,
         totalActions: 0
       };
+      // Mining collection log (v3)
+      if (SKILL_KEYS[i] === 'mining') {
+        skillDef.log = { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
+      }
+      s.skills[SKILL_KEYS[i]] = skillDef;
     }
     return s;
   }
@@ -443,6 +448,10 @@
               s.skills[key].assignedPet = saved.skills[key].assignedPet || null;
               s.skills[key].lastActiveAt = saved.skills[key].lastActiveAt || null;
               s.skills[key].totalActions = saved.skills[key].totalActions || 0;
+              // v3: mining collection log
+              if (key === 'mining') {
+                s.skills[key].log = saved.skills[key].log || { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
+              }
             }
           }
           s.version = STATE_VERSION;
@@ -730,6 +739,14 @@
       if (state.mastered[keys[i]]) count++;
     }
     return count;
+  }
+
+  // ── Mining Collection Log helper ─────────────
+  function getMiningLog() {
+    if (!state.skills.mining.log) {
+      state.skills.mining.log = { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
+    }
+    return state.skills.mining.log;
   }
 
   // ── Mining Perk helpers ──────────────────────
@@ -1149,6 +1166,10 @@
     // Mining perks panel
     renderMiningPerks();
 
+    // Collection log button visibility
+    var logBtn = $('skills-log-btn');
+    if (logBtn) logBtn.style.display = activeSkill === 'mining' ? '' : 'none';
+
     // B5: Milestones panel
     renderMilestones();
   }
@@ -1171,6 +1192,76 @@
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return String(n);
+  }
+
+  // ── Collection Log ─────────────────────────────
+  function renderCollectionLog() {
+    var content = $('skills-log-content');
+    if (!content) return;
+    content.innerHTML = '';
+
+    var log = getMiningLog();
+
+    // Ore table
+    var oreSection = document.createElement('div');
+    oreSection.innerHTML = '<h4 class="skills-log-section-title">Ores Mined</h4>';
+    var oreTable = document.createElement('table');
+    oreTable.className = 'skills-log-table';
+    var resources = SKILLS.mining.resources;
+    for (var i = 0; i < resources.length; i++) {
+      var count = log.oresMined[resources[i].name] || 0;
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + resources[i].name + '</td><td>' + formatNum(count) + '</td>';
+      if (count === 0) tr.style.opacity = '0.4';
+      oreTable.appendChild(tr);
+    }
+    oreSection.appendChild(oreTable);
+    content.appendChild(oreSection);
+
+    // Stats
+    var statsSection = document.createElement('div');
+    statsSection.innerHTML = '<h4 class="skills-log-section-title">Stats</h4>';
+    var stats = [
+      ['Total Clicks', formatNum(log.totalClicks)],
+      ['Gems Found', formatNum(log.totalGems)],
+      ['Critical Hits', formatNum(log.criticalHits)],
+      ['Crit Rate', log.totalClicks > 0 ? (log.criticalHits / log.totalClicks * 100).toFixed(1) + '%' : '0%']
+    ];
+    var statsTable = document.createElement('table');
+    statsTable.className = 'skills-log-table';
+    for (var j = 0; j < stats.length; j++) {
+      var tr2 = document.createElement('tr');
+      tr2.innerHTML = '<td>' + stats[j][0] + '</td><td>' + stats[j][1] + '</td>';
+      statsTable.appendChild(tr2);
+    }
+    statsSection.appendChild(statsTable);
+    content.appendChild(statsSection);
+
+    // Events
+    var evSection = document.createElement('div');
+    evSection.innerHTML = '<h4 class="skills-log-section-title">Events</h4>';
+    var evTable = document.createElement('table');
+    evTable.className = 'skills-log-table';
+    var evNames = [
+      ['Gem Vein', log.events.gemVein],
+      ['Shooting Star', log.events.shootingStar],
+      ['Cave-In', log.events.caveIn],
+      ['Deep Vein', log.events.deepVein]
+    ];
+    for (var k = 0; k < evNames.length; k++) {
+      var tr3 = document.createElement('tr');
+      tr3.innerHTML = '<td>' + evNames[k][0] + '</td><td>' + evNames[k][1] + '</td>';
+      if (evNames[k][1] === 0) tr3.style.opacity = '0.4';
+      evTable.appendChild(tr3);
+    }
+    evSection.appendChild(evTable);
+    content.appendChild(evSection);
+  }
+
+  function showCollectionLog() {
+    renderCollectionLog();
+    var overlay = $('skills-log-overlay');
+    if (overlay) overlay.style.display = '';
   }
 
   // ── Phase 3: Replace skill icons with sprites ──
@@ -1313,6 +1404,8 @@
     var res = getHighestResource('mining');
     var now = Date.now();
     var rs = rockState[idx];
+    var log = getMiningLog();
+    log.totalClicks++;
 
     // A1: Combo tracking (freeze during events)
     var timeSinceLast = now - miningCombo.lastClickTime;
@@ -1347,6 +1440,7 @@
       rock.classList.add('cracking');
       var area = $('skills-game-area');
       if (area) spawnParticle(area, 'CRIT!', 'crit');
+      log.criticalHits++;
       addLog('Critical hit!');
     } else {
       // Normal hit — decrement HP
@@ -1379,6 +1473,7 @@
       }
 
       // Rock depleted — full rewards
+      log.oresMined[res.name] = (log.oresMined[res.name] || 0) + 1;
       var xpGain = Math.floor(res.xp * getStarShowerMult());
       var dustGain = Math.floor(res.dust * dustMult);
 
@@ -1394,6 +1489,7 @@
       var gemChance = hasPerk('keenEye') ? 0.10 : 0.05;
       var isGem = Math.random() < gemChance;
       if (isGem) {
+        log.totalGems++;
         var gemMult = hasPerk('gemSpec') ? 10 : 5;
         dustGain *= gemMult;
         if (area) {
@@ -1558,6 +1654,8 @@
     if (!rock) { cleanupEvent(); return; }
 
     rock.addEventListener('click', function () {
+      getMiningLog().events.gemVein++;
+      getMiningLog().totalGems += 3;
       var area = $('skills-game-area');
       var res = getHighestResource('mining');
       var dustMult = getDustMult();
@@ -1610,6 +1708,7 @@
       setTimeout(function () { rock.classList.remove('hit'); }, 200);
 
       if (starHp.hp <= 0) {
+        getMiningLog().events.shootingStar++;
         var area = $('skills-game-area');
         var res = getHighestResource('mining');
         var xpGain = Math.floor(res.xp * getStarShowerMult() * 10);
@@ -1650,6 +1749,7 @@
           el.classList.add('clicked');
           clicked++;
           if (clicked >= total) {
+            getMiningLog().events.caveIn++;
             var res = getHighestResource('mining');
             var dustGain = Math.floor(res.dust * getDustMult() * 5);
             if (window.StarDust) window.StarDust.add(dustGain);
@@ -1699,6 +1799,7 @@
       setTimeout(function () { rock.classList.remove('hit'); }, 200);
 
       if (veinHp.hp <= 0) {
+        getMiningLog().events.deepVein++;
         var area = $('skills-game-area');
         var res = getHighestResource('mining');
         var xpGain = Math.floor(res.xp * getStarShowerMult() * 5);
@@ -2949,6 +3050,14 @@
 
       var toolBtn = $('skills-upgrade-tool-btn');
       if (toolBtn) toolBtn.addEventListener('click', upgradeTool);
+
+      var logBtn = $('skills-log-btn');
+      if (logBtn) logBtn.addEventListener('click', showCollectionLog);
+
+      var logClose = $('skills-log-close');
+      if (logClose) logClose.addEventListener('click', function () {
+        $('skills-log-overlay').style.display = 'none';
+      });
 
       var idleOk = $('skills-idle-report-ok');
       if (idleOk) idleOk.addEventListener('click', function () {
