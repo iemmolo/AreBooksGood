@@ -237,6 +237,25 @@ Pet Skills Expansion — Phase 2
 - [x] Bug fix: heat button disabled state includes stack cap check (all 4 sites)
 - [x] Bug fix: forging anvil blocks clicks when materials insufficient or stack full
 
+### Phase 6D.5: Mining & Smithing Rebalance (Done)
+- [x] Expand mining to 16 ores (from 12), evenly spread levels 1-92
+- [x] Expand smithing to 12 bars (from 9), with alloy recipes using all 16 ores
+- [x] Fix all ore/bar sprite coordinates to match user-verified catalog
+- [x] Add 4 new ores: Crimson(5), Shadow(42), Slate(54), Molten(78)
+- [x] Add 3 new bars: Mithril(52), Molten(80), Obsidian(94)
+- [x] Rename Iron Bar/equipment → Astral Bar/equipment
+- [x] Rename Bronze Ore → Crimson Ore (Bronze Bar = Copper+Crimson alloy)
+- [x] Add alloy smelting recipes (Bronze, Astral, Mithril, Cobalt use 2 ore types)
+- [x] Update ROCK_HP, MINING_ROCK_SPRITES, ORE_DROP_SPRITES for 16 ores
+- [x] Update BAR_DROP_SPRITES, ANVIL_SPRITES for 12 bars
+- [x] Update ITEM_ICON_MAP, ITEM_CATEGORIES with new items + renames
+- [x] Update SMELTING_RECIPES, SMELTING_ORDER for 12 bars
+- [x] Update FORGING_RECIPES: Iron→Astral rename, adjust levels
+- [x] State migration v6→v7 (inventory renames, collection log)
+- [x] Bump STATE_VERSION to 7
+- [x] Mining ore selector dropdown (pick any unlocked ore to mine)
+- [x] Inventory item hover tooltips (pet speech bubble style)
+
 ### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
 - [ ] TOOL_BAR_COSTS replaces TOOL_COSTS
   - Tier 2 = 5 Iron Bars

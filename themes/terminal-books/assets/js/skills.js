@@ -7,7 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 5;
+  var STATE_VERSION = 7;
   var STACK_CAP = 999;
 
   // ── Tool tiers ────────────────────────────────
@@ -36,12 +36,14 @@
 
   // ── Rock HP (multi-hit mining) ─────────────────
   var ROCK_HP = {
-    'Copper Ore': 1, 'Tin Ore': 1,
-    'Iron Ore': 2, 'Coal': 2,
-    'Gold Ore': 3, 'Silver Ore': 3,
-    'Jade Ore': 4, 'Amethyst Ore': 4,
-    'Ruby Ore': 4, 'Frost Ore': 5,
-    'Dragon Ore': 5, 'Star Ore': 5
+    'Copper Ore': 1, 'Crimson Ore': 1,
+    'Coal': 2, 'Iron Ore': 2,
+    'Gold Ore': 2, 'Silver Ore': 3,
+    'Astral Ore': 3, 'Shadow Ore': 3,
+    'Emerald Ore': 3, 'Slate Ore': 4,
+    'Mithril Ore': 4, 'Amethyst Ore': 4,
+    'Cobalt Ore': 4, 'Molten Ore': 5,
+    'Frost Ore': 5, 'Obsidian Ore': 5
   };
   var rockState = []; // { hp, maxHp } per rock
 
@@ -84,34 +86,42 @@
   // Mining rocks: map resource name → { x, y } on rocks.png (16×16 crystal minerals from y=32 row)
   // Row 2 crystals: grey(x16), gold(x32), silver(x48), purple(x64), red(x80), green(x96), blue(x112), dark(x128), pink(x144)
   var MINING_ROCK_SPRITES = {
-    'Copper Ore':    { x: 32, y: 32 },    // gold crystal (copper-ish)
-    'Tin Ore':       { x: 48, y: 32 },    // silver crystal
-    'Iron Ore':      { x: 128, y: 32 },   // dark crystal
+    'Copper Ore':    { x: 32, y: 32 },    // gold crystal (warm copper)
+    'Crimson Ore':   { x: 80, y: 32 },    // red crystal
     'Coal':          { x: 128, y: 32 },   // dark crystal
+    'Iron Ore':      { x: 128, y: 32 },   // dark crystal
     'Gold Ore':      { x: 32, y: 48 },    // gold crystal alt
     'Silver Ore':    { x: 16, y: 32 },    // grey crystal
-    'Jade Ore':      { x: 96, y: 32 },    // green crystal
+    'Astral Ore':    { x: 64, y: 32 },    // purple crystal
+    'Shadow Ore':    { x: 128, y: 32 },   // dark crystal
+    'Emerald Ore':   { x: 96, y: 32 },    // green crystal
+    'Slate Ore':     { x: 16, y: 32 },    // grey crystal
+    'Mithril Ore':   { x: 112, y: 32 },   // blue crystal (teal)
     'Amethyst Ore':  { x: 64, y: 32 },    // purple crystal
-    'Ruby Ore':      { x: 80, y: 32 },    // red crystal
-    'Frost Ore':     { x: 112, y: 32 },   // blue crystal
-    'Dragon Ore':    { x: 80, y: 48 },    // red crystal alt
-    'Star Ore':      { x: 144, y: 32 }    // pink crystal
+    'Cobalt Ore':    { x: 112, y: 32 },   // blue crystal
+    'Molten Ore':    { x: 80, y: 32 },    // red crystal (molten)
+    'Frost Ore':     { x: 48, y: 32 },    // silver crystal (icy)
+    'Obsidian Ore':  { x: 128, y: 32 }    // dark crystal
   };
 
-  // Ore drop particles: map resource → { sheet, x, y } on items_sheet.png (16px grid, row 31)
+  // Ore drop particles: map resource → { sheet, x, y } on items_sheet.png (16px grid, row 16)
   var ORE_DROP_SPRITES = {
-    'Copper Ore':    { sheet: 'items_sheet', x: 32, y: 496 },
-    'Tin Ore':       { sheet: 'items_sheet', x: 144, y: 496 },
-    'Iron Ore':      { sheet: 'items_sheet', x: 16, y: 496 },
-    'Coal':          { sheet: 'items_sheet', x: 128, y: 496 },
-    'Gold Ore':      { sheet: 'items_sheet', x: 48, y: 496 },
-    'Silver Ore':    { sheet: 'items_sheet', x: 0, y: 496 },
-    'Jade Ore':      { sheet: 'items_sheet', x: 64, y: 496 },
-    'Amethyst Ore':  { sheet: 'items_sheet', x: 240, y: 496 },
-    'Ruby Ore':      { sheet: 'items_sheet', x: 80, y: 496 },
-    'Frost Ore':     { sheet: 'items_sheet', x: 160, y: 496 },
-    'Dragon Ore':    { sheet: 'items_sheet', x: 288, y: 496 },
-    'Star Ore':      { sheet: 'items_sheet', x: 304, y: 496 }
+    'Copper Ore':    { sheet: 'items_sheet', x: 16, y: 256 },
+    'Crimson Ore':   { sheet: 'items_sheet', x: 0, y: 256 },
+    'Coal':          { sheet: 'items_sheet', x: 144, y: 256 },
+    'Iron Ore':      { sheet: 'items_sheet', x: 560, y: 240 },
+    'Gold Ore':      { sheet: 'items_sheet', x: 32, y: 256 },
+    'Silver Ore':    { sheet: 'items_sheet', x: 528, y: 240 },
+    'Astral Ore':    { sheet: 'items_sheet', x: 48, y: 256 },
+    'Shadow Ore':    { sheet: 'items_sheet', x: 544, y: 240 },
+    'Emerald Ore':   { sheet: 'items_sheet', x: 64, y: 256 },
+    'Slate Ore':     { sheet: 'items_sheet', x: 528, y: 256 },
+    'Mithril Ore':   { sheet: 'items_sheet', x: 128, y: 256 },
+    'Amethyst Ore':  { sheet: 'items_sheet', x: 112, y: 256 },
+    'Cobalt Ore':    { sheet: 'items_sheet', x: 80, y: 256 },
+    'Molten Ore':    { sheet: 'items_sheet', x: 160, y: 256 },
+    'Frost Ore':     { sheet: 'items_sheet', x: 320, y: 256 },
+    'Obsidian Ore':  { sheet: 'items_sheet', x: 96, y: 256 }
   };
 
   // Gem drop sprites: 10 gems on items_sheet.png (16px grid, row 15)
@@ -162,28 +172,34 @@
   // Rows by color: 0=blue-grey, 1=grey, 2=orange, 3=gold, 4=purple, 5=blue-grey
   // Use col 0 per row, vary row for color matching ore tier
   var ANVIL_SPRITES = {
-    'Copper Bar':  { x: 0, y: 32 },   // row 2 = orange (copper)
-    'Tin Bar':     { x: 0, y: 16 },   // row 1 = grey (tin)
-    'Iron Bar':    { x: 0, y: 0 },    // row 0 = blue-grey (iron)
-    'Gold Bar':    { x: 0, y: 48 },   // row 3 = gold
-    'Silver Bar':  { x: 0, y: 16 },   // row 1 = grey (silver)
-    'Jade Bar':    { x: 0, y: 80 },   // row 5 = blue-grey (jade)
-    'Ruby Bar':    { x: 0, y: 64 },   // row 4 = purple (ruby)
-    'Frost Bar':   { x: 0, y: 0 },    // row 0 = blue-grey (frost)
-    'Dragon Bar':  { x: 0, y: 32 }    // row 2 = orange (dragon)
+    'Copper Bar':    { x: 0, y: 32 },   // row 2 = orange (copper)
+    'Bronze Bar':    { x: 0, y: 32 },   // row 2 = orange (bronze, warm)
+    'Gold Bar':      { x: 0, y: 48 },   // row 3 = gold
+    'Astral Bar':    { x: 0, y: 64 },   // row 4 = purple (astral)
+    'Silver Bar':    { x: 0, y: 16 },   // row 1 = grey (silver)
+    'Emerald Bar':   { x: 0, y: 80 },   // row 5 = blue-grey (emerald)
+    'Mithril Bar':   { x: 0, y: 0 },    // row 0 = blue-grey (mithril)
+    'Amethyst Bar':  { x: 0, y: 64 },   // row 4 = purple (amethyst)
+    'Cobalt Bar':    { x: 0, y: 0 },    // row 0 = blue-grey (cobalt)
+    'Molten Bar':    { x: 0, y: 32 },   // row 2 = orange (molten)
+    'Frost Bar':     { x: 0, y: 16 },   // row 1 = grey (frost/icy)
+    'Obsidian Bar':  { x: 0, y: 0 }     // row 0 = blue-grey (obsidian)
   };
 
-  // Bar drop particles: items_sheet.png row 15 (y=240), items 562-570
+  // Bar drop particles: items_sheet.png row 15 (color-matched to row 16 ores)
   var BAR_DROP_SPRITES = {
-    'Copper Bar':  { sheet: 'items_sheet', x: 336, y: 240 },
-    'Tin Bar':     { sheet: 'items_sheet', x: 352, y: 240 },
-    'Iron Bar':    { sheet: 'items_sheet', x: 368, y: 240 },
-    'Gold Bar':    { sheet: 'items_sheet', x: 416, y: 240 },
-    'Silver Bar':  { sheet: 'items_sheet', x: 400, y: 240 },
-    'Jade Bar':    { sheet: 'items_sheet', x: 432, y: 240 },
-    'Ruby Bar':    { sheet: 'items_sheet', x: 384, y: 240 },
-    'Frost Bar':   { sheet: 'items_sheet', x: 448, y: 240 },
-    'Dragon Bar':  { sheet: 'items_sheet', x: 464, y: 240 }
+    'Copper Bar':    { sheet: 'items_sheet', x: 384, y: 240 },
+    'Bronze Bar':    { sheet: 'items_sheet', x: 368, y: 240 },
+    'Gold Bar':      { sheet: 'items_sheet', x: 416, y: 240 },
+    'Astral Bar':    { sheet: 'items_sheet', x: 336, y: 240 },
+    'Silver Bar':    { sheet: 'items_sheet', x: 400, y: 240 },
+    'Emerald Bar':   { sheet: 'items_sheet', x: 448, y: 240 },
+    'Mithril Bar':   { sheet: 'items_sheet', x: 432, y: 240 },
+    'Amethyst Bar':  { sheet: 'items_sheet', x: 496, y: 240 },
+    'Cobalt Bar':    { sheet: 'items_sheet', x: 480, y: 240 },
+    'Molten Bar':    { sheet: 'items_sheet', x: 352, y: 240 },
+    'Frost Bar':     { sheet: 'items_sheet', x: 464, y: 240 },
+    'Obsidian Bar':  { sheet: 'items_sheet', x: 512, y: 240 }
   };
 
   // Wood log drop: items_sheet.png row 27 (items 990-997)
@@ -223,38 +239,42 @@
 
   // ── Item Categories & Inventory Icon Map ─────
   var ITEM_CATEGORIES = [
-    { label: 'Ores', items: ['Copper Ore', 'Tin Ore', 'Iron Ore', 'Coal', 'Gold Ore', 'Silver Ore', 'Jade Ore', 'Amethyst Ore', 'Ruby Ore', 'Frost Ore', 'Dragon Ore', 'Star Ore'] },
+    { label: 'Ores', items: ['Copper Ore', 'Crimson Ore', 'Coal', 'Iron Ore', 'Gold Ore', 'Silver Ore', 'Astral Ore', 'Shadow Ore', 'Emerald Ore', 'Slate Ore', 'Mithril Ore', 'Amethyst Ore', 'Cobalt Ore', 'Molten Ore', 'Frost Ore', 'Obsidian Ore'] },
     { label: 'Gems', items: ['Peridot', 'Emerald', 'Aquamarine', 'Topaz', 'Onyx', 'Moonstone', 'Diamond', 'Opal', 'Sapphire', 'Ruby'] },
     { label: 'Logs', items: ['Pine Log', 'Oak Log', 'Birch Log', 'Maple Log', 'Walnut Log', 'Mahogany Log', 'Yew Log', 'Elder Log'] },
     { label: 'Fish', items: ['Minnow', 'Shrimp', 'Perch', 'Trout', 'Bass', 'Salmon', 'Catfish', 'Swordfish', 'Lobster', 'Shark', 'Anglerfish', 'Leviathan'] },
-    { label: 'Bars', items: ['Copper Bar', 'Tin Bar', 'Iron Bar', 'Gold Bar', 'Silver Bar', 'Jade Bar', 'Ruby Bar', 'Frost Bar', 'Dragon Bar'] },
+    { label: 'Bars', items: ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'] },
     { label: 'Equipment', items: [
-      'Copper Sword', 'Copper Shield', 'Tin Dagger', 'Tin Helmet',
-      'Iron Sword', 'Iron Axe', 'Iron Chestplate',
+      'Copper Sword', 'Copper Shield', 'Bronze Dagger', 'Bronze Helmet',
+      'Astral Sword', 'Astral Axe', 'Astral Chestplate',
       'Gold Sword', 'Gold Shield',
       'Silver Spear', 'Silver Chestplate',
-      'Jade Staff', 'Jade Chestplate', 'Jade Crown',
-      'Ruby Dagger', 'Ruby Bow', 'Ruby Helmet',
-      'Frost Sword', 'Frost Chestplate', 'Frost Spear',
-      'Dragon Sword', 'Dragon Axe', 'Dragon Chestplate'
+      'Emerald Staff', 'Emerald Chestplate', 'Emerald Crown',
+      'Amethyst Dagger', 'Amethyst Bow', 'Amethyst Helmet',
+      'Cobalt Sword', 'Cobalt Chestplate', 'Cobalt Spear',
+      'Frost Sword', 'Frost Axe', 'Frost Chestplate'
     ] }
   ];
 
   // Unified item → sprite mapping for inventory icons (all from items_sheet.png)
   var ITEM_ICON_MAP = {
-    // Ores (row 31, items 1117-1136)
-    'Copper Ore':    { sheet: 'items_sheet', x: 32, y: 496 },
-    'Tin Ore':       { sheet: 'items_sheet', x: 144, y: 496 },
-    'Iron Ore':      { sheet: 'items_sheet', x: 16, y: 496 },
-    'Coal':          { sheet: 'items_sheet', x: 128, y: 496 },
-    'Gold Ore':      { sheet: 'items_sheet', x: 48, y: 496 },
-    'Silver Ore':    { sheet: 'items_sheet', x: 0, y: 496 },
-    'Jade Ore':      { sheet: 'items_sheet', x: 64, y: 496 },
-    'Amethyst Ore':  { sheet: 'items_sheet', x: 240, y: 496 },
-    'Ruby Ore':      { sheet: 'items_sheet', x: 80, y: 496 },
-    'Frost Ore':     { sheet: 'items_sheet', x: 160, y: 496 },
-    'Dragon Ore':    { sheet: 'items_sheet', x: 288, y: 496 },
-    'Star Ore':      { sheet: 'items_sheet', x: 304, y: 496 },
+    // Ores (16 ores, rows 15-16 on items_sheet)
+    'Copper Ore':    { sheet: 'items_sheet', x: 16, y: 256 },
+    'Crimson Ore':   { sheet: 'items_sheet', x: 0, y: 256 },
+    'Coal':          { sheet: 'items_sheet', x: 144, y: 256 },
+    'Iron Ore':      { sheet: 'items_sheet', x: 560, y: 240 },
+    'Gold Ore':      { sheet: 'items_sheet', x: 32, y: 256 },
+    'Silver Ore':    { sheet: 'items_sheet', x: 528, y: 240 },
+    'Astral Ore':    { sheet: 'items_sheet', x: 48, y: 256 },
+    'Shadow Ore':    { sheet: 'items_sheet', x: 544, y: 240 },
+    'Emerald Ore':   { sheet: 'items_sheet', x: 64, y: 256 },
+    'Slate Ore':     { sheet: 'items_sheet', x: 528, y: 256 },
+    'Mithril Ore':   { sheet: 'items_sheet', x: 128, y: 256 },
+    'Amethyst Ore':  { sheet: 'items_sheet', x: 112, y: 256 },
+    'Cobalt Ore':    { sheet: 'items_sheet', x: 80, y: 256 },
+    'Molten Ore':    { sheet: 'items_sheet', x: 160, y: 256 },
+    'Frost Ore':     { sheet: 'items_sheet', x: 320, y: 256 },
+    'Obsidian Ore':  { sheet: 'items_sheet', x: 96, y: 256 },
     // Gems (row 15, items 541-558)
     'Peridot':       { sheet: 'items_sheet', x: 0, y: 240 },
     'Emerald':       { sheet: 'items_sheet', x: 32, y: 240 },
@@ -288,40 +308,43 @@
     'Shark':         { sheet: 'items_sheet', x: 112, y: 480 },
     'Anglerfish':    { sheet: 'items_sheet', x: 176, y: 480 },
     'Leviathan':     { sheet: 'items_sheet', x: 240, y: 480 },
-    // Bars (row 15, items 562-570)
-    'Copper Bar':    { sheet: 'items_sheet', x: 336, y: 240 },
-    'Tin Bar':       { sheet: 'items_sheet', x: 352, y: 240 },
-    'Iron Bar':      { sheet: 'items_sheet', x: 368, y: 240 },
+    // Bars (12 bars, row 15 on items_sheet, all y=240)
+    'Copper Bar':    { sheet: 'items_sheet', x: 384, y: 240 },
+    'Bronze Bar':    { sheet: 'items_sheet', x: 368, y: 240 },
     'Gold Bar':      { sheet: 'items_sheet', x: 416, y: 240 },
+    'Astral Bar':    { sheet: 'items_sheet', x: 336, y: 240 },
     'Silver Bar':    { sheet: 'items_sheet', x: 400, y: 240 },
-    'Jade Bar':      { sheet: 'items_sheet', x: 432, y: 240 },
-    'Ruby Bar':      { sheet: 'items_sheet', x: 384, y: 240 },
-    'Frost Bar':     { sheet: 'items_sheet', x: 448, y: 240 },
-    'Dragon Bar':    { sheet: 'items_sheet', x: 464, y: 240 },
+    'Emerald Bar':   { sheet: 'items_sheet', x: 448, y: 240 },
+    'Mithril Bar':   { sheet: 'items_sheet', x: 432, y: 240 },
+    'Amethyst Bar':  { sheet: 'items_sheet', x: 496, y: 240 },
+    'Cobalt Bar':    { sheet: 'items_sheet', x: 480, y: 240 },
+    'Molten Bar':    { sheet: 'items_sheet', x: 352, y: 240 },
+    'Frost Bar':     { sheet: 'items_sheet', x: 464, y: 240 },
+    'Obsidian Bar':  { sheet: 'items_sheet', x: 512, y: 240 },
     // Equipment (Phase 6C forging output)
-    'Copper Sword':      { sheet: 'items_sheet', x: 0, y: 0 },
-    'Copper Shield':     { sheet: 'items_sheet', x: 0, y: 80 },
-    'Tin Dagger':        { sheet: 'items_sheet', x: 32, y: 0 },
-    'Tin Helmet':        { sheet: 'items_sheet', x: 128, y: 80 },
-    'Iron Sword':        { sheet: 'items_sheet', x: 288, y: 0 },
-    'Iron Axe':          { sheet: 'items_sheet', x: 384, y: 0 },
-    'Iron Chestplate':   { sheet: 'items_sheet', x: 0, y: 96 },
-    'Gold Sword':        { sheet: 'items_sheet', x: 64, y: 16 },
-    'Gold Shield':       { sheet: 'items_sheet', x: 256, y: 80 },
-    'Silver Spear':      { sheet: 'items_sheet', x: 352, y: 80 },
-    'Silver Chestplate': { sheet: 'items_sheet', x: 288, y: 96 },
-    'Jade Staff':        { sheet: 'items_sheet', x: 0, y: 32 },
-    'Jade Chestplate':   { sheet: 'items_sheet', x: 416, y: 96 },
-    'Jade Crown':        { sheet: 'items_sheet', x: 0, y: 128 },
-    'Ruby Dagger':       { sheet: 'items_sheet', x: 448, y: 0 },
-    'Ruby Bow':          { sheet: 'items_sheet', x: 0, y: 64 },
-    'Ruby Helmet':       { sheet: 'items_sheet', x: 416, y: 80 },
-    'Frost Sword':       { sheet: 'items_sheet', x: 144, y: 0 },
-    'Frost Chestplate':  { sheet: 'items_sheet', x: 80, y: 96 },
-    'Frost Spear':       { sheet: 'items_sheet', x: 192, y: 80 },
-    'Dragon Sword':      { sheet: 'items_sheet', x: 272, y: 0 },
-    'Dragon Axe':        { sheet: 'items_sheet', x: 560, y: 16 },
-    'Dragon Chestplate': { sheet: 'items_sheet', x: 560, y: 96 }
+    'Copper Sword':        { sheet: 'items_sheet', x: 0, y: 0 },
+    'Copper Shield':       { sheet: 'items_sheet', x: 0, y: 80 },
+    'Bronze Dagger':       { sheet: 'items_sheet', x: 32, y: 0 },
+    'Bronze Helmet':       { sheet: 'items_sheet', x: 128, y: 80 },
+    'Astral Sword':        { sheet: 'items_sheet', x: 288, y: 0 },
+    'Astral Axe':          { sheet: 'items_sheet', x: 384, y: 0 },
+    'Astral Chestplate':   { sheet: 'items_sheet', x: 0, y: 96 },
+    'Gold Sword':          { sheet: 'items_sheet', x: 64, y: 16 },
+    'Gold Shield':         { sheet: 'items_sheet', x: 256, y: 80 },
+    'Silver Spear':        { sheet: 'items_sheet', x: 352, y: 80 },
+    'Silver Chestplate':   { sheet: 'items_sheet', x: 288, y: 96 },
+    'Emerald Staff':       { sheet: 'items_sheet', x: 0, y: 32 },
+    'Emerald Chestplate':  { sheet: 'items_sheet', x: 416, y: 96 },
+    'Emerald Crown':       { sheet: 'items_sheet', x: 0, y: 128 },
+    'Amethyst Dagger':     { sheet: 'items_sheet', x: 448, y: 0 },
+    'Amethyst Bow':        { sheet: 'items_sheet', x: 0, y: 64 },
+    'Amethyst Helmet':     { sheet: 'items_sheet', x: 416, y: 80 },
+    'Cobalt Sword':        { sheet: 'items_sheet', x: 144, y: 0 },
+    'Cobalt Chestplate':   { sheet: 'items_sheet', x: 80, y: 96 },
+    'Cobalt Spear':        { sheet: 'items_sheet', x: 192, y: 80 },
+    'Frost Sword':         { sheet: 'items_sheet', x: 272, y: 0 },
+    'Frost Axe':           { sheet: 'items_sheet', x: 560, y: 16 },
+    'Frost Chestplate':    { sheet: 'items_sheet', x: 560, y: 96 }
   };
 
   // ── Gathering → Inventory Name Maps ──────────
@@ -455,17 +478,21 @@
       name: 'Mining', icon: '\u26CF',
       resources: [
         { name: 'Copper Ore', level: 1, xp: 8, dust: 2, clickTime: 1200 },
-        { name: 'Tin Ore', level: 1, xp: 10, dust: 2, clickTime: 1200 },
-        { name: 'Iron Ore', level: 10, xp: 18, dust: 4, clickTime: 1100 },
-        { name: 'Coal', level: 15, xp: 25, dust: 6, clickTime: 1050 },
-        { name: 'Gold Ore', level: 25, xp: 40, dust: 10, clickTime: 1000 },
-        { name: 'Silver Ore', level: 30, xp: 55, dust: 14, clickTime: 950 },
-        { name: 'Jade Ore', level: 40, xp: 80, dust: 20, clickTime: 900 },
-        { name: 'Amethyst Ore', level: 50, xp: 130, dust: 35, clickTime: 850 },
-        { name: 'Ruby Ore', level: 60, xp: 200, dust: 55, clickTime: 800 },
-        { name: 'Frost Ore', level: 70, xp: 320, dust: 90, clickTime: 750 },
-        { name: 'Dragon Ore', level: 80, xp: 500, dust: 150, clickTime: 700 },
-        { name: 'Star Ore', level: 90, xp: 800, dust: 250, clickTime: 650 }
+        { name: 'Crimson Ore', level: 5, xp: 12, dust: 3, clickTime: 1165 },
+        { name: 'Coal', level: 10, xp: 18, dust: 5, clickTime: 1130 },
+        { name: 'Iron Ore', level: 18, xp: 26, dust: 7, clickTime: 1095 },
+        { name: 'Gold Ore', level: 24, xp: 36, dust: 10, clickTime: 1060 },
+        { name: 'Silver Ore', level: 30, xp: 48, dust: 14, clickTime: 1025 },
+        { name: 'Astral Ore', level: 36, xp: 64, dust: 18, clickTime: 990 },
+        { name: 'Shadow Ore', level: 42, xp: 84, dust: 24, clickTime: 955 },
+        { name: 'Emerald Ore', level: 48, xp: 110, dust: 32, clickTime: 920 },
+        { name: 'Slate Ore', level: 54, xp: 145, dust: 42, clickTime: 885 },
+        { name: 'Mithril Ore', level: 60, xp: 190, dust: 55, clickTime: 850 },
+        { name: 'Amethyst Ore', level: 66, xp: 245, dust: 70, clickTime: 815 },
+        { name: 'Cobalt Ore', level: 72, xp: 315, dust: 92, clickTime: 780 },
+        { name: 'Molten Ore', level: 78, xp: 400, dust: 120, clickTime: 745 },
+        { name: 'Frost Ore', level: 85, xp: 520, dust: 160, clickTime: 710 },
+        { name: 'Obsidian Ore', level: 92, xp: 680, dust: 210, clickTime: 675 }
       ]
     },
     fishing: {
@@ -502,14 +529,17 @@
       name: 'Smithing', icon: '\uD83D\uDD28',
       resources: [
         { name: 'Copper Bar', level: 1, xp: 10, dust: 3, clickTime: 1500 },
-        { name: 'Tin Bar', level: 5, xp: 16, dust: 4, clickTime: 1450 },
-        { name: 'Iron Bar', level: 15, xp: 30, dust: 8, clickTime: 1400 },
-        { name: 'Gold Bar', level: 25, xp: 55, dust: 14, clickTime: 1350 },
-        { name: 'Silver Bar', level: 35, xp: 90, dust: 22, clickTime: 1300 },
-        { name: 'Jade Bar', level: 45, xp: 140, dust: 36, clickTime: 1200 },
-        { name: 'Ruby Bar', level: 60, xp: 220, dust: 58, clickTime: 1100 },
-        { name: 'Frost Bar', level: 75, xp: 380, dust: 100, clickTime: 1000 },
-        { name: 'Dragon Bar', level: 85, xp: 600, dust: 180, clickTime: 900 }
+        { name: 'Bronze Bar', level: 8, xp: 18, dust: 5, clickTime: 1460 },
+        { name: 'Gold Bar', level: 18, xp: 32, dust: 9, clickTime: 1420 },
+        { name: 'Astral Bar', level: 25, xp: 50, dust: 14, clickTime: 1380 },
+        { name: 'Silver Bar', level: 32, xp: 75, dust: 20, clickTime: 1340 },
+        { name: 'Emerald Bar', level: 42, xp: 110, dust: 30, clickTime: 1280 },
+        { name: 'Mithril Bar', level: 52, xp: 160, dust: 44, clickTime: 1220 },
+        { name: 'Amethyst Bar', level: 62, xp: 225, dust: 62, clickTime: 1160 },
+        { name: 'Cobalt Bar', level: 72, xp: 310, dust: 86, clickTime: 1100 },
+        { name: 'Molten Bar', level: 80, xp: 420, dust: 116, clickTime: 1040 },
+        { name: 'Frost Bar', level: 88, xp: 560, dust: 156, clickTime: 980 },
+        { name: 'Obsidian Bar', level: 94, xp: 700, dust: 200, clickTime: 920 }
       ]
     },
     combat: {
@@ -530,52 +560,55 @@
 
   // ── Smelting Recipes (Phase 6C) ────────────────
   var SMELTING_RECIPES = {
-    'Copper Bar':  { level: 1,  inputs: [{ item: 'Copper Ore', qty: 2 }] },
-    'Tin Bar':     { level: 5,  inputs: [{ item: 'Tin Ore', qty: 2 }] },
-    'Iron Bar':    { level: 15, inputs: [{ item: 'Iron Ore', qty: 2 }, { item: 'Coal', qty: 1 }] },
-    'Gold Bar':    { level: 25, inputs: [{ item: 'Gold Ore', qty: 3 }] },
-    'Silver Bar':  { level: 35, inputs: [{ item: 'Silver Ore', qty: 3 }] },
-    'Jade Bar':    { level: 45, inputs: [{ item: 'Jade Ore', qty: 4 }, { item: 'Coal', qty: 2 }] },
-    'Ruby Bar':    { level: 60, inputs: [{ item: 'Ruby Ore', qty: 4 }, { item: 'Coal', qty: 2 }] },
-    'Frost Bar':   { level: 75, inputs: [{ item: 'Frost Ore', qty: 5 }, { item: 'Coal', qty: 3 }] },
-    'Dragon Bar':  { level: 85, inputs: [{ item: 'Dragon Ore', qty: 5 }, { item: 'Coal', qty: 5 }] }
+    'Copper Bar':    { level: 1,  inputs: [{ item: 'Copper Ore', qty: 2 }] },
+    'Bronze Bar':    { level: 8,  inputs: [{ item: 'Copper Ore', qty: 1 }, { item: 'Crimson Ore', qty: 2 }] },
+    'Gold Bar':      { level: 18, inputs: [{ item: 'Gold Ore', qty: 3 }] },
+    'Astral Bar':    { level: 25, inputs: [{ item: 'Astral Ore', qty: 2 }, { item: 'Iron Ore', qty: 1 }] },
+    'Silver Bar':    { level: 32, inputs: [{ item: 'Silver Ore', qty: 3 }, { item: 'Coal', qty: 1 }] },
+    'Emerald Bar':   { level: 42, inputs: [{ item: 'Emerald Ore', qty: 4 }, { item: 'Coal', qty: 2 }] },
+    'Mithril Bar':   { level: 52, inputs: [{ item: 'Mithril Ore', qty: 3 }, { item: 'Shadow Ore', qty: 2 }] },
+    'Amethyst Bar':  { level: 62, inputs: [{ item: 'Amethyst Ore', qty: 4 }, { item: 'Coal', qty: 2 }] },
+    'Cobalt Bar':    { level: 72, inputs: [{ item: 'Cobalt Ore', qty: 5 }, { item: 'Slate Ore', qty: 2 }] },
+    'Molten Bar':    { level: 80, inputs: [{ item: 'Molten Ore', qty: 4 }, { item: 'Coal', qty: 3 }] },
+    'Frost Bar':     { level: 88, inputs: [{ item: 'Frost Ore', qty: 5 }, { item: 'Coal', qty: 3 }] },
+    'Obsidian Bar':  { level: 94, inputs: [{ item: 'Obsidian Ore', qty: 5 }, { item: 'Coal', qty: 5 }] }
   };
-  var SMELTING_ORDER = ['Copper Bar', 'Tin Bar', 'Iron Bar', 'Gold Bar', 'Silver Bar', 'Jade Bar', 'Ruby Bar', 'Frost Bar', 'Dragon Bar'];
+  var SMELTING_ORDER = ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'];
 
   // ── Forging Recipes (Phase 6C) ─────────────────
   var FORGING_RECIPES = [
     // Copper Tier
-    { name: 'Copper Sword',      level: 1,  xp: 15,  dust: 4,   inputs: [{ item: 'Copper Bar', qty: 3 }],                              sprite: { x: 0, y: 0 } },
-    { name: 'Copper Shield',     level: 1,  xp: 12,  dust: 3,   inputs: [{ item: 'Copper Bar', qty: 2 }],                              sprite: { x: 0, y: 80 } },
-    // Tin Tier
-    { name: 'Tin Dagger',        level: 8,  xp: 22,  dust: 6,   inputs: [{ item: 'Tin Bar', qty: 2 }],                                 sprite: { x: 32, y: 0 } },
-    { name: 'Tin Helmet',        level: 8,  xp: 25,  dust: 7,   inputs: [{ item: 'Tin Bar', qty: 3 }],                                 sprite: { x: 128, y: 80 } },
-    // Iron Tier
-    { name: 'Iron Sword',        level: 18, xp: 40,  dust: 10,  inputs: [{ item: 'Iron Bar', qty: 3 }],                                sprite: { x: 288, y: 0 } },
-    { name: 'Iron Axe',          level: 18, xp: 45,  dust: 12,  inputs: [{ item: 'Iron Bar', qty: 4 }],                                sprite: { x: 384, y: 0 } },
-    { name: 'Iron Chestplate',   level: 20, xp: 55,  dust: 14,  inputs: [{ item: 'Iron Bar', qty: 5 }],                                sprite: { x: 0, y: 96 } },
+    { name: 'Copper Sword',        level: 1,  xp: 15,  dust: 4,   inputs: [{ item: 'Copper Bar', qty: 3 }],                                  sprite: { x: 0, y: 0 } },
+    { name: 'Copper Shield',       level: 1,  xp: 12,  dust: 3,   inputs: [{ item: 'Copper Bar', qty: 2 }],                                  sprite: { x: 0, y: 80 } },
+    // Bronze Tier
+    { name: 'Bronze Dagger',       level: 8,  xp: 22,  dust: 6,   inputs: [{ item: 'Bronze Bar', qty: 2 }],                                  sprite: { x: 32, y: 0 } },
+    { name: 'Bronze Helmet',       level: 8,  xp: 25,  dust: 7,   inputs: [{ item: 'Bronze Bar', qty: 3 }],                                  sprite: { x: 128, y: 80 } },
+    // Astral Tier
+    { name: 'Astral Sword',        level: 28, xp: 40,  dust: 10,  inputs: [{ item: 'Astral Bar', qty: 3 }],                                  sprite: { x: 288, y: 0 } },
+    { name: 'Astral Axe',          level: 28, xp: 45,  dust: 12,  inputs: [{ item: 'Astral Bar', qty: 4 }],                                  sprite: { x: 384, y: 0 } },
+    { name: 'Astral Chestplate',   level: 30, xp: 55,  dust: 14,  inputs: [{ item: 'Astral Bar', qty: 5 }],                                  sprite: { x: 0, y: 96 } },
     // Gold Tier
-    { name: 'Gold Sword',        level: 28, xp: 70,  dust: 18,  inputs: [{ item: 'Gold Bar', qty: 3 }, { item: 'Topaz', qty: 1 }],     sprite: { x: 64, y: 16 } },
-    { name: 'Gold Shield',       level: 28, xp: 65,  dust: 16,  inputs: [{ item: 'Gold Bar', qty: 3 }],                                sprite: { x: 256, y: 80 } },
+    { name: 'Gold Sword',          level: 28, xp: 70,  dust: 18,  inputs: [{ item: 'Gold Bar', qty: 3 }, { item: 'Topaz', qty: 1 }],         sprite: { x: 64, y: 16 } },
+    { name: 'Gold Shield',         level: 28, xp: 65,  dust: 16,  inputs: [{ item: 'Gold Bar', qty: 3 }],                                    sprite: { x: 256, y: 80 } },
     // Silver Tier
-    { name: 'Silver Spear',      level: 38, xp: 110, dust: 28,  inputs: [{ item: 'Silver Bar', qty: 4 }, { item: 'Sapphire', qty: 1 }], sprite: { x: 352, y: 80 } },
-    { name: 'Silver Chestplate', level: 38, xp: 120, dust: 30,  inputs: [{ item: 'Silver Bar', qty: 5 }],                              sprite: { x: 288, y: 96 } },
-    // Jade Tier
-    { name: 'Jade Staff',        level: 48, xp: 170, dust: 44,  inputs: [{ item: 'Jade Bar', qty: 4 }, { item: 'Emerald', qty: 1 }],   sprite: { x: 0, y: 32 } },
-    { name: 'Jade Chestplate',   level: 50, xp: 180, dust: 46,  inputs: [{ item: 'Jade Bar', qty: 5 }],                                sprite: { x: 416, y: 96 } },
-    { name: 'Jade Crown',        level: 50, xp: 160, dust: 40,  inputs: [{ item: 'Jade Bar', qty: 3 }, { item: 'Moonstone', qty: 1 }], sprite: { x: 0, y: 128 } },
-    // Ruby Tier
-    { name: 'Ruby Dagger',       level: 62, xp: 260, dust: 66,  inputs: [{ item: 'Ruby Bar', qty: 4 }, { item: 'Ruby', qty: 1 }],      sprite: { x: 448, y: 0 } },
-    { name: 'Ruby Bow',          level: 62, xp: 270, dust: 68,  inputs: [{ item: 'Ruby Bar', qty: 5 }],                                sprite: { x: 0, y: 64 } },
-    { name: 'Ruby Helmet',       level: 65, xp: 250, dust: 64,  inputs: [{ item: 'Ruby Bar', qty: 4 }, { item: 'Onyx', qty: 1 }],      sprite: { x: 416, y: 80 } },
+    { name: 'Silver Spear',        level: 38, xp: 110, dust: 28,  inputs: [{ item: 'Silver Bar', qty: 4 }, { item: 'Sapphire', qty: 1 }],    sprite: { x: 352, y: 80 } },
+    { name: 'Silver Chestplate',   level: 38, xp: 120, dust: 30,  inputs: [{ item: 'Silver Bar', qty: 5 }],                                  sprite: { x: 288, y: 96 } },
+    // Emerald Tier
+    { name: 'Emerald Staff',       level: 48, xp: 170, dust: 44,  inputs: [{ item: 'Emerald Bar', qty: 4 }, { item: 'Emerald', qty: 1 }],    sprite: { x: 0, y: 32 } },
+    { name: 'Emerald Chestplate',  level: 50, xp: 180, dust: 46,  inputs: [{ item: 'Emerald Bar', qty: 5 }],                                 sprite: { x: 416, y: 96 } },
+    { name: 'Emerald Crown',       level: 50, xp: 160, dust: 40,  inputs: [{ item: 'Emerald Bar', qty: 3 }, { item: 'Moonstone', qty: 1 }],  sprite: { x: 0, y: 128 } },
+    // Amethyst Tier
+    { name: 'Amethyst Dagger',     level: 62, xp: 260, dust: 66,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Ruby', qty: 1 }],      sprite: { x: 448, y: 0 } },
+    { name: 'Amethyst Bow',        level: 62, xp: 270, dust: 68,  inputs: [{ item: 'Amethyst Bar', qty: 5 }],                                sprite: { x: 0, y: 64 } },
+    { name: 'Amethyst Helmet',     level: 65, xp: 250, dust: 64,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Onyx', qty: 1 }],      sprite: { x: 416, y: 80 } },
+    // Cobalt Tier
+    { name: 'Cobalt Sword',        level: 78, xp: 430, dust: 110, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Aquamarine', qty: 1 }],  sprite: { x: 144, y: 0 } },
+    { name: 'Cobalt Chestplate',   level: 78, xp: 450, dust: 116, inputs: [{ item: 'Cobalt Bar', qty: 6 }],                                  sprite: { x: 80, y: 96 } },
+    { name: 'Cobalt Spear',        level: 80, xp: 460, dust: 118, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Diamond', qty: 1 }],     sprite: { x: 192, y: 80 } },
     // Frost Tier
-    { name: 'Frost Sword',       level: 78, xp: 430, dust: 110, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Aquamarine', qty: 1 }], sprite: { x: 144, y: 0 } },
-    { name: 'Frost Chestplate',  level: 78, xp: 450, dust: 116, inputs: [{ item: 'Frost Bar', qty: 6 }],                               sprite: { x: 80, y: 96 } },
-    { name: 'Frost Spear',       level: 80, xp: 460, dust: 118, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Diamond', qty: 1 }],  sprite: { x: 192, y: 80 } },
-    // Dragon Tier
-    { name: 'Dragon Sword',      level: 88, xp: 700, dust: 180, inputs: [{ item: 'Dragon Bar', qty: 5 }, { item: 'Diamond', qty: 2 }], sprite: { x: 272, y: 0 } },
-    { name: 'Dragon Axe',        level: 88, xp: 720, dust: 184, inputs: [{ item: 'Dragon Bar', qty: 6 }, { item: 'Opal', qty: 1 }],    sprite: { x: 560, y: 16 } },
-    { name: 'Dragon Chestplate', level: 90, xp: 800, dust: 200, inputs: [{ item: 'Dragon Bar', qty: 7 }, { item: 'Ruby', qty: 2 }],    sprite: { x: 560, y: 96 } }
+    { name: 'Frost Sword',         level: 88, xp: 700, dust: 180, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Diamond', qty: 2 }],      sprite: { x: 272, y: 0 } },
+    { name: 'Frost Axe',           level: 88, xp: 720, dust: 184, inputs: [{ item: 'Frost Bar', qty: 6 }, { item: 'Opal', qty: 1 }],         sprite: { x: 560, y: 16 } },
+    { name: 'Frost Chestplate',    level: 90, xp: 800, dust: 200, inputs: [{ item: 'Frost Bar', qty: 7 }, { item: 'Ruby', qty: 2 }],         sprite: { x: 560, y: 96 } }
   ];
 
   // ── State ─────────────────────────────────────
@@ -589,6 +622,7 @@
   // Mini-game specific state
   var miningCooldown = false;
   var miningCombo = { count: 0, lastClickTime: 0 };
+  var selectedMiningOre = null; // index into SKILLS.mining.resources, null = highest
   var fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
   var wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
   var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
@@ -636,19 +670,58 @@
           s.totalDustEarned = saved.totalDustEarned || 0;
           // v4/v5: inventory
           s.inventory = saved.inventory || {};
-          // v5: Migrate renamed items in inventory
-          var invRenames = {
-            'Astral Ore': 'Amethyst Ore',
-            'Bronze Bar': 'Copper Bar', 'Steel Bar': 'Tin Bar',
-            'Astral Bar': 'Silver Bar', 'Amethyst Bar': 'Ruby Bar',
-            'Tree Log': 'Pine Log', 'Willow Log': 'Birch Log', 'Magic Log': 'Mahogany Log',
-            'Dark Crab': 'Lobster'
-          };
-          for (var rOld in invRenames) {
-            if (s.inventory[rOld]) {
-              s.inventory[invRenames[rOld]] = (s.inventory[invRenames[rOld]] || 0) + s.inventory[rOld];
-              delete s.inventory[rOld];
+          // v5: Migrate renamed items (only for pre-v5 saves)
+          if (!saved.version || saved.version < 5) {
+            var invRenames = {
+              'Astral Ore': 'Amethyst Ore',
+              'Bronze Bar': 'Copper Bar', 'Steel Bar': 'Tin Bar',
+              'Astral Bar': 'Silver Bar', 'Amethyst Bar': 'Ruby Bar',
+              'Tree Log': 'Pine Log', 'Willow Log': 'Birch Log', 'Magic Log': 'Mahogany Log',
+              'Dark Crab': 'Lobster'
+            };
+            for (var rOld in invRenames) {
+              if (s.inventory[rOld]) {
+                s.inventory[invRenames[rOld]] = (s.inventory[invRenames[rOld]] || 0) + s.inventory[rOld];
+                delete s.inventory[rOld];
+              }
             }
+          }
+          // v6: Rename materials (ore/bar sprites re-matched by color)
+          if (!saved.version || saved.version < 6) {
+            var v6Renames = {
+              'Tin Ore': 'Bronze Ore', 'Tin Bar': 'Bronze Bar',
+              'Tin Dagger': 'Bronze Dagger', 'Tin Helmet': 'Bronze Helmet',
+              'Jade Ore': 'Emerald Ore', 'Jade Bar': 'Emerald Bar',
+              'Jade Staff': 'Emerald Staff', 'Jade Chestplate': 'Emerald Chestplate', 'Jade Crown': 'Emerald Crown',
+              'Amethyst Ore': 'Mithril Ore',
+              'Ruby Ore': 'Amethyst Ore', 'Ruby Bar': 'Amethyst Bar',
+              'Ruby Dagger': 'Amethyst Dagger', 'Ruby Bow': 'Amethyst Bow', 'Ruby Helmet': 'Amethyst Helmet',
+              'Frost Ore': 'Cobalt Ore', 'Frost Bar': 'Cobalt Bar',
+              'Frost Sword': 'Cobalt Sword', 'Frost Chestplate': 'Cobalt Chestplate', 'Frost Spear': 'Cobalt Spear',
+              'Dragon Ore': 'Frost Ore', 'Dragon Bar': 'Frost Bar',
+              'Dragon Sword': 'Frost Sword', 'Dragon Axe': 'Frost Axe', 'Dragon Chestplate': 'Frost Chestplate',
+              'Star Ore': 'Obsidian Ore'
+            };
+            var newInv = {};
+            for (var invKey in s.inventory) {
+              var nk = v6Renames[invKey] || invKey;
+              newInv[nk] = (newInv[nk] || 0) + s.inventory[invKey];
+            }
+            s.inventory = newInv;
+          }
+          // v7: Rename Iron Bar/equipment→Astral, Bronze Ore→Crimson Ore, add new bars
+          if (!saved.version || saved.version < 7) {
+            var v7Renames = {
+              'Iron Bar': 'Astral Bar',
+              'Iron Sword': 'Astral Sword', 'Iron Axe': 'Astral Axe', 'Iron Chestplate': 'Astral Chestplate',
+              'Bronze Ore': 'Crimson Ore'
+            };
+            var v7Inv = {};
+            for (var v7Key in s.inventory) {
+              var v7nk = v7Renames[v7Key] || v7Key;
+              v7Inv[v7nk] = (v7Inv[v7nk] || 0) + s.inventory[v7Key];
+            }
+            s.inventory = v7Inv;
           }
           for (var i = 0; i < SKILL_KEYS.length; i++) {
             var key = SKILL_KEYS[i];
@@ -662,14 +735,42 @@
               // v3: mining collection log
               if (key === 'mining') {
                 s.skills[key].log = saved.skills[key].log || { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
-                // Migrate renamed ores in collection log (v3 + v5)
-                var oreRenames = {
-                  'Mithril Ore': 'Amethyst Ore', 'Adamant Ore': 'Jade Ore', 'Runite Ore': 'Amethyst Ore',
-                  'Astral Ore': 'Amethyst Ore'
-                };
-                var om = s.skills[key].log.oresMined;
-                for (var oldName in oreRenames) {
-                  if (om[oldName]) { om[oreRenames[oldName]] = (om[oreRenames[oldName]] || 0) + om[oldName]; delete om[oldName]; }
+                // Migrate renamed ores in collection log (v3 → v5)
+                if (!saved.version || saved.version < 5) {
+                  var oreRenames = {
+                    'Mithril Ore': 'Amethyst Ore', 'Adamant Ore': 'Jade Ore', 'Runite Ore': 'Amethyst Ore',
+                    'Astral Ore': 'Amethyst Ore'
+                  };
+                  var om = s.skills[key].log.oresMined;
+                  for (var oldName in oreRenames) {
+                    if (om[oldName]) { om[oreRenames[oldName]] = (om[oreRenames[oldName]] || 0) + om[oldName]; delete om[oldName]; }
+                  }
+                }
+                // v6: rename ores in collection log
+                if (!saved.version || saved.version < 6) {
+                  var v6OreLog = {
+                    'Tin Ore': 'Bronze Ore', 'Jade Ore': 'Emerald Ore',
+                    'Amethyst Ore': 'Mithril Ore', 'Ruby Ore': 'Amethyst Ore',
+                    'Frost Ore': 'Cobalt Ore', 'Dragon Ore': 'Frost Ore', 'Star Ore': 'Obsidian Ore'
+                  };
+                  var oldLog = s.skills[key].log.oresMined;
+                  var newLog = {};
+                  for (var logKey in oldLog) {
+                    var nlk = v6OreLog[logKey] || logKey;
+                    newLog[nlk] = (newLog[nlk] || 0) + oldLog[logKey];
+                  }
+                  s.skills[key].log.oresMined = newLog;
+                }
+                // v7: rename Bronze Ore → Crimson Ore in collection log
+                if (!saved.version || saved.version < 7) {
+                  var v7OreLog = { 'Bronze Ore': 'Crimson Ore' };
+                  var v7oldLog = s.skills[key].log.oresMined;
+                  var v7newLog = {};
+                  for (var v7logKey in v7oldLog) {
+                    var v7nlk = v7OreLog[v7logKey] || v7logKey;
+                    v7newLog[v7nlk] = (v7newLog[v7nlk] || 0) + v7oldLog[v7logKey];
+                  }
+                  s.skills[key].log.oresMined = v7newLog;
                 }
               }
             }
@@ -1145,6 +1246,14 @@
     return best;
   }
 
+  function getSelectedMiningResource() {
+    if (selectedMiningOre !== null) {
+      var r = SKILLS.mining.resources[selectedMiningOre];
+      if (r && r.level <= state.skills.mining.level) return r;
+    }
+    return getHighestResource('mining');
+  }
+
   // ── D1: Resource tier index ───────────────────
   function getResourceTierIndex(skill) {
     var s = state.skills[skill];
@@ -1523,6 +1632,24 @@
 
   // ── Inventory Panel ──────────────────────────────
   var invCollapsed = false;
+  var invTooltipEl = null;
+
+  function showInvTooltip(e) {
+    if (!invTooltipEl) {
+      invTooltipEl = document.createElement('div');
+      invTooltipEl.className = 'skills-inv-tooltip';
+      document.body.appendChild(invTooltipEl);
+    }
+    invTooltipEl.textContent = e.currentTarget._tooltipText;
+    invTooltipEl.style.display = '';
+    var rect = e.currentTarget.getBoundingClientRect();
+    invTooltipEl.style.left = rect.left + 'px';
+    invTooltipEl.style.top = (rect.top - invTooltipEl.offsetHeight - 6) + 'px';
+  }
+
+  function hideInvTooltip() {
+    if (invTooltipEl) invTooltipEl.style.display = 'none';
+  }
 
   function renderInventoryPanel() {
     var emptyEl = $('skills-inv-empty');
@@ -1574,7 +1701,9 @@
 
         var cell = document.createElement('div');
         cell.className = 'skills-inv-cell';
-        cell.title = itemKey + ' \u00d7 ' + qty;
+        cell._tooltipText = itemKey + ' \u00d7 ' + qty;
+        cell.addEventListener('mouseenter', showInvTooltip);
+        cell.addEventListener('mouseleave', hideInvTooltip);
 
         var sprite = createSpriteEl(iconData.sheet, iconData.x, iconData.y, 16, 16, 24, 24);
         if (sprite) cell.appendChild(sprite);
@@ -1707,8 +1836,12 @@
     if (titleEl) titleEl.textContent = SKILLS[activeSkill].name;
     var resEl = $('skills-current-resource');
     if (resEl) {
-      var res = getHighestResource(activeSkill);
-      var tierIdx = getResourceTierIndex(activeSkill);
+      var res = activeSkill === 'mining' ? getSelectedMiningResource() : getHighestResource(activeSkill);
+      var resources = SKILLS[activeSkill].resources;
+      var tierIdx = 0;
+      for (var i = 0; i < resources.length; i++) {
+        if (resources[i].name === res.name) { tierIdx = i; break; }
+      }
       resEl.textContent = res.name;
       resEl.className = 'tier-' + tierIdx;
     }
@@ -1722,7 +1855,35 @@
     if (!area) return;
     area.innerHTML = '';
     miningCombo = { count: 0, lastClickTime: 0 };
-    var res = getHighestResource('mining');
+
+    // Ore selector dropdown
+    var level = state.skills.mining.level;
+    var resources = SKILLS.mining.resources;
+    var selectWrap = document.createElement('div');
+    selectWrap.className = 'mining-ore-select-wrap';
+    var sel = document.createElement('select');
+    sel.className = 'smithing-recipe-select';
+    sel.id = 'mining-ore-select';
+    var highestIdx = 0;
+    for (var si = 0; si < resources.length; si++) {
+      if (resources[si].level > level) continue;
+      highestIdx = si;
+      var opt = document.createElement('option');
+      opt.value = si;
+      opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
+      sel.appendChild(opt);
+    }
+    sel.value = selectedMiningOre !== null ? selectedMiningOre : highestIdx;
+    if (selectedMiningOre === null) selectedMiningOre = highestIdx;
+    sel.addEventListener('change', function () {
+      selectedMiningOre = parseInt(sel.value);
+      renderMining();
+      updateGameHeader();
+    });
+    selectWrap.appendChild(sel);
+    area.appendChild(selectWrap);
+
+    var res = getSelectedMiningResource();
     var maxHp = ROCK_HP[res.name] || 1;
     rockState = [];
 
@@ -1804,7 +1965,7 @@
     if (rock.classList.contains('depleted')) return;
 
     var idx = parseInt(rock.getAttribute('data-idx'));
-    var res = getHighestResource('mining');
+    var res = getSelectedMiningResource();
     var now = Date.now();
     var rs = rockState[idx];
     var log = getMiningLog();
@@ -2069,7 +2230,7 @@
       getMiningLog().events.gemVein++;
       getMiningLog().totalGems += 3;
       var area = $('skills-game-area');
-      var res = getHighestResource('mining');
+      var res = getSelectedMiningResource();
       var dustMult = getDustMult();
       // 3 guaranteed gems
       for (var i = 0; i < 3; i++) {
@@ -2125,7 +2286,7 @@
       if (starHp.hp <= 0) {
         getMiningLog().events.shootingStar++;
         var area = $('skills-game-area');
-        var res = getHighestResource('mining');
+        var res = getSelectedMiningResource();
         var xpGain = Math.floor(res.xp * getStarShowerMult() * 10);
         addXp('mining', xpGain);
         addLog('Shooting Star mined! 10x XP bonus! (+' + xpGain + ' XP)');
@@ -2165,7 +2326,7 @@
           clicked++;
           if (clicked >= total) {
             getMiningLog().events.caveIn++;
-            var res = getHighestResource('mining');
+            var res = getSelectedMiningResource();
             var dustGain = Math.floor(res.dust * getDustMult() * 5);
             if (window.StarDust) window.StarDust.add(dustGain);
             // 6B: Add ore to inventory
@@ -2218,7 +2379,7 @@
       if (veinHp.hp <= 0) {
         getMiningLog().events.deepVein++;
         var area = $('skills-game-area');
-        var res = getHighestResource('mining');
+        var res = getSelectedMiningResource();
         var xpGain = Math.floor(res.xp * getStarShowerMult() * 5);
         addXp('mining', xpGain);
         addLog('Deep Vein mined! 5x XP bonus! (+' + xpGain + ' XP)');

@@ -256,6 +256,10 @@ AreBooksGood - Improvement TODO
 - [x] Equipment category in inventory (23 items across 9 tiers)
 - [x] Bug fixes: atomic consume, stack cap guards, stuck state recovery, zone sync, click guards
 
+### Phase 6D.5: Mining & Smithing Rebalance (Done)
+- [x] 16 mining ores, 12 smelting bars, alloy recipes, sprite fixes, Iron→Astral rename, v7 migration
+- [x] Mining ore selector dropdown, inventory hover tooltips
+
 ### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
 - [ ] TOOL_BAR_COSTS replaces TOOL_COSTS (Tier 2 = 5 Iron Bars, Tier 3 = 10 Jade, Tier 4 = 8 Frost, Tier 5 = 5 Dragon)
 - [ ] Crafting UI shows bar requirement instead of SD cost
@@ -279,6 +283,19 @@ AreBooksGood - Improvement TODO
 - [ ] Cape Hall page — trophy room showing all earned capes
 - [ ] Cape perks: each cape gives a permanent passive bonus for that skill
 - [ ] Cape emote/animation on equip
+
+## Jack's RPG Adventure (Future — Major Feature)
+
+Full RPG game built into the site. Create a character, train skills, do quests, kill monsters, go on raids.
+
+- [ ] Character creation (name, class/type selection, save/load state)
+- [ ] Menu screen with themed UI (new game, continue, settings)
+- [ ] Skill training system (multiple training methods per skill)
+- [ ] Quest system (NPC dialogue, objectives, rewards)
+- [ ] Monster combat (overworld encounters, boss fights)
+- [ ] Raid system (multi-stage dungeons, loot tables)
+- [ ] Character progression (levels, stats, equipment, inventory)
+- [ ] Save/load via localStorage with versioned state
 
 ## Low Priority / Nice-to-Have
 

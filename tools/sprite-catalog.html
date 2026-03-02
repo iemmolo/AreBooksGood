@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprite Catalog — items_sheet.png</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0a0a0a;
+  color: #b0b0b0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  padding: 16px;
+  min-height: 100vh;
+}
+h1 {
+  color: #4af;
+  font-size: 20px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #222;
+}
+.toolbar button {
+  background: #1a1a1a;
+  color: #8f8;
+  border: 1px solid #333;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.toolbar button:hover { background: #252525; border-color: #8f8; }
+.toolbar input[type="file"] { display: none; }
+.toolbar label {
+  background: #1a1a1a;
+  color: #fa8;
+  border: 1px solid #333;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.toolbar label:hover { background: #252525; border-color: #fa8; }
+
+/* Stats bar */
+.stats-bar {
+  background: #111;
+  border: 1px solid #333;
+  padding: 8px 14px;
+  margin-bottom: 16px;
+  border-radius: 3px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.stat { color: #888; }
+.stat .val { font-weight: bold; }
+.stat.named .val { color: #8f8; }
+.stat.skipped .val { color: #f88; }
+.stat.remaining .val { color: #fa8; }
+
+/* === ORE & BAR MATCHING SECTION === */
+.match-section {
+  border: 2px solid #fa8;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  background: #0d0d0d;
+}
+.match-section h2 {
+  background: #1a1200;
+  color: #fa8;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-bottom: 1px solid #333;
+}
+.match-row-label {
+  color: #888;
+  font-size: 12px;
+  padding: 10px 14px 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.match-row-label.ore { color: #f88; }
+.match-row-label.bar { color: #fa8; }
+.match-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 4px 10px 12px;
+  gap: 6px;
+}
+.match-card {
+  width: 100px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: #111;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.match-card.named { border-color: #4a4; }
+.match-card.ore-type { border-color: #633; }
+.match-card.bar-type { border-color: #663; }
+.match-card.named.ore-type { border-color: #a44; box-shadow: 0 0 6px rgba(170,68,68,0.3); }
+.match-card.named.bar-type { border-color: #aa6; box-shadow: 0 0 6px rgba(170,170,68,0.3); }
+.match-card .sprite-big {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  cursor: crosshair;
+}
+.match-card .item-id {
+  font-size: 10px;
+  color: #555;
+}
+.match-card input[type="text"] {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #ddd;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 3px 4px;
+  border-radius: 2px;
+  text-align: center;
+}
+.match-card input[type="text"]:focus {
+  outline: none;
+  border-color: #4af;
+}
+.match-divider {
+  border-top: 1px dashed #333;
+  margin: 4px 14px;
+}
+
+/* Group */
+.group {
+  margin-bottom: 12px;
+  border: 1px solid #222;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.group-header {
+  background: #141414;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.group-header:hover { background: #1a1a1a; }
+.group-header .arrow {
+  color: #4af;
+  font-size: 12px;
+  transition: transform 0.15s;
+  display: inline-block;
+  width: 14px;
+}
+.group-header.collapsed .arrow { transform: rotate(-90deg); }
+.group-header .label { color: #ccc; flex: 1; }
+.group-header .count { color: #666; font-size: 11px; }
+.group-header .batch-skip {
+  background: #1a1a1a;
+  color: #f88;
+  border: 1px solid #333;
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.group-header .batch-skip:hover { border-color: #f88; }
+.group-body {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8px;
+  gap: 6px;
+  background: #0d0d0d;
+}
+.group-body.hidden { display: none; }
+
+/* Item card */
+.item-card {
+  width: 88px;
+  border: 1px solid #222;
+  border-radius: 3px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: #111;
+  transition: border-color 0.15s;
+}
+.item-card.named { border-color: #4a4; }
+.item-card.skipped { opacity: 0.3; }
+.item-card .sprite-wrap {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  cursor: crosshair;
+  position: relative;
+}
+.item-card .item-id {
+  font-size: 10px;
+  color: #555;
+}
+.item-card input[type="text"] {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #ddd;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  text-align: center;
+}
+.item-card input[type="text"]:focus {
+  outline: none;
+  border-color: #4af;
+}
+.item-card input[type="text"].pre-filled {
+  border-color: #4a4;
+  color: #8f8;
+}
+.item-card .skip-wrap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: #666;
+}
+.item-card .skip-wrap input { cursor: pointer; }
+
+/* Zoom tooltip */
+.zoom-tooltip {
+  position: fixed;
+  width: 128px;
+  height: 128px;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+  border: 2px solid #4af;
+  background-color: #0a0a0a;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+  border-radius: 3px;
+  box-shadow: 0 0 12px rgba(68, 170, 255, 0.3);
+}
+
+/* Search */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.search-bar input {
+  background: #111;
+  border: 1px solid #333;
+  color: #ddd;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 3px;
+  width: 260px;
+}
+.search-bar input:focus { outline: none; border-color: #4af; }
+.search-bar .search-info { color: #666; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<h1>Sprite Catalog — items_sheet.png</h1>
+
+<div class="toolbar" id="toolbar">
+  <button id="btn-save">Save JSON</button>
+  <label for="file-load">Load JSON</label>
+  <input type="file" id="file-load" accept=".json">
+  <button id="btn-expand">Expand All</button>
+  <button id="btn-collapse">Collapse All</button>
+  <button id="btn-export-map">Export ITEM_ICON_MAP</button>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="search-input" placeholder="Search items by name or #...">
+  <span class="search-info" id="search-info"></span>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+  <span class="stat named">Named: <span class="val" id="stat-named">0</span></span>
+  <span class="stat skipped">Skipped: <span class="val" id="stat-skipped">0</span></span>
+  <span class="stat remaining">Remaining: <span class="val" id="stat-remaining">0</span></span>
+  <span class="stat">Total: <span class="val" id="stat-total">0</span></span>
+</div>
+
+<div id="match-section"></div>
+<div id="groups-container"></div>
+<div class="zoom-tooltip" id="zoom-tooltip"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  var COLS = 36;
+  var ROWS = 35;
+  var TILE = 16;
+  var SHEET_W = 576;
+  var SHEET_H = 560;
+  var TOTAL = COLS * ROWS; // 1260
+  var SHEET_PATH = '../static/images/skills/items_sheet.png';
+
+  // Tagged ORE sprites (from user catalog) — item IDs
+  var ORE_IDS = [574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 597, 610];
+  // Tagged BAR sprites (from user catalog) — item IDs
+  var BAR_IDS = [562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573];
+
+  // Row groups from ITEMS-REFERENCE.md
+  var GROUPS = [
+    { label: 'Swords, Daggers, Axes', rowStart: 0, rowEnd: 1 },
+    { label: 'Staves, Wands, Scepters', rowStart: 2, rowEnd: 3 },
+    { label: 'Bows, Boomerangs, Medals', rowStart: 4, rowEnd: 4 },
+    { label: 'Spears, Shields, Helmets', rowStart: 5, rowEnd: 5 },
+    { label: 'Chest Armor', rowStart: 6, rowEnd: 6 },
+    { label: 'Leg Armor, Boots, Gloves', rowStart: 7, rowEnd: 7 },
+    { label: 'Hats, Crowns, Headgear', rowStart: 8, rowEnd: 8 },
+    { label: 'Raw & Cooked Food', rowStart: 9, rowEnd: 11 },
+    { label: 'Shells, Seafood', rowStart: 12, rowEnd: 12 },
+    { label: 'More Food, Herbs, Utensils', rowStart: 13, rowEnd: 13 },
+    { label: 'Prepared Dishes, Scrolls', rowStart: 14, rowEnd: 14 },
+    { label: 'Gems, Bars, Ingots', rowStart: 15, rowEnd: 15 },
+    { label: 'Ore Chunks, Gift Boxes', rowStart: 16, rowEnd: 16 },
+    { label: 'Sushi, Plates, Utensils', rowStart: 17, rowEnd: 17 },
+    { label: 'Books, Scrolls, Maps, Keys', rowStart: 18, rowEnd: 18 },
+    { label: 'Hearts, Potions, Misc', rowStart: 19, rowEnd: 19 },
+    { label: 'Tools (Hammers, Pickaxes)', rowStart: 20, rowEnd: 20 },
+    { label: 'Quills, Compasses, Bones', rowStart: 21, rowEnd: 21 },
+    { label: 'Rings, Pendants, Mirrors', rowStart: 22, rowEnd: 22 },
+    { label: 'Instruments, Feathers, Masks', rowStart: 23, rowEnd: 23 },
+    { label: 'Rings, Capes, Wands', rowStart: 24, rowEnd: 24 },
+    { label: 'Bottles, Lanterns, Bags', rowStart: 25, rowEnd: 26 },
+    { label: 'Seeds, Wood Logs, Leaves', rowStart: 27, rowEnd: 27 },
+    { label: 'Flowers, Herbs, Seeds', rowStart: 28, rowEnd: 28 },
+    { label: 'Fish', rowStart: 29, rowEnd: 29 },
+    { label: 'Shells, Starfish, Coral', rowStart: 30, rowEnd: 30 },
+    { label: 'Ores, Refined Ore', rowStart: 31, rowEnd: 31 },
+    { label: 'Rings, Orbs, Skulls', rowStart: 32, rowEnd: 32 },
+    { label: 'Misc Organic, Final Items', rowStart: 33, rowEnd: 34 }
+  ];
+
+  // Pre-populated names — ores/bars proposed by color matching
+  var KNOWN_NAMES = {
+    // Ores — matched to bars by color
+    '32,256': 'Gold Ore',         // #579 → warm red-brown
+    '0,256': 'Crimson Ore',       // #577 → dark red-brown
+    '48,256': 'Astral Ore',      // #580 → grey-purple
+    '16,256': 'Copper Ore',      // #578 → amber/golden
+    '528,240': 'Silver Ore',     // #574 → blue-grey
+    '64,256': 'Emerald Ore',     // #581 → green
+    '128,256': 'Mithril Ore',    // #585 → blue-teal
+    '112,256': 'Amethyst Ore',   // #584 → magenta-purple
+    '80,256': 'Cobalt Ore',      // #582 → blue-steel
+    '320,256': 'Frost Ore',      // #597 → icy teal
+    '96,256': 'Obsidian Ore',    // #583 → dark blue
+    '160,256': 'Molten Ore',     // #587 → dark magenta
+    // Ores — unmatched (utility, no bar)
+    '144,256': 'Coal',           // #586 → smelting fuel
+    '528,256': 'Slate Ore',      // #610 → grey-brown
+    '544,240': 'Shadow Ore',     // #575 → purple
+    '560,240': 'Iron Ore',       // #576 → blue-purple
+    // Bars — matched to ores by color
+    '384,240': 'Copper Bar',     // #565 → warm red-orange
+    '368,240': 'Bronze Bar',     // #564 → red-brown
+    '336,240': 'Astral Bar',     // #562 → grey-purple
+    '416,240': 'Gold Bar',       // #567 → bright gold
+    '400,240': 'Silver Bar',     // #566 → blue-grey
+    '448,240': 'Emerald Bar',    // #569 → green
+    '432,240': 'Mithril Bar',    // #568 → light green-teal
+    '496,240': 'Amethyst Bar',   // #572 → magenta-purple
+    '480,240': 'Cobalt Bar',     // #571 → blue-steel
+    '464,240': 'Frost Bar',      // #570 → light icy teal
+    '512,240': 'Obsidian Bar',   // #573 → dark blue
+    '352,240': 'Molten Bar',     // #563 → dark red-purple
+    // Gems (row 15)
+    '0,240': 'Peridot',
+    '32,240': 'Emerald',
+    '64,240': 'Aquamarine',
+    '96,240': 'Topaz',
+    '128,240': 'Onyx',
+    '160,240': 'Moonstone',
+    '176,240': 'Diamond',
+    '224,240': 'Opal',
+    '48,240': 'Sapphire',
+    '112,240': 'Ruby',
+    // Logs (row 27)
+    '272,432': 'Pine Log',
+    '288,432': 'Oak Log',
+    '304,432': 'Birch Log',
+    '320,432': 'Maple Log',
+    '336,432': 'Walnut Log',
+    '352,432': 'Mahogany Log',
+    '368,432': 'Yew Log',
+    '384,432': 'Elder Log',
+    // Fish (rows 29-30)
+    '0,464': 'Minnow',
+    '32,464': 'Shrimp',
+    '64,464': 'Perch',
+    '96,464': 'Trout',
+    '128,464': 'Bass',
+    '160,464': 'Salmon',
+    '208,464': 'Catfish',
+    '0,480': 'Swordfish',
+    '48,480': 'Lobster',
+    '112,480': 'Shark',
+    '176,480': 'Anglerfish',
+    '240,480': 'Leviathan',
+    // Equipment
+    '0,0': 'Copper Sword',
+    '0,80': 'Copper Shield',
+    '32,0': 'Bronze Dagger',
+    '128,80': 'Bronze Helmet',
+    '288,0': 'Astral Sword',
+    '384,0': 'Astral Axe',
+    '0,96': 'Astral Chestplate',
+    '64,16': 'Gold Sword',
+    '256,80': 'Gold Shield',
+    '352,80': 'Silver Spear',
+    '288,96': 'Silver Chestplate',
+    '0,32': 'Emerald Staff',
+    '416,96': 'Emerald Chestplate',
+    '0,128': 'Emerald Crown',
+    '448,0': 'Amethyst Dagger',
+    '0,64': 'Amethyst Bow',
+    '416,80': 'Amethyst Helmet',
+    '144,0': 'Cobalt Sword',
+    '80,96': 'Cobalt Chestplate',
+    '192,80': 'Cobalt Spear',
+    '272,0': 'Frost Sword',
+    '560,16': 'Frost Axe',
+    '560,96': 'Frost Chestplate'
+  };
+
+  // State: array of { id, col, row, x, y, name, skip }
+  var items = [];
+  var cardEls = []; // parallel array of DOM references for main catalog
+  var matchInputs = {}; // idx -> input element in match section
+
+  // Build items array
+  for (var i = 0; i < TOTAL; i++) {
+    var col = i % COLS;
+    var row = Math.floor(i / COLS);
+    var x = col * TILE;
+    var y = row * TILE;
+    var key = x + ',' + y;
+    items.push({
+      id: i + 1,
+      col: col,
+      row: row,
+      x: x,
+      y: y,
+      name: KNOWN_NAMES[key] || '',
+      skip: false,
+      _known: !!KNOWN_NAMES[key]
+    });
+  }
+
+  // DOM refs
+  var matchContainer = document.getElementById('match-section');
+  var container = document.getElementById('groups-container');
+  var zoomTip = document.getElementById('zoom-tooltip');
+  var statNamed = document.getElementById('stat-named');
+  var statSkipped = document.getElementById('stat-skipped');
+  var statRemaining = document.getElementById('stat-remaining');
+  var statTotal = document.getElementById('stat-total');
+  var searchInput = document.getElementById('search-input');
+  var searchInfo = document.getElementById('search-info');
+
+  // Preload sprite sheet
+  var sheetImg = new Image();
+  sheetImg.src = SHEET_PATH;
+
+  function updateStats() {
+    var named = 0, skipped = 0;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].name.trim()) named++;
+      if (items[i].skip) skipped++;
+    }
+    statNamed.textContent = named;
+    statSkipped.textContent = skipped;
+    statRemaining.textContent = TOTAL - named - skipped;
+    statTotal.textContent = TOTAL;
+  }
+
+  function updateCardClass(idx) {
+    var card = cardEls[idx];
+    if (!card) return;
+    var item = items[idx];
+    card.classList.toggle('named', !!item.name.trim());
+    card.classList.toggle('skipped', item.skip);
+  }
+
+  // Sync a name change from one input to the other (match <-> catalog)
+  function syncName(idx, value, sourceInput) {
+    items[idx].name = value;
+    // Update match section input
+    if (matchInputs[idx] && matchInputs[idx] !== sourceInput) {
+      matchInputs[idx].value = value;
+      matchInputs[idx].parentNode.classList.toggle('named', !!value.trim());
+    }
+    // Update catalog input
+    if (cardEls[idx]) {
+      var catInput = cardEls[idx].querySelector('input[type="text"]');
+      if (catInput && catInput !== sourceInput) {
+        catInput.value = value;
+      }
+      updateCardClass(idx);
+    }
+    updateStats();
+  }
+
+  // ========= BUILD ORE & BAR MATCHING SECTION =========
+  function buildMatchSection() {
+    matchContainer.innerHTML = '';
+    matchInputs = {};
+
+    var section = document.createElement('div');
+    section.className = 'match-section';
+
+    var h2 = document.createElement('h2');
+    h2.textContent = 'Ore & Bar Matching — Name these sprites!';
+    section.appendChild(h2);
+
+    // ORES
+    var oreLabel = document.createElement('div');
+    oreLabel.className = 'match-row-label ore';
+    oreLabel.textContent = 'ORES (' + ORE_IDS.length + ')';
+    section.appendChild(oreLabel);
+
+    var oreGrid = document.createElement('div');
+    oreGrid.className = 'match-grid';
+    for (var oi = 0; oi < ORE_IDS.length; oi++) {
+      var oreIdx = ORE_IDS[oi] - 1;
+      oreGrid.appendChild(buildMatchCard(oreIdx, 'ore-type'));
+    }
+    section.appendChild(oreGrid);
+
+    // Divider
+    var divider = document.createElement('div');
+    divider.className = 'match-divider';
+    section.appendChild(divider);
+
+    // BARS
+    var barLabel = document.createElement('div');
+    barLabel.className = 'match-row-label bar';
+    barLabel.textContent = 'BARS (' + BAR_IDS.length + ')';
+    section.appendChild(barLabel);
+
+    var barGrid = document.createElement('div');
+    barGrid.className = 'match-grid';
+    for (var bi = 0; bi < BAR_IDS.length; bi++) {
+      var barIdx = BAR_IDS[bi] - 1;
+      barGrid.appendChild(buildMatchCard(barIdx, 'bar-type'));
+    }
+    section.appendChild(barGrid);
+
+    matchContainer.appendChild(section);
+  }
+
+  function buildMatchCard(idx, typeClass) {
+    var item = items[idx];
+    var card = document.createElement('div');
+    card.className = 'match-card ' + typeClass;
+    if (item.name.trim()) card.classList.add('named');
+
+    // Big sprite (64px = 4x zoom)
+    var sprite = document.createElement('div');
+    sprite.className = 'sprite-big';
+    sprite.style.backgroundImage = 'url(' + SHEET_PATH + ')';
+    sprite.style.backgroundSize = (SHEET_W * 4) + 'px ' + (SHEET_H * 4) + 'px';
+    sprite.style.backgroundPosition = (-item.x * 4) + 'px ' + (-item.y * 4) + 'px';
+    sprite.setAttribute('data-idx', idx);
+
+    var idLabel = document.createElement('span');
+    idLabel.className = 'item-id';
+    idLabel.textContent = '#' + item.id + ' (' + item.x + ',' + item.y + ')';
+
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = item.name;
+    inp.placeholder = '#' + item.id;
+    inp.setAttribute('data-idx', idx);
+
+    inp.addEventListener('input', function() {
+      var i = parseInt(this.getAttribute('data-idx'), 10);
+      syncName(i, this.value, this);
+      this.parentNode.classList.toggle('named', !!this.value.trim());
+    });
+
+    card.appendChild(sprite);
+    card.appendChild(idLabel);
+    card.appendChild(inp);
+
+    matchInputs[idx] = inp;
+    return card;
+  }
+
+  // ========= BUILD MAIN CATALOG =========
+  function buildUI() {
+    container.innerHTML = '';
+    cardEls = new Array(TOTAL);
+
+    for (var g = 0; g < GROUPS.length; g++) {
+      var grp = GROUPS[g];
+      var startIdx = grp.rowStart * COLS;
+      var endIdx = (grp.rowEnd + 1) * COLS - 1;
+      var count = endIdx - startIdx + 1;
+
+      var groupEl = document.createElement('div');
+      groupEl.className = 'group';
+
+      // Header
+      var header = document.createElement('div');
+      header.className = 'group-header';
+      header.setAttribute('data-group', g);
+
+      var arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      arrow.textContent = '\u25BC';
+
+      var label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = 'Row ' + grp.rowStart + (grp.rowEnd > grp.rowStart ? '-' + grp.rowEnd : '') + ': ' + grp.label;
+
+      var countSpan = document.createElement('span');
+      countSpan.className = 'count';
+      countSpan.textContent = '(' + count + ' items)';
+
+      var batchBtn = document.createElement('button');
+      batchBtn.className = 'batch-skip';
+      batchBtn.textContent = 'Skip unnamed';
+      batchBtn.setAttribute('data-start', startIdx);
+      batchBtn.setAttribute('data-end', endIdx);
+
+      header.appendChild(arrow);
+      header.appendChild(label);
+      header.appendChild(countSpan);
+      header.appendChild(batchBtn);
+
+      // Body
+      var body = document.createElement('div');
+      body.className = 'group-body';
+      body.setAttribute('data-group', g);
+
+      for (var idx = startIdx; idx <= endIdx && idx < TOTAL; idx++) {
+        var item = items[idx];
+        var card = document.createElement('div');
+        card.className = 'item-card';
+        if (item.name.trim()) card.classList.add('named');
+
+        // Sprite
+        var sprite = document.createElement('div');
+        sprite.className = 'sprite-wrap';
+        sprite.style.backgroundImage = 'url(' + SHEET_PATH + ')';
+        sprite.style.backgroundSize = (SHEET_W * 3) + 'px ' + (SHEET_H * 3) + 'px';
+        sprite.style.backgroundPosition = (-item.x * 3) + 'px ' + (-item.y * 3) + 'px';
+        sprite.setAttribute('data-idx', idx);
+
+        // Item id label
+        var idLabel = document.createElement('span');
+        idLabel.className = 'item-id';
+        idLabel.textContent = '#' + item.id + ' (' + item.col + ',' + item.row + ')';
+
+        // Name input
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = item.name;
+        inp.placeholder = '#' + item.id;
+        inp.setAttribute('data-idx', idx);
+        if (item._known) inp.classList.add('pre-filled');
+
+        // Skip checkbox
+        var skipWrap = document.createElement('label');
+        skipWrap.className = 'skip-wrap';
+        var skipCb = document.createElement('input');
+        skipCb.type = 'checkbox';
+        skipCb.checked = item.skip;
+        skipCb.setAttribute('data-idx', idx);
+        var skipLabel = document.createTextNode('skip');
+        skipWrap.appendChild(skipCb);
+        skipWrap.appendChild(skipLabel);
+
+        card.appendChild(sprite);
+        card.appendChild(idLabel);
+        card.appendChild(inp);
+        card.appendChild(skipWrap);
+        body.appendChild(card);
+        cardEls[idx] = card;
+      }
+
+      groupEl.appendChild(header);
+      groupEl.appendChild(body);
+      container.appendChild(groupEl);
+    }
+
+    updateStats();
+  }
+
+  // Event delegation for catalog inputs
+  container.addEventListener('input', function(e) {
+    if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+      var idx = parseInt(e.target.getAttribute('data-idx'), 10);
+      syncName(idx, e.target.value, e.target);
+    }
+  });
+
+  container.addEventListener('change', function(e) {
+    if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+      var idx = parseInt(e.target.getAttribute('data-idx'), 10);
+      items[idx].skip = e.target.checked;
+      updateCardClass(idx);
+      updateStats();
+    }
+  });
+
+  // Group collapse/expand
+  container.addEventListener('click', function(e) {
+    if (e.target.classList.contains('batch-skip')) {
+      e.stopPropagation();
+      var start = parseInt(e.target.getAttribute('data-start'), 10);
+      var end = parseInt(e.target.getAttribute('data-end'), 10);
+      for (var i = start; i <= end && i < TOTAL; i++) {
+        if (!items[i].name.trim()) {
+          items[i].skip = true;
+          updateCardClass(i);
+          var cb = cardEls[i] && cardEls[i].querySelector('input[type="checkbox"]');
+          if (cb) cb.checked = true;
+        }
+      }
+      updateStats();
+      return;
+    }
+
+    var header = e.target.closest('.group-header');
+    if (header) {
+      var gIdx = header.getAttribute('data-group');
+      var body = container.querySelector('.group-body[data-group="' + gIdx + '"]');
+      if (body) {
+        var collapsed = body.classList.toggle('hidden');
+        header.classList.toggle('collapsed', collapsed);
+      }
+    }
+  });
+
+  // Zoom tooltip — works on both match section and catalog
+  document.addEventListener('mousemove', function(e) {
+    var target = e.target;
+    if (!target.classList.contains('sprite-wrap') && !target.classList.contains('sprite-big')) {
+      zoomTip.style.display = 'none';
+      return;
+    }
+    var idx = parseInt(target.getAttribute('data-idx'), 10);
+    var item = items[idx];
+    zoomTip.style.display = 'block';
+    zoomTip.style.backgroundImage = 'url(' + SHEET_PATH + ')';
+    zoomTip.style.backgroundSize = (SHEET_W * 8) + 'px ' + (SHEET_H * 8) + 'px';
+    zoomTip.style.backgroundPosition = (-item.x * 8) + 'px ' + (-item.y * 8) + 'px';
+
+    var tx = e.clientX + 16;
+    var ty = e.clientY - 64;
+    if (tx + 132 > window.innerWidth) tx = e.clientX - 144;
+    if (ty < 4) ty = 4;
+    zoomTip.style.left = tx + 'px';
+    zoomTip.style.top = ty + 'px';
+  });
+
+  // Save JSON
+  document.getElementById('btn-save').addEventListener('click', function() {
+    var data = {
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      sheet: 'items_sheet.png',
+      grid: { cols: COLS, rows: ROWS, tileSize: TILE },
+      oreIds: ORE_IDS,
+      barIds: BAR_IDS,
+      items: items.map(function(it) {
+        return {
+          id: it.id,
+          col: it.col,
+          row: it.row,
+          x: it.x,
+          y: it.y,
+          name: it.name,
+          skip: it.skip
+        };
+      })
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'items-catalog.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Load JSON
+  document.getElementById('file-load').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        if (!data.items || !Array.isArray(data.items)) {
+          alert('Invalid catalog JSON: missing items array');
+          return;
+        }
+        var lookup = {};
+        for (var i = 0; i < data.items.length; i++) {
+          lookup[data.items[i].id] = data.items[i];
+        }
+        for (var j = 0; j < items.length; j++) {
+          var loaded = lookup[items[j].id];
+          if (loaded) {
+            items[j].name = loaded.name || '';
+            items[j].skip = !!loaded.skip;
+          }
+        }
+        // Rebuild both sections
+        buildMatchSection();
+        buildUI();
+        // Re-apply to catalog DOM
+        for (var k = 0; k < items.length; k++) {
+          if (!cardEls[k]) continue;
+          var inp = cardEls[k].querySelector('input[type="text"]');
+          var cb = cardEls[k].querySelector('input[type="checkbox"]');
+          if (inp) {
+            inp.value = items[k].name;
+            inp.classList.toggle('pre-filled', items[k]._known && items[k].name === KNOWN_NAMES[items[k].x + ',' + items[k].y]);
+          }
+          if (cb) cb.checked = items[k].skip;
+          updateCardClass(k);
+        }
+        updateStats();
+        alert('Loaded ' + data.items.length + ' items from catalog.');
+      } catch (err) {
+        alert('Error parsing JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // Export as ITEM_ICON_MAP
+  document.getElementById('btn-export-map').addEventListener('click', function() {
+    var lines = ['var ITEM_ICON_MAP = {'];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (!it.name.trim() || it.skip) continue;
+      var pad = '    ';
+      var nameStr = "'" + it.name.replace(/'/g, "\\'") + "':";
+      while (nameStr.length < 22) nameStr += ' ';
+      lines.push(pad + nameStr + "{ sheet: 'items_sheet', x: " + it.x + ', y: ' + it.y + ' },');
+    }
+    lines.push('};');
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'ITEM_ICON_MAP.js';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Expand / Collapse all
+  document.getElementById('btn-expand').addEventListener('click', function() {
+    var bodies = container.querySelectorAll('.group-body');
+    var headers = container.querySelectorAll('.group-header');
+    for (var i = 0; i < bodies.length; i++) {
+      bodies[i].classList.remove('hidden');
+      headers[i].classList.remove('collapsed');
+    }
+  });
+
+  document.getElementById('btn-collapse').addEventListener('click', function() {
+    var bodies = container.querySelectorAll('.group-body');
+    var headers = container.querySelectorAll('.group-header');
+    for (var i = 0; i < bodies.length; i++) {
+      bodies[i].classList.add('hidden');
+      headers[i].classList.add('collapsed');
+    }
+  });
+
+  // Search
+  searchInput.addEventListener('input', function() {
+    var query = searchInput.value.trim().toLowerCase();
+    if (!query) {
+      for (var i = 0; i < cardEls.length; i++) {
+        if (cardEls[i]) cardEls[i].style.display = '';
+      }
+      var bodies = container.querySelectorAll('.group-body');
+      for (var b = 0; b < bodies.length; b++) bodies[b].classList.remove('hidden');
+      var headers = container.querySelectorAll('.group-header');
+      for (var h = 0; h < headers.length; h++) headers[h].classList.remove('collapsed');
+      searchInfo.textContent = '';
+      return;
+    }
+
+    var matchCount = 0;
+    var matchedGroups = {};
+    var numQuery = query.match(/^#?(\d+)$/);
+
+    for (var j = 0; j < items.length; j++) {
+      var match = false;
+      if (numQuery) {
+        match = items[j].id === parseInt(numQuery[1], 10);
+      } else {
+        match = items[j].name.toLowerCase().indexOf(query) !== -1;
+      }
+      if (cardEls[j]) {
+        cardEls[j].style.display = match ? '' : 'none';
+      }
+      if (match) {
+        matchCount++;
+        for (var g = 0; g < GROUPS.length; g++) {
+          var gs = GROUPS[g].rowStart * COLS;
+          var ge = (GROUPS[g].rowEnd + 1) * COLS - 1;
+          if (j >= gs && j <= ge) {
+            matchedGroups[g] = true;
+            break;
+          }
+        }
+      }
+    }
+
+    var allBodies = container.querySelectorAll('.group-body');
+    var allHeaders = container.querySelectorAll('.group-header');
+    for (var k = 0; k < allBodies.length; k++) {
+      if (matchedGroups[k]) {
+        allBodies[k].classList.remove('hidden');
+        allHeaders[k].classList.remove('collapsed');
+      } else {
+        allBodies[k].classList.add('hidden');
+        allHeaders[k].classList.add('collapsed');
+      }
+    }
+
+    searchInfo.textContent = matchCount + ' match' + (matchCount !== 1 ? 'es' : '');
+  });
+
+  // Build both sections
+  buildMatchSection();
+  buildUI();
+
+  // Start catalog groups collapsed except those with named items
+  var bodies = container.querySelectorAll('.group-body');
+  var headers = container.querySelectorAll('.group-header');
+  for (var g = 0; g < GROUPS.length; g++) {
+    var hasNamed = false;
+    var gs = GROUPS[g].rowStart * COLS;
+    var ge = (GROUPS[g].rowEnd + 1) * COLS - 1;
+    for (var ci = gs; ci <= ge && ci < TOTAL; ci++) {
+      if (items[ci].name.trim()) { hasNamed = true; break; }
+    }
+    if (!hasNamed) {
+      bodies[g].classList.add('hidden');
+      headers[g].classList.add('collapsed');
+    }
+  }
+})();
+</script>
+</body>
+</html>
