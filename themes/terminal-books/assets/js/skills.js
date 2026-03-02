@@ -591,7 +591,7 @@
   var miningCombo = { count: 0, lastClickTime: 0 };
   var fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
   var wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
-  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false };
+  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
   var combatState = {
     enemyHp: 0, enemyMaxHp: 0, enemyName: '', streak: 0, enemyTimer: null, cooldown: false,
     playerHp: 0, playerMaxHp: 0, potions: 3, dodgeCooldown: false, dead: false,
@@ -2583,7 +2583,11 @@
       if (smithingState.mode === 'smelting') return;
       if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
       if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+      if (smithingState.cooldownTimer) { clearTimeout(smithingState.cooldownTimer); smithingState.cooldownTimer = null; }
       smithingState.mode = 'smelting';
+      smithingState.phase = 'idle';
+      smithingState.hits = 0;
+      smithingState.bonusHits = 0;
       renderSmithing();
     });
     var forgeTab = document.createElement('button');
@@ -2593,7 +2597,11 @@
       if (smithingState.mode === 'forging') return;
       if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
       if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+      if (smithingState.cooldownTimer) { clearTimeout(smithingState.cooldownTimer); smithingState.cooldownTimer = null; }
       smithingState.mode = 'forging';
+      smithingState.phase = 'idle';
+      smithingState.hits = 0;
+      smithingState.bonusHits = 0;
       renderSmithing();
     });
     tabs.appendChild(smeltTab);
@@ -2618,13 +2626,11 @@
 
     // Build recipe dropdown (filtered by level + available ores)
     var options = '';
-    var firstAvailable = -1;
     for (var i = 0; i < SMELTING_ORDER.length; i++) {
       var barName = SMELTING_ORDER[i];
       var recipe = SMELTING_RECIPES[barName];
       if (recipe.level > level) continue;
       var available = canSmelt(barName);
-      if (firstAvailable < 0 && available) firstAvailable = i;
       options += '<option value="' + i + '"' + (available ? '' : ' class="smithing-unavailable"') + '>' +
         barName + ' (Lv ' + recipe.level + ')' + (available ? '' : ' [need ores]') + '</option>';
     }
@@ -2775,7 +2781,8 @@
       if (progress) progress.textContent = 'Temperature missed! Try again...';
       if (status) status.textContent = temp < zoneBottom ? 'Too cold!' : 'Too hot!';
       var cooldown = getToolCooldown('smithing', 800);
-      setTimeout(function () {
+      smithingState.cooldownTimer = setTimeout(function () {
+        smithingState.cooldownTimer = null;
         smithingState.phase = 'active';
         smithingState.smeltTemp = 0;
         var fill = $('smelting-gauge-fill');
@@ -2793,7 +2800,8 @@
     if (!canSmelt(barName) || getItemCount(barName) >= STACK_CAP) {
       if (progress) progress.textContent = !canSmelt(barName) ? 'Not enough ores!' : 'Bar stack is full (999)!';
       var failCd = getToolCooldown('smithing', 800);
-      setTimeout(function () {
+      smithingState.cooldownTimer = setTimeout(function () {
+        smithingState.cooldownTimer = null;
         smithingState.phase = 'active';
         smithingState.smeltTemp = 0;
         var fill2 = $('smelting-gauge-fill');
@@ -2855,7 +2863,8 @@
     }
 
     var resetCooldown = getToolCooldown('smithing', 1000);
-    setTimeout(function () {
+    smithingState.cooldownTimer = setTimeout(function () {
+      smithingState.cooldownTimer = null;
       renderSmithing();
       renderSkillList();
       renderRightPanel();
@@ -2925,8 +2934,14 @@
       recipeEl.addEventListener('change', function () {
         updateForgeMats();
         updateForgeZone();
-        // Update anvil sprite
         updateForgeAnvilSprite();
+        // Reset hit state when recipe changes mid-game to prevent exploit
+        smithingState.hits = 0;
+        smithingState.bonusHits = 0;
+        var fp = $('forge-progress');
+        if (fp) fp.textContent = 'Click anvil when cursor is in green zone (0/5 hits)';
+        var anv = $('forge-anvil');
+        if (anv) anv.classList.remove('glow-1', 'glow-2', 'glow-3', 'glow-4', 'glow-5');
       });
     }
 
@@ -3063,7 +3078,8 @@
       if (!canForge(recipe) || getItemCount(recipe.name) >= STACK_CAP) {
         if (progress) progress.textContent = !canForge(recipe) ? 'Not enough materials!' : 'Item stack is full (999)!';
         var resetCd = getToolCooldown('smithing', 1000);
-        setTimeout(function () {
+        smithingState.cooldownTimer = setTimeout(function () {
+          smithingState.cooldownTimer = null;
           renderSmithing();
           renderSkillList();
           renderRightPanel();
@@ -3119,7 +3135,8 @@
       animatePetAction('pet-bounce');
 
       var cooldown = getToolCooldown('smithing', 1000);
-      setTimeout(function () {
+      smithingState.cooldownTimer = setTimeout(function () {
+        smithingState.cooldownTimer = null;
         renderSmithing();
         renderSkillList();
         renderRightPanel();
@@ -3498,8 +3515,9 @@
     wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
     if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
     if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+    if (smithingState.cooldownTimer) clearTimeout(smithingState.cooldownTimer);
     var prevMode = smithingState.mode || 'smelting';
-    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false };
+    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
     if (combatState.enemyTimer) clearInterval(combatState.enemyTimer);
     if (combatState.dodgeWindowTimer) clearTimeout(combatState.dodgeWindowTimer);
     combatState = {
@@ -3780,6 +3798,27 @@
 
         if (key === activeSkill && (xp > 0 || dust > 0)) {
           spawnAutoFloat('+' + xp + ' XP +' + dust + ' SD');
+        }
+
+        // 6B: Active auto-train materials for gathering skills
+        if (key === 'mining' || key === 'fishing' || key === 'woodcutting') {
+          var matName = key === 'woodcutting' ? (LOG_NAMES[res.name] || res.name + ' Log') : res.name;
+          if (getItemCount(matName) < STACK_CAP) {
+            addItem(matName, 1);
+          }
+        }
+
+        // 6C: Active auto-train smelting for smithing
+        if (key === 'smithing') {
+          var smeltLv = s.level;
+          for (var asi = SMELTING_ORDER.length - 1; asi >= 0; asi--) {
+            var asBar = SMELTING_ORDER[asi];
+            if (SMELTING_RECIPES[asBar].level <= smeltLv && canSmelt(asBar) && getItemCount(asBar) < STACK_CAP) {
+              consumeSmeltingOres(asBar);
+              addItem(asBar, 1);
+              break;
+            }
+          }
         }
       }
       renderSkillList();
