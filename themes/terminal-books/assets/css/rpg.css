@@ -255,31 +255,42 @@
   justify-content: center;
 }
 
-/* ── World Map ───────────────────────────────── */
-.rpg-world-header {
+/* ── Game Screen Topbar ──────────────────────── */
+.rpg-game-topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 0;
+  justify-content: space-between;
+  padding: 10px 0;
   border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
-.rpg-world-info {
-  flex: 1;
+.rpg-game-topbar-info {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 12px;
 }
 
-.rpg-world-name {
+.rpg-game-topbar-name {
   font-size: 1.1em;
   color: var(--accent);
 }
 
-.rpg-world-total {
+.rpg-game-topbar-level {
   font-size: 0.85em;
   color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* ── World Map Nav Button (in left panel) ────── */
+.rpg-map-nav-btn {
+  width: 100%;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* ── World Map Container (in center panel) ───── */
+.rpg-world-map-container {
+  padding: 16px 8px;
 }
 
 .rpg-locations-grid {
@@ -327,131 +338,22 @@
   margin-top: 2px;
 }
 
-/* ── Location Screen ─────────────────────────── */
-.rpg-location-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
-  margin-bottom: 16px;
-  position: sticky;
-  top: 0;
-  background: var(--background);
-  z-index: 10;
+/* ── Character Info (in right panel) ─────────── */
+.rpg-char-info {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
-.rpg-location-title {
-  font-size: 1.2em;
-  color: var(--accent);
-  margin: 0;
-}
-
-.rpg-location-content {
-  min-height: 300px;
-}
-
-/* ── Home / Character Sheet ──────────────────── */
-.rpg-home-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
-  margin-bottom: 20px;
-}
-
-.rpg-home-content {
-  text-align: center;
-}
-
-.rpg-home-name {
-  font-size: 1.3em;
-  color: var(--accent);
-  margin-bottom: 20px;
-}
-
-.rpg-home-section-title {
+.rpg-char-name {
   font-size: 1em;
   color: var(--accent);
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
-  padding-bottom: 6px;
-  margin: 24px 0 12px;
-  text-align: left;
+  margin-bottom: 2px;
 }
 
-.rpg-home-skills-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.rpg-home-skill-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
-  text-align: left;
-}
-
-.rpg-home-skill-mastered {
-  border-color: color-mix(in srgb, #ffd700 40%, transparent);
-  background: color-mix(in srgb, #ffd700 5%, transparent);
-}
-
-.rpg-home-skill-icon {
-  font-size: 1.3em;
-  width: 28px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.rpg-home-skill-name {
-  flex: 1;
-  font-size: 0.95em;
-}
-
-.rpg-home-skill-level {
-  font-size: 0.9em;
-  color: var(--accent);
-  width: 50px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.rpg-home-skill-xp-bar {
-  width: 80px;
-  height: 4px;
-  background: color-mix(in srgb, var(--foreground) 12%, transparent);
-  flex-shrink: 0;
-}
-
-.rpg-home-skill-xp-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.3s;
-}
-
-.rpg-home-inv-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 6px;
-  text-align: left;
-}
-
-.rpg-home-inv-item {
-  padding: 6px 10px;
+.rpg-char-total {
   font-size: 0.85em;
-  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
-  color: color-mix(in srgb, var(--foreground) 80%, transparent);
-}
-
-.rpg-home-empty {
-  font-size: 0.9em;
-  color: color-mix(in srgb, var(--foreground) 40%, transparent);
-  text-align: center;
-  padding: 12px;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
 }
 
 /* ── Responsive ──────────────────────────────── */
@@ -472,8 +374,6 @@
     gap: 0.5em 0.8em;
     font-size: 0.85em;
   }
-
-  .rpg-home-skill-xp-bar { width: 50px; }
 }
 
 @media (max-width: 480px) {

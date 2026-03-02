@@ -30,6 +30,7 @@
   var activeSlot = -1;
   var currentScreen = 'rpg-menu-screen';
   var createTargetSlot = -1;
+  var centerMode = 'map'; // 'map' or 'skill'
 
   // ── Helpers ───────────────────────────────────
   function $(id) { return document.getElementById(id); }
@@ -63,7 +64,7 @@
 
   function getTotalLevel(idx) {
     var ss = getSlotSkillsState(idx);
-    if (!ss || !ss.skills) return 5; // default 5 (each skill starts at 1)
+    if (!ss || !ss.skills) return 5;
     var total = 0;
     for (var i = 0; i < SKILL_KEYS.length; i++) {
       var sk = ss.skills[SKILL_KEYS[i]];
@@ -85,6 +86,12 @@
     return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
   }
 
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
   // ── Screen Manager ────────────────────────────
   function showScreen(id) {
     var screens = document.querySelectorAll('.rpg-screen');
@@ -96,12 +103,32 @@
     currentScreen = id;
   }
 
+  // ── Center Panel Toggle ───────────────────────
+  function showCenterContent(mode) {
+    centerMode = mode;
+    var mapContainer = $('rpg-world-map-container');
+    var gameHeader = $('skills-game-header');
+    var gameArea = $('skills-game-area');
+    var gameLog = $('skills-game-log');
+
+    if (mode === 'map') {
+      if (mapContainer) mapContainer.style.display = 'block';
+      if (gameHeader) gameHeader.style.display = 'none';
+      if (gameArea) gameArea.style.display = 'none';
+      if (gameLog) gameLog.style.display = 'none';
+    } else {
+      if (mapContainer) mapContainer.style.display = 'none';
+      if (gameHeader) gameHeader.style.display = '';
+      if (gameArea) gameArea.style.display = '';
+      if (gameLog) gameLog.style.display = '';
+    }
+  }
+
   // ── Menu Screen ───────────────────────────────
   function renderMenuScreen() {
     var slotsPanel = $('rpg-save-slots');
     slotsPanel.style.display = 'none';
 
-    // Check if any saves exist for Continue button state
     var hasSaves = false;
     for (var i = 0; i < MAX_SLOTS; i++) {
       if (meta.slots[i]) { hasSaves = true; break; }
@@ -175,15 +202,8 @@
     }
   }
 
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
-  }
-
   // ── Menu Event Handlers ───────────────────────
   function onNewGame() {
-    // Check if any empty slot exists
     var hasEmpty = false;
     for (var i = 0; i < MAX_SLOTS; i++) {
       if (!meta.slots[i]) { hasEmpty = true; break; }
@@ -228,10 +248,8 @@
     meta.slots[slot] = null;
     localStorage.removeItem(slotStorageKey(slot));
     saveMeta();
-    // Re-render whichever mode we're in
     var slotsPanel = $('rpg-save-slots');
     if (slotsPanel.style.display !== 'none') {
-      // Determine mode from context
       var hasPlay = slotsPanel.querySelector('.rpg-btn-primary[data-slot]');
       var mode = (hasPlay && hasPlay.textContent === 'Play') ? 'continue' : 'new';
       renderSaveSlots(mode);
@@ -276,20 +294,56 @@
     // Set up RPG storage key for skills.js
     window.__RPG_STORAGE_KEY = slotStorageKey(slot);
 
+    // Hide the skills-topbar (we use our own topbar)
+    var skillsTopbar = document.querySelector('.skills-topbar');
+    if (skillsTopbar) skillsTopbar.style.display = 'none';
+
+    // Reveal RPG-mode elements
+    var mapBtn = $('rpg-map-nav-btn');
+    if (mapBtn) mapBtn.style.display = '';
+    var charInfo = $('rpg-char-info');
+    if (charInfo) charInfo.style.display = '';
+
+    // Update topbar
+    updateTopbar();
+
+    // Update character info in right panel
+    updateCharInfo();
+
+    // Show game screen
+    showScreen('rpg-game-screen');
+
+    // Render world map in center
     renderWorldMap();
-    showScreen('rpg-world-screen');
+    showCenterContent('map');
+
+    // (Re-)initialize skills.js with the new slot's storage key
+    window.dispatchEvent(new Event('rpg-skills-init'));
+  }
+
+  // ── Topbar ────────────────────────────────────
+  function updateTopbar() {
+    if (activeSlot < 0 || !meta.slots[activeSlot]) return;
+    var slot = meta.slots[activeSlot];
+    var nameEl = $('rpg-game-topbar-name');
+    var lvlEl = $('rpg-game-topbar-level');
+    if (nameEl) nameEl.textContent = slot.name;
+    if (lvlEl) lvlEl.textContent = 'Total Lv: ' + getTotalLevel(activeSlot);
+  }
+
+  function updateCharInfo() {
+    if (activeSlot < 0 || !meta.slots[activeSlot]) return;
+    var slot = meta.slots[activeSlot];
+    var nameEl = $('rpg-char-name');
+    var totalEl = $('rpg-char-total');
+    if (nameEl) nameEl.textContent = slot.name;
+    if (totalEl) totalEl.textContent = 'Total Lv: ' + getTotalLevel(activeSlot);
   }
 
   // ── World Map ─────────────────────────────────
   function renderWorldMap() {
     if (activeSlot < 0 || !meta.slots[activeSlot]) return;
-    var slot = meta.slots[activeSlot];
 
-    // Header
-    $('rpg-world-name').textContent = slot.name;
-    $('rpg-world-total').textContent = 'Total Lv: ' + getTotalLevel(activeSlot);
-
-    // Location tiles
     var grid = $('rpg-locations-grid');
     grid.innerHTML = '';
 
@@ -315,7 +369,6 @@
       tile.appendChild(name);
       tile.appendChild(desc);
 
-      // Show skill level on skill locations
       if (loc.skill) {
         var lvl = getSkillLevel(activeSlot, loc.skill);
         var lvlEl = document.createElement('div');
@@ -334,139 +387,43 @@
     if (!tile) return;
     var locId = tile.getAttribute('data-location');
 
-    if (locId === 'town') {
-      enterHome();
-      return;
-    }
-
     // Find location
     var loc = null;
     for (var i = 0; i < LOCATIONS.length; i++) {
       if (LOCATIONS[i].id === locId) { loc = LOCATIONS[i]; break; }
     }
-    if (!loc || !loc.skill) return;
+    if (!loc) return;
+
+    if (!loc.skill) {
+      // Town hub — no action for now (could show character sheet later)
+      return;
+    }
 
     enterSkillLocation(loc);
   }
 
   // ── Skill Location Entry ──────────────────────
   function enterSkillLocation(loc) {
-    $('rpg-location-title').textContent = loc.name;
+    showCenterContent('skill');
 
-    // Move skills panel into location content area
-    var container = $('rpg-skills-container');
-    var content = $('rpg-location-content');
-    var skillsPage = container.querySelector('#skills-page');
-
-    if (skillsPage) {
-      content.innerHTML = '';
-      content.appendChild(skillsPage);
-    }
-
-    showScreen('rpg-location-screen');
-
-    // Set the storage key and trigger skills.js reinit
-    window.__RPG_STORAGE_KEY = slotStorageKey(activeSlot);
-    window.dispatchEvent(new Event('rpg-skills-init'));
-
-    // Auto-select the correct skill after a brief delay for DOM to settle
+    // Click the matching skill row to switch skills.js to this skill
     setTimeout(function () {
       var skillRow = document.querySelector('.skill-row[data-skill="' + loc.skill + '"]');
       if (skillRow) skillRow.click();
-    }, 100);
+    }, 50);
   }
 
-  function exitSkillLocation() {
-    // Cleanup skills.js state
+  function returnToMap() {
+    // Cleanup the active game in skills.js
     if (typeof window.__RPG_SKILLS_CLEANUP === 'function') {
       window.__RPG_SKILLS_CLEANUP();
     }
 
-    // Move skills panel back to hidden container
-    var container = $('rpg-skills-container');
-    var content = $('rpg-location-content');
-    var skillsPage = content.querySelector('#skills-page');
-
-    if (skillsPage) {
-      container.appendChild(skillsPage);
-    }
-    content.innerHTML = '';
-
+    // Refresh map tiles with updated levels
     renderWorldMap();
-    showScreen('rpg-world-screen');
-  }
-
-  // ── Home / Character Sheet ────────────────────
-  function enterHome() {
-    if (activeSlot < 0 || !meta.slots[activeSlot]) return;
-    var slot = meta.slots[activeSlot];
-
-    $('rpg-home-name').textContent = slot.name;
-
-    // Render skill levels
-    var skillsDiv = $('rpg-home-skills');
-    skillsDiv.innerHTML = '<h3 class="rpg-home-section-title">Skills</h3>';
-
-    var skillsGrid = document.createElement('div');
-    skillsGrid.className = 'rpg-home-skills-grid';
-
-    for (var i = 0; i < SKILL_KEYS.length; i++) {
-      var sk = SKILL_KEYS[i];
-      var lvl = getSkillLevel(activeSlot, sk);
-      var ss = getSlotSkillsState(activeSlot);
-      var xp = 0;
-      var xpNeeded = 50;
-      if (ss && ss.skills && ss.skills[sk]) {
-        xp = ss.skills[sk].xp || 0;
-        // XP formula from skills.js: floor(50 * 1.08^(level-1))
-        xpNeeded = Math.floor(50 * Math.pow(1.08, lvl - 1));
-      }
-      var pct = Math.min(100, Math.round((xp / xpNeeded) * 100));
-
-      var row = document.createElement('div');
-      row.className = 'rpg-home-skill-row';
-      if (lvl >= 99) row.classList.add('rpg-home-skill-mastered');
-
-      row.innerHTML = '<span class="rpg-home-skill-icon">' + (SKILL_ICONS[sk] || '') + '</span>' +
-        '<span class="rpg-home-skill-name">' + sk.charAt(0).toUpperCase() + sk.slice(1) + '</span>' +
-        '<span class="rpg-home-skill-level">Lv ' + lvl + '</span>' +
-        '<div class="rpg-home-skill-xp-bar"><div class="rpg-home-skill-xp-fill" style="width:' + pct + '%"></div></div>';
-
-      skillsGrid.appendChild(row);
-    }
-    skillsDiv.appendChild(skillsGrid);
-
-    // Render inventory summary
-    var invDiv = $('rpg-home-inventory');
-    invDiv.innerHTML = '<h3 class="rpg-home-section-title">Inventory</h3>';
-
-    var ss = getSlotSkillsState(activeSlot);
-    if (ss && ss.inventory) {
-      var keys = [];
-      for (var k in ss.inventory) {
-        if (ss.inventory.hasOwnProperty(k) && ss.inventory[k] > 0) {
-          keys.push(k);
-        }
-      }
-      if (keys.length > 0) {
-        var invGrid = document.createElement('div');
-        invGrid.className = 'rpg-home-inv-grid';
-        keys.sort();
-        for (var j = 0; j < keys.length; j++) {
-          var item = document.createElement('div');
-          item.className = 'rpg-home-inv-item';
-          item.textContent = keys[j] + ' x' + ss.inventory[keys[j]];
-          invGrid.appendChild(item);
-        }
-        invDiv.appendChild(invGrid);
-      } else {
-        invDiv.innerHTML += '<div class="rpg-home-empty">No items yet. Visit skill locations to gather resources!</div>';
-      }
-    } else {
-      invDiv.innerHTML += '<div class="rpg-home-empty">No items yet. Visit skill locations to gather resources!</div>';
-    }
-
-    showScreen('rpg-home-screen');
+    updateTopbar();
+    updateCharInfo();
+    showCenterContent('map');
   }
 
   // ── Save & Quit ───────────────────────────────
@@ -481,21 +438,44 @@
       window.__RPG_SKILLS_CLEANUP();
     }
 
-    // Move skills panel back if it was moved
-    var container = $('rpg-skills-container');
-    var content = $('rpg-location-content');
-    if (content) {
-      var skillsPage = content.querySelector('#skills-page');
-      if (skillsPage) {
-        container.appendChild(skillsPage);
-      }
-      content.innerHTML = '';
-    }
+    // Hide RPG-mode elements
+    var mapBtn = $('rpg-map-nav-btn');
+    if (mapBtn) mapBtn.style.display = 'none';
+    var charInfo = $('rpg-char-info');
+    if (charInfo) charInfo.style.display = 'none';
+
+    // Restore skills-topbar visibility
+    var skillsTopbar = document.querySelector('.skills-topbar');
+    if (skillsTopbar) skillsTopbar.style.display = '';
 
     activeSlot = -1;
-    window.__RPG_STORAGE_KEY = null;
+    centerMode = 'map';
+    window.__RPG_STORAGE_KEY = '__rpg_pending__';
     showScreen('rpg-menu-screen');
     renderMenuScreen();
+  }
+
+  // ── Skill Row Click Interceptor ───────────────
+  // When the user clicks a skill row while the map is showing,
+  // switch to skill view first so skills.js renders into visible area
+  function onSkillListCapture(e) {
+    var row = e.target.closest('.skill-row');
+    if (!row) return;
+    if (centerMode === 'map') {
+      showCenterContent('skill');
+    }
+  }
+
+  // ── Keyboard Interceptor ────────────────────────
+  // skills.js onKeyDown handles 1-5 to switch skills.
+  // If the map is showing, switch to skill view so the user sees the result.
+  function onRpgKeyDown(e) {
+    if (currentScreen !== 'rpg-game-screen') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    var num = parseInt(e.key);
+    if (num >= 1 && num <= 5 && centerMode === 'map') {
+      showCenterContent('skill');
+    }
   }
 
   // ── Init ──────────────────────────────────────
@@ -515,11 +495,19 @@
     $('rpg-btn-begin').addEventListener('click', onBeginAdventure);
     $('rpg-name-input').addEventListener('input', onNameInput);
     $('rpg-btn-save-quit').addEventListener('click', onSaveQuit);
-    $('rpg-btn-back-map').addEventListener('click', exitSkillLocation);
-    $('rpg-btn-back-world').addEventListener('click', function () {
-      renderWorldMap();
-      showScreen('rpg-world-screen');
-    });
+
+    // World Map button in left panel
+    var mapBtn = $('rpg-map-nav-btn');
+    if (mapBtn) mapBtn.addEventListener('click', returnToMap);
+
+    // Skill row click interceptor (capture phase)
+    var skillsList = $('skills-list');
+    if (skillsList) {
+      skillsList.addEventListener('click', onSkillListCapture, true);
+    }
+
+    // Keyboard interceptor: switch to skill view when pressing 1-5 on map
+    document.addEventListener('keydown', onRpgKeyDown);
 
     // Enter key submits character creation
     $('rpg-name-input').addEventListener('keydown', function (e) {

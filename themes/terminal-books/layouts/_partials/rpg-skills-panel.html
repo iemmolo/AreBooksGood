@@ -12,6 +12,8 @@
 
     <!-- Left Panel: Skill List -->
     <div class="skills-list-panel">
+      <!-- RPG mode: World Map button (hidden on standalone /pets/skills/) -->
+      <button class="rpg-map-nav-btn rpg-btn rpg-btn-primary rpg-btn-small" id="rpg-map-nav-btn" style="display:none">World Map</button>
       <h3 class="skills-panel-title">Skills</h3>
       <div class="skills-list" id="skills-list">
         <div class="skill-row selected" data-skill="mining">
@@ -59,7 +61,11 @@
 
     <!-- Center Panel: Active Mini-Game -->
     <div class="skills-game-panel" id="skills-game-panel">
-      <div class="skills-game-header">
+      <!-- RPG mode: World Map (hidden on standalone /pets/skills/) -->
+      <div class="rpg-world-map-container" id="rpg-world-map-container" style="display:none">
+        <div class="rpg-locations-grid" id="rpg-locations-grid"></div>
+      </div>
+      <div class="skills-game-header" id="skills-game-header">
         <h2 id="skills-game-title">Mining</h2>
         <div class="skills-game-resource">
           Current: <span id="skills-current-resource">Copper Ore</span>
@@ -112,6 +118,13 @@
       </div>
 
       <button class="skills-log-btn" id="skills-log-btn">Collection Log</button>
+
+      <!-- RPG mode: Character Info (hidden on standalone /pets/skills/) -->
+      <div class="rpg-char-info" id="rpg-char-info" style="display:none">
+        <h3 class="skills-panel-title">Character</h3>
+        <div class="rpg-char-name" id="rpg-char-name"></div>
+        <div class="rpg-char-total" id="rpg-char-total">Total Lv: 5</div>
+      </div>
     </div>
 
   </div>

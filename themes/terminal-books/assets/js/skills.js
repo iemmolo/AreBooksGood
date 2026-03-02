@@ -593,6 +593,7 @@
   var catalog = null;
   var enemyData = null;
   var activeAutoTimer = null;
+  var listenersAttached = false;
 
   // Mini-game specific state
   var miningCooldown = false;
@@ -3952,44 +3953,48 @@
       // Start active auto-train
       startActiveAutoTrain();
 
-      // Event listeners
-      var skillRows = document.querySelectorAll('.skill-row');
-      for (var i = 0; i < skillRows.length; i++) {
-        skillRows[i].addEventListener('click', (function (key) {
-          return function () { switchSkill(key); };
-        })(skillRows[i].getAttribute('data-skill')));
+      // Event listeners (guard prevents duplicates when reinit is called with persistent DOM)
+      if (!listenersAttached) {
+        listenersAttached = true;
+
+        var skillRows = document.querySelectorAll('.skill-row');
+        for (var i = 0; i < skillRows.length; i++) {
+          skillRows[i].addEventListener('click', (function (key) {
+            return function () { switchSkill(key); };
+          })(skillRows[i].getAttribute('data-skill')));
+        }
+
+        var assignBtn = $('skills-assign-btn');
+        if (assignBtn) assignBtn.addEventListener('click', openPetPicker);
+
+        var unassignBtn = $('skills-unassign-btn');
+        if (unassignBtn) unassignBtn.addEventListener('click', unassignPet);
+
+        var pickerClose = $('skills-picker-close');
+        if (pickerClose) pickerClose.addEventListener('click', function () {
+          $('skills-pet-picker').style.display = 'none';
+        });
+
+        var invToggle = $('skills-inv-toggle');
+        if (invToggle) invToggle.addEventListener('click', toggleInventoryPanel);
+        var invTitle = $('skills-inv-title');
+        if (invTitle) invTitle.addEventListener('click', toggleInventoryPanel);
+
+        var logBtn = $('skills-log-btn');
+        if (logBtn) logBtn.addEventListener('click', showCollectionLog);
+
+        var logClose = $('skills-log-close');
+        if (logClose) logClose.addEventListener('click', function () {
+          $('skills-log-overlay').style.display = 'none';
+        });
+
+        var idleOk = $('skills-idle-report-ok');
+        if (idleOk) idleOk.addEventListener('click', function () {
+          $('skills-idle-report').style.display = 'none';
+        });
+
+        document.addEventListener('keydown', onKeyDown);
       }
-
-      var assignBtn = $('skills-assign-btn');
-      if (assignBtn) assignBtn.addEventListener('click', openPetPicker);
-
-      var unassignBtn = $('skills-unassign-btn');
-      if (unassignBtn) unassignBtn.addEventListener('click', unassignPet);
-
-      var pickerClose = $('skills-picker-close');
-      if (pickerClose) pickerClose.addEventListener('click', function () {
-        $('skills-pet-picker').style.display = 'none';
-      });
-
-      var invToggle = $('skills-inv-toggle');
-      if (invToggle) invToggle.addEventListener('click', toggleInventoryPanel);
-      var invTitle = $('skills-inv-title');
-      if (invTitle) invTitle.addEventListener('click', toggleInventoryPanel);
-
-      var logBtn = $('skills-log-btn');
-      if (logBtn) logBtn.addEventListener('click', showCollectionLog);
-
-      var logClose = $('skills-log-close');
-      if (logClose) logClose.addEventListener('click', function () {
-        $('skills-log-overlay').style.display = 'none';
-      });
-
-      var idleOk = $('skills-idle-report-ok');
-      if (idleOk) idleOk.addEventListener('click', function () {
-        $('skills-idle-report').style.display = 'none';
-      });
-
-      document.addEventListener('keydown', onKeyDown);
 
       // Update lastActiveAt for all skills with pets on page load
       var now = Date.now();
