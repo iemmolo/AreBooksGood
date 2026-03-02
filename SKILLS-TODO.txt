@@ -142,7 +142,7 @@ Pet Skills Expansion — Phase 2
 - [x] Perks panel in right panel (locked/unlocked styling)
 
 ### Phase 2: Rock HP System (Multi-Hit Mining)
-- [x] ROCK_HP constant: Copper/Tin=1, Iron/Coal=2, Gold/Mithril=3, Adamant/Runite=4, Dragon/Star=5
+- [x] ROCK_HP constant: Silver/Tin=1, Iron/Coal=2, Gold/Mithril=3, Adamant/Runite=4, Dragon/Star=5
 - [x] rockState array tracking per-rock HP
 - [x] HP bars inside rocks (hidden for 1-HP ores)
 - [x] Partial XP/dust per hit, full rewards on depletion
@@ -197,24 +197,51 @@ Pet Skills Expansion — Phase 2
 - [x] Material drop toasts with sprite icons (reuses existing sprite particles + addLog)
 - [x] Idle mode also adds materials (capped at 50% of active rate)
 
-### Phase 6C: Smithing Consumes Ores → Produces Bars
-- [ ] SMITHING_RECIPES constant: bar → { ores: [{key, count}], xp, dust }
-  - Bronze Bar = 1 Copper Ore + 1 Tin Ore
-  - Iron Bar = 2 Iron Ore
-  - Steel Bar = 1 Iron Bar + 2 Coal
-  - Astral Bar = 3 Astral Ore + 1 Coal
-  - Jade Bar = 4 Jade Ore + 2 Coal
-  - Amethyst Bar = 5 Amethyst Ore + 3 Coal
-  - Dragon Bar = 5 Dragon Ore + 5 Coal
-- [ ] Can only smith if ores in inventory (grey out unavailable recipes)
-- [ ] Bars go to inventory on successful smith
-- [ ] Recipe UI shows required materials with have/need counts
+### Phase 6B.5: Items Sheet Migration (Done)
+- [x] Copy items_sheet (1).png → static/images/skills/items_sheet.png (576×560, 36×35 grid, ~1244 items)
+- [x] Create ITEMS-REFERENCE.md with full sprite catalog (coordinates, names, categories)
+- [x] Add items_sheet to SKILL_SPRITE_PATHS and SKILL_SHEET_META
+- [x] Remap ITEM_ICON_MAP: all entries now use items_sheet.png
+- [x] Expand mining ores: 10 → 12 tiers (Copper, Tin, Iron, Coal, Gold, Silver, Jade, Amethyst, Ruby, Frost, Dragon, Star)
+- [x] Expand fishing: 6 → 12 tiers (Minnow, Shrimp, Perch, Trout, Bass, Salmon, Catfish, Swordfish, Lobster, Shark, Anglerfish, Leviathan)
+- [x] Expand woodcutting: 7 → 8 tiers (Pine, Oak, Birch, Maple, Walnut, Mahogany, Yew, Elder)
+- [x] Expand smithing bars: 8 → 9 (Copper, Tin, Iron, Gold, Silver, Jade, Ruby, Frost, Dragon)
+- [x] Update GEM_NAMES: 7 → 10 gems (Peridot, Emerald, Aquamarine, Topaz, Onyx, Moonstone, Diamond, Opal, Sapphire, Ruby)
+- [x] Update all sprite particle calls (ORE_DROP_SPRITES, BAR_DROP_SPRITES, GEM_SPRITES, FISH_SPRITES, WOOD_DROP_SPRITES)
+- [x] State migration v4 → v5: rename old items (Astral→Amethyst, Bronze Bar→Copper Bar, etc.)
+- [x] Collection log migration for renamed ores
+
+### Phase 6C: Smithing → Smelting + Forging (Done)
+- [x] SMELTING_RECIPES + SMELTING_ORDER constants (9 bar recipes)
+- [x] FORGING_RECIPES constant (23 equipment recipes across 9 tiers)
+- [x] Equipment ITEM_ICON_MAP entries + Equipment ITEM_CATEGORIES group
+- [x] canSmelt/consumeSmeltingOres/canForge/consumeForgingMats helpers
+- [x] renderMaterialRequirements shared component (sprite icons + have/need)
+- [x] Smithing mode toggle tabs (Smelting / Forging)
+- [x] Smelting: temperature gauge mini-game (hold to heat, release in green zone)
+- [x] Smelting: recipe dropdown filtered by level + available ores
+- [x] Smelting: material requirements display with green/red counts
+- [x] Smelting: perfect release = 5x bonus (same as masterwork)
+- [x] Smelting: consumes ores → produces bars in inventory
+- [x] Forging: 5-hit timing bar mini-game (adapted from old smithing)
+- [x] Forging: recipe dropdown showing equipment items filtered by level + mats
+- [x] Forging: consumes bars/gems → produces equipment in inventory
+- [x] Forging: masterwork bonus unchanged (5/5 perfect = 5x)
+- [x] Idle mode: smithing pet auto-smelts bars from available ores (50% of actions)
+- [x] Idle report shows smelted bars summary
+- [x] CSS: tab toggle, temperature gauge, material requirements, heat button
+- [x] Bug fix: atomic consume helpers (pre-check all inputs before removing any)
+- [x] Bug fix: stack cap (999) checks on smelting, forging, and idle smelting
+- [x] Bug fix: smelting stuck state recovery when ores insufficient or stack full
+- [x] Bug fix: forging zone width mismatch on initial render (updateForgeZone call)
+- [x] Bug fix: heat button disabled state includes stack cap check (all 4 sites)
+- [x] Bug fix: forging anvil blocks clicks when materials insufficient or stack full
 
 ### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
 - [ ] TOOL_BAR_COSTS replaces TOOL_COSTS
   - Tier 2 = 5 Iron Bars
-  - Tier 3 = 10 Steel Bars
-  - Tier 4 = 8 Astral Bars
+  - Tier 3 = 10 Jade Bars
+  - Tier 4 = 8 Frost Bars
   - Tier 5 = 5 Dragon Bars
 - [ ] Crafting UI shows bar requirement instead of SD cost
 - [ ] SD remains reward currency, just not spent on tools
@@ -225,7 +252,31 @@ Pet Skills Expansion — Phase 2
 - [ ] Potions craftable or buyable (using sprites from static/images/skills/potions/)
 - [ ] Gear buffs from smithed bars (temporary combat stat boosts)
 
-### Phase 7: 99 Capes (Planned)
+### Phase 7: Cooking Skill
+- [ ] New skill: Cooking (skill 6)
+- [ ] Input: Fish (from fishing) + raw food ingredients (items_sheet rows 9-14)
+- [ ] Output: Prepared meals that heal HP in combat (items_sheet rows 9-14, 17)
+- [ ] Mini-game: Timing-based (temperature gauge)
+- [ ] Recipes: Fish + ingredient → dish (e.g. Trout + Mushroom → Fish Stew)
+- [ ] 100+ food sprites available from items_sheet
+
+### Phase 8: Crafting Skill
+- [ ] New skill: Crafting (skill 7)
+- [ ] Input: Bars (from smithing) + gems (from mining)
+- [ ] Output: Weapons and armor for dungeon gear system (items_sheet rows 0-8)
+- [ ] Mini-game: Assembly-based (place components in correct order)
+- [ ] Recipes: Bars + gems → equipment (e.g. 3 Iron Bars + Ruby → Fire Sword)
+- [ ] 200+ weapon/armor sprites available from items_sheet
+
+### Phase 9: Magic / Alchemy Skill
+- [ ] New skill: Magic/Alchemy (skill 8)
+- [ ] Trained by: Casting alchemy on produced items (ores, bars, fish, logs, food)
+- [ ] Output: Enchanted/transmuted items, potions, magical upgrades
+- [ ] Sprites: Row 19 (potions/hearts), row 16b (stars), rows 22-24 (rings/orbs)
+- [ ] Mini-game: Rune-drawing or spell-timing mechanic
+- [ ] Consume inventory items → gain Magic XP + enchanted output
+
+### Phase 10: 99 Capes (Planned)
 - [ ] Skill cape unlock on reaching level 99 (one per skill)
 - [ ] Cape visuals: unique pixel art per skill, worn by pet sprite
 - [ ] Cape Hall page — trophy room showing all earned capes

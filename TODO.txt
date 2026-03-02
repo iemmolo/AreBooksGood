@@ -242,14 +242,22 @@ AreBooksGood - Improvement TODO
 - [x] Material drop toasts with sprite icons (reuses existing sprite particles + addLog)
 - [x] Idle mode also adds materials (capped at 50% of active rate)
 
-### Phase 6C: Smithing Consumes Ores → Produces Bars
-- [ ] SMITHING_RECIPES: bar → required ores (e.g. Bronze Bar = 1 Copper + 1 Tin)
-- [ ] Can only smith if ores in inventory
-- [ ] Bars go to inventory
-- [ ] Recipe UI shows required materials
+### Phase 6B.5: Items Sheet Migration (Done)
+- [x] Master items_sheet.png (576×560, 1244 items) as single source of truth
+- [x] ITEMS-REFERENCE.md catalog with coordinates for all named items
+- [x] All ITEM_ICON_MAP entries remapped to items_sheet.png
+- [x] Expanded: 12 mining ores, 12 fish, 8 wood, 9 bars, 10 gems
+- [x] State migration v5 for renamed items
+
+### Phase 6C: Smithing → Smelting + Forging (Done)
+- [x] Smelting: temperature gauge mini-game, 9 bar recipes, consumes ores → bars
+- [x] Forging: 5-hit timing bar, 23 equipment recipes, consumes bars/gems → equipment
+- [x] Tab toggle UI, material requirements display, idle smelting
+- [x] Equipment category in inventory (23 items across 9 tiers)
+- [x] Bug fixes: atomic consume, stack cap guards, stuck state recovery, zone sync, click guards
 
 ### Phase 6D: Tool Crafting via Bars (replaces SD tool purchases)
-- [ ] TOOL_BAR_COSTS replaces TOOL_COSTS (Tier 2 = 5 Iron Bars, Tier 3 = 10 Steel, Tier 4 = 8 Astral, Tier 5 = 5 Dragon)
+- [ ] TOOL_BAR_COSTS replaces TOOL_COSTS (Tier 2 = 5 Iron Bars, Tier 3 = 10 Jade, Tier 4 = 8 Frost, Tier 5 = 5 Dragon)
 - [ ] Crafting UI shows bar requirement instead of SD cost
 - [ ] SD remains reward currency, just not spent on tools
 
@@ -257,6 +265,12 @@ AreBooksGood - Improvement TODO
 - [ ] Fish as food (consume from inventory → heal HP)
 - [ ] Potions craftable or buyable (using potion sprites)
 - [ ] Gear buffs from smithed bars
+
+## New Skills (Planned — see SKILLS-TODO.txt)
+
+- [ ] Cooking (Phase 7): Fish + food ingredients → prepared meals for combat HP
+- [ ] Crafting (Phase 8): Bars + gems → weapons/armor for dungeon gear
+- [ ] Magic/Alchemy (Phase 9): Transmute items → enchanted output, potions
 
 ## 99 Cape System (Future)
 

@@ -7,7 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 4;
+  var STATE_VERSION = 5;
   var STACK_CAP = 999;
 
   // ── Tool tiers ────────────────────────────────
@@ -38,8 +38,9 @@
   var ROCK_HP = {
     'Copper Ore': 1, 'Tin Ore': 1,
     'Iron Ore': 2, 'Coal': 2,
-    'Gold Ore': 3, 'Astral Ore': 3,
+    'Gold Ore': 3, 'Silver Ore': 3,
     'Jade Ore': 4, 'Amethyst Ore': 4,
+    'Ruby Ore': 4, 'Frost Ore': 5,
     'Dragon Ore': 5, 'Star Ore': 5
   };
   var rockState = []; // { hp, maxHp } per rock
@@ -60,7 +61,8 @@
     'tools-t1': '/images/skills/tools-t1.png',
     'tools-t2': '/images/skills/tools-t2.png',
     'tools-t3': '/images/skills/tools-t3.png',
-    stones: '/images/skills/stones.png'
+    stones: '/images/skills/stones.png',
+    items_sheet: '/images/skills/items_sheet.png'
   };
 
   var SKILL_SHEET_META = {
@@ -75,105 +77,125 @@
     'tools-t1': { w: 320, h: 48 },
     'tools-t2': { w: 288, h: 48 },
     'tools-t3': { w: 288, h: 48 },
-    stones: { w: 64, h: 32 }
+    stones: { w: 64, h: 32 },
+    items_sheet: { w: 576, h: 560 }
   };
 
   // Mining rocks: map resource name → { x, y } on rocks.png (16×16 crystal minerals from y=32 row)
   // Row 2 crystals: grey(x16), gold(x32), silver(x48), purple(x64), red(x80), green(x96), blue(x112), dark(x128), pink(x144)
   var MINING_ROCK_SPRITES = {
-    'Copper Ore':  { x: 16, y: 32 },    // grey crystal
-    'Tin Ore':     { x: 48, y: 32 },    // silver crystal
-    'Iron Ore':    { x: 128, y: 32 },   // dark crystal
-    'Coal':        { x: 128, y: 32 },   // dark crystal
-    'Gold Ore':    { x: 32, y: 32 },    // gold crystal
-    'Astral Ore':    { x: 112, y: 32 },   // blue crystal
+    'Copper Ore':    { x: 32, y: 32 },    // gold crystal (copper-ish)
+    'Tin Ore':       { x: 48, y: 32 },    // silver crystal
+    'Iron Ore':      { x: 128, y: 32 },   // dark crystal
+    'Coal':          { x: 128, y: 32 },   // dark crystal
+    'Gold Ore':      { x: 32, y: 48 },    // gold crystal alt
+    'Silver Ore':    { x: 16, y: 32 },    // grey crystal
     'Jade Ore':      { x: 96, y: 32 },    // green crystal
     'Amethyst Ore':  { x: 64, y: 32 },    // purple crystal
-    'Dragon Ore':  { x: 80, y: 32 },    // red crystal
-    'Star Ore':    { x: 144, y: 32 }    // pink crystal
+    'Ruby Ore':      { x: 80, y: 32 },    // red crystal
+    'Frost Ore':     { x: 112, y: 32 },   // blue crystal
+    'Dragon Ore':    { x: 80, y: 48 },    // red crystal alt
+    'Star Ore':      { x: 144, y: 32 }    // pink crystal
   };
 
-  // Ore drop particles: map resource → { x, y } on ores.png (16px grid)
-  // Row 0 = raw ores, row 2 = bars
+  // Ore drop particles: map resource → { sheet, x, y } on items_sheet.png (16px grid, row 31)
   var ORE_DROP_SPRITES = {
-    'Copper Ore':  { x: 0, y: 0 },
-    'Tin Ore':     { x: 16, y: 0 },
-    'Iron Ore':    { x: 32, y: 0 },
-    'Coal':        { x: 48, y: 0 },
-    'Gold Ore':    { x: 64, y: 0 },
-    'Astral Ore':    { x: 80, y: 0 },
-    'Jade Ore':      { x: 96, y: 0 },
-    'Amethyst Ore':  { x: 112, y: 0 },
-    'Dragon Ore':  { x: 128, y: 0 },
-    'Star Ore':    { x: 144, y: 0 }
+    'Copper Ore':    { sheet: 'items_sheet', x: 32, y: 496 },
+    'Tin Ore':       { sheet: 'items_sheet', x: 144, y: 496 },
+    'Iron Ore':      { sheet: 'items_sheet', x: 16, y: 496 },
+    'Coal':          { sheet: 'items_sheet', x: 128, y: 496 },
+    'Gold Ore':      { sheet: 'items_sheet', x: 48, y: 496 },
+    'Silver Ore':    { sheet: 'items_sheet', x: 0, y: 496 },
+    'Jade Ore':      { sheet: 'items_sheet', x: 64, y: 496 },
+    'Amethyst Ore':  { sheet: 'items_sheet', x: 240, y: 496 },
+    'Ruby Ore':      { sheet: 'items_sheet', x: 80, y: 496 },
+    'Frost Ore':     { sheet: 'items_sheet', x: 160, y: 496 },
+    'Dragon Ore':    { sheet: 'items_sheet', x: 288, y: 496 },
+    'Star Ore':      { sheet: 'items_sheet', x: 304, y: 496 }
   };
 
-  // Gem drop sprites: 7 gems on gems.png (16px grid)
+  // Gem drop sprites: 10 gems on items_sheet.png (16px grid, row 15)
   var GEM_SPRITES = [
-    { x: 0, y: 0 },   // red gem
-    { x: 16, y: 0 },  // blue gem
-    { x: 32, y: 0 },  // pink gem
-    { x: 48, y: 0 },  // yellow gem
-    { x: 64, y: 0 },  // green gem
-    { x: 0, y: 16 },  // brown gem
-    { x: 16, y: 16 }  // dark gem
+    { sheet: 'items_sheet', x: 0, y: 240 },    // Peridot
+    { sheet: 'items_sheet', x: 32, y: 240 },   // Emerald
+    { sheet: 'items_sheet', x: 64, y: 240 },   // Aquamarine
+    { sheet: 'items_sheet', x: 96, y: 240 },   // Topaz
+    { sheet: 'items_sheet', x: 128, y: 240 },  // Onyx
+    { sheet: 'items_sheet', x: 160, y: 240 },  // Moonstone
+    { sheet: 'items_sheet', x: 176, y: 240 },  // Diamond
+    { sheet: 'items_sheet', x: 224, y: 240 },  // Opal
+    { sheet: 'items_sheet', x: 48, y: 240 },   // Sapphire
+    { sheet: 'items_sheet', x: 112, y: 240 }   // Ruby
   ];
 
-  // Fish sprites: map name → { x, y } on fish.png (16px grid, 10 cols × 15 rows)
+  // Fish sprites: map name → { sheet, x, y } on items_sheet.png (16px grid, row 29-30)
   var FISH_SPRITES = {
-    'Shrimp':    { x: 0, y: 0 },
-    'Trout':     { x: 16, y: 0 },
-    'Lobster':   { x: 32, y: 0 },
-    'Swordfish': { x: 48, y: 0 },
-    'Shark':     { x: 64, y: 0 },
-    'Dark Crab': { x: 80, y: 0 }
+    'Minnow':     { sheet: 'items_sheet', x: 0, y: 464 },
+    'Shrimp':     { sheet: 'items_sheet', x: 32, y: 464 },
+    'Perch':      { sheet: 'items_sheet', x: 64, y: 464 },
+    'Trout':      { sheet: 'items_sheet', x: 96, y: 464 },
+    'Bass':       { sheet: 'items_sheet', x: 128, y: 464 },
+    'Salmon':     { sheet: 'items_sheet', x: 160, y: 464 },
+    'Catfish':    { sheet: 'items_sheet', x: 208, y: 464 },
+    'Swordfish':  { sheet: 'items_sheet', x: 0, y: 480 },
+    'Lobster':    { sheet: 'items_sheet', x: 48, y: 480 },
+    'Shark':      { sheet: 'items_sheet', x: 112, y: 480 },
+    'Anglerfish': { sheet: 'items_sheet', x: 176, y: 480 },
+    'Leviathan':  { sheet: 'items_sheet', x: 240, y: 480 }
   };
 
   // Tree sprites: map name → { x, y, w, h } crop region on trees.png (288×192)
   // Full trees at y=36, 32×60 (trimmed 4px from top to exclude floating birds/decorations)
   // Base reference: extract-farm-sprites.py uses y=32..96, we trim top 4px
   var TREE_SPRITES = {
-    'Tree':   { x: 0, y: 36, w: 32, h: 60 },     // green basic tree (col 0, bird trimmed)
-    'Oak':    { x: 32, y: 36, w: 32, h: 60 },     // green variant
-    'Willow': { x: 64, y: 36, w: 32, h: 60 },     // orange/autumn tree
-    'Maple':  { x: 96, y: 36, w: 32, h: 60 },     // white/winter tree
-    'Yew':    { x: 160, y: 36, w: 32, h: 60 },    // green with blue cap
-    'Magic':  { x: 192, y: 36, w: 32, h: 60 },    // green with base item
-    'Elder':  { x: 224, y: 36, w: 32, h: 60 }     // green with golden fruit
+    'Pine':     { x: 0, y: 36, w: 32, h: 60 },     // green basic tree
+    'Oak':      { x: 32, y: 36, w: 32, h: 60 },    // green variant
+    'Birch':    { x: 64, y: 36, w: 32, h: 60 },    // orange/autumn tree
+    'Maple':    { x: 96, y: 36, w: 32, h: 60 },    // white/winter tree
+    'Walnut':   { x: 128, y: 36, w: 32, h: 60 },   // mid-green tree
+    'Mahogany': { x: 160, y: 36, w: 32, h: 60 },   // green with blue cap
+    'Yew':      { x: 192, y: 36, w: 32, h: 60 },   // green with base item
+    'Elder':    { x: 224, y: 36, w: 32, h: 60 }     // green with golden fruit
   };
 
   // Anvil sprites: map recipe → { x, y } on anvil.png (128×96, 16×16 cells, 8 cols × 6 rows)
   // Rows by color: 0=blue-grey, 1=grey, 2=orange, 3=gold, 4=purple, 5=blue-grey
   // Use col 0 per row, vary row for color matching ore tier
   var ANVIL_SPRITES = {
-    'Bronze Bar':  { x: 0, y: 32 },   // row 2 = orange (bronze)
-    'Iron Bar':    { x: 0, y: 16 },   // row 1 = grey (iron)
-    'Steel Bar':   { x: 0, y: 0 },    // row 0 = blue-grey (steel)
+    'Copper Bar':  { x: 0, y: 32 },   // row 2 = orange (copper)
+    'Tin Bar':     { x: 0, y: 16 },   // row 1 = grey (tin)
+    'Iron Bar':    { x: 0, y: 0 },    // row 0 = blue-grey (iron)
     'Gold Bar':    { x: 0, y: 48 },   // row 3 = gold
-    'Astral Bar':    { x: 0, y: 80 },   // row 5 = blue-grey (astral)
-    'Jade Bar':      { x: 0, y: 16 },   // row 1 = grey (closest to green)
-    'Amethyst Bar':  { x: 0, y: 64 },   // row 4 = purple (amethyst)
-    'Dragon Bar':  { x: 0, y: 32 }    // row 2 = orange (dragon red-ish)
+    'Silver Bar':  { x: 0, y: 16 },   // row 1 = grey (silver)
+    'Jade Bar':    { x: 0, y: 80 },   // row 5 = blue-grey (jade)
+    'Ruby Bar':    { x: 0, y: 64 },   // row 4 = purple (ruby)
+    'Frost Bar':   { x: 0, y: 0 },    // row 0 = blue-grey (frost)
+    'Dragon Bar':  { x: 0, y: 32 }    // row 2 = orange (dragon)
   };
 
-  // Bar drop particles: ores.png row 2 (y=32)
+  // Bar drop particles: items_sheet.png row 15 (y=240), items 562-570
   var BAR_DROP_SPRITES = {
-    'Bronze Bar':  { x: 0, y: 32 },
-    'Iron Bar':    { x: 16, y: 32 },
-    'Steel Bar':   { x: 32, y: 32 },
-    'Gold Bar':    { x: 48, y: 32 },
-    'Astral Bar':    { x: 64, y: 32 },
-    'Jade Bar':      { x: 80, y: 32 },
-    'Amethyst Bar':  { x: 96, y: 32 },
-    'Dragon Bar':  { x: 112, y: 32 }
+    'Copper Bar':  { sheet: 'items_sheet', x: 336, y: 240 },
+    'Tin Bar':     { sheet: 'items_sheet', x: 352, y: 240 },
+    'Iron Bar':    { sheet: 'items_sheet', x: 368, y: 240 },
+    'Gold Bar':    { sheet: 'items_sheet', x: 416, y: 240 },
+    'Silver Bar':  { sheet: 'items_sheet', x: 400, y: 240 },
+    'Jade Bar':    { sheet: 'items_sheet', x: 432, y: 240 },
+    'Ruby Bar':    { sheet: 'items_sheet', x: 384, y: 240 },
+    'Frost Bar':   { sheet: 'items_sheet', x: 448, y: 240 },
+    'Dragon Bar':  { sheet: 'items_sheet', x: 464, y: 240 }
   };
 
-  // Wood log drop: wood.png (16px grid, 4 cols × 3 rows)
+  // Wood log drop: items_sheet.png row 27 (items 990-997)
   var WOOD_DROP_SPRITES = [
-    { x: 0, y: 0 },
-    { x: 16, y: 0 },
-    { x: 32, y: 0 },
-    { x: 48, y: 0 }
+    { sheet: 'items_sheet', x: 272, y: 432 },  // Pine Log
+    { sheet: 'items_sheet', x: 288, y: 432 },  // Oak Log
+    { sheet: 'items_sheet', x: 304, y: 432 },  // Birch Log
+    { sheet: 'items_sheet', x: 320, y: 432 },  // Maple Log
+    { sheet: 'items_sheet', x: 336, y: 432 },  // Walnut Log
+    { sheet: 'items_sheet', x: 352, y: 432 },  // Mahogany Log
+    { sheet: 'items_sheet', x: 368, y: 432 },  // Yew Log
+    { sheet: 'items_sheet', x: 384, y: 432 }   // Elder Log
   ];
 
   // Tool sprites: map { skill, tier } → { sheet, x, y } on tools-t1/t2/t3 (16px grid)
@@ -201,66 +223,114 @@
 
   // ── Item Categories & Inventory Icon Map ─────
   var ITEM_CATEGORIES = [
-    { label: 'Ores', items: ['Copper Ore', 'Tin Ore', 'Iron Ore', 'Coal', 'Gold Ore', 'Astral Ore', 'Jade Ore', 'Amethyst Ore', 'Dragon Ore', 'Star Ore'] },
-    { label: 'Gems', items: ['Ruby', 'Sapphire', 'Topaz', 'Emerald', 'Opal', 'Onyx', 'Diamond'] },
-    { label: 'Logs', items: ['Tree Log', 'Oak Log', 'Willow Log', 'Maple Log', 'Yew Log', 'Magic Log', 'Elder Log'] },
-    { label: 'Fish', items: ['Shrimp', 'Trout', 'Lobster', 'Swordfish', 'Shark', 'Dark Crab'] },
-    { label: 'Bars', items: ['Bronze Bar', 'Iron Bar', 'Steel Bar', 'Gold Bar', 'Astral Bar', 'Jade Bar', 'Amethyst Bar', 'Dragon Bar'] }
+    { label: 'Ores', items: ['Copper Ore', 'Tin Ore', 'Iron Ore', 'Coal', 'Gold Ore', 'Silver Ore', 'Jade Ore', 'Amethyst Ore', 'Ruby Ore', 'Frost Ore', 'Dragon Ore', 'Star Ore'] },
+    { label: 'Gems', items: ['Peridot', 'Emerald', 'Aquamarine', 'Topaz', 'Onyx', 'Moonstone', 'Diamond', 'Opal', 'Sapphire', 'Ruby'] },
+    { label: 'Logs', items: ['Pine Log', 'Oak Log', 'Birch Log', 'Maple Log', 'Walnut Log', 'Mahogany Log', 'Yew Log', 'Elder Log'] },
+    { label: 'Fish', items: ['Minnow', 'Shrimp', 'Perch', 'Trout', 'Bass', 'Salmon', 'Catfish', 'Swordfish', 'Lobster', 'Shark', 'Anglerfish', 'Leviathan'] },
+    { label: 'Bars', items: ['Copper Bar', 'Tin Bar', 'Iron Bar', 'Gold Bar', 'Silver Bar', 'Jade Bar', 'Ruby Bar', 'Frost Bar', 'Dragon Bar'] },
+    { label: 'Equipment', items: [
+      'Copper Sword', 'Copper Shield', 'Tin Dagger', 'Tin Helmet',
+      'Iron Sword', 'Iron Axe', 'Iron Chestplate',
+      'Gold Sword', 'Gold Shield',
+      'Silver Spear', 'Silver Chestplate',
+      'Jade Staff', 'Jade Chestplate', 'Jade Crown',
+      'Ruby Dagger', 'Ruby Bow', 'Ruby Helmet',
+      'Frost Sword', 'Frost Chestplate', 'Frost Spear',
+      'Dragon Sword', 'Dragon Axe', 'Dragon Chestplate'
+    ] }
   ];
 
-  // Unified item → sprite mapping for inventory icons
-  // Ores: ores.png row 0 (16px grid)
-  // Gems: gems.png (16px grid)
-  // Fish: fish.png (16px grid)
-  // Logs: wood.png (16px grid)
-  // Bars: ores.png row 2 (y=32)
+  // Unified item → sprite mapping for inventory icons (all from items_sheet.png)
   var ITEM_ICON_MAP = {
-    'Copper Ore':    { sheet: 'ores', x: 0, y: 0 },
-    'Tin Ore':       { sheet: 'ores', x: 16, y: 0 },
-    'Iron Ore':      { sheet: 'ores', x: 32, y: 0 },
-    'Coal':          { sheet: 'ores', x: 48, y: 0 },
-    'Gold Ore':      { sheet: 'ores', x: 64, y: 0 },
-    'Astral Ore':    { sheet: 'ores', x: 80, y: 0 },
-    'Jade Ore':      { sheet: 'ores', x: 96, y: 0 },
-    'Amethyst Ore':  { sheet: 'ores', x: 112, y: 0 },
-    'Dragon Ore':    { sheet: 'ores', x: 128, y: 0 },
-    'Star Ore':      { sheet: 'ores', x: 144, y: 0 },
-    'Ruby':          { sheet: 'gems', x: 0, y: 0 },
-    'Sapphire':      { sheet: 'gems', x: 16, y: 0 },
-    'Topaz':         { sheet: 'gems', x: 32, y: 0 },
-    'Emerald':       { sheet: 'gems', x: 48, y: 0 },
-    'Opal':          { sheet: 'gems', x: 64, y: 0 },
-    'Onyx':          { sheet: 'gems', x: 0, y: 16 },
-    'Diamond':       { sheet: 'gems', x: 16, y: 16 },
-    'Tree Log':      { sheet: 'wood', x: 0, y: 0 },
-    'Oak Log':       { sheet: 'wood', x: 16, y: 0 },
-    'Willow Log':    { sheet: 'wood', x: 32, y: 0 },
-    'Maple Log':     { sheet: 'wood', x: 48, y: 0 },
-    'Yew Log':       { sheet: 'wood', x: 0, y: 16 },
-    'Magic Log':     { sheet: 'wood', x: 16, y: 16 },
-    'Elder Log':     { sheet: 'wood', x: 32, y: 16 },
-    'Shrimp':        { sheet: 'fish', x: 0, y: 0 },
-    'Trout':         { sheet: 'fish', x: 16, y: 0 },
-    'Lobster':       { sheet: 'fish', x: 32, y: 0 },
-    'Swordfish':     { sheet: 'fish', x: 48, y: 0 },
-    'Shark':         { sheet: 'fish', x: 64, y: 0 },
-    'Dark Crab':     { sheet: 'fish', x: 80, y: 0 },
-    'Bronze Bar':    { sheet: 'ores', x: 0, y: 32 },
-    'Iron Bar':      { sheet: 'ores', x: 16, y: 32 },
-    'Steel Bar':     { sheet: 'ores', x: 32, y: 32 },
-    'Gold Bar':      { sheet: 'ores', x: 48, y: 32 },
-    'Astral Bar':    { sheet: 'ores', x: 64, y: 32 },
-    'Jade Bar':      { sheet: 'ores', x: 80, y: 32 },
-    'Amethyst Bar':  { sheet: 'ores', x: 96, y: 32 },
-    'Dragon Bar':    { sheet: 'ores', x: 112, y: 32 }
+    // Ores (row 31, items 1117-1136)
+    'Copper Ore':    { sheet: 'items_sheet', x: 32, y: 496 },
+    'Tin Ore':       { sheet: 'items_sheet', x: 144, y: 496 },
+    'Iron Ore':      { sheet: 'items_sheet', x: 16, y: 496 },
+    'Coal':          { sheet: 'items_sheet', x: 128, y: 496 },
+    'Gold Ore':      { sheet: 'items_sheet', x: 48, y: 496 },
+    'Silver Ore':    { sheet: 'items_sheet', x: 0, y: 496 },
+    'Jade Ore':      { sheet: 'items_sheet', x: 64, y: 496 },
+    'Amethyst Ore':  { sheet: 'items_sheet', x: 240, y: 496 },
+    'Ruby Ore':      { sheet: 'items_sheet', x: 80, y: 496 },
+    'Frost Ore':     { sheet: 'items_sheet', x: 160, y: 496 },
+    'Dragon Ore':    { sheet: 'items_sheet', x: 288, y: 496 },
+    'Star Ore':      { sheet: 'items_sheet', x: 304, y: 496 },
+    // Gems (row 15, items 541-558)
+    'Peridot':       { sheet: 'items_sheet', x: 0, y: 240 },
+    'Emerald':       { sheet: 'items_sheet', x: 32, y: 240 },
+    'Aquamarine':    { sheet: 'items_sheet', x: 64, y: 240 },
+    'Topaz':         { sheet: 'items_sheet', x: 96, y: 240 },
+    'Onyx':          { sheet: 'items_sheet', x: 128, y: 240 },
+    'Moonstone':     { sheet: 'items_sheet', x: 160, y: 240 },
+    'Diamond':       { sheet: 'items_sheet', x: 176, y: 240 },
+    'Opal':          { sheet: 'items_sheet', x: 224, y: 240 },
+    'Sapphire':      { sheet: 'items_sheet', x: 48, y: 240 },
+    'Ruby':          { sheet: 'items_sheet', x: 112, y: 240 },
+    // Logs (row 27, items 990-997)
+    'Pine Log':      { sheet: 'items_sheet', x: 272, y: 432 },
+    'Oak Log':       { sheet: 'items_sheet', x: 288, y: 432 },
+    'Birch Log':     { sheet: 'items_sheet', x: 304, y: 432 },
+    'Maple Log':     { sheet: 'items_sheet', x: 320, y: 432 },
+    'Walnut Log':    { sheet: 'items_sheet', x: 336, y: 432 },
+    'Mahogany Log':  { sheet: 'items_sheet', x: 352, y: 432 },
+    'Yew Log':       { sheet: 'items_sheet', x: 368, y: 432 },
+    'Elder Log':     { sheet: 'items_sheet', x: 384, y: 432 },
+    // Fish (row 29-30, items 1045-1078)
+    'Minnow':        { sheet: 'items_sheet', x: 0, y: 464 },
+    'Shrimp':        { sheet: 'items_sheet', x: 32, y: 464 },
+    'Perch':         { sheet: 'items_sheet', x: 64, y: 464 },
+    'Trout':         { sheet: 'items_sheet', x: 96, y: 464 },
+    'Bass':          { sheet: 'items_sheet', x: 128, y: 464 },
+    'Salmon':        { sheet: 'items_sheet', x: 160, y: 464 },
+    'Catfish':       { sheet: 'items_sheet', x: 208, y: 464 },
+    'Swordfish':     { sheet: 'items_sheet', x: 0, y: 480 },
+    'Lobster':       { sheet: 'items_sheet', x: 48, y: 480 },
+    'Shark':         { sheet: 'items_sheet', x: 112, y: 480 },
+    'Anglerfish':    { sheet: 'items_sheet', x: 176, y: 480 },
+    'Leviathan':     { sheet: 'items_sheet', x: 240, y: 480 },
+    // Bars (row 15, items 562-570)
+    'Copper Bar':    { sheet: 'items_sheet', x: 336, y: 240 },
+    'Tin Bar':       { sheet: 'items_sheet', x: 352, y: 240 },
+    'Iron Bar':      { sheet: 'items_sheet', x: 368, y: 240 },
+    'Gold Bar':      { sheet: 'items_sheet', x: 416, y: 240 },
+    'Silver Bar':    { sheet: 'items_sheet', x: 400, y: 240 },
+    'Jade Bar':      { sheet: 'items_sheet', x: 432, y: 240 },
+    'Ruby Bar':      { sheet: 'items_sheet', x: 384, y: 240 },
+    'Frost Bar':     { sheet: 'items_sheet', x: 448, y: 240 },
+    'Dragon Bar':    { sheet: 'items_sheet', x: 464, y: 240 },
+    // Equipment (Phase 6C forging output)
+    'Copper Sword':      { sheet: 'items_sheet', x: 0, y: 0 },
+    'Copper Shield':     { sheet: 'items_sheet', x: 0, y: 80 },
+    'Tin Dagger':        { sheet: 'items_sheet', x: 32, y: 0 },
+    'Tin Helmet':        { sheet: 'items_sheet', x: 128, y: 80 },
+    'Iron Sword':        { sheet: 'items_sheet', x: 288, y: 0 },
+    'Iron Axe':          { sheet: 'items_sheet', x: 384, y: 0 },
+    'Iron Chestplate':   { sheet: 'items_sheet', x: 0, y: 96 },
+    'Gold Sword':        { sheet: 'items_sheet', x: 64, y: 16 },
+    'Gold Shield':       { sheet: 'items_sheet', x: 256, y: 80 },
+    'Silver Spear':      { sheet: 'items_sheet', x: 352, y: 80 },
+    'Silver Chestplate': { sheet: 'items_sheet', x: 288, y: 96 },
+    'Jade Staff':        { sheet: 'items_sheet', x: 0, y: 32 },
+    'Jade Chestplate':   { sheet: 'items_sheet', x: 416, y: 96 },
+    'Jade Crown':        { sheet: 'items_sheet', x: 0, y: 128 },
+    'Ruby Dagger':       { sheet: 'items_sheet', x: 448, y: 0 },
+    'Ruby Bow':          { sheet: 'items_sheet', x: 0, y: 64 },
+    'Ruby Helmet':       { sheet: 'items_sheet', x: 416, y: 80 },
+    'Frost Sword':       { sheet: 'items_sheet', x: 144, y: 0 },
+    'Frost Chestplate':  { sheet: 'items_sheet', x: 80, y: 96 },
+    'Frost Spear':       { sheet: 'items_sheet', x: 192, y: 80 },
+    'Dragon Sword':      { sheet: 'items_sheet', x: 272, y: 0 },
+    'Dragon Axe':        { sheet: 'items_sheet', x: 560, y: 16 },
+    'Dragon Chestplate': { sheet: 'items_sheet', x: 560, y: 96 }
   };
 
   // ── Gathering → Inventory Name Maps ──────────
-  var GEM_NAMES = ['Ruby', 'Sapphire', 'Topaz', 'Emerald', 'Opal', 'Onyx', 'Diamond'];
+  var GEM_NAMES = ['Peridot', 'Emerald', 'Aquamarine', 'Topaz', 'Onyx', 'Moonstone', 'Diamond', 'Opal', 'Sapphire', 'Ruby'];
 
   var LOG_NAMES = {
-    'Tree': 'Tree Log', 'Oak': 'Oak Log', 'Willow': 'Willow Log',
-    'Maple': 'Maple Log', 'Yew': 'Yew Log', 'Magic': 'Magic Log', 'Elder': 'Elder Log'
+    'Pine': 'Pine Log', 'Oak': 'Oak Log', 'Birch': 'Birch Log',
+    'Maple': 'Maple Log', 'Walnut': 'Walnut Log', 'Mahogany': 'Mahogany Log',
+    'Yew': 'Yew Log', 'Elder': 'Elder Log'
   };
 
   // ── Sprite Helper Functions ──────────────────
@@ -384,52 +454,62 @@
     mining: {
       name: 'Mining', icon: '\u26CF',
       resources: [
-        { name: 'Copper Ore', level: 1, xp: 10, dust: 2, clickTime: 1200 },
-        { name: 'Tin Ore', level: 10, xp: 18, dust: 4, clickTime: 1100 },
-        { name: 'Iron Ore', level: 20, xp: 30, dust: 7, clickTime: 1000 },
-        { name: 'Coal', level: 30, xp: 50, dust: 12, clickTime: 900 },
-        { name: 'Gold Ore', level: 40, xp: 80, dust: 20, clickTime: 850 },
-        { name: 'Astral Ore', level: 50, xp: 130, dust: 35, clickTime: 800 },
-        { name: 'Jade Ore', level: 60, xp: 200, dust: 55, clickTime: 750 },
-        { name: 'Amethyst Ore', level: 70, xp: 320, dust: 90, clickTime: 700 },
-        { name: 'Dragon Ore', level: 80, xp: 500, dust: 150, clickTime: 650 },
-        { name: 'Star Ore', level: 90, xp: 800, dust: 250, clickTime: 600 }
+        { name: 'Copper Ore', level: 1, xp: 8, dust: 2, clickTime: 1200 },
+        { name: 'Tin Ore', level: 1, xp: 10, dust: 2, clickTime: 1200 },
+        { name: 'Iron Ore', level: 10, xp: 18, dust: 4, clickTime: 1100 },
+        { name: 'Coal', level: 15, xp: 25, dust: 6, clickTime: 1050 },
+        { name: 'Gold Ore', level: 25, xp: 40, dust: 10, clickTime: 1000 },
+        { name: 'Silver Ore', level: 30, xp: 55, dust: 14, clickTime: 950 },
+        { name: 'Jade Ore', level: 40, xp: 80, dust: 20, clickTime: 900 },
+        { name: 'Amethyst Ore', level: 50, xp: 130, dust: 35, clickTime: 850 },
+        { name: 'Ruby Ore', level: 60, xp: 200, dust: 55, clickTime: 800 },
+        { name: 'Frost Ore', level: 70, xp: 320, dust: 90, clickTime: 750 },
+        { name: 'Dragon Ore', level: 80, xp: 500, dust: 150, clickTime: 700 },
+        { name: 'Star Ore', level: 90, xp: 800, dust: 250, clickTime: 650 }
       ]
     },
     fishing: {
       name: 'Fishing', icon: '\uD83C\uDFA3',
       resources: [
-        { name: 'Shrimp', level: 1, xp: 10, dust: 2, clickTime: 2000 },
-        { name: 'Trout', level: 15, xp: 25, dust: 6, clickTime: 1800 },
-        { name: 'Lobster', level: 30, xp: 55, dust: 14, clickTime: 1600 },
-        { name: 'Swordfish', level: 50, xp: 120, dust: 32, clickTime: 1400 },
-        { name: 'Shark', level: 70, xp: 280, dust: 80, clickTime: 1200 },
-        { name: 'Dark Crab', level: 85, xp: 550, dust: 170, clickTime: 1000 }
+        { name: 'Minnow', level: 1, xp: 8, dust: 2, clickTime: 2000 },
+        { name: 'Shrimp', level: 5, xp: 12, dust: 3, clickTime: 1900 },
+        { name: 'Perch', level: 10, xp: 18, dust: 4, clickTime: 1800 },
+        { name: 'Trout', level: 20, xp: 30, dust: 7, clickTime: 1700 },
+        { name: 'Bass', level: 30, xp: 50, dust: 12, clickTime: 1600 },
+        { name: 'Salmon', level: 40, xp: 80, dust: 20, clickTime: 1500 },
+        { name: 'Catfish', level: 50, xp: 120, dust: 32, clickTime: 1400 },
+        { name: 'Swordfish', level: 60, xp: 180, dust: 48, clickTime: 1300 },
+        { name: 'Lobster', level: 65, xp: 220, dust: 60, clickTime: 1250 },
+        { name: 'Shark', level: 75, xp: 320, dust: 90, clickTime: 1150 },
+        { name: 'Anglerfish', level: 85, xp: 500, dust: 150, clickTime: 1050 },
+        { name: 'Leviathan', level: 95, xp: 800, dust: 250, clickTime: 1000 }
       ]
     },
     woodcutting: {
       name: 'Woodcutting', icon: '\uD83E\uDE93',
       resources: [
-        { name: 'Tree', level: 1, xp: 10, dust: 2, clickTime: 1200 },
-        { name: 'Oak', level: 15, xp: 22, dust: 5, clickTime: 1100 },
-        { name: 'Willow', level: 30, xp: 50, dust: 12, clickTime: 1000 },
-        { name: 'Maple', level: 45, xp: 100, dust: 25, clickTime: 900 },
-        { name: 'Yew', level: 60, xp: 190, dust: 50, clickTime: 800 },
-        { name: 'Magic', level: 75, xp: 360, dust: 100, clickTime: 700 },
-        { name: 'Elder', level: 90, xp: 700, dust: 220, clickTime: 600 }
+        { name: 'Pine', level: 1, xp: 10, dust: 2, clickTime: 1200 },
+        { name: 'Oak', level: 10, xp: 20, dust: 5, clickTime: 1100 },
+        { name: 'Birch', level: 20, xp: 35, dust: 8, clickTime: 1050 },
+        { name: 'Maple', level: 35, xp: 65, dust: 16, clickTime: 1000 },
+        { name: 'Walnut', level: 50, xp: 120, dust: 30, clickTime: 900 },
+        { name: 'Mahogany', level: 65, xp: 220, dust: 60, clickTime: 800 },
+        { name: 'Yew', level: 80, xp: 400, dust: 110, clickTime: 700 },
+        { name: 'Elder', level: 92, xp: 700, dust: 220, clickTime: 600 }
       ]
     },
     smithing: {
       name: 'Smithing', icon: '\uD83D\uDD28',
       resources: [
-        { name: 'Bronze Bar', level: 1, xp: 12, dust: 3, clickTime: 1500 },
-        { name: 'Iron Bar', level: 20, xp: 35, dust: 8, clickTime: 1400 },
-        { name: 'Steel Bar', level: 30, xp: 60, dust: 15, clickTime: 1300 },
-        { name: 'Gold Bar', level: 40, xp: 100, dust: 25, clickTime: 1200 },
-        { name: 'Astral Bar', level: 50, xp: 160, dust: 42, clickTime: 1100 },
-        { name: 'Jade Bar', level: 60, xp: 250, dust: 65, clickTime: 1000 },
-        { name: 'Amethyst Bar', level: 70, xp: 400, dust: 110, clickTime: 900 },
-        { name: 'Dragon Bar', level: 80, xp: 650, dust: 200, clickTime: 800 }
+        { name: 'Copper Bar', level: 1, xp: 10, dust: 3, clickTime: 1500 },
+        { name: 'Tin Bar', level: 5, xp: 16, dust: 4, clickTime: 1450 },
+        { name: 'Iron Bar', level: 15, xp: 30, dust: 8, clickTime: 1400 },
+        { name: 'Gold Bar', level: 25, xp: 55, dust: 14, clickTime: 1350 },
+        { name: 'Silver Bar', level: 35, xp: 90, dust: 22, clickTime: 1300 },
+        { name: 'Jade Bar', level: 45, xp: 140, dust: 36, clickTime: 1200 },
+        { name: 'Ruby Bar', level: 60, xp: 220, dust: 58, clickTime: 1100 },
+        { name: 'Frost Bar', level: 75, xp: 380, dust: 100, clickTime: 1000 },
+        { name: 'Dragon Bar', level: 85, xp: 600, dust: 180, clickTime: 900 }
       ]
     },
     combat: {
@@ -448,6 +528,56 @@
 
   var SKILL_KEYS = ['mining', 'fishing', 'woodcutting', 'smithing', 'combat'];
 
+  // ── Smelting Recipes (Phase 6C) ────────────────
+  var SMELTING_RECIPES = {
+    'Copper Bar':  { level: 1,  inputs: [{ item: 'Copper Ore', qty: 2 }] },
+    'Tin Bar':     { level: 5,  inputs: [{ item: 'Tin Ore', qty: 2 }] },
+    'Iron Bar':    { level: 15, inputs: [{ item: 'Iron Ore', qty: 2 }, { item: 'Coal', qty: 1 }] },
+    'Gold Bar':    { level: 25, inputs: [{ item: 'Gold Ore', qty: 3 }] },
+    'Silver Bar':  { level: 35, inputs: [{ item: 'Silver Ore', qty: 3 }] },
+    'Jade Bar':    { level: 45, inputs: [{ item: 'Jade Ore', qty: 4 }, { item: 'Coal', qty: 2 }] },
+    'Ruby Bar':    { level: 60, inputs: [{ item: 'Ruby Ore', qty: 4 }, { item: 'Coal', qty: 2 }] },
+    'Frost Bar':   { level: 75, inputs: [{ item: 'Frost Ore', qty: 5 }, { item: 'Coal', qty: 3 }] },
+    'Dragon Bar':  { level: 85, inputs: [{ item: 'Dragon Ore', qty: 5 }, { item: 'Coal', qty: 5 }] }
+  };
+  var SMELTING_ORDER = ['Copper Bar', 'Tin Bar', 'Iron Bar', 'Gold Bar', 'Silver Bar', 'Jade Bar', 'Ruby Bar', 'Frost Bar', 'Dragon Bar'];
+
+  // ── Forging Recipes (Phase 6C) ─────────────────
+  var FORGING_RECIPES = [
+    // Copper Tier
+    { name: 'Copper Sword',      level: 1,  xp: 15,  dust: 4,   inputs: [{ item: 'Copper Bar', qty: 3 }],                              sprite: { x: 0, y: 0 } },
+    { name: 'Copper Shield',     level: 1,  xp: 12,  dust: 3,   inputs: [{ item: 'Copper Bar', qty: 2 }],                              sprite: { x: 0, y: 80 } },
+    // Tin Tier
+    { name: 'Tin Dagger',        level: 8,  xp: 22,  dust: 6,   inputs: [{ item: 'Tin Bar', qty: 2 }],                                 sprite: { x: 32, y: 0 } },
+    { name: 'Tin Helmet',        level: 8,  xp: 25,  dust: 7,   inputs: [{ item: 'Tin Bar', qty: 3 }],                                 sprite: { x: 128, y: 80 } },
+    // Iron Tier
+    { name: 'Iron Sword',        level: 18, xp: 40,  dust: 10,  inputs: [{ item: 'Iron Bar', qty: 3 }],                                sprite: { x: 288, y: 0 } },
+    { name: 'Iron Axe',          level: 18, xp: 45,  dust: 12,  inputs: [{ item: 'Iron Bar', qty: 4 }],                                sprite: { x: 384, y: 0 } },
+    { name: 'Iron Chestplate',   level: 20, xp: 55,  dust: 14,  inputs: [{ item: 'Iron Bar', qty: 5 }],                                sprite: { x: 0, y: 96 } },
+    // Gold Tier
+    { name: 'Gold Sword',        level: 28, xp: 70,  dust: 18,  inputs: [{ item: 'Gold Bar', qty: 3 }, { item: 'Topaz', qty: 1 }],     sprite: { x: 64, y: 16 } },
+    { name: 'Gold Shield',       level: 28, xp: 65,  dust: 16,  inputs: [{ item: 'Gold Bar', qty: 3 }],                                sprite: { x: 256, y: 80 } },
+    // Silver Tier
+    { name: 'Silver Spear',      level: 38, xp: 110, dust: 28,  inputs: [{ item: 'Silver Bar', qty: 4 }, { item: 'Sapphire', qty: 1 }], sprite: { x: 352, y: 80 } },
+    { name: 'Silver Chestplate', level: 38, xp: 120, dust: 30,  inputs: [{ item: 'Silver Bar', qty: 5 }],                              sprite: { x: 288, y: 96 } },
+    // Jade Tier
+    { name: 'Jade Staff',        level: 48, xp: 170, dust: 44,  inputs: [{ item: 'Jade Bar', qty: 4 }, { item: 'Emerald', qty: 1 }],   sprite: { x: 0, y: 32 } },
+    { name: 'Jade Chestplate',   level: 50, xp: 180, dust: 46,  inputs: [{ item: 'Jade Bar', qty: 5 }],                                sprite: { x: 416, y: 96 } },
+    { name: 'Jade Crown',        level: 50, xp: 160, dust: 40,  inputs: [{ item: 'Jade Bar', qty: 3 }, { item: 'Moonstone', qty: 1 }], sprite: { x: 0, y: 128 } },
+    // Ruby Tier
+    { name: 'Ruby Dagger',       level: 62, xp: 260, dust: 66,  inputs: [{ item: 'Ruby Bar', qty: 4 }, { item: 'Ruby', qty: 1 }],      sprite: { x: 448, y: 0 } },
+    { name: 'Ruby Bow',          level: 62, xp: 270, dust: 68,  inputs: [{ item: 'Ruby Bar', qty: 5 }],                                sprite: { x: 0, y: 64 } },
+    { name: 'Ruby Helmet',       level: 65, xp: 250, dust: 64,  inputs: [{ item: 'Ruby Bar', qty: 4 }, { item: 'Onyx', qty: 1 }],      sprite: { x: 416, y: 80 } },
+    // Frost Tier
+    { name: 'Frost Sword',       level: 78, xp: 430, dust: 110, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Aquamarine', qty: 1 }], sprite: { x: 144, y: 0 } },
+    { name: 'Frost Chestplate',  level: 78, xp: 450, dust: 116, inputs: [{ item: 'Frost Bar', qty: 6 }],                               sprite: { x: 80, y: 96 } },
+    { name: 'Frost Spear',       level: 80, xp: 460, dust: 118, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Diamond', qty: 1 }],  sprite: { x: 192, y: 80 } },
+    // Dragon Tier
+    { name: 'Dragon Sword',      level: 88, xp: 700, dust: 180, inputs: [{ item: 'Dragon Bar', qty: 5 }, { item: 'Diamond', qty: 2 }], sprite: { x: 272, y: 0 } },
+    { name: 'Dragon Axe',        level: 88, xp: 720, dust: 184, inputs: [{ item: 'Dragon Bar', qty: 6 }, { item: 'Opal', qty: 1 }],    sprite: { x: 560, y: 16 } },
+    { name: 'Dragon Chestplate', level: 90, xp: 800, dust: 200, inputs: [{ item: 'Dragon Bar', qty: 7 }, { item: 'Ruby', qty: 2 }],    sprite: { x: 560, y: 96 } }
+  ];
+
   // ── State ─────────────────────────────────────
   var state = null;
   var activeSkill = 'mining';
@@ -461,7 +591,7 @@
   var miningCombo = { count: 0, lastClickTime: 0 };
   var fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
   var wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
-  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0 };
+  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false };
   var combatState = {
     enemyHp: 0, enemyMaxHp: 0, enemyName: '', streak: 0, enemyTimer: null, cooldown: false,
     playerHp: 0, playerMaxHp: 0, potions: 3, dodgeCooldown: false, dead: false,
@@ -504,8 +634,22 @@
           s.mastered = saved.mastered || {};
           s.activePlayTime = saved.activePlayTime || 0;
           s.totalDustEarned = saved.totalDustEarned || 0;
-          // v4: inventory
+          // v4/v5: inventory
           s.inventory = saved.inventory || {};
+          // v5: Migrate renamed items in inventory
+          var invRenames = {
+            'Astral Ore': 'Amethyst Ore',
+            'Bronze Bar': 'Copper Bar', 'Steel Bar': 'Tin Bar',
+            'Astral Bar': 'Silver Bar', 'Amethyst Bar': 'Ruby Bar',
+            'Tree Log': 'Pine Log', 'Willow Log': 'Birch Log', 'Magic Log': 'Mahogany Log',
+            'Dark Crab': 'Lobster'
+          };
+          for (var rOld in invRenames) {
+            if (s.inventory[rOld]) {
+              s.inventory[invRenames[rOld]] = (s.inventory[invRenames[rOld]] || 0) + s.inventory[rOld];
+              delete s.inventory[rOld];
+            }
+          }
           for (var i = 0; i < SKILL_KEYS.length; i++) {
             var key = SKILL_KEYS[i];
             if (saved.skills[key]) {
@@ -518,8 +662,11 @@
               // v3: mining collection log
               if (key === 'mining') {
                 s.skills[key].log = saved.skills[key].log || { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
-                // Migrate renamed ores in collection log
-                var oreRenames = { 'Mithril Ore': 'Astral Ore', 'Adamant Ore': 'Jade Ore', 'Runite Ore': 'Amethyst Ore' };
+                // Migrate renamed ores in collection log (v3 + v5)
+                var oreRenames = {
+                  'Mithril Ore': 'Amethyst Ore', 'Adamant Ore': 'Jade Ore', 'Runite Ore': 'Amethyst Ore',
+                  'Astral Ore': 'Amethyst Ore'
+                };
                 var om = s.skills[key].log.oresMined;
                 for (var oldName in oreRenames) {
                   if (om[oldName]) { om[oreRenames[oldName]] = (om[oreRenames[oldName]] || 0) + om[oldName]; delete om[oldName]; }
@@ -576,6 +723,74 @@
 
   function getItemCount(key) {
     return state.inventory[key] || 0;
+  }
+
+  // ── Smelting / Forging helpers (Phase 6C) ──────
+  function canSmelt(barName) {
+    var recipe = SMELTING_RECIPES[barName];
+    if (!recipe) return false;
+    for (var i = 0; i < recipe.inputs.length; i++) {
+      if (!hasItem(recipe.inputs[i].item, recipe.inputs[i].qty)) return false;
+    }
+    return true;
+  }
+
+  function consumeSmeltingOres(barName) {
+    var recipe = SMELTING_RECIPES[barName];
+    if (!recipe) return false;
+    // Pre-check all inputs before removing any (atomic)
+    for (var i = 0; i < recipe.inputs.length; i++) {
+      if (!hasItem(recipe.inputs[i].item, recipe.inputs[i].qty)) return false;
+    }
+    for (var j = 0; j < recipe.inputs.length; j++) {
+      removeItem(recipe.inputs[j].item, recipe.inputs[j].qty);
+    }
+    return true;
+  }
+
+  function canForge(recipe) {
+    for (var i = 0; i < recipe.inputs.length; i++) {
+      if (!hasItem(recipe.inputs[i].item, recipe.inputs[i].qty)) return false;
+    }
+    return true;
+  }
+
+  function consumeForgingMats(recipe) {
+    // Pre-check all inputs before removing any (atomic)
+    for (var i = 0; i < recipe.inputs.length; i++) {
+      if (!hasItem(recipe.inputs[i].item, recipe.inputs[i].qty)) return false;
+    }
+    for (var j = 0; j < recipe.inputs.length; j++) {
+      removeItem(recipe.inputs[j].item, recipe.inputs[j].qty);
+    }
+    return true;
+  }
+
+  function renderMaterialRequirements(container, inputs) {
+    container.innerHTML = '';
+    for (var i = 0; i < inputs.length; i++) {
+      var inp = inputs[i];
+      var have = getItemCount(inp.item);
+      var need = inp.qty;
+      var sufficient = have >= need;
+
+      var row = document.createElement('div');
+      row.className = 'smithing-mat-row';
+
+      var iconData = ITEM_ICON_MAP[inp.item];
+      if (iconData) {
+        var sprite = createSpriteEl(iconData.sheet, iconData.x, iconData.y, 16, 16, 24, 24);
+        if (sprite) row.appendChild(sprite);
+      }
+
+      var text = document.createElement('span');
+      text.className = 'smithing-mat-text';
+      text.style.color = sufficient ? 'var(--accent)' : '#f44';
+      text.textContent = inp.item + ': ' + have + '/' + need;
+      row.appendChild(text);
+
+      container.appendChild(row);
+    }
   }
 
   // ── Pet state helpers ─────────────────────────
@@ -1686,7 +1901,7 @@
         dustGain *= gemMult;
         if (area) {
           var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
-          spawnSpriteParticle(area, 'gems', gem.x, gem.y);
+          spawnSpriteParticle(area, gem.sheet || 'gems', gem.x, gem.y);
           spawnParticle(area, 'GEM! +' + dustGain + ' SD', 'gem');
         }
         addLog('Found a gem! ' + gemMult + 'x dust bonus!');
@@ -1696,7 +1911,7 @@
         spawnParticle(area, '+' + xpGain + ' XP', 'xp');
         if (!isGem) {
           var orePos = ORE_DROP_SPRITES[res.name];
-          if (orePos) spawnSpriteParticle(area, 'ores', orePos.x, orePos.y);
+          if (orePos) spawnSpriteParticle(area, orePos.sheet || 'ores', orePos.x, orePos.y);
           setTimeout(function () {
             spawnParticle(area, '+' + dustGain + ' SD', 'dust');
           }, 200);
@@ -1866,7 +2081,7 @@
         addItem(GEM_NAMES[gemIdx], 1);
         if (area) {
           var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
-          spawnSpriteParticle(area, 'gems', gem.x, gem.y);
+          spawnSpriteParticle(area, gem.sheet || 'gems', gem.x, gem.y);
         }
       }
       var totalDust = Math.floor(res.dust * dustMult * (hasPerk('gemSpec') ? 10 : 5) * 3);
@@ -2180,7 +2395,7 @@
     if (gameArea) {
       // Phase 3: Fish sprite particle
       var fishPos = FISH_SPRITES[res.name];
-      if (fishPos) spawnSpriteParticle(gameArea, 'fish', fishPos.x, fishPos.y);
+      if (fishPos) spawnSpriteParticle(gameArea, fishPos.sheet || 'fish', fishPos.x, fishPos.y);
       spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
       setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
     }
@@ -2322,7 +2537,7 @@
       if (gameArea2) {
         // Phase 3: Wood log sprite particle
         var woodDrop = WOOD_DROP_SPRITES[Math.floor(Math.random() * WOOD_DROP_SPRITES.length)];
-        spawnSpriteParticle(gameArea2, 'wood', woodDrop.x, woodDrop.y);
+        spawnSpriteParticle(gameArea2, woodDrop.sheet || 'wood', woodDrop.x, woodDrop.y);
         spawnParticle(gameArea2, '+' + xpGain + ' XP', 'xp');
         if (!isNest) {
           setTimeout(function () { spawnParticle(gameArea2, '+' + dustGain + ' SD', 'dust'); }, 200);
@@ -2351,82 +2566,433 @@
   }
 
   // ══════════════════════════════════════════════
-  // ── SMITHING MINI-GAME (A4 enhanced) ──────────
+  // ── SMITHING MINI-GAME (Phase 6C: Smelting + Forging) ──
   // ══════════════════════════════════════════════
   function renderSmithing() {
     var area = $('skills-game-area');
     if (!area) return;
     area.innerHTML = '';
+
+    // Mode toggle tabs
+    var tabs = document.createElement('div');
+    tabs.className = 'smithing-tabs';
+    var smeltTab = document.createElement('button');
+    smeltTab.className = 'smithing-tab' + (smithingState.mode === 'smelting' ? ' active' : '');
+    smeltTab.textContent = 'Smelting';
+    smeltTab.addEventListener('click', function () {
+      if (smithingState.mode === 'smelting') return;
+      if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
+      if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+      smithingState.mode = 'smelting';
+      renderSmithing();
+    });
+    var forgeTab = document.createElement('button');
+    forgeTab.className = 'smithing-tab' + (smithingState.mode === 'forging' ? ' active' : '');
+    forgeTab.textContent = 'Forging';
+    forgeTab.addEventListener('click', function () {
+      if (smithingState.mode === 'forging') return;
+      if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
+      if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+      smithingState.mode = 'forging';
+      renderSmithing();
+    });
+    tabs.appendChild(smeltTab);
+    tabs.appendChild(forgeTab);
+    area.appendChild(tabs);
+
+    if (smithingState.mode === 'smelting') {
+      renderSmeltingGame(area);
+    } else {
+      renderForgingGame(area);
+    }
+
+    // C1: Render pet
+    renderPetInGameArea();
+  }
+
+  // ── SMELTING: Temperature gauge mini-game ─────
+  function renderSmeltingGame(area) {
     var div = document.createElement('div');
-    div.className = 'smithing-area';
-
-    // Build recipe select
-    var resources = SKILLS.smithing.resources;
+    div.className = 'smithing-area smelting-area';
     var level = state.skills.smithing.level;
+
+    // Build recipe dropdown (filtered by level + available ores)
     var options = '';
-    for (var i = 0; i < resources.length; i++) {
-      if (resources[i].level <= level) {
-        options += '<option value="' + i + '">' + resources[i].name + ' (Lv ' + resources[i].level + ')</option>';
-      }
+    var firstAvailable = -1;
+    for (var i = 0; i < SMELTING_ORDER.length; i++) {
+      var barName = SMELTING_ORDER[i];
+      var recipe = SMELTING_RECIPES[barName];
+      if (recipe.level > level) continue;
+      var available = canSmelt(barName);
+      if (firstAvailable < 0 && available) firstAvailable = i;
+      options += '<option value="' + i + '"' + (available ? '' : ' class="smithing-unavailable"') + '>' +
+        barName + ' (Lv ' + recipe.level + ')' + (available ? '' : ' [need ores]') + '</option>';
     }
 
-    // A4: Calculate green zone width based on selected recipe
-    var highestIdx = 0;
-    for (var h = 0; h < resources.length; h++) {
-      if (resources[h].level <= level) highestIdx = h;
+    div.innerHTML =
+      '<select class="smithing-recipe-select" id="smelt-recipe">' + options + '</select>' +
+      '<div class="smithing-mat-reqs" id="smelt-mats"></div>' +
+      '<div class="smithing-furnace" id="smelt-furnace"></div>' +
+      '<div class="smelting-gauge-wrap">' +
+        '<div class="smelting-gauge" id="smelting-gauge">' +
+          '<div class="smelting-gauge-fill" id="smelting-gauge-fill"></div>' +
+          '<div class="smelting-gauge-zone" id="smelting-gauge-zone"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="smithing-progress" id="smelt-progress">Hold button to heat, release in the green zone</div>' +
+      '<button class="smelting-heat-btn" id="smelt-heat-btn">Hold to Heat</button>' +
+      '<div class="smithing-status" id="smelt-status"></div>';
+    area.appendChild(div);
+
+    // Set to highest available recipe
+    var recipeEl = $('smelt-recipe');
+    if (recipeEl) {
+      var bestIdx = 0;
+      for (var b = 0; b < SMELTING_ORDER.length; b++) {
+        if (SMELTING_RECIPES[SMELTING_ORDER[b]].level <= level && canSmelt(SMELTING_ORDER[b])) bestIdx = b;
+      }
+      recipeEl.selectedIndex = bestIdx;
     }
-    var zoneWidth = Math.max(10, 35 - (highestIdx * 3.5)); // 35% → ~10% for high recipes
+
+    // Furnace sprite
+    var furnaceEl = $('smelt-furnace');
+    var furnaceSprite = createSpriteEl('furnace', 0, 0, 16, 16, 64, 64);
+    if (furnaceSprite && furnaceEl) {
+      furnaceSprite.className = 'skill-sprite smithing-anvil-sprite';
+      furnaceEl.appendChild(furnaceSprite);
+    }
+
+    // Update material display
+    updateSmeltMats();
+    if (recipeEl) {
+      recipeEl.addEventListener('change', updateSmeltMats);
+    }
+
+    // Set up green zone
+    updateSmeltZone();
+
+    // Temperature gauge interaction
+    smithingState.smeltTemp = 0;
+    smithingState.smeltHolding = false;
+    smithingState.phase = 'active';
+    if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+
+    var heatBtn = $('smelt-heat-btn');
+    if (heatBtn) {
+      var selectedBar = getSelectedSmeltBar();
+      heatBtn.disabled = !canSmelt(selectedBar) || getItemCount(selectedBar) >= STACK_CAP;
+
+      var startHeat = function (e) {
+        e.preventDefault();
+        if (smithingState.phase !== 'active') return;
+        var bar = getSelectedSmeltBar();
+        if (!canSmelt(bar) || getItemCount(bar) >= STACK_CAP) return;
+        smithingState.smeltHolding = true;
+        startSmeltTimer();
+      };
+      var stopHeat = function (e) {
+        e.preventDefault();
+        if (!smithingState.smeltHolding) return;
+        smithingState.smeltHolding = false;
+        onSmeltRelease();
+      };
+      heatBtn.addEventListener('mousedown', startHeat);
+      heatBtn.addEventListener('touchstart', startHeat);
+      heatBtn.addEventListener('mouseup', stopHeat);
+      heatBtn.addEventListener('mouseleave', stopHeat);
+      heatBtn.addEventListener('touchend', stopHeat);
+      heatBtn.addEventListener('touchcancel', stopHeat);
+    }
+  }
+
+  function getSelectedSmeltBar() {
+    var recipeEl = $('smelt-recipe');
+    if (!recipeEl) return SMELTING_ORDER[0];
+    var idx = parseInt(recipeEl.value);
+    return SMELTING_ORDER[idx] || SMELTING_ORDER[0];
+  }
+
+  function updateSmeltMats() {
+    var matsEl = $('smelt-mats');
+    var barName = getSelectedSmeltBar();
+    var recipe = SMELTING_RECIPES[barName];
+    if (matsEl && recipe) {
+      renderMaterialRequirements(matsEl, recipe.inputs);
+    }
+    var heatBtn = $('smelt-heat-btn');
+    if (heatBtn) heatBtn.disabled = !canSmelt(barName) || getItemCount(barName) >= STACK_CAP;
+    updateSmeltZone();
+  }
+
+  function updateSmeltZone() {
+    var zone = $('smelting-gauge-zone');
+    if (!zone) return;
+    var barName = getSelectedSmeltBar();
+    var idx = SMELTING_ORDER.indexOf(barName);
+    var zoneHeight = Math.max(10, 35 - (idx * 3.5));
+    var zoneBottom = Math.floor(50 - zoneHeight / 2);
+    zone.style.height = zoneHeight + '%';
+    zone.style.bottom = zoneBottom + '%';
+  }
+
+  function startSmeltTimer() {
+    if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+    smithingState.smeltTemp = 0;
+    smithingState.smeltTimer = setInterval(function () {
+      if (smithingState.smeltHolding) {
+        smithingState.smeltTemp = Math.min(100, smithingState.smeltTemp + 1.2);
+      }
+      var fill = $('smelting-gauge-fill');
+      if (fill) fill.style.height = smithingState.smeltTemp + '%';
+    }, 20);
+  }
+
+  function onSmeltRelease() {
+    if (smithingState.smeltTimer) { clearInterval(smithingState.smeltTimer); smithingState.smeltTimer = null; }
+    smithingState.phase = 'done';
+
+    var barName = getSelectedSmeltBar();
+    var idx = SMELTING_ORDER.indexOf(barName);
+    var recipe = SMELTING_RECIPES[barName];
+    var res = SKILLS.smithing.resources[idx] || SKILLS.smithing.resources[0];
+
+    // Check if temperature is in the green zone
+    var zoneHeight = Math.max(10, 35 - (idx * 3.5));
+    var zoneBottom = Math.floor(50 - zoneHeight / 2);
+    var zoneTop = zoneBottom + zoneHeight;
+    var temp = smithingState.smeltTemp;
+    var inZone = temp >= zoneBottom && temp <= zoneTop;
+
+    // Perfect = within middle 30% of zone
+    var zoneMid = zoneBottom + zoneHeight / 2;
+    var perfectRange = zoneHeight * 0.15;
+    var isPerfect = Math.abs(temp - zoneMid) <= perfectRange;
+
+    var progress = $('smelt-progress');
+    var status = $('smelt-status');
+
+    if (!inZone) {
+      if (progress) progress.textContent = 'Temperature missed! Try again...';
+      if (status) status.textContent = temp < zoneBottom ? 'Too cold!' : 'Too hot!';
+      var cooldown = getToolCooldown('smithing', 800);
+      setTimeout(function () {
+        smithingState.phase = 'active';
+        smithingState.smeltTemp = 0;
+        var fill = $('smelting-gauge-fill');
+        if (fill) fill.style.height = '0%';
+        if (progress) progress.textContent = 'Hold button to heat, release in the green zone';
+        if (status) status.textContent = '';
+        var heatBtn = $('smelt-heat-btn');
+        var curBar = getSelectedSmeltBar();
+        if (heatBtn) heatBtn.disabled = !canSmelt(curBar) || getItemCount(curBar) >= STACK_CAP;
+      }, cooldown);
+      return;
+    }
+
+    // Success: consume ores and produce bar
+    if (!canSmelt(barName) || getItemCount(barName) >= STACK_CAP) {
+      if (progress) progress.textContent = !canSmelt(barName) ? 'Not enough ores!' : 'Bar stack is full (999)!';
+      var failCd = getToolCooldown('smithing', 800);
+      setTimeout(function () {
+        smithingState.phase = 'active';
+        smithingState.smeltTemp = 0;
+        var fill2 = $('smelting-gauge-fill');
+        if (fill2) fill2.style.height = '0%';
+        if (progress) progress.textContent = 'Hold button to heat, release in the green zone';
+        if (status) status.textContent = '';
+        var heatBtn2 = $('smelt-heat-btn');
+        var curBar2 = getSelectedSmeltBar();
+        if (heatBtn2) heatBtn2.disabled = !canSmelt(curBar2) || getItemCount(curBar2) >= STACK_CAP;
+      }, failCd);
+      return;
+    }
+
+    consumeSmeltingOres(barName);
+    addItem(barName, 1);
+
+    var bonusMult = isPerfect ? 5 : 1;
+    var xpGain = Math.floor(res.xp * bonusMult * getStarShowerMult());
+    var dustGain = Math.floor(res.dust * bonusMult * getDustMult());
+
+    addXp('smithing', xpGain);
+    if (window.StarDust) window.StarDust.add(dustGain);
+
+    var logText = isPerfect
+      ? 'PERFECT SMELT! ' + barName + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)'
+      : 'Smelted ' + barName + ' (+' + xpGain + ' XP, +' + dustGain + ' SD)';
+    addLog(logText);
+
+    var gameArea = $('skills-game-area');
+    if (gameArea) {
+      var barPos = BAR_DROP_SPRITES[barName];
+      if (barPos) spawnSpriteParticle(gameArea, barPos.sheet || 'ores', barPos.x, barPos.y);
+      spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
+      setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
+    }
+
+    if (isPerfect && gameArea) {
+      var mw = document.createElement('div');
+      mw.className = 'smithing-masterwork';
+      mw.textContent = 'PERFECT!';
+      mw.style.left = '50%';
+      mw.style.top = '30%';
+      mw.style.transform = 'translateX(-50%)';
+      gameArea.appendChild(mw);
+      setTimeout(function () { if (mw.parentNode) mw.parentNode.removeChild(mw); }, 1000);
+    }
+
+    if (progress) progress.textContent = isPerfect ? 'Perfect temperature! ' + barName + ' smelted!' : barName + ' smelted!';
+    if (status) status.textContent = '+' + xpGain + ' XP, +' + dustGain + ' SD';
+
+    onAction('smithing', dustGain);
+    animatePetAction('pet-bounce');
+
+    // Furnace glow
+    var furnace = $('smelt-furnace');
+    if (furnace) {
+      furnace.classList.add('smelting-glow');
+      setTimeout(function () { furnace.classList.remove('smelting-glow'); }, 600);
+    }
+
+    var resetCooldown = getToolCooldown('smithing', 1000);
+    setTimeout(function () {
+      renderSmithing();
+      renderSkillList();
+      renderRightPanel();
+      updateGameHeader();
+    }, resetCooldown);
+  }
+
+  // ── FORGING: 5-hit timing bar mini-game ────────
+  function renderForgingGame(area) {
+    var div = document.createElement('div');
+    div.className = 'smithing-area forging-area';
+    var level = state.skills.smithing.level;
+
+    // Build recipe dropdown (filtered by level + available bars/gems)
+    var options = '';
+    var firstAvailable = -1;
+    for (var i = 0; i < FORGING_RECIPES.length; i++) {
+      var recipe = FORGING_RECIPES[i];
+      if (recipe.level > level) continue;
+      var available = canForge(recipe);
+      if (firstAvailable < 0 && available) firstAvailable = i;
+      options += '<option value="' + i + '"' + (available ? '' : ' class="smithing-unavailable"') + '>' +
+        recipe.name + ' (Lv ' + recipe.level + ')' + (available ? '' : ' [need mats]') + '</option>';
+    }
+
+    if (!options) {
+      div.innerHTML = '<div class="smithing-progress">No forging recipes available at your level.</div>';
+      area.appendChild(div);
+      return;
+    }
+
+    // Calculate zone width based on first selected recipe
+    var selIdx = firstAvailable >= 0 ? firstAvailable : 0;
+    var zoneWidth = Math.max(10, 35 - (selIdx * 1.2));
     var zoneLeft = Math.floor(50 - zoneWidth / 2);
 
     div.innerHTML =
-      '<select class="smithing-recipe-select" id="smithing-recipe">' + options + '</select>' +
-      '<div class="smithing-anvil" id="smithing-anvil"></div>' +
+      '<select class="smithing-recipe-select" id="forge-recipe">' + options + '</select>' +
+      '<div class="smithing-mat-reqs" id="forge-mats"></div>' +
+      '<div class="smithing-anvil" id="forge-anvil"></div>' +
       '<div class="smithing-timing-bar" id="smithing-timing-bar">' +
         '<div class="smithing-timing-zone" id="smithing-zone" style="left:' + zoneLeft + '%;width:' + zoneWidth + '%"></div>' +
         '<div class="smithing-timing-cursor" id="smithing-cursor" style="left:0%"></div>' +
       '</div>' +
-      '<div class="smithing-progress" id="smithing-progress">Click anvil when cursor is in green zone (0/5 hits)</div>' +
-      '<div class="smithing-status" id="smithing-status"></div>';
+      '<div class="smithing-progress" id="forge-progress">Click anvil when cursor is in green zone (0/5 hits)</div>' +
+      '<div class="smithing-status" id="forge-status"></div>';
     area.appendChild(div);
 
-    // Set recipe to highest available
-    var recipeEl = $('smithing-recipe');
-    if (recipeEl && recipeEl.options.length > 0) {
-      recipeEl.selectedIndex = recipeEl.options.length - 1;
+    // Set to best available recipe
+    var recipeEl = $('forge-recipe');
+    if (recipeEl) {
+      var bestIdx = 0;
+      for (var b = 0; b < FORGING_RECIPES.length; b++) {
+        if (FORGING_RECIPES[b].level <= level && canForge(FORGING_RECIPES[b])) bestIdx = b;
+      }
+      for (var o = 0; o < recipeEl.options.length; o++) {
+        if (parseInt(recipeEl.options[o].value) === bestIdx) {
+          recipeEl.selectedIndex = o;
+          break;
+        }
+      }
     }
 
-    // A4: Update zone when recipe changes
+    // Update material display
+    updateForgeMats();
     if (recipeEl) {
       recipeEl.addEventListener('change', function () {
-        var idx = parseInt(recipeEl.value);
-        var newZoneWidth = Math.max(10, 35 - (idx * 3.5));
-        var newZoneLeft = Math.floor(50 - newZoneWidth / 2);
-        var zone = $('smithing-zone');
-        if (zone) {
-          zone.style.width = newZoneWidth + '%';
-          zone.style.left = newZoneLeft + '%';
-        }
+        updateForgeMats();
+        updateForgeZone();
+        // Update anvil sprite
+        updateForgeAnvilSprite();
       });
     }
 
-    // Phase 3: Anvil sprite
-    var anvilEl = $('smithing-anvil');
-    var highestRes = SKILLS.smithing.resources[highestIdx];
-    var anvilPos = ANVIL_SPRITES[highestRes.name] || { x: 0, y: 0 };
-    var anvilSprite = createSpriteEl('anvil', anvilPos.x, anvilPos.y, 16, 16, 64, 64);
+    // Anvil sprite — show item being forged
+    updateForgeAnvilSprite();
+    // Sync zone width to actually selected recipe
+    updateForgeZone();
+
+    smithingState.phase = 'active';
+    smithingState.hits = 0;
+    smithingState.bonusHits = 0;
+    smithingState.cursorPos = 0;
+    smithingState.cursorDir = 1;
+    startSmithingCursor();
+
+    var anvilEl = $('forge-anvil');
+    if (anvilEl) anvilEl.addEventListener('click', onForgeClick);
+  }
+
+  function getSelectedForgeRecipe() {
+    var recipeEl = $('forge-recipe');
+    if (!recipeEl) return FORGING_RECIPES[0];
+    var idx = parseInt(recipeEl.value);
+    return FORGING_RECIPES[idx] || FORGING_RECIPES[0];
+  }
+
+  function updateForgeMats() {
+    var matsEl = $('forge-mats');
+    var recipe = getSelectedForgeRecipe();
+    if (matsEl && recipe) {
+      renderMaterialRequirements(matsEl, recipe.inputs);
+    }
+  }
+
+  function updateForgeZone() {
+    var recipeEl = $('forge-recipe');
+    var idx = recipeEl ? parseInt(recipeEl.value) : 0;
+    var newZoneWidth = Math.max(10, 35 - (idx * 1.2));
+    var newZoneLeft = Math.floor(50 - newZoneWidth / 2);
+    var zone = $('smithing-zone');
+    if (zone) {
+      zone.style.width = newZoneWidth + '%';
+      zone.style.left = newZoneLeft + '%';
+    }
+  }
+
+  function updateForgeAnvilSprite() {
+    var anvilEl = $('forge-anvil');
+    if (!anvilEl) return;
+    anvilEl.innerHTML = '';
+    var recipe = getSelectedForgeRecipe();
+    // Show the item sprite on the anvil
+    if (recipe && recipe.sprite) {
+      var itemSprite = createSpriteEl('items_sheet', recipe.sprite.x, recipe.sprite.y, 16, 16, 64, 64);
+      if (itemSprite) {
+        itemSprite.className = 'skill-sprite smithing-anvil-sprite';
+        anvilEl.appendChild(itemSprite);
+        return;
+      }
+    }
+    // Fallback: anvil sprite
+    var anvilSprite = createSpriteEl('anvil', 0, 0, 16, 16, 64, 64);
     if (anvilSprite) {
       anvilSprite.className = 'skill-sprite smithing-anvil-sprite';
       anvilEl.appendChild(anvilSprite);
-    } else {
-      anvilEl.textContent = '\uD83D\uDD28';
     }
-
-    smithingState = { phase: 'active', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0 };
-    startSmithingCursor();
-    anvilEl.addEventListener('click', onSmithClick);
-
-    // C1: Render pet
-    renderPetInGameArea();
   }
 
   function startSmithingCursor() {
@@ -2443,9 +3009,20 @@
     }, 20);
   }
 
-  function onSmithClick() {
+  function onForgeClick() {
     if (smithingState.phase !== 'active') return;
-    var anvil = $('smithing-anvil');
+    var recipe = getSelectedForgeRecipe();
+    if (!canForge(recipe)) {
+      var fp = $('forge-progress');
+      if (fp) fp.textContent = 'Need materials! Select a recipe you can craft.';
+      return;
+    }
+    if (getItemCount(recipe.name) >= STACK_CAP) {
+      var fp2 = $('forge-progress');
+      if (fp2) fp2.textContent = 'Item stack is full (999)!';
+      return;
+    }
+    var anvil = $('forge-anvil');
     if (anvil) {
       anvil.classList.remove('hit');
       void anvil.offsetWidth;
@@ -2462,7 +3039,7 @@
     smithingState.hits++;
     if (inZone) smithingState.bonusHits++;
 
-    // A4: Hammer glow
+    // Hammer glow
     if (anvil) {
       anvil.classList.remove('glow-1', 'glow-2', 'glow-3', 'glow-4', 'glow-5');
       if (smithingState.bonusHits > 0) {
@@ -2470,7 +3047,7 @@
       }
     }
 
-    var progress = $('smithing-progress');
+    var progress = $('forge-progress');
     if (progress) {
       progress.textContent = (inZone ? 'Perfect! ' : 'Miss... ') + '(' + smithingState.hits + '/5 hits)';
     }
@@ -2480,34 +3057,50 @@
       if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
       smithingState.phase = 'done';
 
-      var recipeEl = $('smithing-recipe');
-      var idx = recipeEl ? parseInt(recipeEl.value) : 0;
-      var res = SKILLS.smithing.resources[idx] || SKILLS.smithing.resources[0];
+      var recipe = getSelectedForgeRecipe();
 
-      // A4: Masterwork check (5/5 perfect)
+      // Check materials and stack cap
+      if (!canForge(recipe) || getItemCount(recipe.name) >= STACK_CAP) {
+        if (progress) progress.textContent = !canForge(recipe) ? 'Not enough materials!' : 'Item stack is full (999)!';
+        var resetCd = getToolCooldown('smithing', 1000);
+        setTimeout(function () {
+          renderSmithing();
+          renderSkillList();
+          renderRightPanel();
+          updateGameHeader();
+        }, resetCd);
+        return;
+      }
+
+      // Consume materials and produce item
+      consumeForgingMats(recipe);
+      addItem(recipe.name, 1);
+
+      // Masterwork check (5/5 perfect)
       var isMasterwork = smithingState.bonusHits >= 5;
       var bonusMult = isMasterwork ? 5 : (1 + (smithingState.bonusHits * 0.25));
-      var xpGain = Math.floor(res.xp * bonusMult * getStarShowerMult());
-      var dustGain = Math.floor(res.dust * bonusMult * getDustMult());
+      var xpGain = Math.floor(recipe.xp * bonusMult * getStarShowerMult());
+      var dustGain = Math.floor(recipe.dust * bonusMult * getDustMult());
 
       addXp('smithing', xpGain);
       if (window.StarDust) window.StarDust.add(dustGain);
 
       var logText = isMasterwork
-        ? 'MASTERWORK! ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD) [5/5 perfect]'
-        : 'Smithed ' + res.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD) [' + smithingState.bonusHits + '/5 perfect]';
+        ? 'MASTERWORK! Forged ' + recipe.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD) [5/5 perfect]'
+        : 'Forged ' + recipe.name + ' (+' + xpGain + ' XP, +' + dustGain + ' SD) [' + smithingState.bonusHits + '/5 perfect]';
       addLog(logText);
 
       var gameArea = $('skills-game-area');
       if (gameArea) {
-        // Phase 3: Bar sprite particle
-        var barPos = BAR_DROP_SPRITES[res.name];
-        if (barPos) spawnSpriteParticle(gameArea, 'ores', barPos.x, barPos.y);
+        // Item sprite particle
+        if (recipe.sprite) {
+          spawnSpriteParticle(gameArea, 'items_sheet', recipe.sprite.x, recipe.sprite.y);
+        }
         spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
         setTimeout(function () { spawnParticle(gameArea, '+' + dustGain + ' SD', 'dust'); }, 200);
       }
 
-      // A4: Masterwork flash
+      // Masterwork flash
       if (isMasterwork && gameArea) {
         var mw = document.createElement('div');
         mw.className = 'smithing-masterwork';
@@ -2519,13 +3112,10 @@
         setTimeout(function () { if (mw.parentNode) mw.parentNode.removeChild(mw); }, 1000);
       }
 
-      var status = $('smithing-status');
+      var status = $('forge-status');
       if (status) status.textContent = isMasterwork ? 'MASTERWORK! 5/5 perfect!' : smithingState.bonusHits + '/5 perfect hits!';
 
-      // Common action hook
       onAction('smithing', dustGain);
-
-      // C1: Pet bounce
       animatePetAction('pet-bounce');
 
       var cooldown = getToolCooldown('smithing', 1000);
@@ -2907,7 +3497,9 @@
     fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
     wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
     if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
-    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0 };
+    if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
+    var prevMode = smithingState.mode || 'smelting';
+    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false };
     if (combatState.enemyTimer) clearInterval(combatState.enemyTimer);
     if (combatState.dodgeWindowTimer) clearTimeout(combatState.dodgeWindowTimer);
     combatState = {
@@ -3084,6 +3676,35 @@
         }
       }
 
+      // 6C: Idle smelting for smithing (50% of actions → bars from available ores)
+      if (key === 'smithing') {
+        var smeltActions = Math.floor(actions * 0.5);
+        var smeltLevel = s.level;
+        var barsSmelted = [];
+        for (var si = SMELTING_ORDER.length - 1; si >= 0 && smeltActions > 0; si--) {
+          var smeltBar = SMELTING_ORDER[si];
+          var smeltRecipe = SMELTING_RECIPES[smeltBar];
+          if (smeltRecipe.level > smeltLevel) continue;
+          while (smeltActions > 0 && canSmelt(smeltBar) && getItemCount(smeltBar) < STACK_CAP) {
+            consumeSmeltingOres(smeltBar);
+            addItem(smeltBar, 1);
+            smeltActions--;
+            var found = false;
+            for (var bf = 0; bf < barsSmelted.length; bf++) {
+              if (barsSmelted[bf].name === smeltBar) { barsSmelted[bf].qty++; found = true; break; }
+            }
+            if (!found) barsSmelted.push({ name: smeltBar, qty: 1 });
+          }
+        }
+        if (barsSmelted.length > 0) {
+          var smeltSummary = '';
+          for (var bs = 0; bs < barsSmelted.length; bs++) {
+            smeltSummary += (bs > 0 ? ', ' : '') + barsSmelted[bs].qty + ' ' + barsSmelted[bs].name;
+          }
+          rewards[rewards.length - 1].smelted = smeltSummary;
+        }
+      }
+
       s.lastActiveAt = now;
     }
 
@@ -3123,6 +3744,7 @@
 
       var text = document.createElement('span');
       var matText = r.materials ? ' + ' + r.materials.qty + ' ' + r.materials.name : '';
+      if (r.smelted) matText += ' + Smelted: ' + r.smelted;
       text.textContent = petName + ' earned ' + formatNum(r.xp) + ' ' + SKILLS[r.skill].name + ' XP + ' + formatNum(r.dust) + ' SD' + matText;
       line.appendChild(text);
 
