@@ -41,6 +41,46 @@
       <button class="rpg-btn rpg-btn-small" id="rpg-btn-save-quit">Save &amp; Quit</button>
     </div>
     {{ partial "rpg-skills-panel.html" . }}
+
+    <!-- OSRS-style bottom bar (chat + inventory panels combined) -->
+    <div class="osrs-chatbox" id="osrs-chatbox" style="display:none">
+      <div class="osrs-chatbox-header">
+        <div class="osrs-chatbox-tabs">
+          <button class="osrs-chatbox-tab active" data-chat-tab="game">Game</button>
+          <button class="osrs-chatbox-tab" data-chat-tab="chat">Chat</button>
+          <button class="osrs-chatbox-tab" data-chat-tab="quest">Quest</button>
+        </div>
+        <div class="osrs-chatbox-skill-actions" id="osrs-chatbox-skill-actions" style="display:none">
+          <!-- #skills-perks-btn and #skills-log-btn moved here by rpg.js -->
+        </div>
+        <button class="rpg-map-return-btn" id="rpg-btn-map" style="display:none">&larr; World Map</button>
+        <div class="osrs-chatbox-icons">
+          <button class="osrs-tab" data-chat-tab="skills" title="Skills"></button>
+          <button class="osrs-tab osrs-tab-center" data-chat-tab="inventory" title="Inventory"></button>
+          <button class="osrs-tab" data-chat-tab="character" title="Character"></button>
+          <button class="osrs-tab" data-chat-tab="milestones" title="Milestones"></button>
+        </div>
+        <button class="osrs-chatbox-toggle" id="osrs-chatbox-toggle" title="Minimize">&#9660;</button>
+      </div>
+      <div class="osrs-chatbox-body" id="osrs-chatbox-body">
+        <div class="osrs-chat-pane" id="osrs-chat-game">
+          <div class="osrs-chatbox-welcome" id="osrs-chatbox-welcome">
+            Welcome, adventurer. Select a location on the map to begin your journey.
+          </div>
+          <!-- #skills-game-log gets moved here by rpg.js -->
+        </div>
+        <div class="osrs-chat-pane" id="osrs-chat-chat" style="display:none">
+          <div class="osrs-chatbox-empty">No messages yet.</div>
+        </div>
+        <div class="osrs-chat-pane" id="osrs-chat-quest" style="display:none">
+          <div class="osrs-chatbox-empty">No active quests.</div>
+        </div>
+        <div class="osrs-chat-pane" id="osrs-chat-skills" style="display:none"></div>
+        <div class="osrs-chat-pane" id="osrs-chat-inventory" style="display:none"></div>
+        <div class="osrs-chat-pane" id="osrs-chat-character" style="display:none"></div>
+        <div class="osrs-chat-pane" id="osrs-chat-milestones" style="display:none"></div>
+      </div>
+    </div>
   </div>
 
 </div>

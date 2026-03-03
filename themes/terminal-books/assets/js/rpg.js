@@ -38,7 +38,8 @@
   var activeSlot = -1;
   var currentScreen = 'rpg-menu-screen';
   var createTargetSlot = -1;
-  var centerMode = 'map'; // 'map' or 'skill'
+  var osrsPanelSetUp = false;
+  var programmaticSkillClick = false;
 
   // ── Helpers ───────────────────────────────────
   function $(id) { return document.getElementById(id); }
@@ -98,6 +99,20 @@
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+  }
+
+  function timeAgo(ts) {
+    var diff = Date.now() - ts;
+    var secs = Math.floor(diff / 1000);
+    if (secs < 60) return 'just now';
+    var mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + (mins === 1 ? ' minute' : ' minutes') + ' ago';
+    var hours = Math.floor(mins / 60);
+    if (hours < 24) return hours + (hours === 1 ? ' hour' : ' hours') + ' ago';
+    var days = Math.floor(hours / 24);
+    if (days < 30) return days + (days === 1 ? ' day' : ' days') + ' ago';
+    var months = Math.floor(days / 30);
+    return months + (months === 1 ? ' month' : ' months') + ' ago';
   }
 
   // ── Location Icon Helper ─────────────────────
@@ -161,22 +176,30 @@
 
   // ── Center Panel Toggle ───────────────────────
   function showCenterContent(mode) {
-    centerMode = mode;
     var mapContainer = $('rpg-world-map-container');
     var gameHeader = $('skills-game-header');
     var gameArea = $('skills-game-area');
     var gameLog = $('skills-game-log');
+    var mapBtnTopbar = $('rpg-btn-map');
+    var skillActions = $('osrs-chatbox-skill-actions');
+    var welcomeMsg = $('osrs-chatbox-welcome');
 
-    if (mode === 'map') {
-      if (mapContainer) mapContainer.style.display = 'block';
-      if (gameHeader) gameHeader.style.display = 'none';
-      if (gameArea) gameArea.style.display = 'none';
-      if (gameLog) gameLog.style.display = 'none';
-    } else {
+    if (mode === 'skill') {
       if (mapContainer) mapContainer.style.display = 'none';
       if (gameHeader) gameHeader.style.display = '';
       if (gameArea) gameArea.style.display = '';
       if (gameLog) gameLog.style.display = '';
+      if (mapBtnTopbar) mapBtnTopbar.style.display = '';
+      if (skillActions) skillActions.style.display = '';
+      if (welcomeMsg) welcomeMsg.style.display = 'none';
+    } else {
+      if (mapContainer) mapContainer.style.display = 'block';
+      if (gameHeader) gameHeader.style.display = 'none';
+      if (gameArea) gameArea.style.display = 'none';
+      if (gameLog) gameLog.style.display = 'none';
+      if (mapBtnTopbar) mapBtnTopbar.style.display = 'none';
+      if (skillActions) skillActions.style.display = 'none';
+      if (welcomeMsg) welcomeMsg.style.display = '';
     }
   }
 
@@ -340,10 +363,111 @@
     renderMenuScreen();
   }
 
+  // ── OSRS Bottom Bar (chatbox with panel tabs) ─
+  function setupOsrsPanel() {
+    var chatbox = $('osrs-chatbox');
+    if (!chatbox) return;
+
+    if (osrsPanelSetUp) {
+      chatbox.style.display = '';
+      return;
+    }
+
+    // Move DOM nodes from hidden panels into chatbox panes
+    var skillsPane = $('osrs-chat-skills');
+    var invPane = $('osrs-chat-inventory');
+    var charPane = $('osrs-chat-character');
+    var milestonesPane = $('osrs-chat-milestones');
+
+    // Skills pane: skill list (display-only in RPG mode)
+    var skillsList = $('skills-list');
+    if (skillsList && skillsPane) {
+      skillsPane.appendChild(skillsList);
+      var selectedRows = skillsList.querySelectorAll('.skill-row.selected');
+      for (var i = 0; i < selectedRows.length; i++) {
+        selectedRows[i].classList.remove('selected');
+      }
+    }
+
+    // Inventory pane
+    var invPanel = $('skills-inv-panel');
+    if (invPanel && invPane) invPane.appendChild(invPanel);
+
+    // Character pane: char info, pet assignment, idle status
+    var charInfo = $('rpg-char-info');
+    if (charInfo && charPane) charPane.appendChild(charInfo);
+    var petSlot = $('skills-pet-slot');
+    if (petSlot && charPane) charPane.appendChild(petSlot);
+    var idleStatus = $('skills-idle-status');
+    if (idleStatus && charPane) charPane.appendChild(idleStatus);
+
+    // Milestones pane
+    var milestones = $('skills-milestones');
+    if (milestones && milestonesPane) milestonesPane.appendChild(milestones);
+
+    // Game pane: move game log
+    var gamePane = $('osrs-chat-game');
+    var gameLog = $('skills-game-log');
+    if (gamePane && gameLog) gamePane.appendChild(gameLog);
+
+    // Move perks/log buttons into chatbox skill actions row
+    var skillActions = $('osrs-chatbox-skill-actions');
+    var perksBtn = $('skills-perks-btn');
+    if (skillActions && perksBtn) skillActions.appendChild(perksBtn);
+    var logBtn = $('skills-log-btn');
+    if (skillActions && logBtn) skillActions.appendChild(logBtn);
+
+    // Show chatbox, default to game tab
+    chatbox.style.display = '';
+    switchChatTab('game');
+    osrsPanelSetUp = true;
+  }
+
+  function switchChatTab(tabId) {
+    var chatbox = $('osrs-chatbox');
+    if (!chatbox) return;
+    // Update all tab buttons (text tabs + icon tabs)
+    var allTabs = chatbox.querySelectorAll('[data-chat-tab]');
+    for (var i = 0; i < allTabs.length; i++) {
+      if (allTabs[i].getAttribute('data-chat-tab') === tabId) {
+        allTabs[i].classList.add('active');
+      } else {
+        allTabs[i].classList.remove('active');
+      }
+    }
+    var panes = chatbox.querySelectorAll('.osrs-chat-pane');
+    for (var i = 0; i < panes.length; i++) {
+      panes[i].style.display = (panes[i].id === 'osrs-chat-' + tabId) ? '' : 'none';
+    }
+    // Auto-expand if collapsed
+    chatbox.classList.remove('collapsed');
+    var toggle = $('osrs-chatbox-toggle');
+    if (toggle) toggle.innerHTML = '&#9660;';
+  }
+
+  function onChatTabClick(e) {
+    var btn = e.target.closest('[data-chat-tab]');
+    if (!btn) return;
+    var tabId = btn.getAttribute('data-chat-tab');
+    if (tabId) switchChatTab(tabId);
+  }
+
+  function toggleChatbox() {
+    var chatbox = $('osrs-chatbox');
+    var toggle = $('osrs-chatbox-toggle');
+    if (!chatbox) return;
+    chatbox.classList.toggle('collapsed');
+    if (toggle) {
+      toggle.innerHTML = chatbox.classList.contains('collapsed') ? '&#9650;' : '&#9660;';
+    }
+  }
+
   // ── Game Entry ────────────────────────────────
   function enterGame(slot) {
     activeSlot = slot;
     meta.currentSlot = slot;
+    var prevLastPlayed = meta.slots[slot].lastPlayed;
+    var isFirstLogin = Math.abs(prevLastPlayed - meta.slots[slot].created) < 2000;
     meta.slots[slot].lastPlayed = Date.now();
     saveMeta();
 
@@ -365,6 +489,22 @@
 
     // Update character info in right panel
     updateCharInfo();
+
+    // Set up OSRS floating panel (moves DOM nodes on first call)
+    setupOsrsPanel();
+
+    // Update welcome message
+    var welcomeEl = $('osrs-chatbox-welcome');
+    if (welcomeEl) {
+      var pName = escapeHtml(meta.slots[slot].name);
+      if (isFirstLogin) {
+        welcomeEl.innerHTML = 'Welcome, ' + pName + '. This is your first time here — Jack greets you warmly!';
+      } else if (Date.now() - prevLastPlayed < 300000) {
+        welcomeEl.innerHTML = 'Welcome back, ' + pName + '.';
+      } else {
+        welcomeEl.innerHTML = 'Welcome back, ' + pName + '. You last logged in ' + timeAgo(prevLastPlayed) + '.';
+      }
+    }
 
     // Show game screen
     showScreen('rpg-game-screen');
@@ -456,7 +596,7 @@
     if (!loc) return;
 
     if (!loc.skill) {
-      // Town hub — no action for now (could show character sheet later)
+      // Town hub — no action for now
       return;
     }
 
@@ -466,11 +606,16 @@
   // ── Skill Location Entry ──────────────────────
   function enterSkillLocation(loc) {
     showCenterContent('skill');
+    switchChatTab('skills');
 
     // Click the matching skill row to switch skills.js to this skill
     setTimeout(function () {
       var skillRow = document.querySelector('.skill-row[data-skill="' + loc.skill + '"]');
-      if (skillRow) skillRow.click();
+      if (skillRow) {
+        programmaticSkillClick = true;
+        skillRow.click();
+        programmaticSkillClick = false;
+      }
     }, 50);
   }
 
@@ -480,11 +625,10 @@
       window.__RPG_SKILLS_CLEANUP();
     }
 
-    // Refresh map tiles with updated levels
+    showCenterContent('map');
     renderWorldMap();
     updateTopbar();
     updateCharInfo();
-    showCenterContent('map');
   }
 
   // ── Save & Quit ───────────────────────────────
@@ -500,6 +644,10 @@
       window.__RPG_SKILLS_CLEANUP();
     }
 
+    // Hide chatbox
+    var osrsChatbox = $('osrs-chatbox');
+    if (osrsChatbox) osrsChatbox.style.display = 'none';
+
     // Hide RPG-mode elements
     var mapBtn = $('rpg-map-nav-btn');
     if (mapBtn) mapBtn.style.display = 'none';
@@ -511,32 +659,28 @@
     if (skillsTopbar) skillsTopbar.style.display = '';
 
     activeSlot = -1;
-    centerMode = 'map';
     window.__RPG_STORAGE_KEY = '__rpg_pending__';
     showScreen('rpg-menu-screen');
     renderMenuScreen();
   }
 
   // ── Skill Row Click Interceptor ───────────────
-  // When the user clicks a skill row while the map is showing,
-  // switch to skill view first so skills.js renders into visible area
+  // Block manual clicks on skill rows in OSRS panel; allow programmatic clicks from enterSkillLocation
   function onSkillListCapture(e) {
     var row = e.target.closest('.skill-row');
     if (!row) return;
-    if (centerMode === 'map') {
-      showCenterContent('skill');
-    }
+    if (programmaticSkillClick) return; // let it through
+    e.stopPropagation();
   }
 
   // ── Keyboard Interceptor ────────────────────────
-  // skills.js onKeyDown handles 1-5 to switch skills.
-  // If the map is showing, switch to skill view so the user sees the result.
+  // Block 1-5 keys from triggering skills.js skill switch in RPG mode
   function onRpgKeyDown(e) {
     if (currentScreen !== 'rpg-game-screen') return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
     var num = parseInt(e.key);
-    if (num >= 1 && num <= 5 && centerMode === 'map') {
-      showCenterContent('skill');
+    if (num >= 1 && num <= 5) {
+      e.stopPropagation();
     }
   }
 
@@ -572,9 +716,11 @@
     $('rpg-name-input').addEventListener('input', onNameInput);
     $('rpg-btn-save-quit').addEventListener('click', onSaveQuit);
 
-    // World Map button in left panel
+    // World Map buttons (panel + topbar)
     var mapBtn = $('rpg-map-nav-btn');
     if (mapBtn) mapBtn.addEventListener('click', returnToMap);
+    var mapBtnTopbar = $('rpg-btn-map');
+    if (mapBtnTopbar) mapBtnTopbar.addEventListener('click', returnToMap);
 
     // Skill row click interceptor (capture phase)
     var skillsList = $('skills-list');
@@ -584,6 +730,14 @@
 
     // Keyboard interceptor: switch to skill view when pressing 1-5 on map
     document.addEventListener('keydown', onRpgKeyDown);
+
+    // Chatbox toggle + all tabs (text tabs + icon tabs)
+    var chatToggle = $('osrs-chatbox-toggle');
+    if (chatToggle) chatToggle.addEventListener('click', toggleChatbox);
+    var chatTabs = document.querySelector('.osrs-chatbox-tabs');
+    if (chatTabs) chatTabs.addEventListener('click', onChatTabClick);
+    var iconTabs = document.querySelector('.osrs-chatbox-icons');
+    if (iconTabs) iconTabs.addEventListener('click', onChatTabClick);
 
     // Enter key submits character creation
     $('rpg-name-input').addEventListener('keydown', function (e) {

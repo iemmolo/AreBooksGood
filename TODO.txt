@@ -319,25 +319,53 @@ AreBooksGood - Improvement TODO
 - [x] Widen site-container to 1100px for RPG pages (:has() selector)
 - [x] Mobile responsive: portrait stacks, landscape preserves 3-panel
 
-### Phase 3: UI Rework — Minimizable Panel + Full Game Area
-- [ ] Rework layout: skills list + inventory in a minimizable floating window (lower-left)
-  - Backpack icon (#674, 400,288) + skill icons along top edge of rectangle
-  - Click to expand/collapse the panel
-  - Game area takes over the full center/main space when panel minimized
+### Phase 3: UI Rework — OSRS Floating Panel + Full-Width Game Area (Done)
+- [x] Rework layout: hide left/right panels, center panel full-width
+- [x] OSRS-style floating panel (bottom-right, 220px) with 4 tabs: Skills, Inventory, Character, Milestones
+- [x] Tab icons from items_sheet.png (Crafting, Backpack, Walking, Quest sprites)
+- [x] Collapse (click active tab), minimize (× → backpack reopen icon)
+- [x] DOM nodes moved from hidden panels via appendChild (preserves event listeners, zero skills.js changes)
+- [x] Mobile: bottom sheet (position: fixed, full-width)
 - [ ] Replace Training Arena icon (currently placeholder Sword #1) — rework later
 - [ ] Add Prayer skill location tile on world map (icon: Prayer #925, 384,400)
 - [ ] Add Slayer skill location tile on world map (icon: Tanning #670, 336,288)
 
-### Phase 4+ (Future)
-- [ ] Top-down tile-based overworld with LPC walk animations
+### Phase 4: Walking World Map — Character Movement + Travel Time
+- [ ] Character sprite on world map: player has a position on the map (starts at Town Hub)
+- [ ] Click a location tile → character sprite walks/moves to that tile over time (not instant)
+  - Travel animation: sprite slides from current tile to target tile
+  - Travel duration: short but noticeable (1-3 seconds depending on distance)
+  - Cannot start another action while travelling
+- [ ] Arrive at location → skill mini-game or activity becomes available
+- [ ] Current location indicator (highlight, glow, or "You are here" marker)
+- [ ] LPC walk animation during travel (4-directional sprite sheet frames)
+
+### Phase 5: Game Integration — All Site Games as RPG Activities
+Goal: Every standalone game on the site becomes accessible as an RPG activity at a map location.
+
+- [ ] **Casino District** (new map location): Poker, Blackjack, Casino Wars, Slots
+  - Coins/JB earned in-game feed into RPG slot wallet
+- [ ] **Arcade** (new map location): Flappy Bird, Doodle Jump
+  - High scores tracked per RPG save slot
+- [ ] **Tower Defense Outpost** (new map location): TD game launches from RPG
+  - Materials/JB earned carry back to RPG slot
+- [ ] **Farm** (new map location): Farm system accessible from RPG map
+  - JB wallet, crops, farmhouse tied to RPG save slot
+- [ ] **Dungeon Gate** (new map location): Battle/dungeon system as RPG activity
+  - Gear drops and dungeon progress scoped to RPG slot
+- [ ] **Chess Parlor** (new map location): Chess puzzles from RPG
+- [ ] Expand world map grid to accommodate new locations (3×2 → larger grid)
+- [ ] Location unlock progression (some locations gated by total level or quest)
+
+### Phase 6+ (Future)
 - [ ] Quest system (NPCs in Tavern give objectives + rewards)
 - [ ] Shop system in Town Hub (buy/sell, ties into Silk Road economy)
 - [ ] New skills as RPG locations: Cooking, Crafting, Magic/Alchemy
-- [ ] Dungeon system integration (battle.js dungeons as RPG location)
 - [ ] Equipment stat system (forged gear provides combat bonuses)
 - [ ] Per-slot pet companions (pets scoped to save slot)
 - [ ] LPC runtime layer compositing (equipment visually changes character sprite)
 - [ ] Achievement/milestone tracker across all skills
+- [ ] Per-slot economy isolation (casino coins, JB, materials all scoped to save slot)
 
 ## Low Priority / Nice-to-Have
 
