@@ -707,11 +707,13 @@
   font-style: italic;
 }
 
-/* ── Mining Perks Panel ──────────────────────── */
-.skills-perks-panel {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 0.75rem;
+/* ── Perks (modal) ──────────────────────────── */
+.perks-summary {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .perk-row {
@@ -2049,8 +2051,6 @@
   .mining-rock, .mining-rock-wrap { width: 64px; min-width: 64px; height: 64px; min-height: 64px; }
 
   .skills-right-panel { padding: 0.25rem; overflow: hidden; min-width: 0; }
-
-  .skills-perks-panel { max-height: 150px; overflow-y: auto; }
 
   .skills-inv-grid { grid-template-columns: repeat(5, 1fr); }
 

@@ -8,22 +8,30 @@
   var MAX_SLOTS = 3;
 
   var SKILL_KEYS = ['mining', 'fishing', 'woodcutting', 'smithing', 'combat'];
-  var SKILL_ICONS = {
-    mining: '\u26CF',
-    fishing: '\uD83C\uDFA3',
-    woodcutting: '\uD83E\uDE93',
-    smithing: '\uD83D\uDD28',
-    combat: '\u2694'
+  var LOCATIONS = [
+    { id: 'town', name: 'Town Hub', desc: 'Home, shop, and tavern', skill: null },
+    { id: 'mine', name: 'Mining Camp', desc: 'Mine ores and gems', skill: 'mining' },
+    { id: 'dock', name: 'Fishing Dock', desc: 'Cast your line', skill: 'fishing' },
+    { id: 'forest', name: 'Lumber Forest', desc: 'Chop trees for wood', skill: 'woodcutting' },
+    { id: 'smithy', name: 'Smithy', desc: 'Smelt and forge', skill: 'smithing' },
+    { id: 'arena', name: 'Training Arena', desc: 'Fight monsters', skill: 'combat' }
+  ];
+
+  // ── Location Icons (from items_sheet.png) ────
+  var ITEMS_SHEET_PATH = '/images/skills/items_sheet.png';
+  var LOCATION_ICONS = {
+    town:   { x: 0, y: 288 },    // Quest
+    mine:   { x: 80, y: 320 },   // Mine Cart
+    dock:   { x: 32, y: 464 },   // Little Shark (#1047)
+    forest: { x: 256, y: 432 },  // Log (#989)
+    smithy: { x: 416, y: 320 },  // Smithy (#747)
+    arena:  { x: 0, y: 0 }       // Sword (placeholder — rework later)
   };
 
-  var LOCATIONS = [
-    { id: 'town', name: 'Town Hub', icon: '\uD83C\uDFE0', desc: 'Home, shop, and tavern', skill: null },
-    { id: 'mine', name: 'Mining Camp', icon: '\u26CF\uFE0F', desc: 'Mine ores and gems', skill: 'mining' },
-    { id: 'dock', name: 'Fishing Dock', icon: '\uD83C\uDFA3', desc: 'Cast your line', skill: 'fishing' },
-    { id: 'forest', name: 'Lumber Forest', icon: '\uD83C\uDF32', desc: 'Chop trees for wood', skill: 'woodcutting' },
-    { id: 'smithy', name: 'Smithy', icon: '\uD83D\uDD25', desc: 'Smelt and forge', skill: 'smithing' },
-    { id: 'arena', name: 'Training Arena', icon: '\u2694\uFE0F', desc: 'Fight monsters', skill: 'combat' }
-  ];
+  // ── Pet Data ─────────────────────────────────
+  var PET_KEY = 'arebooksgood-pet';
+  var petSpriteData = null;
+  var petCatalog = null;
 
   // ── State ─────────────────────────────────────
   var meta = null;
@@ -90,6 +98,54 @@
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+  }
+
+  // ── Location Icon Helper ─────────────────────
+  function createLocationIcon(locId) {
+    var data = LOCATION_ICONS[locId];
+    if (!data) return null;
+    var scale = 2; // 16px native → 32px display
+    var el = document.createElement('div');
+    el.className = 'rpg-location-icon';
+    el.style.backgroundImage = 'url(' + ITEMS_SHEET_PATH + ')';
+    el.style.backgroundSize = (576 * scale) + 'px ' + (560 * scale) + 'px';
+    el.style.backgroundPosition = '-' + (data.x * scale) + 'px -' + (data.y * scale) + 'px';
+    return el;
+  }
+
+  // ── Pet Helpers ──────────────────────────────
+  function getAssignedPet(slotIdx, skill) {
+    var ss = getSlotSkillsState(slotIdx);
+    if (!ss || !ss.skills || !ss.skills[skill]) return null;
+    return ss.skills[skill].assignedPet || null;
+  }
+
+  function createPetSpriteEl(petId) {
+    if (!petSpriteData || !petCatalog) return null;
+    var creature = petCatalog.creatures ? petCatalog.creatures[petId] : null;
+    if (!creature) return null;
+    var sid = creature.spriteId || petId;
+    // Check for alt skin
+    var ps = null;
+    try { var raw = localStorage.getItem(PET_KEY); if (raw) ps = JSON.parse(raw); } catch (e) {}
+    var petSkin = (ps && ps.pets && ps.pets[petId] && ps.pets[petId].skin === 'alt') ? 'alt' : 'default';
+    var sheetKey = petSkin === 'alt' ? sid + '-alt' : sid;
+    var data = petSpriteData[sheetKey] || petSpriteData[sid];
+    if (!data) return null;
+
+    var petLevel = (ps && ps.pets && ps.pets[petId]) ? (ps.pets[petId].level || 1) : 1;
+    var frameOffset = data.frameOffset || 0;
+    var frameIdx = Math.min(frameOffset + petLevel - 1, (data.frames || 3) - 1);
+
+    // Scale factor: display 32px from native 48px = 2/3
+    var scale = 32 / 48;
+    var el = document.createElement('div');
+    el.className = 'rpg-tile-pet';
+    el.style.backgroundImage = 'url(' + data.sheet + ')';
+    el.style.backgroundSize = ((data.frames || 3) * 48 * scale) + 'px ' + (48 * scale) + 'px';
+    el.style.backgroundPosition = '-' + Math.round(frameIdx * 48 * scale) + 'px 0';
+    el.title = creature.name;
+    return el;
   }
 
   // ── Screen Manager ────────────────────────────
@@ -353,9 +409,7 @@
       tile.className = 'rpg-location-tile';
       tile.setAttribute('data-location', loc.id);
 
-      var icon = document.createElement('div');
-      icon.className = 'rpg-location-icon';
-      icon.textContent = loc.icon;
+      var icon = createLocationIcon(loc.id);
 
       var name = document.createElement('div');
       name.className = 'rpg-location-name';
@@ -375,6 +429,13 @@
         lvlEl.className = 'rpg-location-level';
         lvlEl.textContent = 'Lv ' + lvl;
         tile.appendChild(lvlEl);
+
+        // Show assigned pet sprite on tile
+        var petId = getAssignedPet(activeSlot, loc.skill);
+        if (petId) {
+          var petEl = createPetSpriteEl(petId);
+          if (petEl) tile.appendChild(petEl);
+        }
       }
 
       tile.addEventListener('click', onLocationClick);
@@ -484,6 +545,20 @@
     if (!$('rpg-page')) return;
 
     meta = loadMeta();
+
+    // Load pet sprite data for world map tiles
+    try {
+      var xhr1 = new XMLHttpRequest();
+      xhr1.open('GET', '/data/petsprites.json', false); // sync — small file
+      xhr1.send();
+      if (xhr1.status === 200) petSpriteData = JSON.parse(xhr1.responseText);
+    } catch (e) {}
+    try {
+      var xhr2 = new XMLHttpRequest();
+      xhr2.open('GET', '/data/petcatalog.json', false);
+      xhr2.send();
+      if (xhr2.status === 200) petCatalog = JSON.parse(xhr2.responseText);
+    } catch (e) {}
 
     // Set RPG mode flag so skills.js knows not to auto-init
     window.__RPG_STORAGE_KEY = '__rpg_pending__';

@@ -277,6 +277,12 @@ AreBooksGood - Improvement TODO
 - [ ] Cooking (Phase 7): Fish + food ingredients → prepared meals for combat HP
 - [ ] Crafting (Phase 8): Bars + gems → weapons/armor for dungeon gear
 - [ ] Magic/Alchemy (Phase 9): Transmute items → enchanted output, potions
+- [ ] Prayer (Phase 10): Burning bones + banishing souls → prayer XP. Icon: Prayer (#925, 384,400)
+  - Bones obtained as drops from combat/slayer
+  - Souls obtained from slayer skill
+  - Placeholder — full design TBD
+- [ ] Slayer (Phase 11): Kill assigned creatures → slayer XP + soul drops for Prayer. Icon: Tanning (#670, 336,288)
+  - Placeholder — full design TBD
 
 ## 99 Cape System (Future)
 
@@ -313,7 +319,16 @@ AreBooksGood - Improvement TODO
 - [x] Widen site-container to 1100px for RPG pages (:has() selector)
 - [x] Mobile responsive: portrait stacks, landscape preserves 3-panel
 
-### Phase 3+ (Future)
+### Phase 3: UI Rework — Minimizable Panel + Full Game Area
+- [ ] Rework layout: skills list + inventory in a minimizable floating window (lower-left)
+  - Backpack icon (#674, 400,288) + skill icons along top edge of rectangle
+  - Click to expand/collapse the panel
+  - Game area takes over the full center/main space when panel minimized
+- [ ] Replace Training Arena icon (currently placeholder Sword #1) — rework later
+- [ ] Add Prayer skill location tile on world map (icon: Prayer #925, 384,400)
+- [ ] Add Slayer skill location tile on world map (icon: Tanning #670, 336,288)
+
+### Phase 4+ (Future)
 - [ ] Top-down tile-based overworld with LPC walk animations
 - [ ] Quest system (NPCs in Tavern give objectives + rewards)
 - [ ] Shop system in Town Hub (buy/sell, ties into Silk Road economy)

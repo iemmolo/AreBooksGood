@@ -11,16 +11,59 @@
   var STACK_CAP = 999;
 
   // ── Mining Perks (level-gated passives) ────────
-  var MINING_PERKS = [
-    { id: 'keenEye', name: 'Keen Eye', level: 10, desc: 'Gem chance 5% \u2192 10%' },
-    { id: 'doubleStrike', name: 'Double Strike', level: 20, desc: '10% chance for 2x ore yield' },
-    { id: 'prospector', name: "Prospector's Luck", level: 30, desc: '+25% XP from mining' },
-    { id: 'oreSense', name: 'Ore Sense', level: 45, desc: 'Rock respawn 3s \u2192 2s' },
-    { id: 'gemSpec', name: 'Gem Specialist', level: 60, desc: 'Gem bonus 5x \u2192 10x XP' },
-    { id: 'veinMiner', name: 'Vein Miner', level: 75, desc: '20% chance to auto-mine adjacent rock' },
-    { id: 'deepCore', name: 'Deep Core', level: 85, desc: 'Enables rare deep vein events (5x XP)' },
-    { id: 'mastery', name: 'Mining Mastery', level: 99, desc: 'Permanent 2x XP from all mining' }
-  ];
+  var SKILL_PERKS = {
+    mining: [
+      { id: 'keenEye', name: 'Keen Eye', level: 10, desc: 'Gem chance 5% \u2192 10%' },
+      { id: 'doubleStrike', name: 'Double Strike', level: 20, desc: '10% chance for 2x ore yield' },
+      { id: 'prospector', name: "Prospector's Luck", level: 30, desc: '+25% XP from mining' },
+      { id: 'oreSense', name: 'Ore Sense', level: 45, desc: 'Rock respawn 3s \u2192 2s' },
+      { id: 'gemSpec', name: 'Gem Specialist', level: 60, desc: 'Gem bonus 5x \u2192 10x XP' },
+      { id: 'veinMiner', name: 'Vein Miner', level: 75, desc: '20% chance to auto-mine adjacent rock' },
+      { id: 'deepCore', name: 'Deep Core', level: 85, desc: 'Enables rare deep vein events (5x XP)' },
+      { id: 'mastery', name: 'Mining Mastery', level: 99, desc: 'Permanent 2x XP from all mining' }
+    ],
+    fishing: [
+      { id: 'quickHands', name: 'Quick Hands', level: 10, desc: 'Golden catch window 300ms \u2192 400ms' },
+      { id: 'luckyBait', name: 'Lucky Bait', level: 20, desc: 'Rare catch 8% \u2192 15%' },
+      { id: 'deepCast', name: 'Deep Cast', level: 30, desc: '+25% XP from fishing' },
+      { id: 'bigGame', name: 'Big Game', level: 45, desc: 'Large/Huge fish more common' },
+      { id: 'doubleCatch', name: 'Double Catch', level: 60, desc: '10% chance for 2x fish' },
+      { id: 'patience', name: 'Patience', level: 75, desc: 'Bite wait time reduced 25%' },
+      { id: 'netMaster', name: 'Net Master', level: 85, desc: 'Size bonus multipliers doubled' },
+      { id: 'fishMastery', name: 'Fishing Mastery', level: 99, desc: 'Permanent 2x XP from all fishing' }
+    ],
+    woodcutting: [
+      { id: 'sharpAxe', name: 'Sharp Axe', level: 10, desc: 'Chop cooldown 300ms \u2192 200ms' },
+      { id: 'lumberjack', name: 'Lumberjack', level: 20, desc: 'Double chop window 100ms wider' },
+      { id: 'forester', name: "Forester's Skill", level: 30, desc: '+25% XP from woodcutting' },
+      { id: 'nestFinder', name: 'Nest Finder', level: 45, desc: 'Bird nest drop 10% \u2192 20%' },
+      { id: 'doubleLog', name: 'Double Log', level: 60, desc: '10% chance for 2x logs' },
+      { id: 'powerChop', name: 'Power Chop', level: 75, desc: 'Each hit counts as 2 (halves chops needed)' },
+      { id: 'ancientRoots', name: 'Ancient Roots', level: 85, desc: '5% chance for 10x XP rare log' },
+      { id: 'wcMastery', name: 'Woodcutting Mastery', level: 99, desc: 'Permanent 2x XP from all woodcutting' }
+    ],
+    smithing: [
+      { id: 'steadyHand', name: 'Steady Hand', level: 10, desc: 'Smelting green zone 10% wider' },
+      { id: 'quickStrike', name: 'Quick Strike', level: 20, desc: 'Forging cursor 15% slower' },
+      { id: 'metalworker', name: 'Metalworker', level: 30, desc: '+25% XP from smithing' },
+      { id: 'efficientSmelt', name: 'Efficient Smelt', level: 45, desc: '15% chance to not consume ores' },
+      { id: 'doubleBar', name: 'Double Bar', level: 60, desc: '10% chance for 2x bars when smelting' },
+      { id: 'masterForge', name: 'Master Forge', level: 75, desc: 'Forging green zone 15% wider' },
+      { id: 'pyromaniac', name: 'Pyromaniac', level: 85, desc: 'Perfect smelt zone 50% larger' },
+      { id: 'smithMastery', name: 'Smithing Mastery', level: 99, desc: 'Permanent 2x XP from all smithing' }
+    ],
+    combat: [
+      { id: 'toughSkin', name: 'Tough Skin', level: 10, desc: 'Enemy damage reduced 10%' },
+      { id: 'quickReflex', name: 'Quick Reflex', level: 20, desc: 'Dodge cooldown 2s \u2192 1.5s' },
+      { id: 'warrior', name: "Warrior's Spirit", level: 30, desc: '+25% XP from combat' },
+      { id: 'critMaster', name: 'Crit Master', level: 45, desc: 'Crit chance 15% \u2192 25%' },
+      { id: 'lifesteal', name: 'Lifesteal', level: 60, desc: 'Heal 5% of damage dealt' },
+      { id: 'extraPotion', name: 'Field Medic', level: 75, desc: '3 \u2192 5 potions per encounter' },
+      { id: 'secondWind', name: 'Second Wind', level: 85, desc: 'Survive death once per encounter at 10% HP' },
+      { id: 'combatMastery', name: 'Combat Mastery', level: 99, desc: 'Permanent 2x XP from all combat' }
+    ]
+  };
+  var MINING_PERKS = SKILL_PERKS.mining; // backward compat for existing hasPerk calls
 
   // ── Rock HP (multi-hit mining) ─────────────────
   var ROCK_HP = {
@@ -605,7 +648,7 @@
   var combatState = {
     enemyHp: 0, enemyMaxHp: 0, enemyName: '', streak: 0, enemyTimer: null, cooldown: false,
     playerHp: 0, playerMaxHp: 0, potions: 3, dodgeCooldown: false, dead: false,
-    dodgeWindow: false, dodgeWindowTimer: null
+    dodgeWindow: false, dodgeWindowTimer: null, secondWindUsed: false
   };
 
   // Star shower state (B3)
@@ -963,11 +1006,12 @@
       addLog('Pet: "' + line + '"');
     }
 
-    // Mining perk unlock check
-    if (skill === 'mining') {
-      for (var pi = 0; pi < MINING_PERKS.length; pi++) {
-        if (MINING_PERKS[pi].level > oldLevel && MINING_PERKS[pi].level <= newLevel) {
-          showPerkUnlockToast(MINING_PERKS[pi]);
+    // Perk unlock check (all skills)
+    var skillPerks = SKILL_PERKS[skill];
+    if (skillPerks) {
+      for (var pi = 0; pi < skillPerks.length; pi++) {
+        if (skillPerks[pi].level > oldLevel && skillPerks[pi].level <= newLevel) {
+          showPerkUnlockToast(skillPerks[pi]);
         }
       }
     }
@@ -1147,33 +1191,43 @@
     return state.skills.mining.log;
   }
 
-  // ── Mining Perk helpers ──────────────────────
-  function hasPerk(perkId) {
-    var level = state.skills.mining.level;
-    for (var i = 0; i < MINING_PERKS.length; i++) {
-      if (MINING_PERKS[i].id === perkId) return level >= MINING_PERKS[i].level;
+  // ── Perk helpers ────────────────────────────
+  function hasPerk(perkId, skill) {
+    var sk = skill || 'mining';
+    var perks = SKILL_PERKS[sk];
+    if (!perks || !state || !state.skills[sk]) return false;
+    var level = state.skills[sk].level;
+    for (var i = 0; i < perks.length; i++) {
+      if (perks[i].id === perkId) return level >= perks[i].level;
     }
     return false;
   }
 
-  function renderMiningPerks() {
-    var panel = $('skills-perks-panel');
-    var title = $('skills-perks-title');
-    if (!panel || !title) return;
+  function renderPerksModal() {
+    var content = $('skills-perks-content');
+    var titleEl = document.querySelector('#skills-perks-overlay .skills-log-modal h3');
+    if (!content) return;
 
-    if (activeSkill !== 'mining') {
-      panel.style.display = 'none';
-      title.style.display = 'none';
-      return;
+    var perks = SKILL_PERKS[activeSkill];
+    var skillName = activeSkill.charAt(0).toUpperCase() + activeSkill.slice(1);
+    if (titleEl) titleEl.textContent = skillName + ' Perks';
+
+    content.innerHTML = '';
+    if (!perks) return;
+
+    var level = state.skills[activeSkill].level;
+    var unlockedCount = 0;
+    for (var i = 0; i < perks.length; i++) {
+      if (level >= perks[i].level) unlockedCount++;
     }
 
-    panel.style.display = '';
-    title.style.display = '';
-    panel.innerHTML = '';
+    var summary = document.createElement('div');
+    summary.className = 'perks-summary';
+    summary.textContent = unlockedCount + ' / ' + perks.length + ' unlocked';
+    content.appendChild(summary);
 
-    var level = state.skills.mining.level;
-    for (var i = 0; i < MINING_PERKS.length; i++) {
-      var perk = MINING_PERKS[i];
+    for (var i = 0; i < perks.length; i++) {
+      var perk = perks[i];
       var unlocked = level >= perk.level;
       var row = document.createElement('div');
       row.className = 'perk-row ' + (unlocked ? 'perk-unlocked' : 'perk-locked');
@@ -1195,16 +1249,31 @@
         row.appendChild(req);
       }
 
-      panel.appendChild(row);
+      content.appendChild(row);
     }
+  }
+
+  function showPerksModal() {
+    renderPerksModal();
+    var overlay = $('skills-perks-overlay');
+    if (overlay) overlay.style.display = '';
   }
 
   // ── Combined XP multiplier ──────────────────
   function getXpMult() {
     var mult = getStarShowerMult() * getMasteryBonus();
-    if (activeSkill === 'mining') {
-      if (hasPerk('prospector')) mult *= 1.25;
-      if (hasPerk('mastery')) mult *= 2;
+    // Per-skill XP perks (level 30 = +25%, level 99 = 2x)
+    var xpPerks = {
+      mining: { mid: 'prospector', master: 'mastery' },
+      fishing: { mid: 'deepCast', master: 'fishMastery' },
+      woodcutting: { mid: 'forester', master: 'wcMastery' },
+      smithing: { mid: 'metalworker', master: 'smithMastery' },
+      combat: { mid: 'warrior', master: 'combatMastery' }
+    };
+    var perkIds = xpPerks[activeSkill];
+    if (perkIds) {
+      if (hasPerk(perkIds.mid, activeSkill)) mult *= 1.25;
+      if (hasPerk(perkIds.master, activeSkill)) mult *= 2;
     }
     return mult;
   }
@@ -1517,8 +1586,9 @@
       }
     }
 
-    // Mining perks panel
-    renderMiningPerks();
+    // Perks button visibility (all skills have perks now)
+    var perksBtn = $('skills-perks-btn');
+    if (perksBtn) perksBtn.style.display = '';
 
     // Collection log button visibility
     var logBtn = $('skills-log-btn');
@@ -2368,8 +2438,9 @@
     if (bobber) { bobber.classList.add('visible'); bobber.classList.remove('bite'); }
     if (exclaim) exclaim.classList.remove('visible');
 
-    // A2: Power affects wait time (full power = 1s, no power = 4s)
+    // A2: Power affects wait time (full power = 1s, no power = 4s; Perk: Patience = 25% faster)
     var waitTime = 1000 + (1 - castPower) * 3000;
+    if (hasPerk('patience', 'fishing')) waitTime *= 0.75;
     fishingState.biteTimeout = setTimeout(function () {
       fishingState.phase = 'bite';
       fishingState.biteStartTime = Date.now();
@@ -2404,8 +2475,9 @@
     var res = getHighestResource('fishing');
     var level = state.skills.fishing.level;
 
-    // A2: Fish size (level-weighted)
-    var sizeRoll = Math.random() + (level / MAX_LEVEL) * 0.3;
+    // A2: Fish size (level-weighted; Perk: Big Game shifts toward Large/Huge)
+    var sizeBonus = hasPerk('bigGame', 'fishing') ? 0.2 : 0;
+    var sizeRoll = Math.random() + (level / MAX_LEVEL) * 0.3 + sizeBonus;
     var sizeIdx;
     if (sizeRoll < 0.15) sizeIdx = 0;
     else if (sizeRoll < 0.4) sizeIdx = 1;
@@ -2413,23 +2485,28 @@
     else if (sizeRoll < 0.9) sizeIdx = 3;
     else sizeIdx = 4;
     var sizeMult = FISH_SIZE_MULTS[sizeIdx];
+    // Perk: Net Master doubles size bonus multipliers
+    if (hasPerk('netMaster', 'fishing') && sizeMult > 1) sizeMult *= 2;
     var sizeName = FISH_SIZES[sizeIdx];
 
-    // A2: Golden catch (< 300ms reaction)
-    var isGolden = reactionTime < 300;
+    // A2: Golden catch (< 300ms reaction; Perk: Quick Hands widens to 400ms)
+    var goldenThreshold = hasPerk('quickHands', 'fishing') ? 400 : 300;
+    var isGolden = reactionTime < goldenThreshold;
     var goldenMult = isGolden ? 3 : 1;
 
-    // A2: Rare catch (8%)
-    var isRare = Math.random() < 0.08;
+    // A2: Rare catch (8%; Perk: Lucky Bait → 15%)
+    var rareChance = hasPerk('luckyBait', 'fishing') ? 0.15 : 0.08;
+    var isRare = Math.random() < rareChance;
     var rareMult = isRare ? 5 : 1;
 
     var xpGain = Math.floor(res.xp * getXpMult() * sizeMult * goldenMult * rareMult);
 
     addXp('fishing', xpGain);
 
-    // 6B: Add fish to inventory
-    addItem(res.name, 1);
-    addLog('+1 ' + res.name);
+    // 6B: Add fish to inventory (Perk: Double Catch = 10% chance for 2x)
+    var fishCount = (hasPerk('doubleCatch', 'fishing') && Math.random() < 0.10) ? 2 : 1;
+    addItem(res.name, fishCount);
+    addLog('+' + fishCount + ' ' + res.name);
 
     var catchText = 'Caught ' + sizeName + ' ' + res.name + '!';
     if (isGolden) catchText = 'GOLDEN catch! ' + catchText;
@@ -2525,13 +2602,17 @@
     if (!tree) return;
     var now = Date.now();
 
-    // A3: Rhythm check (350-450ms = Double Chop!)
+    // A3: Rhythm check (350-450ms = Double Chop!; Perk: Lumberjack widens to 300-500ms)
     var timeSinceLast = now - wcState.lastChopTime;
-    var isDoubleChop = wcState.lastChopTime > 0 && timeSinceLast >= 350 && timeSinceLast <= 450;
+    var dcLow = hasPerk('lumberjack', 'woodcutting') ? 300 : 350;
+    var dcHigh = hasPerk('lumberjack', 'woodcutting') ? 500 : 450;
+    var isDoubleChop = wcState.lastChopTime > 0 && timeSinceLast >= dcLow && timeSinceLast <= dcHigh;
     wcState.lastChopTime = now;
 
     wcState.cooldown = true;
+    // Perk: Power Chop = each hit counts as 2
     var chopCount = isDoubleChop ? 2 : 1;
+    if (hasPerk('powerChop', 'woodcutting')) chopCount *= 2;
     wcState.hits += chopCount;
 
     tree.classList.remove('chopping');
@@ -2565,8 +2646,9 @@
       var res = getHighestResource('woodcutting');
       var xpGain = Math.floor(res.xp * getXpMult());
 
-      // A3: 10% bird nest drop
-      var isNest = Math.random() < 0.1;
+      // A3: 10% bird nest drop (Perk: Nest Finder → 20%)
+      var nestChance = hasPerk('nestFinder', 'woodcutting') ? 0.20 : 0.10;
+      var isNest = Math.random() < nestChance;
       if (isNest) {
         xpGain *= 10;
         addLog('Found a bird nest! 10x XP bonus!');
@@ -2574,12 +2656,21 @@
         if (gameArea) spawnParticle(gameArea, '\uD83E\uDD5A Nest!', 'nest');
       }
 
+      // Perk: Ancient Roots — 5% chance for 10x XP rare log
+      if (!isNest && hasPerk('ancientRoots', 'woodcutting') && Math.random() < 0.05) {
+        xpGain *= 10;
+        addLog('Ancient roots! 10x XP bonus!');
+        var gameArea3 = $('skills-game-area');
+        if (gameArea3) spawnParticle(gameArea3, 'Ancient!', 'gem');
+      }
+
       addXp('woodcutting', xpGain);
 
-      // 6B: Add log to inventory
+      // 6B: Add log to inventory (Perk: Double Log = 10% chance for 2x)
       var logName = LOG_NAMES[res.name] || (res.name + ' Log');
-      addItem(logName, 1);
-      addLog('+1 ' + logName);
+      var logCount = (hasPerk('doubleLog', 'woodcutting') && Math.random() < 0.10) ? 2 : 1;
+      addItem(logName, logCount);
+      addLog('+' + logCount + ' ' + logName);
 
       addLog('Chopped ' + res.name + ' (+' + xpGain + ' XP)');
 
@@ -2605,7 +2696,9 @@
         updateGameHeader();
       }, cooldown);
     } else {
-      var chopCooldown = getToolCooldown('woodcutting', 300);
+      // Perk: Sharp Axe = chop cooldown 300ms → 200ms
+      var baseCd = hasPerk('sharpAxe', 'woodcutting') ? 200 : 300;
+      var chopCooldown = getToolCooldown('woodcutting', baseCd);
       setTimeout(function () {
         wcState.cooldown = false;
       }, chopCooldown);
@@ -2783,6 +2876,8 @@
     var barName = getSelectedSmeltBar();
     var idx = SMELTING_ORDER.indexOf(barName);
     var zoneHeight = Math.max(10, 35 - (idx * 3.5));
+    // Perk: Steady Hand = 10% wider green zone
+    if (hasPerk('steadyHand', 'smithing')) zoneHeight *= 1.10;
     var zoneBottom = Math.floor(50 - zoneHeight / 2);
     zone.style.height = zoneHeight + '%';
     zone.style.bottom = zoneBottom + '%';
@@ -2809,16 +2904,18 @@
     var recipe = SMELTING_RECIPES[barName];
     var res = SKILLS.smithing.resources[idx] || SKILLS.smithing.resources[0];
 
-    // Check if temperature is in the green zone
+    // Check if temperature is in the green zone (Perk: Steady Hand = 10% wider)
     var zoneHeight = Math.max(10, 35 - (idx * 3.5));
+    if (hasPerk('steadyHand', 'smithing')) zoneHeight *= 1.10;
     var zoneBottom = Math.floor(50 - zoneHeight / 2);
     var zoneTop = zoneBottom + zoneHeight;
     var temp = smithingState.smeltTemp;
     var inZone = temp >= zoneBottom && temp <= zoneTop;
 
-    // Perfect = within middle 30% of zone
+    // Perfect = within middle 30% of zone (Perk: Pyromaniac = 50% larger perfect zone)
     var zoneMid = zoneBottom + zoneHeight / 2;
     var perfectRange = zoneHeight * 0.15;
+    if (hasPerk('pyromaniac', 'smithing')) perfectRange *= 1.5;
     var isPerfect = Math.abs(temp - zoneMid) <= perfectRange;
 
     var progress = $('smelt-progress');
@@ -2862,8 +2959,16 @@
       return;
     }
 
-    consumeSmeltingOres(barName);
-    addItem(barName, 1);
+    // Perk: Efficient Smelt — 15% chance to not consume ores
+    if (hasPerk('efficientSmelt', 'smithing') && Math.random() < 0.15) {
+      addLog('Efficient smelt! Ores preserved.');
+    } else {
+      consumeSmeltingOres(barName);
+    }
+    // Perk: Double Bar — 10% chance for 2x bars
+    var barCount = (hasPerk('doubleBar', 'smithing') && Math.random() < 0.10) ? 2 : 1;
+    addItem(barName, barCount);
+    if (barCount > 1) addLog('Double bar! +' + barCount + ' ' + barName);
     updateSmeltMats();
 
     var bonusMult = isPerfect ? 5 : 1;
@@ -2944,6 +3049,8 @@
     // Calculate zone width based on first selected recipe
     var selIdx = firstAvailable >= 0 ? firstAvailable : 0;
     var zoneWidth = Math.max(10, 35 - (selIdx * 1.2));
+    // Perk: Master Forge = forging green zone 15% wider
+    if (hasPerk('masterForge', 'smithing')) zoneWidth *= 1.15;
     var zoneLeft = Math.floor(50 - zoneWidth / 2);
 
     div.innerHTML =
@@ -3025,6 +3132,8 @@
     var recipeEl = $('forge-recipe');
     var idx = recipeEl ? parseInt(recipeEl.value) : 0;
     var newZoneWidth = Math.max(10, 35 - (idx * 1.2));
+    // Perk: Master Forge = forging green zone 15% wider
+    if (hasPerk('masterForge', 'smithing')) newZoneWidth *= 1.15;
     var newZoneLeft = Math.floor(50 - newZoneWidth / 2);
     var zone = $('smithing-zone');
     if (zone) {
@@ -3059,7 +3168,8 @@
     if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
     smithingState.cursorPos = 0;
     smithingState.cursorDir = 1;
-    var speed = 1.5;
+    // Perk: Quick Strike = cursor 15% slower (easier to hit)
+    var speed = hasPerk('quickStrike', 'smithing') ? 1.275 : 1.5;
     smithingState.cursorTimer = setInterval(function () {
       smithingState.cursorPos += smithingState.cursorDir * speed;
       if (smithingState.cursorPos >= 100) { smithingState.cursorPos = 100; smithingState.cursorDir = -1; }
@@ -3219,12 +3329,13 @@
       '<div class="combat-streak" id="combat-streak"></div>';
     area.appendChild(div);
 
-    // A5: Initialize player HP
+    // A5: Initialize player HP (Perk: Field Medic = 5 potions)
     combatState.playerMaxHp = 100 + level * 3;
     combatState.playerHp = combatState.playerMaxHp;
-    combatState.potions = 3;
+    combatState.potions = hasPerk('extraPotion', 'combat') ? 5 : 3;
     combatState.dead = false;
     combatState.dodgeCooldown = false;
+    combatState.secondWindUsed = false;
 
     $('combat-btn').addEventListener('click', onCombatAttack);
     $('combat-dodge-btn').addEventListener('click', onCombatDodge);
@@ -3306,8 +3417,9 @@
         if (!combatState.dodgeWindow) return; // already dodged
         combatState.dodgeWindow = false;
 
-        // A5: Enemy attack deals real damage
+        // A5: Enemy attack deals real damage (Perk: Tough Skin = 10% reduction)
         var dmg = Math.floor(5 + level * 0.5);
+        if (hasPerk('toughSkin', 'combat')) dmg = Math.floor(dmg * 0.9);
         combatState.playerHp = Math.max(0, combatState.playerHp - dmg);
         addLog(combatState.enemyName + ' attacks! (-' + dmg + ' HP)');
 
@@ -3324,9 +3436,18 @@
 
         updatePlayerHP();
 
-        // A5: Player death check
+        // A5: Player death check (Perk: Second Wind = survive once at 10% HP)
         if (combatState.playerHp <= 0) {
-          onPlayerDeath();
+          if (hasPerk('secondWind', 'combat') && !combatState.secondWindUsed) {
+            combatState.secondWindUsed = true;
+            combatState.playerHp = Math.floor(combatState.playerMaxHp * 0.10);
+            updatePlayerHP();
+            addLog('Second Wind! Survived at ' + combatState.playerHp + ' HP!');
+            var gameArea = $('skills-game-area');
+            if (gameArea) spawnParticle(gameArea, 'Second Wind!', 'gem');
+          } else {
+            onPlayerDeath();
+          }
         }
       }, 500); // 500ms dodge window
     }, 2000);
@@ -3381,10 +3502,12 @@
     var dodgeBtn = $('combat-dodge-btn');
     if (dodgeBtn) dodgeBtn.disabled = true;
 
+    // Perk: Quick Reflex = dodge cooldown 2s → 1.5s
+    var dodgeCd = hasPerk('quickReflex', 'combat') ? 1500 : 2000;
     setTimeout(function () {
       combatState.dodgeCooldown = false;
       if (dodgeBtn) dodgeBtn.disabled = combatState.dead;
-    }, 2000);
+    }, dodgeCd);
   }
 
   // A5: Potion mechanic
@@ -3424,7 +3547,8 @@
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         combatState.dead = false;
         combatState.playerHp = combatState.playerMaxHp;
-        combatState.potions = 3;
+        combatState.potions = hasPerk('extraPotion', 'combat') ? 5 : 3;
+        combatState.secondWindUsed = false;
         updatePlayerHP();
         updatePotionBtn();
         spawnCombatEnemy();
@@ -3446,14 +3570,22 @@
     var typeMult = 1;
     if (petId) typeMult = getTypeBonus(petId, 'combat');
 
-    // A5: 15% crit chance
-    var isCrit = Math.random() < 0.15;
+    // A5: 15% crit chance (Perk: Crit Master → 25%)
+    var critRate = hasPerk('critMaster', 'combat') ? 0.25 : 0.15;
+    var isCrit = Math.random() < critRate;
     var critMult = isCrit ? 2 : 1;
 
     var dmg = Math.floor(baseDmg * typeMult * critMult * (0.8 + Math.random() * 0.4));
 
     combatState.enemyHp = Math.max(0, combatState.enemyHp - dmg);
     updateCombatHP();
+
+    // Perk: Lifesteal — heal 5% of damage dealt
+    if (hasPerk('lifesteal', 'combat') && combatState.playerHp < combatState.playerMaxHp) {
+      var lsHeal = Math.max(1, Math.floor(dmg * 0.05));
+      combatState.playerHp = Math.min(combatState.playerMaxHp, combatState.playerHp + lsHeal);
+      updatePlayerHP();
+    }
 
     // Float damage
     var enemy = $('combat-enemy');
@@ -3492,8 +3624,9 @@
       // C1: Pet bounce
       animatePetAction('pet-bounce');
 
-      // A5: Reset potions on kill
-      combatState.potions = 3;
+      // A5: Reset potions on kill (Perk: Field Medic = 5)
+      combatState.potions = hasPerk('extraPotion', 'combat') ? 5 : 3;
+      combatState.secondWindUsed = false;
       updatePotionBtn();
 
       var cooldown = getToolCooldown('combat', 800);
@@ -3563,7 +3696,7 @@
     combatState = {
       enemyHp: 0, enemyMaxHp: 0, enemyName: '', streak: 0, enemyTimer: null, cooldown: false,
       playerHp: 0, playerMaxHp: 0, potions: 3, dodgeCooldown: false, dead: false,
-      dodgeWindow: false, dodgeWindowTimer: null
+      dodgeWindow: false, dodgeWindowTimer: null, secondWindUsed: false
     };
   }
 
@@ -3986,6 +4119,14 @@
         var logClose = $('skills-log-close');
         if (logClose) logClose.addEventListener('click', function () {
           $('skills-log-overlay').style.display = 'none';
+        });
+
+        var perksBtn = $('skills-perks-btn');
+        if (perksBtn) perksBtn.addEventListener('click', showPerksModal);
+
+        var perksClose = $('skills-perks-close');
+        if (perksClose) perksClose.addEventListener('click', function () {
+          $('skills-perks-overlay').style.display = 'none';
         });
 
         var idleOk = $('skills-idle-report-ok');

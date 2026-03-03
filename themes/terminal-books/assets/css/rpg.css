@@ -319,8 +319,10 @@
 }
 
 .rpg-location-icon {
-  font-size: 1.6em;
-  margin-bottom: 4px;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 4px;
+  image-rendering: pixelated;
 }
 
 .rpg-location-name {
@@ -341,6 +343,15 @@
   border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
   padding-top: 6px;
   margin-top: 2px;
+}
+
+/* Pet sprite on world map tile */
+.rpg-tile-pet {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  margin: 4px auto 0;
+  overflow: hidden;
 }
 
 /* ── Character Info (in right panel) ─────────── */
@@ -418,7 +429,6 @@
   }
 
   .rpg-location-tile { padding: 10px 6px; }
-  .rpg-location-icon { font-size: 1.3em; }
   .rpg-location-name { font-size: 0.85em; }
   .rpg-location-desc { display: none; }
 }
@@ -434,6 +444,6 @@
   .rpg-world-map-container { padding: 4px 2px; }
   .rpg-locations-grid { gap: 6px; }
   .rpg-location-tile { padding: 8px 4px; }
-  .rpg-location-icon { font-size: 1.2em; margin-bottom: 2px; }
+  .rpg-location-icon { margin-bottom: 2px; }
   .rpg-location-desc { display: none; }
 }

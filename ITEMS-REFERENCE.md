@@ -210,9 +210,32 @@
 
 | Item # | x,y (px) | Tool Type |
 |--------|----------|-----------|
-| 731-735 | various | Pickaxes (5 color tiers) |
-| 737-741 | various | Shovels (5 tiers) |
-| 745-749 | various | Keys (misc) |
+| 721-725 | 0-64,320 | Hammers (5 color tiers) |
+| 726-730 | 80-144,320 | More tools |
+| 731-735 | 160-224,320 | Pickaxes (5 color tiers) |
+| 737-741 | 256-320,320 | Shovels (5 tiers) |
+| 745-749 | 384-448,320 | Keys (misc) |
+
+### World Map Location Icons (Active)
+
+| Location | Item | # | x,y (px) | Row |
+|----------|------|---|----------|-----|
+| Town Hub | Quest | #649 | 0,288 | 18 |
+| Mining Camp | Mine Cart | #726 | 80,320 | 20 |
+| Fishing Dock | Little Shark | #1047 | 32,464 | 29 |
+| Lumber Forest | Log | #989 | 256,432 | 27 |
+| Smithy | Smithy | #747 | 416,320 | 20 |
+| Training Arena | Sword | #1 | 0,0 | 0 (placeholder — rework later) |
+
+Rendered at 2x scale (16px native → 32px display) via `LOCATION_ICONS` in `rpg.js`.
+
+### UI Icons (Planned)
+
+| Icon | Item | # | x,y (px) | Purpose |
+|------|------|---|----------|---------|
+| Backpack | Backpack | #674 | 400,288 | Inventory/skills minimizable window |
+| Prayer | Prayer | #925 | 384,400 | Prayer skill icon |
+| Tanning | Tanning | #670 | 336,288 | Slayer skill icon |
 
 ---
 

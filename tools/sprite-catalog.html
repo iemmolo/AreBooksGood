@@ -149,6 +149,32 @@ h1 {
   margin: 4px 14px;
 }
 
+/* Location icon candidates */
+.loc-section {
+  border: 2px solid #4af;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  background: #0d0d0d;
+}
+.loc-section h2 {
+  background: #0a1520;
+  color: #4af;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-bottom: 1px solid #333;
+}
+.loc-group-label {
+  color: #4af;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 10px 14px 2px;
+}
+.loc-group-desc {
+  color: #666;
+  font-size: 11px;
+  padding: 0 14px 6px;
+}
+
 /* Group */
 .group {
   margin-bottom: 12px;
@@ -313,6 +339,7 @@ h1 {
   <span class="stat">Total: <span class="val" id="stat-total">0</span></span>
 </div>
 
+<div id="location-icons-section"></div>
 <div id="match-section"></div>
 <div id="groups-container"></div>
 <div class="zoom-tooltip" id="zoom-tooltip"></div>
@@ -333,6 +360,62 @@ h1 {
   var ORE_IDS = [574, 575, 576, 577, 578, 579, 580, 581, 582, 583, 584, 585, 586, 587, 597, 610];
   // Tagged BAR sprites (from user catalog) — item IDs
   var BAR_IDS = [562, 563, 564, 565, 566, 567, 568, 569, 570, 571, 572, 573];
+
+  // World Map location icon candidates — broad selection for user to pick from
+  var LOCATION_CANDIDATES = [
+    { label: 'Town Hub', desc: 'Current: Quest (#649). Books, scrolls, maps, keys, lanterns, skill icons', items: [
+      649, 650, 651, 652, 653, 654, 655, 656,  // Row 18 first half
+      657, 658, 659, 660, 661, 662, 663, 664,
+      665, 666, 667, 668, 669, 670, 671, 672,  // Row 18 second half
+      673, 674, 675, 676, 677, 678, 679, 680,
+      681, 682, 683, 684,
+      925, 926, 927, 928, 929, 930, 931, 932,  // Row 25: bottles, skill icons
+      933, 934, 935, 936
+    ]},
+    { label: 'Mining Camp', desc: 'Current: Mine Cart (#726). Tools, pickaxes, ores, gems', items: [
+      721, 722, 723, 724, 725, 726, 727, 728,  // Row 20 first half: tools
+      729, 730, 731, 732, 733, 734, 735, 736,
+      737, 738, 739, 740, 741, 742, 743, 744,
+      745, 746, 747, 748, 749, 750, 751, 752,
+      753, 754, 755, 756,
+      577, 578, 579, 580, 581, 582, 583, 584,  // Row 16: ores
+      585, 586, 587, 597, 610,
+      541, 543, 545, 547, 549, 551, 552         // Row 15: gems
+    ]},
+    { label: 'Fishing Dock', desc: 'Current: Crab (#433). Fish, shells, seafood', items: [
+      1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052,  // Row 29: fish
+      1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060,
+      1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068,  // Row 30: bigger fish
+      1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076,
+      1077, 1078,
+      433, 434, 435, 436, 437, 438, 439, 440,  // Row 12: shells, crabs
+      441, 442, 443, 444, 445, 446, 447, 448,
+      1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088  // Row 30: shells, starfish
+    ]},
+    { label: 'Lumber Forest', desc: 'Current: Wood Working (#926). Axes, logs, leaves, seeds', items: [
+      973, 974, 975, 976, 977, 978, 979, 980,  // Row 27 first half: seeds, leaves
+      981, 982, 983, 984, 985, 986, 987, 988,
+      989, 990, 991, 992, 993, 994, 995, 996,  // Row 27 second half: logs
+      997, 998, 999, 1000, 1001, 1002, 1003, 1004,
+      1005, 1006, 1007, 1008,
+      25, 26, 27, 28, 29, 30, 31, 32,          // Row 0: axes area
+      33, 34, 35, 36
+    ]},
+    { label: 'Smithy', desc: 'Current: Camp Fire (#721). Hammers, bars, tools', items: [
+      721, 722, 723, 724, 725, 726, 727, 728,  // Row 20: tools (same as mining for overlap)
+      729, 730, 731, 732, 733, 734, 735, 736,
+      562, 563, 564, 565, 566, 567, 568, 569,  // Row 15: bars
+      570, 571, 572, 573
+    ]},
+    { label: 'Training Arena', desc: 'Current: Sword (#1). Swords, shields, armor, helmets', items: [
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,          // Row 0: swords
+      11, 12, 13, 14, 15, 16, 17, 18,
+      181, 182, 183, 184, 185, 186, 187, 188,  // Row 5: spears, shields
+      189, 190, 191, 192, 193, 194, 195, 196,
+      289, 290, 291, 292, 293, 294, 295, 296,  // Row 8: helmets, headgear
+      297, 298, 299, 300
+    ]}
+  ];
 
   // Row groups from ITEMS-REFERENCE.md
   var GROUPS = [
@@ -422,7 +505,7 @@ h1 {
     '384,432': 'Elder Log',
     // Fish (rows 29-30)
     '0,464': 'Minnow',
-    '32,464': 'Shrimp',
+    '32,464': 'Shark',
     '64,464': 'Perch',
     '96,464': 'Trout',
     '128,464': 'Bass',
@@ -433,13 +516,56 @@ h1 {
     '112,480': 'Shark',
     '176,480': 'Anglerfish',
     '240,480': 'Leviathan',
+    // User-named items from catalog
+    '384,0': 'Gold Pickaxe',        // #25
+    '400,0': 'Silver Pick Axe',     // #26
+    '416,0': 'Bronze Pick Axe',     // #27
+    '432,0': 'Trash Pickaxe',       // #28
+    '176,80': 'Trident',            // #194
+    '192,80': 'Trident',            // #195 (Cobalt Spear override)
+    '208,80': 'Trident',            // #196
+    '0,128': 'Walking',             // #289
+    '16,128': 'Belt',               // #290
+    '32,128': 'Ring',               // #291
+    '48,128': 'Armour',             // #292
+    '64,128': 'Arm Brace',          // #293
+    '80,128': 'Gloves',             // #294
+    '0,192': 'Crab',                // #433
+    '64,192': 'String Ray Red',     // #437
+    '80,192': 'String Ray Orange',  // #438
+    '144,192': 'Snail',             // #442
+    '0,288': 'Quest',               // #649
+    '16,288': 'Exit',               // #650
+    '32,288': 'Potion',             // #651
+    '48,288': 'Church',             // #652
+    '288,288': 'Bar',               // #667
+    '304,288': 'Time',              // #668
+    '320,288': 'Cloth',             // #669
+    '336,288': 'Tanning',           // #670
+    '0,320': 'Camp Fire',           // #721
+    '16,320': 'Lit Lantern',        // #722
+    '32,320': 'Dynamite',           // #723
+    '48,320': 'Grappling Hook',     // #724
+    '64,320': 'Loot',               // #725
+    '80,320': 'Mine Cart',          // #726
+    '96,320': 'Empty Potion',       // #727
+    '112,320': 'Chains',            // #728
+    '128,320': 'Arm Chains',        // #729
+    '144,320': 'Handcuffs',         // #730
+    '160,320': 'Metal Balls',       // #731
+    '416,320': 'Smithy',            // #747
+    '400,288': 'Backpack',          // #674
+    '256,432': 'Log',               // #989
+    '384,400': 'Prayer',            // #925
+    '400,400': 'Wood Working',      // #926
+    '416,400': 'Thieving',          // #927
+    '432,400': 'Crafting',          // #928
     // Equipment
     '0,0': 'Copper Sword',
     '0,80': 'Copper Shield',
     '32,0': 'Bronze Dagger',
     '128,80': 'Bronze Helmet',
     '288,0': 'Astral Sword',
-    '384,0': 'Astral Axe',
     '0,96': 'Astral Chestplate',
     '64,16': 'Gold Sword',
     '256,80': 'Gold Shield',
@@ -447,13 +573,11 @@ h1 {
     '288,96': 'Silver Chestplate',
     '0,32': 'Emerald Staff',
     '416,96': 'Emerald Chestplate',
-    '0,128': 'Emerald Crown',
     '448,0': 'Amethyst Dagger',
     '0,64': 'Amethyst Bow',
     '416,80': 'Amethyst Helmet',
     '144,0': 'Cobalt Sword',
     '80,96': 'Cobalt Chestplate',
-    '192,80': 'Cobalt Spear',
     '272,0': 'Frost Sword',
     '560,16': 'Frost Axe',
     '560,96': 'Frost Chestplate'
@@ -535,6 +659,51 @@ h1 {
       updateCardClass(idx);
     }
     updateStats();
+  }
+
+  // ========= BUILD LOCATION ICON CANDIDATES =========
+  function buildLocationSection() {
+    var locContainer = document.getElementById('location-icons-section');
+    locContainer.innerHTML = '';
+
+    var section = document.createElement('div');
+    section.className = 'loc-section';
+
+    var h2 = document.createElement('h2');
+    h2.textContent = 'World Map Icon Candidates — Pick one per location';
+    section.appendChild(h2);
+
+    for (var li = 0; li < LOCATION_CANDIDATES.length; li++) {
+      var loc = LOCATION_CANDIDATES[li];
+
+      var label = document.createElement('div');
+      label.className = 'loc-group-label';
+      label.textContent = loc.label;
+      section.appendChild(label);
+
+      var desc = document.createElement('div');
+      desc.className = 'loc-group-desc';
+      desc.textContent = loc.desc;
+      section.appendChild(desc);
+
+      var grid = document.createElement('div');
+      grid.className = 'match-grid';
+
+      for (var ci = 0; ci < loc.items.length; ci++) {
+        var itemIdx = loc.items[ci] - 1; // convert 1-indexed to 0-indexed
+        if (itemIdx < 0 || itemIdx >= TOTAL) continue;
+        grid.appendChild(buildMatchCard(itemIdx, ''));
+      }
+      section.appendChild(grid);
+
+      if (li < LOCATION_CANDIDATES.length - 1) {
+        var divider = document.createElement('div');
+        divider.className = 'match-divider';
+        section.appendChild(divider);
+      }
+    }
+
+    locContainer.appendChild(section);
   }
 
   // ========= BUILD ORE & BAR MATCHING SECTION =========
@@ -967,7 +1136,8 @@ h1 {
     searchInfo.textContent = matchCount + ' match' + (matchCount !== 1 ? 'es' : '');
   });
 
-  // Build both sections
+  // Build all sections
+  buildLocationSection();
   buildMatchSection();
   buildUI();
 
