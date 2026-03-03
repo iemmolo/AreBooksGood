@@ -326,19 +326,20 @@ AreBooksGood - Improvement TODO
 - [x] Collapse (click active tab), minimize (× → backpack reopen icon)
 - [x] DOM nodes moved from hidden panels via appendChild (preserves event listeners, zero skills.js changes)
 - [x] Mobile: bottom sheet (position: fixed, full-width)
-- [ ] Replace Training Arena icon (currently placeholder Sword #1) — rework later
 - [ ] Add Prayer skill location tile on world map (icon: Prayer #925, 384,400)
 - [ ] Add Slayer skill location tile on world map (icon: Tanning #670, 336,288)
 
-### Phase 4: Walking World Map — Character Movement + Travel Time
-- [ ] Character sprite on world map: player has a position on the map (starts at Town Hub)
-- [ ] Click a location tile → character sprite walks/moves to that tile over time (not instant)
-  - Travel animation: sprite slides from current tile to target tile
-  - Travel duration: short but noticeable (1-3 seconds depending on distance)
-  - Cannot start another action while travelling
-- [ ] Arrive at location → skill mini-game or activity becomes available
-- [ ] Current location indicator (highlight, glow, or "You are here" marker)
-- [ ] LPC walk animation during travel (4-directional sprite sheet frames)
+### Phase 4: Walking World Map (Done)
+- [x] Canvas pixel art world map (grass terrain, dirt paths, water, decorations)
+- [x] 6 pixel art location markers (house, cave, dock, trees, anvil, arena) with labels
+- [x] Character sprite (16x16, 4 directions, idle + 2 walk frames, canvas fillRect)
+- [x] Click-to-walk system (120px/sec, direction-based animation)
+- [x] "Enter [Location]" prompt on arrival, click to enter skill mini-game
+- [x] Player location persists in save slot (mapLocation field)
+- [x] Skill topbar (Perks, Collection Log, World Map buttons above game content)
+- [x] Canvas aspect-ratio lock (700:440), no stretching
+- [ ] LPC walk animation during travel (swap fillRect sprite for real sprite sheet)
+- [ ] Replace Training Arena icon (currently placeholder Sword #1)
 
 ### Phase 5: Game Integration — All Site Games as RPG Activities
 Goal: Every standalone game on the site becomes accessible as an RPG activity at a map location.
