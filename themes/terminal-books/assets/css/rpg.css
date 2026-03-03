@@ -366,7 +366,7 @@
 .osrs-chatbox-toggle:hover { color: var(--foreground); }
 
 .osrs-chatbox-body {
-  height: 140px;
+  height: 160px;
   overflow-y: auto;
   padding: 8px 12px;
 }
@@ -564,20 +564,73 @@
   display: none;
 }
 
-/* Game panel is the positioning parent for the chatbox */
+/* Game panel is the positioning parent for chatbox + side panel */
 .rpg-page .skills-game-panel {
   position: relative;
-  padding-bottom: 180px;
+  padding-bottom: 200px;
 }
 
-/* ── OSRS Icon Tabs (in chatbox header) ──────── */
-.osrs-chatbox-icons {
+/* ── OSRS Side Panel (floating above chatbox) ── */
+.osrs-side-panel {
+  position: absolute;
+  bottom: 210px;
+  right: 4px;
+  width: 220px;
+  z-index: 101;
+  background: var(--background);
+  border: 2px solid color-mix(in srgb, var(--foreground) 35%, transparent);
+  box-shadow: 0 2px 12px color-mix(in srgb, #000 40%, transparent);
+  font-size: 0.85em;
+}
+
+.osrs-side-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.osrs-side-panel-icons {
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-left: auto;
+  flex: 1;
 }
 
+.osrs-side-panel-toggle {
+  background: transparent;
+  border: none;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  font-size: 0.8em;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.osrs-side-panel-toggle:hover { color: var(--foreground); }
+
+.osrs-side-panel-body {
+  height: 200px;
+  overflow-y: auto;
+  padding: 8px 10px;
+}
+
+.osrs-side-pane {
+  height: 100%;
+}
+
+/* Collapsed: hide body */
+.osrs-side-panel.collapsed .osrs-side-panel-body {
+  display: none;
+}
+
+.osrs-side-panel.collapsed .osrs-side-panel-header {
+  border-bottom: none;
+}
+
+/* ── OSRS Icon Tabs (shared base for side panel) ── */
 .osrs-tab {
   width: 28px;
   height: 28px;
@@ -603,22 +656,22 @@
 
 /* Tab icon sprites — 16px native → 28px display (scale 1.75)
    bg-size: 576×1.75 = 1008, 560×1.75 = 980 */
-.osrs-tab[data-chat-tab="skills"] {
+.osrs-tab[data-side-tab="skills"] {
   background-size: 1008px 980px;
   background-position: -756px -700px;
 }
 
-.osrs-tab[data-chat-tab="inventory"] {
+.osrs-tab[data-side-tab="inventory"] {
   background-size: 1008px 980px;
   background-position: -700px -504px;
 }
 
-.osrs-tab[data-chat-tab="character"] {
+.osrs-tab[data-side-tab="character"] {
   background-size: 1008px 980px;
   background-position: 0px -224px;
 }
 
-.osrs-tab[data-chat-tab="milestones"] {
+.osrs-tab[data-side-tab="milestones"] {
   background-size: 1008px 980px;
   background-position: 0px -504px;
 }
@@ -631,19 +684,19 @@
   background-position: -800px -576px;
 }
 
-/* Hide section titles inside chatbox — tabs make them redundant */
-.osrs-chatbox .skills-panel-title {
+/* Hide section titles inside side panel — tabs make them redundant */
+.osrs-side-panel .skills-panel-title {
   display: none;
 }
 
-/* ── Skills Grid (OSRS-style compact grid) ──── */
-.osrs-chatbox .skills-list {
+/* ── Skills Grid (OSRS-style compact grid in side panel) ──── */
+.osrs-side-panel .skills-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
 }
 
-.osrs-chatbox .skill-row {
+.osrs-side-panel .skill-row {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -654,31 +707,31 @@
   background: color-mix(in srgb, var(--foreground) 4%, transparent);
 }
 
-.osrs-chatbox .skill-row:hover {
+.osrs-side-panel .skill-row:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-color: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
-.osrs-chatbox .skill-row.selected {
+.osrs-side-panel .skill-row.selected {
   border-color: transparent;
   background: color-mix(in srgb, var(--foreground) 4%, transparent);
 }
 
-.osrs-chatbox .skill-row.mastered {
+.osrs-side-panel .skill-row.mastered {
   border-color: color-mix(in srgb, #ffd700 30%, transparent);
 }
 
-.osrs-chatbox .skill-icon {
+.osrs-side-panel .skill-icon {
   font-size: 0.9rem;
   width: 1.1rem;
 }
 
-.osrs-chatbox .skill-icon-sprite {
+.osrs-side-panel .skill-icon-sprite {
   width: 18px !important;
   height: 18px !important;
 }
 
-.osrs-chatbox .skill-info {
+.osrs-side-panel .skill-info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -686,20 +739,20 @@
   gap: 4px;
 }
 
-.osrs-chatbox .skill-name {
+.osrs-side-panel .skill-name {
   font-size: 0.7rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.osrs-chatbox .skill-level {
+.osrs-side-panel .skill-level {
   font-size: 0.7rem;
   margin-left: auto;
   flex-shrink: 0;
 }
 
-.osrs-chatbox .skill-xp-bar {
+.osrs-side-panel .skill-xp-bar {
   display: none;
 }
 
@@ -714,13 +767,13 @@
   margin-top: 2px;
 }
 
-/* ── Inventory in chatbox: compact fixed-size cells ── */
-.osrs-chatbox .skills-inv-grid {
+/* ── Inventory in side panel: compact fixed-size cells ── */
+.osrs-side-panel .skills-inv-grid {
   grid-template-columns: repeat(auto-fill, 34px);
   gap: 2px;
 }
 
-.osrs-chatbox .skills-inv-group-label {
+.osrs-side-panel .skills-inv-group-label {
   margin: 0.2rem 0 0.1rem;
 }
 
@@ -865,6 +918,14 @@
 
   .osrs-chatbox-body {
     height: 100px;
+  }
+
+  .osrs-side-panel {
+    position: fixed;
+    width: 200px;
+    right: 4px;
+    bottom: 145px;
+    z-index: 100;
   }
 
 }

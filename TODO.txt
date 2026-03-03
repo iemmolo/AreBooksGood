@@ -326,6 +326,8 @@ AreBooksGood - Improvement TODO
 - [x] Collapse (click active tab), minimize (× → backpack reopen icon)
 - [x] DOM nodes moved from hidden panels via appendChild (preserves event listeners, zero skills.js changes)
 - [x] Mobile: bottom sheet (position: fixed, full-width)
+- [x] Extract icon tabs into separate floating side panel (overlays game area, independent from chatbox)
+- [x] Chatbox retains only text tabs (Game/Chat/Quest/Location), fills space below map
 - [ ] Add Prayer skill location tile on world map (icon: Prayer #925, 384,400)
 - [ ] Add Slayer skill location tile on world map (icon: Tanning #670, 336,288)
 

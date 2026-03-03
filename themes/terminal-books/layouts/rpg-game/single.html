@@ -42,7 +42,26 @@
     </div>
     {{ partial "rpg-skills-panel.html" . }}
 
-    <!-- OSRS-style bottom bar (chat + inventory panels combined) -->
+    <!-- OSRS-style side panel (floating above chatbox, icon tabs) -->
+    <div class="osrs-side-panel" id="osrs-side-panel" style="display:none">
+      <div class="osrs-side-panel-header">
+        <div class="osrs-side-panel-icons">
+          <button class="osrs-tab active" data-side-tab="skills" title="Skills"></button>
+          <button class="osrs-tab osrs-tab-center" data-side-tab="inventory" title="Inventory"></button>
+          <button class="osrs-tab" data-side-tab="character" title="Character"></button>
+          <button class="osrs-tab" data-side-tab="milestones" title="Milestones"></button>
+        </div>
+        <button class="osrs-side-panel-toggle" id="osrs-side-panel-toggle" title="Minimize">&#9660;</button>
+      </div>
+      <div class="osrs-side-panel-body" id="osrs-side-panel-body">
+        <div class="osrs-side-pane" id="osrs-side-skills"></div>
+        <div class="osrs-side-pane" id="osrs-side-inventory" style="display:none"></div>
+        <div class="osrs-side-pane" id="osrs-side-character" style="display:none"></div>
+        <div class="osrs-side-pane" id="osrs-side-milestones" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- OSRS-style bottom bar (chat only) -->
     <div class="osrs-chatbox" id="osrs-chatbox" style="display:none">
       <div class="osrs-chatbox-header">
         <div class="osrs-chatbox-tabs">
@@ -52,12 +71,6 @@
           <button class="osrs-chatbox-tab" data-chat-tab="location">Location</button>
         </div>
         <button class="rpg-map-return-btn" id="rpg-btn-map" style="display:none">&larr; World Map</button>
-        <div class="osrs-chatbox-icons">
-          <button class="osrs-tab" data-chat-tab="skills" title="Skills"></button>
-          <button class="osrs-tab osrs-tab-center" data-chat-tab="inventory" title="Inventory"></button>
-          <button class="osrs-tab" data-chat-tab="character" title="Character"></button>
-          <button class="osrs-tab" data-chat-tab="milestones" title="Milestones"></button>
-        </div>
         <button class="osrs-chatbox-toggle" id="osrs-chatbox-toggle" title="Minimize">&#9660;</button>
       </div>
       <div class="osrs-chatbox-body" id="osrs-chatbox-body">
@@ -80,10 +93,6 @@
             </div>
           </div>
         </div>
-        <div class="osrs-chat-pane" id="osrs-chat-skills" style="display:none"></div>
-        <div class="osrs-chat-pane" id="osrs-chat-inventory" style="display:none"></div>
-        <div class="osrs-chat-pane" id="osrs-chat-character" style="display:none"></div>
-        <div class="osrs-chat-pane" id="osrs-chat-milestones" style="display:none"></div>
       </div>
     </div>
   </div>
