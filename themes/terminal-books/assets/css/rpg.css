@@ -363,16 +363,6 @@
   flex-shrink: 0;
 }
 
-.osrs-chatbox-skill-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.osrs-chatbox-skill-actions .skills-log-btn {
-  font-size: 0.75em;
-  padding: 2px 10px;
-}
-
 .osrs-chatbox-toggle:hover { color: var(--foreground); }
 
 .osrs-chatbox-body {
@@ -456,19 +446,16 @@
   border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
-.rpg-skill-topbar .skills-log-btn {
-  width: auto;
-  font-size: 0.85em;
-  padding: 4px 14px;
-}
-
 .rpg-skill-topbar-map {
   margin-left: auto;
 }
 
-/* Prevent game area from stretching to fill panel */
+/* Match game area proportions to world map canvas */
 .rpg-page .skills-game-area {
   flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 1060 / 660;
+  min-height: unset;
 }
 
 /* ── World Map Nav Button (in left panel) ────── */
@@ -658,6 +645,104 @@
 .osrs-chatbox .skill-row.selected {
   border-color: transparent;
   background: transparent;
+}
+
+/* ── Location Pane (in chatbox) ─────────────── */
+.rpg-location-pane {
+  font-size: 0.85em;
+}
+
+.rpg-loc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.rpg-loc-name {
+  color: var(--accent);
+  font-size: 1.05em;
+}
+
+.rpg-loc-flavor {
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.rpg-loc-sections {
+  display: flex;
+  gap: 16px;
+}
+
+.rpg-loc-stats,
+.rpg-loc-perks,
+.rpg-loc-log {
+  flex: 1;
+  min-width: 0;
+}
+
+.rpg-loc-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+
+.rpg-loc-stat-label {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.rpg-loc-stat-value {
+  color: var(--foreground);
+}
+
+.rpg-loc-perk-summary {
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-bottom: 3px;
+  font-size: 0.9em;
+}
+
+.rpg-loc-perk {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
+  cursor: default;
+}
+
+.rpg-loc-perk.rpg-loc-perk-unlocked {
+  color: var(--accent);
+}
+
+.rpg-loc-perk-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rpg-loc-perk-level {
+  flex-shrink: 0;
+  margin-left: 6px;
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.rpg-loc-log-header {
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  font-size: 0.9em;
+  margin-top: 4px;
+  margin-bottom: 1px;
+}
+
+.rpg-loc-log-row {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  padding: 0 0 1px;
+  font-size: 0.95em;
+}
+
+.rpg-loc-muted {
+  color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  font-style: italic;
 }
 
 /* ── Responsive ──────────────────────────────── */

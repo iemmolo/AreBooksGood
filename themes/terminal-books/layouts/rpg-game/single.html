@@ -49,9 +49,7 @@
           <button class="osrs-chatbox-tab active" data-chat-tab="game">Game</button>
           <button class="osrs-chatbox-tab" data-chat-tab="chat">Chat</button>
           <button class="osrs-chatbox-tab" data-chat-tab="quest">Quest</button>
-        </div>
-        <div class="osrs-chatbox-skill-actions" id="osrs-chatbox-skill-actions" style="display:none">
-          <!-- #skills-perks-btn and #skills-log-btn moved here by rpg.js -->
+          <button class="osrs-chatbox-tab" data-chat-tab="location">Location</button>
         </div>
         <button class="rpg-map-return-btn" id="rpg-btn-map" style="display:none">&larr; World Map</button>
         <div class="osrs-chatbox-icons">
@@ -71,6 +69,16 @@
         </div>
         <div class="osrs-chat-pane" id="osrs-chat-quest" style="display:none">
           <div class="osrs-chatbox-empty">No active quests.</div>
+        </div>
+        <div class="osrs-chat-pane" id="osrs-chat-location" style="display:none">
+          <div class="rpg-location-pane" id="rpg-location-pane">
+            <div class="rpg-loc-header" id="rpg-loc-header"></div>
+            <div class="rpg-loc-sections">
+              <div class="rpg-loc-stats" id="rpg-loc-stats"></div>
+              <div class="rpg-loc-perks" id="rpg-loc-perks"></div>
+              <div class="rpg-loc-log" id="rpg-loc-log"></div>
+            </div>
+          </div>
         </div>
         <div class="osrs-chat-pane" id="osrs-chat-skills" style="display:none"></div>
         <div class="osrs-chat-pane" id="osrs-chat-inventory" style="display:none"></div>

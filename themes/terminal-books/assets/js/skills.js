@@ -642,6 +642,14 @@
   var miningCooldown = false;
   var miningCombo = { count: 0, lastClickTime: 0 };
   var selectedMiningOre = null; // index into SKILLS.mining.resources, null = highest
+  var miningBgDataUrl = null; // cached PNG data URL for cavern background
+
+  // Deterministic tile hash (same as rpg.js)
+  function tileHash(x, y) {
+    var h = (x * 374761393 + y * 668265263) | 0;
+    h = ((h ^ (h >> 13)) * 1274126177) | 0;
+    return h;
+  }
   var fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
   var wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
   var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
@@ -1820,12 +1828,158 @@
     }
   }
 
+  // ── Mining Cavern Pixel Art Background ────────
+  function generateMiningCavernBg() {
+    var W = 320, H = 200, T = 8; // canvas size, tile size
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var ctx = c.getContext('2d');
+
+    // 1. Stone wall tiles (8×8 grid with hash variation)
+    var wallColors = ['#383838', '#404040', '#484848', '#505050'];
+    var cols = Math.ceil(W / T), rows = Math.ceil(H / T);
+    for (var ty = 0; ty < rows; ty++) {
+      for (var tx = 0; tx < cols; tx++) {
+        var h = tileHash(tx, ty);
+        ctx.fillStyle = wallColors[((h >>> 0) % wallColors.length)];
+        ctx.fillRect(tx * T, ty * T, T, T);
+      }
+    }
+
+    // 2. Checkerboard dither
+    ctx.fillStyle = 'rgba(0,0,0,0.04)';
+    for (var dy = 0; dy < rows; dy++) {
+      for (var dx = 0; dx < cols; dx++) {
+        if ((dx + dy) % 2 === 0) ctx.fillRect(dx * T, dy * T, T, T);
+      }
+    }
+
+    // 3. Ceiling darkening (top 40px)
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(0, 0, W, 40);
+
+    // 4. Stalactites from ceiling
+    var stalactites = [
+      { x: 30, w: 6, h: 22 }, { x: 80, w: 4, h: 18 },
+      { x: 140, w: 5, h: 25 }, { x: 195, w: 6, h: 20 },
+      { x: 245, w: 4, h: 16 }, { x: 290, w: 5, h: 23 }
+    ];
+    for (var si = 0; si < stalactites.length; si++) {
+      var st = stalactites[si];
+      // Taper from base width to 1px
+      for (var sy = 0; sy < st.h; sy++) {
+        var sw = Math.max(1, Math.round(st.w * (1 - sy / st.h)));
+        ctx.fillStyle = sy < st.h / 2 ? '#303030' : '#484848';
+        ctx.fillRect(st.x - Math.floor(sw / 2), sy, sw, 1);
+      }
+    }
+
+    // 5. Rocky floor (uneven base + small mounds)
+    var floorColors = ['#484848', '#505050', '#585858', '#606060'];
+    var floorY = H - 24;
+    for (var fx = 0; fx < cols; fx++) {
+      var fh = tileHash(fx, 999);
+      var bump = ((fh >>> 0) % 5); // 0-4 px variation
+      var fy = floorY - bump;
+      ctx.fillStyle = floorColors[((fh >>> 0) % floorColors.length)];
+      ctx.fillRect(fx * T, fy, T, H - fy);
+    }
+    // Small rock mounds
+    var mounds = [
+      { x: 20, y: H - 18, w: 14, h: 6 }, { x: 90, y: H - 16, w: 10, h: 4 },
+      { x: 170, y: H - 20, w: 16, h: 7 }, { x: 260, y: H - 17, w: 12, h: 5 }
+    ];
+    for (var mi = 0; mi < mounds.length; mi++) {
+      var m = mounds[mi];
+      ctx.fillStyle = '#585858';
+      ctx.fillRect(m.x, m.y, m.w, m.h);
+      ctx.fillStyle = '#606060';
+      ctx.fillRect(m.x + 2, m.y + 1, m.w - 4, m.h - 2);
+    }
+
+    // 6. Wood support beams (2 vertical + 1 crossbeam)
+    var beamX1 = 60, beamX2 = 250, beamW = 8, crossY = 30;
+    ctx.fillStyle = '#6b4e2b';
+    ctx.fillRect(beamX1, crossY, beamW, H - crossY - 20); // left vertical
+    ctx.fillRect(beamX2, crossY, beamW, H - crossY - 20); // right vertical
+    ctx.fillRect(beamX1, crossY, beamX2 - beamX1 + beamW, 6); // crossbeam
+    // Beam highlights
+    ctx.fillStyle = '#8b6e3b';
+    ctx.fillRect(beamX1 + 2, crossY, 2, H - crossY - 20);
+    ctx.fillRect(beamX2 + 2, crossY, 2, H - crossY - 20);
+    ctx.fillRect(beamX1, crossY + 1, beamX2 - beamX1 + beamW, 2);
+
+    // 7. Torches + warm glow on each beam
+    var torchPositions = [
+      { x: beamX1 + beamW + 1, y: crossY + 20 },
+      { x: beamX2 - 5, y: crossY + 20 }
+    ];
+    for (var ti = 0; ti < torchPositions.length; ti++) {
+      var tp = torchPositions[ti];
+      // Torch stick
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(tp.x + 1, tp.y, 2, 8);
+      // Flame
+      ctx.fillStyle = '#ff8030';
+      ctx.fillRect(tp.x, tp.y - 3, 4, 3);
+      ctx.fillStyle = '#ffd060';
+      ctx.fillRect(tp.x + 1, tp.y - 2, 2, 2);
+      // Warm glow (radial via concentric rects)
+      ctx.fillStyle = 'rgba(255,160,48,0.15)';
+      ctx.fillRect(tp.x - 14, tp.y - 18, 32, 32);
+      ctx.fillStyle = 'rgba(255,160,48,0.06)';
+      ctx.fillRect(tp.x - 28, tp.y - 32, 60, 60);
+      ctx.fillStyle = 'rgba(255,160,48,0.03)';
+      ctx.fillRect(tp.x - 40, tp.y - 44, 84, 84);
+    }
+
+    // 8. Ore vein glints on walls (avoid center rock area)
+    var glints = [
+      { x: 12, y: 55, color: '#b87333' },  // copper
+      { x: 18, y: 80, color: '#b87333' },
+      { x: 5, y: 110, color: '#c0c0c0' },  // silver
+      { x: 295, y: 60, color: '#ffd700' },  // gold
+      { x: 305, y: 95, color: '#ffd700' },
+      { x: 300, y: 130, color: '#50c878' }, // emerald
+      { x: 15, y: 140, color: '#50c878' },
+      { x: 8, y: 45, color: '#c0c0c0' },
+      { x: 310, y: 50, color: '#b87333' },
+      { x: 25, y: 160, color: '#ffd700' }
+    ];
+    for (var gi = 0; gi < glints.length; gi++) {
+      var g = glints[gi];
+      ctx.fillStyle = g.color;
+      ctx.fillRect(g.x, g.y, 2, 1);
+      ctx.fillRect(g.x + 1, g.y + 1, 1, 1);
+    }
+
+    // 9. Edge vignette (heavier at top for cave ceiling feel)
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(0, 0, W, 12);
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(0, 12, W, 12);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 0, 12, H);   // left edge
+    ctx.fillRect(W - 12, 0, 12, H); // right edge
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(0, H - 12, W, 12); // bottom edge
+
+    return c.toDataURL('image/png');
+  }
+
   // ══════════════════════════════════════════════
   // ── MINING MINI-GAME (A1 enhanced) ─────────────
   // ══════════════════════════════════════════════
   function renderMining() {
     var area = $('skills-game-area');
     if (!area) return;
+
+    // Apply cavern pixel art background (cached after first generation)
+    if (!miningBgDataUrl) miningBgDataUrl = generateMiningCavernBg();
+    area.style.backgroundImage = 'url(' + miningBgDataUrl + ')';
+    area.style.backgroundSize = 'cover';
+    area.style.backgroundPosition = 'center';
+
     area.innerHTML = '';
     miningCombo = { count: 0, lastClickTime: 0 };
 
@@ -3698,6 +3852,13 @@
       playerHp: 0, playerMaxHp: 0, potions: 3, dodgeCooldown: false, dead: false,
       dodgeWindow: false, dodgeWindowTimer: null, secondWindUsed: false
     };
+    // Clear mining cavern background so other skills don't inherit it
+    var area = $('skills-game-area');
+    if (area) {
+      area.style.backgroundImage = '';
+      area.style.backgroundSize = '';
+      area.style.backgroundPosition = '';
+    }
   }
 
   // ══════════════════════════════════════════════
@@ -4053,6 +4214,138 @@
     cleanupActiveGame();
     if (activeAutoTimer) { clearInterval(activeAutoTimer); activeAutoTimer = null; }
     if (starShowerTimer) { clearTimeout(starShowerTimer); starShowerTimer = null; }
+  };
+
+  // ── RPG Skills API (for location pane) ───────────
+  window.__RPG_SKILLS_API = {
+    getActiveSkill: function () { return activeSkill; },
+
+    renderPerksInto: function (container, skill) {
+      if (!container) return;
+      container.innerHTML = '';
+      var perks = SKILL_PERKS[skill];
+      if (!perks || !state || !state.skills[skill]) {
+        container.innerHTML = '<div class="rpg-loc-muted">No perks data.</div>';
+        return;
+      }
+      var level = state.skills[skill].level;
+      var unlocked = 0;
+      for (var i = 0; i < perks.length; i++) {
+        if (level >= perks[i].level) unlocked++;
+      }
+      var sumEl = document.createElement('div');
+      sumEl.className = 'rpg-loc-perk-summary';
+      sumEl.textContent = unlocked + '/' + perks.length + ' unlocked';
+      container.appendChild(sumEl);
+      for (var i = 0; i < perks.length; i++) {
+        var p = perks[i];
+        var isUnlocked = level >= p.level;
+        var row = document.createElement('div');
+        row.className = 'rpg-loc-perk' + (isUnlocked ? ' rpg-loc-perk-unlocked' : '');
+        row.title = p.desc;
+        var nameSpan = document.createElement('span');
+        nameSpan.className = 'rpg-loc-perk-name';
+        nameSpan.textContent = (isUnlocked ? '\u2713 ' : '') + p.name;
+        row.appendChild(nameSpan);
+        var lvSpan = document.createElement('span');
+        lvSpan.className = 'rpg-loc-perk-level';
+        lvSpan.textContent = 'Lv ' + p.level;
+        row.appendChild(lvSpan);
+        container.appendChild(row);
+      }
+    },
+
+    renderCollectionLogInto: function (container) {
+      if (!container) return;
+      container.innerHTML = '';
+      if (activeSkill !== 'mining' || !state || !state.skills.mining) {
+        container.innerHTML = '<div class="rpg-loc-muted">No collection log yet.</div>';
+        return;
+      }
+      var log = getMiningLog();
+      // Ore counts (nonzero only)
+      var ores = log.oresMined || {};
+      var hasAny = false;
+      for (var k in ores) { if (ores[k] > 0) { hasAny = true; break; } }
+      if (hasAny) {
+        var hdr = document.createElement('div');
+        hdr.className = 'rpg-loc-log-header';
+        hdr.textContent = 'Ores Mined';
+        container.appendChild(hdr);
+        for (var k in ores) {
+          if (ores[k] > 0) {
+            var row = document.createElement('div');
+            row.className = 'rpg-loc-log-row';
+            row.textContent = k + ': ' + formatNum(ores[k]);
+            container.appendChild(row);
+          }
+        }
+      }
+      // Stats
+      var statsHdr = document.createElement('div');
+      statsHdr.className = 'rpg-loc-log-header';
+      statsHdr.textContent = 'Stats';
+      container.appendChild(statsHdr);
+      var stats = [
+        ['Clicks', formatNum(log.totalClicks || 0)],
+        ['Gems', formatNum(log.totalGems || 0)],
+        ['Crits', formatNum(log.criticalHits || 0)]
+      ];
+      for (var i = 0; i < stats.length; i++) {
+        var row = document.createElement('div');
+        row.className = 'rpg-loc-log-row';
+        row.textContent = stats[i][0] + ': ' + stats[i][1];
+        container.appendChild(row);
+      }
+      // Events (nonzero only)
+      var evts = log.events || {};
+      var evtNames = { gemVein: 'Gem Vein', shootingStar: 'Shooting Star', caveIn: 'Cave-In', deepVein: 'Deep Vein' };
+      var hasEvt = false;
+      for (var k in evts) { if (evts[k] > 0) { hasEvt = true; break; } }
+      if (hasEvt) {
+        var evtHdr = document.createElement('div');
+        evtHdr.className = 'rpg-loc-log-header';
+        evtHdr.textContent = 'Events';
+        container.appendChild(evtHdr);
+        for (var k in evts) {
+          if (evts[k] > 0) {
+            var row = document.createElement('div');
+            row.className = 'rpg-loc-log-row';
+            row.textContent = (evtNames[k] || k) + ': ' + evts[k];
+            container.appendChild(row);
+          }
+        }
+      }
+    },
+
+    renderSkillStatsInto: function (container, skill) {
+      if (!container) return;
+      container.innerHTML = '';
+      if (!state || !state.skills[skill]) return;
+      var s = state.skills[skill];
+      var skillDef = SKILLS[skill];
+      var skillName = skillDef ? skillDef.name : skill;
+      var nextXp = xpForLevel(s.level + 1);
+      var lines = [
+        ['Skill', skillName],
+        ['Level', String(s.level)],
+        ['XP', formatNum(s.xp) + ' / ' + formatNum(nextXp)],
+        ['Actions', formatNum(s.totalActions || 0)]
+      ];
+      for (var i = 0; i < lines.length; i++) {
+        var row = document.createElement('div');
+        row.className = 'rpg-loc-stat-row';
+        var label = document.createElement('span');
+        label.className = 'rpg-loc-stat-label';
+        label.textContent = lines[i][0];
+        row.appendChild(label);
+        var val = document.createElement('span');
+        val.className = 'rpg-loc-stat-value';
+        val.textContent = lines[i][1];
+        row.appendChild(val);
+        container.appendChild(row);
+      }
+    }
   };
   window.addEventListener('rpg-skills-init', reinit);
 

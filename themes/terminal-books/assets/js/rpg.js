@@ -681,15 +681,13 @@
       topbar.id = 'rpg-skill-topbar';
       topbar.style.display = 'none';
 
+      // Hide original perks/log buttons (replaced by Location tab)
       var perksBtn = $('skills-perks-btn');
-      if (perksBtn) {
-        perksBtn.style.display = '';
-        topbar.appendChild(perksBtn);
-      }
+      if (perksBtn) perksBtn.style.display = 'none';
       var logBtn = $('skills-log-btn');
-      if (logBtn) topbar.appendChild(logBtn);
+      if (logBtn) logBtn.style.display = 'none';
 
-      // Clone the World Map button into the topbar
+      // World Map button in topbar
       var mapBtn = document.createElement('button');
       mapBtn.className = 'rpg-btn rpg-btn-small rpg-skill-topbar-map';
       mapBtn.innerHTML = '&larr; World Map';
@@ -737,6 +735,10 @@
     if (!btn) return;
     var tabId = btn.getAttribute('data-chat-tab');
     if (tabId) switchChatTab(tabId);
+    // Re-render location pane for fresh data when switching to it
+    if (tabId === 'location' && currentLocationId) {
+      renderLocationPane(currentLocationId, currentLocationSkill);
+    }
   }
 
   function toggleChatbox() {
@@ -1826,6 +1828,55 @@
     initMapCanvas();
   }
 
+  // ── Location Pane ────────────────────────────────
+  var currentLocationId = null;
+  var currentLocationSkill = null;
+
+  function renderLocationPane(locId, skill) {
+    currentLocationId = locId;
+    currentLocationSkill = skill;
+    var header = $('rpg-loc-header');
+    var statsC = $('rpg-loc-stats');
+    var perksC = $('rpg-loc-perks');
+    var logC = $('rpg-loc-log');
+    if (!header) return;
+
+    // Header: name + flavor
+    var loc = null;
+    for (var i = 0; i < LOCATIONS.length; i++) {
+      if (LOCATIONS[i].id === locId) { loc = LOCATIONS[i]; break; }
+    }
+    var name = loc ? escapeHtml(loc.name) : escapeHtml(locId);
+    var flavor = LOCATION_FLAVOR[locId] || '';
+    header.innerHTML = '<span class="rpg-loc-name">' + name + '</span>' +
+      (flavor ? '<span class="rpg-loc-flavor">' + escapeHtml(flavor) + '</span>' : '');
+
+    // Delegate to skills API
+    var api = window.__RPG_SKILLS_API;
+    if (!api || !skill) {
+      if (statsC) statsC.innerHTML = '';
+      if (perksC) perksC.innerHTML = '';
+      if (logC) logC.innerHTML = '<div class="rpg-loc-muted">No skill at this location.</div>';
+      return;
+    }
+    api.renderSkillStatsInto(statsC, skill);
+    api.renderPerksInto(perksC, skill);
+    api.renderCollectionLogInto(logC);
+  }
+
+  function clearLocationPane() {
+    currentLocationId = null;
+    currentLocationSkill = null;
+    var header = $('rpg-loc-header');
+    var statsC = $('rpg-loc-stats');
+    var perksC = $('rpg-loc-perks');
+    var logC = $('rpg-loc-log');
+    if (header) header.innerHTML = '';
+    if (statsC) statsC.innerHTML = '';
+    if (perksC) perksC.innerHTML = '';
+    if (logC) logC.innerHTML = '';
+  }
+
   // ── Skill Location Entry ──────────────────────
   function enterSkillLocation(loc) {
     showCenterContent('skill');
@@ -1839,6 +1890,8 @@
         skillRow.click();
         programmaticSkillClick = false;
       }
+      // Populate location pane after skill switch
+      renderLocationPane(loc.id, loc.skill);
     }, 50);
   }
 
@@ -1848,6 +1901,7 @@
       window.__RPG_SKILLS_CLEANUP();
     }
 
+    clearLocationPane();
     addGameMessage('You return to the world map.', 'return');
     showCenterContent('map');
     enterPromptVisible = !!playerAtLocation;
