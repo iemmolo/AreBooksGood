@@ -436,6 +436,15 @@
   padding: 12px 4px;
 }
 
+#rpg-map-canvas {
+  display: block;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  cursor: pointer;
+}
+
 .rpg-locations-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
