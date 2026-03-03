@@ -714,6 +714,16 @@
   margin-top: 2px;
 }
 
+/* ── Inventory in chatbox: compact fixed-size cells ── */
+.osrs-chatbox .skills-inv-grid {
+  grid-template-columns: repeat(auto-fill, 34px);
+  gap: 2px;
+}
+
+.osrs-chatbox .skills-inv-group-label {
+  margin: 0.2rem 0 0.1rem;
+}
+
 /* ── Location Pane (in chatbox) ─────────────── */
 .rpg-location-pane {
   font-size: 0.85em;
