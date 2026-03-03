@@ -424,6 +424,31 @@
   padding: 2px 0;
 }
 
+/* ── Skill Topbar (above game content) ────────── */
+.rpg-skill-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.rpg-skill-topbar .skills-log-btn {
+  width: auto;
+  font-size: 0.85em;
+  padding: 4px 14px;
+}
+
+.rpg-skill-topbar-map {
+  margin-left: auto;
+}
+
+/* Prevent game area from stretching to fill panel */
+.rpg-page .skills-game-area {
+  flex: 0 0 auto;
+}
+
 /* ── World Map Nav Button (in left panel) ────── */
 .rpg-map-nav-btn {
   width: 100%;
@@ -440,6 +465,7 @@
   display: block;
   width: 100%;
   max-width: 700px;
+  aspect-ratio: 700 / 440;
   margin: 0 auto;
   image-rendering: pixelated;
   cursor: pointer;

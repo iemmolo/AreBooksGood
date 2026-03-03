@@ -392,8 +392,7 @@
     var gameHeader = $('skills-game-header');
     var gameArea = $('skills-game-area');
     var gameLog = $('skills-game-log');
-    var mapBtnTopbar = $('rpg-btn-map');
-    var skillActions = $('osrs-chatbox-skill-actions');
+    var skillTopbar = $('rpg-skill-topbar');
     var welcomeMsg = $('osrs-chatbox-welcome');
 
     if (mode === 'skill') {
@@ -401,16 +400,14 @@
       if (gameHeader) gameHeader.style.display = '';
       if (gameArea) gameArea.style.display = '';
       if (gameLog) gameLog.style.display = '';
-      if (mapBtnTopbar) mapBtnTopbar.style.display = '';
-      if (skillActions) skillActions.style.display = '';
+      if (skillTopbar) skillTopbar.style.display = '';
       if (welcomeMsg) welcomeMsg.style.display = 'none';
     } else {
       if (mapContainer) mapContainer.style.display = 'block';
       if (gameHeader) gameHeader.style.display = 'none';
       if (gameArea) gameArea.style.display = 'none';
       if (gameLog) gameLog.style.display = 'none';
-      if (mapBtnTopbar) mapBtnTopbar.style.display = 'none';
-      if (skillActions) skillActions.style.display = 'none';
+      if (skillTopbar) skillTopbar.style.display = 'none';
       if (welcomeMsg) welcomeMsg.style.display = '';
     }
   }
@@ -622,12 +619,37 @@
     var gameLog = $('skills-game-log');
     if (gamePane && gameLog) gamePane.appendChild(gameLog);
 
-    // Move perks/log buttons into chatbox skill actions row
-    var skillActions = $('osrs-chatbox-skill-actions');
-    var perksBtn = $('skills-perks-btn');
-    if (skillActions && perksBtn) skillActions.appendChild(perksBtn);
-    var logBtn = $('skills-log-btn');
-    if (skillActions && logBtn) skillActions.appendChild(logBtn);
+    // Create skill topbar at top of center game panel
+    var gamePanel = $('skills-game-panel');
+    var mapContainer = $('rpg-world-map-container');
+    if (gamePanel && !$('rpg-skill-topbar')) {
+      var topbar = document.createElement('div');
+      topbar.className = 'rpg-skill-topbar';
+      topbar.id = 'rpg-skill-topbar';
+      topbar.style.display = 'none';
+
+      var perksBtn = $('skills-perks-btn');
+      if (perksBtn) {
+        perksBtn.style.display = '';
+        topbar.appendChild(perksBtn);
+      }
+      var logBtn = $('skills-log-btn');
+      if (logBtn) topbar.appendChild(logBtn);
+
+      // Clone the World Map button into the topbar
+      var mapBtn = document.createElement('button');
+      mapBtn.className = 'rpg-btn rpg-btn-small rpg-skill-topbar-map';
+      mapBtn.innerHTML = '&larr; World Map';
+      mapBtn.addEventListener('click', returnToMap);
+      topbar.appendChild(mapBtn);
+
+      // Insert before the map container (so it appears above game content)
+      if (mapContainer) {
+        gamePanel.insertBefore(topbar, mapContainer);
+      } else {
+        gamePanel.insertBefore(topbar, gamePanel.firstChild);
+      }
+    }
 
     // Show chatbox, default to game tab
     chatbox.style.display = '';
