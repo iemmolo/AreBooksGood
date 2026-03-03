@@ -458,14 +458,13 @@
 
 /* ── World Map Container (in center panel) ───── */
 .rpg-world-map-container {
-  padding: 12px 4px;
+  padding: 4px 0;
 }
 
 #rpg-map-canvas {
   display: block;
   width: 100%;
-  max-width: 700px;
-  aspect-ratio: 700 / 440;
+  aspect-ratio: 1060 / 660;
   margin: 0 auto;
   image-rendering: pixelated;
   cursor: pointer;

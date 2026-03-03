@@ -34,14 +34,14 @@
   var petCatalog = null;
 
   // ── Map Constants ────────────────────────────
-  var MAP_W = 700, MAP_H = 440;
+  var MAP_W = 1060, MAP_H = 660;
   var MAP_LOCATIONS = {
-    town:   { x: 350, y: 65,  name: 'Town Hub',        skill: null },
-    mine:   { x: 110, y: 170, name: 'Mining Camp',      skill: 'mining' },
-    dock:   { x: 590, y: 170, name: 'Fishing Dock',     skill: 'fishing' },
-    forest: { x: 110, y: 300, name: 'Lumber Forest',    skill: 'woodcutting' },
-    smithy: { x: 590, y: 300, name: 'Smithy',           skill: 'smithing' },
-    arena:  { x: 350, y: 370, name: 'Training Arena',   skill: 'combat' }
+    town:   { x: 530, y: 98,  name: 'Town Hub',        skill: null },
+    mine:   { x: 166, y: 255, name: 'Mining Camp',      skill: 'mining' },
+    dock:   { x: 894, y: 255, name: 'Fishing Dock',     skill: 'fishing' },
+    forest: { x: 166, y: 450, name: 'Lumber Forest',    skill: 'woodcutting' },
+    smithy: { x: 894, y: 450, name: 'Smithy',           skill: 'smithing' },
+    arena:  { x: 530, y: 555, name: 'Training Arena',   skill: 'combat' }
   };
   var MAP_LOC_ORDER = ['town', 'mine', 'dock', 'forest', 'smithy', 'arena'];
   var PATH_SEGMENTS = [
@@ -51,192 +51,210 @@
     ['mine', 'forest'], ['dock', 'smithy'],
     ['forest', 'arena'], ['smithy', 'arena']
   ];
-  var PLAYER_SPEED = 120; // px/sec
-  var HIT_RADIUS = 40;
+  var PLAYER_SPEED = 180; // px/sec (scaled for larger map)
+  var HIT_RADIUS = 55;
   var CHAR_SIZE = 16; // native pixel size
   var CHAR_SCALE = 2; // render at 32x32
 
   // Character pixel art — 16x16, 4 directions, 2 walk frames + 1 idle
-  // Format: [x, y, colorIndex] — colors: 0=skin, 1=hair, 2=tunic, 3=belt, 4=pants, 5=boots, 6=eye
-  var CHAR_COLORS = ['#f0c090', '#5a3010', '#2d8c3c', '#8b5e2b', '#6b4226', '#2a1a0a', '#1a1a2e'];
+  // Colors: 0=skin, 1=hair, 2=tunic, 3=belt, 4=pants, 5=boots, 6=eye, 7=sword, 8=hilt, 9=skinHi, A=tunicShadow
+  var CHAR_COLORS = ['#f0c090','#5a3010','#2d8c3c','#8b5e2b','#6b4226','#2a1a0a','#1a1a2e','#a0a0a0','#c0a060','#e0d0b0','#1d6a28'];
   var CHAR_FRAMES = {
     down: [
-      // idle (facing down)
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'0'],[10,2,'1'],
-       [6,3,'0'],[7,3,'6'],[8,3,'0'],[9,3,'6'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'2'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'2'],
+      // idle — bigger head (3px tall), sword at right hip
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
+       [5,2,'1'],[6,2,'0'],[7,2,'6'],[8,2,'0'],[9,2,'6'],[10,2,'1'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
+       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
        [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [5,9,'4'],[6,9,'4'],[7,9,'4'],[8,9,'4'],[9,9,'4'],[10,9,'4'],
-       [5,10,'4'],[6,10,'4'],[9,10,'4'],[10,10,'4'],
-       [5,11,'4'],[6,11,'4'],[9,11,'4'],[10,11,'4'],
-       [5,12,'5'],[6,12,'5'],[9,12,'5'],[10,12,'5'],
-       [5,13,'5'],[6,13,'5'],[9,13,'5'],[10,13,'5']],
-      // walk1 (left leg forward)
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'0'],[10,2,'1'],
-       [6,3,'0'],[7,3,'6'],[8,3,'0'],[9,3,'6'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'2'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
+       [5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],[11,9,'7'],
+       [5,10,'4'],[6,10,'4'],[9,10,'4'],[10,10,'4'],[11,10,'7'],
+       [5,11,'5'],[6,11,'5'],[9,11,'5'],[10,11,'5'],[11,11,'8'],
+       [5,12,'5'],[6,12,'5'],[9,12,'5'],[10,12,'5']],
+      // walk1
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
+       [5,2,'1'],[6,2,'0'],[7,2,'6'],[8,2,'0'],[9,2,'6'],[10,2,'1'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
+       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
        [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [4,9,'4'],[5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],
-       [3,10,'4'],[4,10,'4'],[9,10,'4'],[10,10,'4'],
-       [3,11,'5'],[4,11,'5'],[9,11,'4'],[10,11,'4'],
-       [3,12,'5'],[4,12,'5'],[9,12,'5'],[10,12,'5'],
-       [9,13,'5'],[10,13,'5']],
-      // walk2 (right leg forward)
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'0'],[10,2,'1'],
-       [6,3,'0'],[7,3,'6'],[8,3,'0'],[9,3,'6'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'2'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [4,8,'4'],[5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],
+       [3,9,'4'],[4,9,'4'],[9,9,'4'],[10,9,'4'],[11,9,'7'],
+       [3,10,'5'],[4,10,'5'],[9,10,'4'],[10,10,'4'],[11,10,'7'],
+       [3,11,'5'],[4,11,'5'],[9,11,'5'],[10,11,'5'],[11,11,'8'],
+       [9,12,'5'],[10,12,'5']],
+      // walk2
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
+       [5,2,'1'],[6,2,'0'],[7,2,'6'],[8,2,'0'],[9,2,'6'],[10,2,'1'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
+       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
        [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],[11,9,'4'],
-       [5,10,'4'],[6,10,'4'],[11,10,'4'],[12,10,'4'],
-       [5,11,'4'],[6,11,'4'],[11,11,'5'],[12,11,'5'],
-       [5,12,'5'],[6,12,'5'],[11,12,'5'],[12,12,'5'],
-       [5,13,'5'],[6,13,'5']]
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],[11,8,'4'],
+       [5,9,'4'],[6,9,'4'],[11,9,'4'],[12,9,'4'],
+       [5,10,'4'],[6,10,'4'],[11,10,'5'],[12,10,'5'],
+       [5,11,'5'],[6,11,'5'],[11,11,'5'],[12,11,'5'],
+       [5,12,'5'],[6,12,'5']]
     ],
     up: [
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [5,1,'1'],[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],[10,1,'1'],
        [5,2,'1'],[6,2,'1'],[7,2,'1'],[8,2,'1'],[9,2,'1'],[10,2,'1'],
-       [6,3,'1'],[7,3,'1'],[8,3,'1'],[9,3,'1'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'2'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'2'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
+       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
        [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [5,9,'4'],[6,9,'4'],[7,9,'4'],[8,9,'4'],[9,9,'4'],[10,9,'4'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
+       [5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],
        [5,10,'4'],[6,10,'4'],[9,10,'4'],[10,10,'4'],
-       [5,11,'4'],[6,11,'4'],[9,11,'4'],[10,11,'4'],
-       [5,12,'5'],[6,12,'5'],[9,12,'5'],[10,12,'5'],
-       [5,13,'5'],[6,13,'5'],[9,13,'5'],[10,13,'5']],
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],
+       [5,11,'5'],[6,11,'5'],[9,11,'5'],[10,11,'5'],
+       [5,12,'5'],[6,12,'5'],[9,12,'5'],[10,12,'5']],
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [5,1,'1'],[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],[10,1,'1'],
        [5,2,'1'],[6,2,'1'],[7,2,'1'],[8,2,'1'],[9,2,'1'],[10,2,'1'],
-       [6,3,'1'],[7,3,'1'],[8,3,'1'],[9,3,'1'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'2'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'2'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
+       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
        [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [4,9,'4'],[5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],
-       [3,10,'4'],[4,10,'4'],[9,10,'4'],[10,10,'4'],
-       [3,11,'5'],[4,11,'5'],[9,11,'4'],[10,11,'4'],
-       [3,12,'5'],[4,12,'5'],[9,12,'5'],[10,12,'5'],
-       [9,13,'5'],[10,13,'5']],
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [4,8,'4'],[5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],
+       [3,9,'4'],[4,9,'4'],[9,9,'4'],[10,9,'4'],
+       [3,10,'5'],[4,10,'5'],[9,10,'4'],[10,10,'4'],
+       [3,11,'5'],[4,11,'5'],[9,11,'5'],[10,11,'5'],
+       [9,12,'5'],[10,12,'5']],
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [5,1,'1'],[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],[10,1,'1'],
        [5,2,'1'],[6,2,'1'],[7,2,'1'],[8,2,'1'],[9,2,'1'],[10,2,'1'],
-       [6,3,'1'],[7,3,'1'],[8,3,'1'],[9,3,'1'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'2'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'2'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
+       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
        [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],[11,9,'4'],
-       [5,10,'4'],[6,10,'4'],[11,10,'4'],[12,10,'4'],
-       [5,11,'4'],[6,11,'4'],[11,11,'5'],[12,11,'5'],
-       [5,12,'5'],[6,12,'5'],[11,12,'5'],[12,12,'5'],
-       [5,13,'5'],[6,13,'5']]
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],[11,8,'4'],
+       [5,9,'4'],[6,9,'4'],[11,9,'4'],[12,9,'4'],
+       [5,10,'4'],[6,10,'4'],[11,10,'5'],[12,10,'5'],
+       [5,11,'5'],[6,11,'5'],[11,11,'5'],[12,11,'5'],
+       [5,12,'5'],[6,12,'5']]
     ],
     left: [
-      [[7,1,'1'],[8,1,'1'],[9,1,'1'],
-       [6,2,'1'],[7,2,'0'],[8,2,'0'],[9,2,'0'],[10,2,'1'],
-       [6,3,'6'],[7,3,'0'],[8,3,'0'],[9,3,'0'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'0'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
-       [5,6,'0'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [5,9,'4'],[6,9,'4'],[7,9,'4'],[8,9,'4'],[9,9,'4'],
+      [[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [6,1,'1'],[7,1,'0'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
+       [6,2,'6'],[7,2,'0'],[8,2,'0'],[9,2,'0'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'0'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],
+       [5,5,'0'],[6,5,'A'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
+       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],
+       [5,9,'4'],[6,9,'4'],[8,9,'4'],[9,9,'4'],
        [5,10,'4'],[6,10,'4'],[8,10,'4'],[9,10,'4'],
-       [5,11,'4'],[6,11,'4'],[8,11,'4'],[9,11,'4'],
-       [5,12,'5'],[6,12,'5'],[8,12,'5'],[9,12,'5'],
-       [5,13,'5'],[6,13,'5'],[8,13,'5'],[9,13,'5']],
-      [[7,1,'1'],[8,1,'1'],[9,1,'1'],
-       [6,2,'1'],[7,2,'0'],[8,2,'0'],[9,2,'0'],[10,2,'1'],
-       [6,3,'6'],[7,3,'0'],[8,3,'0'],[9,3,'0'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'0'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
-       [5,6,'0'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [4,9,'4'],[5,9,'4'],[6,9,'4'],[8,9,'4'],[9,9,'4'],
-       [3,10,'4'],[4,10,'4'],[8,10,'4'],[9,10,'4'],
-       [3,11,'5'],[4,11,'5'],[8,11,'5'],[9,11,'5'],
-       [3,12,'5'],[4,12,'5']],
-      [[7,1,'1'],[8,1,'1'],[9,1,'1'],
-       [6,2,'1'],[7,2,'0'],[8,2,'0'],[9,2,'0'],[10,2,'1'],
-       [6,3,'6'],[7,3,'0'],[8,3,'0'],[9,3,'0'],
-       [7,4,'0'],[8,4,'0'],
-       [5,5,'0'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
-       [5,6,'0'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
-       [5,7,'2'],[6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [5,9,'4'],[6,9,'4'],[8,9,'4'],[9,9,'4'],[10,9,'4'],
-       [5,10,'4'],[6,10,'4'],[10,10,'4'],[11,10,'4'],
-       [5,11,'5'],[6,11,'5'],[10,11,'5'],[11,11,'5'],
-       [10,12,'5'],[11,12,'5']]
+       [5,11,'5'],[6,11,'5'],[8,11,'5'],[9,11,'5'],
+       [5,12,'5'],[6,12,'5'],[8,12,'5'],[9,12,'5']],
+      [[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [6,1,'1'],[7,1,'0'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
+       [6,2,'6'],[7,2,'0'],[8,2,'0'],[9,2,'0'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'0'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],
+       [5,5,'0'],[6,5,'A'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
+       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [4,8,'4'],[5,8,'4'],[6,8,'4'],[8,8,'4'],[9,8,'4'],
+       [3,9,'4'],[4,9,'4'],[8,9,'4'],[9,9,'4'],
+       [3,10,'5'],[4,10,'5'],[8,10,'5'],[9,10,'5'],
+       [3,11,'5'],[4,11,'5']],
+      [[7,0,'1'],[8,0,'1'],[9,0,'1'],
+       [6,1,'1'],[7,1,'0'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
+       [6,2,'6'],[7,2,'0'],[8,2,'0'],[9,2,'0'],
+       [7,3,'0'],[8,3,'0'],
+       [5,4,'0'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],
+       [5,5,'0'],[6,5,'A'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
+       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [5,8,'4'],[6,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
+       [5,9,'4'],[6,9,'4'],[10,9,'4'],[11,9,'4'],
+       [5,10,'5'],[6,10,'5'],[10,10,'5'],[11,10,'5'],
+       [10,11,'5'],[11,11,'5']]
     ],
     right: [
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'1'],
-       [6,3,'0'],[7,3,'0'],[8,3,'0'],[9,3,'6'],
-       [7,4,'0'],[8,4,'0'],
-       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'0'],
-       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'0'],
-       [6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [6,9,'4'],[7,9,'4'],[8,9,'4'],[9,9,'4'],[10,9,'4'],
-       [6,10,'4'],[7,10,'4'],[9,10,'4'],[10,10,'4'],
-       [6,11,'4'],[7,11,'4'],[9,11,'4'],[10,11,'4'],
-       [6,12,'5'],[7,12,'5'],[9,12,'5'],[10,12,'5'],
-       [6,13,'5'],[7,13,'5'],[9,13,'5'],[10,13,'5']],
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'1'],
-       [6,3,'0'],[7,3,'0'],[8,3,'0'],[9,3,'6'],
-       [7,4,'0'],[8,4,'0'],
-       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'0'],
-       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'0'],
-       [6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [6,9,'4'],[7,9,'4'],[8,9,'4'],[10,9,'4'],[11,9,'4'],
-       [6,10,'4'],[7,10,'4'],[11,10,'4'],[12,10,'4'],
-       [6,11,'5'],[7,11,'5'],[11,11,'5'],[12,11,'5'],
-       [6,12,'5'],[7,12,'5']],
-      [[6,1,'1'],[7,1,'1'],[8,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'1'],
-       [6,3,'0'],[7,3,'0'],[8,3,'0'],[9,3,'6'],
-       [7,4,'0'],[8,4,'0'],
-       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'0'],
-       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'0'],
-       [6,7,'2'],[7,7,'2'],[8,7,'2'],[9,7,'2'],[10,7,'2'],
-       [6,8,'3'],[7,8,'3'],[8,8,'3'],[9,8,'3'],
-       [4,9,'4'],[5,9,'4'],[6,9,'4'],[7,9,'4'],[8,9,'4'],
-       [3,10,'4'],[4,10,'4'],[6,10,'4'],[7,10,'4'],
-       [3,11,'5'],[4,11,'5'],[6,11,'5'],[7,11,'5'],
-       [3,12,'5'],[4,12,'5']]
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],
+       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'0'],[9,1,'1'],
+       [6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'6'],
+       [7,3,'0'],[8,3,'0'],
+       [6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'0'],
+       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'A'],[10,5,'0'],
+       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
+       [6,9,'4'],[7,9,'4'],[9,9,'4'],[10,9,'4'],[4,9,'7'],
+       [6,10,'4'],[7,10,'4'],[9,10,'4'],[10,10,'4'],[4,10,'7'],
+       [6,11,'5'],[7,11,'5'],[9,11,'5'],[10,11,'5'],[4,11,'8'],
+       [6,12,'5'],[7,12,'5'],[9,12,'5'],[10,12,'5']],
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],
+       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'0'],[9,1,'1'],
+       [6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'6'],
+       [7,3,'0'],[8,3,'0'],
+       [6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'0'],
+       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'A'],[10,5,'0'],
+       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [6,8,'4'],[7,8,'4'],[8,8,'4'],[10,8,'4'],[11,8,'4'],
+       [6,9,'4'],[7,9,'4'],[11,9,'4'],[12,9,'4'],
+       [6,10,'5'],[7,10,'5'],[11,10,'5'],[12,10,'5'],
+       [6,11,'5'],[7,11,'5']],
+      [[6,0,'1'],[7,0,'1'],[8,0,'1'],
+       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'0'],[9,1,'1'],
+       [6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'6'],
+       [7,3,'0'],[8,3,'0'],
+       [6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'0'],
+       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'A'],[10,5,'0'],
+       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
+       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
+       [4,8,'4'],[5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],
+       [3,9,'4'],[4,9,'4'],[6,9,'4'],[7,9,'4'],
+       [3,10,'5'],[4,10,'5'],[6,10,'5'],[7,10,'5'],
+       [3,11,'5'],[4,11,'5']]
     ]
   };
 
-  // Decoration positions (flowers, rocks, bushes) — [x, y, type]
-  // type: 0=flower, 1=rock, 2=bush
+  // Decoration positions — [x, y, type]
+  // type: 0=flower, 1=rock, 2=bush, 3=tree, 4=mushroom, 5=stump, 6=signpost, 7=fence
   var MAP_DECO = [
-    [40,50,0],[180,80,2],[460,90,0],[650,50,1],[80,380,0],
-    [250,200,1],[480,250,0],[620,400,2],[300,140,0],[170,420,1],
-    [530,130,2],[400,300,0],[50,250,1],[660,230,0],[230,370,2],
-    [500,380,1],[150,140,0],[420,50,2],[570,370,0],[80,120,1]
+    // Flowers (scattered)
+    [60,75,0],[700,135,0],[455,375,0],[730,255,0],[940,600,0],
+    [320,500,0],[800,120,0],[120,570,0],[610,490,0],[380,210,0],
+    // Rocks (near mine, scattered)
+    [100,310,1],[85,200,1],[230,220,1],[75,375,1],[760,345,1],
+    [950,520,1],[350,580,1],[640,130,1],
+    // Bushes (scattered, some along paths)
+    [270,120,2],[800,135,2],[530,380,2],[250,510,2],[680,570,2],
+    [430,80,2],[960,350,2],[100,450,2],
+    // Trees (clustered near forest, some scattered)
+    [80,420,3],[120,480,3],[200,500,3],[240,420,3],[60,520,3],
+    [320,580,3],[900,100,3],[700,580,3],[50,150,3],[980,480,3],
+    // Mushrooms (near forest/damp areas)
+    [190,460,4],[150,510,4],[280,470,4],[350,540,4],
+    // Stumps (near forest)
+    [220,440,5],[300,490,5],
+    // Signposts (at path intersections)
+    [430,180,6],[630,180,6],
+    // Fences (near arena/town)
+    [460,520,7],[600,520,7],[470,105,7],[590,105,7]
   ];
 
   // ── Map State ──────────────────────────────────
   var mapCanvas = null, mapCtx = null, mapAnimId = null;
-  var playerPos = { x: 350, y: 65 };
+  var staticBuffer = null, staticBufferCtx = null, staticDirty = true;
+  var smokeFrame = 0;
+  var playerPos = { x: 530, y: 98 };
   var playerTarget = null;
   var playerDir = 'down';
   var playerFrame = 0;
@@ -805,6 +823,8 @@
     playerFrame = 0;
     enterPromptVisible = true;
     lastTimestamp = 0;
+    staticDirty = true;
+    smokeFrame = 0;
 
     startMapLoop();
   }
@@ -827,6 +847,7 @@
     var dt = Math.min((ts - lastTimestamp) / 1000, 0.1);
     lastTimestamp = ts;
 
+    smokeFrame++;
     updatePlayer(dt);
     drawMap();
 
@@ -887,238 +908,733 @@
     enterPromptVisible = false;
   }
 
+  // ── Terrain Hash ─────────────────────────────────
+  function tileHash(x, y) {
+    var h = (x * 374761393 + y * 668265263) | 0;
+    h = ((h ^ (h >> 13)) * 1274126177) | 0;
+    return h;
+  }
+
+  // ── Pre-render Static Buffer ───────────────────
+  function renderStaticBuffer() {
+    if (!staticBuffer) {
+      staticBuffer = document.createElement('canvas');
+      staticBuffer.width = MAP_W;
+      staticBuffer.height = MAP_H;
+      staticBufferCtx = staticBuffer.getContext('2d');
+    }
+    var ctx = staticBufferCtx;
+    drawTerrain(ctx);
+    drawPaths(ctx);
+    drawDecorations(ctx);
+    drawStaticLocationParts(ctx);
+    drawMapBorder(ctx);
+    staticDirty = false;
+  }
+
   // ── Drawing ─────────────────────────────────────
   function drawMap() {
     var ctx = mapCtx;
     if (!ctx) return;
     ctx.save();
-    ctx.scale(2, 2); // 2x for crisp pixels
+    ctx.scale(2, 2);
 
-    drawTerrain(ctx);
-    drawPaths(ctx);
-    drawDecorations(ctx);
-    drawLocationMarkers(ctx);
+    // Blit static buffer
+    if (staticDirty) renderStaticBuffer();
+    ctx.drawImage(staticBuffer, 0, 0);
+
+    // Animated elements on top
+    drawAnimatedWater(ctx);
+    drawAnimatedLocationParts(ctx);
     drawPlayer(ctx);
+    drawLocationLabels(ctx);
     if (enterPromptVisible && playerAtLocation) {
       drawEnterPrompt(ctx);
     }
+    // Redraw border on top of everything
+    drawMapBorder(ctx);
 
     ctx.restore();
   }
 
+  // ── Terrain ─────────────────────────────────────
   function drawTerrain(ctx) {
-    // Grass base
-    ctx.fillStyle = '#4a8c3f';
-    ctx.fillRect(0, 0, MAP_W, MAP_H);
+    var TILE = 8;
+    var greens = ['#3a7a32', '#428a3a', '#4a9442', '#509e48'];
+    var cols = Math.ceil(MAP_W / TILE);
+    var rows = Math.ceil(MAP_H / TILE);
 
-    // Grass variation patches
-    ctx.fillStyle = '#3f7a35';
-    var grassPatches = [[0,0,200,100],[300,200,150,80],[500,300,200,140],[100,350,180,90]];
-    for (var i = 0; i < grassPatches.length; i++) {
-      var p = grassPatches[i];
-      ctx.fillRect(p[0], p[1], p[2], p[3]);
-    }
-    ctx.fillStyle = '#55a048';
-    var grassLight = [[200,50,180,70],[450,100,100,60],[50,200,120,100],[350,350,150,70]];
-    for (var i = 0; i < grassLight.length; i++) {
-      var p = grassLight[i];
-      ctx.fillRect(p[0], p[1], p[2], p[3]);
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var h = tileHash(c, r);
+        ctx.fillStyle = greens[((h >>> 0) % 4)];
+        ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+      }
     }
 
-    // Water near Fishing Dock
+    // Checkerboard dither overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.04)';
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        if ((c + r) % 2 === 0) {
+          ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+        }
+      }
+    }
+
+    // Edge darkening (cliff border feel)
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 0, MAP_W, 6);
+    ctx.fillRect(0, MAP_H - 6, MAP_W, 6);
+    ctx.fillRect(0, 0, 6, MAP_H);
+    ctx.fillRect(MAP_W - 6, 0, 6, MAP_H);
+
+    // Water body near Fishing Dock — deep outer
+    ctx.fillStyle = '#1e5888';
+    ctx.fillRect(820, 180, 220, 150);
+    // Sand beach border
+    ctx.fillStyle = '#c8b478';
+    ctx.fillRect(816, 176, 228, 4);
+    ctx.fillRect(816, 330, 228, 4);
+    ctx.fillRect(816, 176, 4, 158);
+    ctx.fillRect(1040, 176, 4, 158);
+    // Main water
     ctx.fillStyle = '#2868a8';
-    ctx.fillRect(550, 120, 150, 100);
+    ctx.fillRect(824, 184, 212, 142);
+    // Lighter center
     ctx.fillStyle = '#3078b8';
-    ctx.fillRect(560, 130, 130, 80);
-    // Water ripples
+    ctx.fillRect(840, 200, 180, 110);
+  }
+
+  // ── Animated Water Ripples ──────────────────────
+  function drawAnimatedWater(ctx) {
+    var phase = smokeFrame * 0.03;
     ctx.fillStyle = '#4898d0';
-    ctx.fillRect(570, 145, 20, 2);
-    ctx.fillRect(610, 165, 25, 2);
-    ctx.fillRect(580, 185, 18, 2);
-    ctx.fillRect(650, 155, 15, 2);
+    var ripples = [
+      [860, 220, 24], [900, 250, 20], [870, 275, 18],
+      [930, 235, 22], [950, 260, 16], [880, 295, 20]
+    ];
+    for (var i = 0; i < ripples.length; i++) {
+      var r = ripples[i];
+      var off = Math.sin(phase + i * 1.3) * 4;
+      ctx.fillRect(r[0] + off, r[1], r[2], 2);
+    }
   }
 
+  // ── Paths ───────────────────────────────────────
   function drawPaths(ctx) {
-    ctx.strokeStyle = '#9b7b4a';
-    ctx.lineWidth = 8;
     ctx.lineCap = 'round';
+    // Layer 1: dark border
+    ctx.strokeStyle = '#6b5030';
+    ctx.lineWidth = 16;
     for (var i = 0; i < PATH_SEGMENTS.length; i++) {
       var seg = PATH_SEGMENTS[i];
-      var a = MAP_LOCATIONS[seg[0]];
-      var b = MAP_LOCATIONS[seg[1]];
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
+      var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     }
-    // Inner lighter path
-    ctx.strokeStyle = '#b89b6a';
-    ctx.lineWidth = 4;
+    // Layer 2: main dirt
+    ctx.strokeStyle = '#9b7b4a';
+    ctx.lineWidth = 12;
     for (var i = 0; i < PATH_SEGMENTS.length; i++) {
       var seg = PATH_SEGMENTS[i];
-      var a = MAP_LOCATIONS[seg[0]];
-      var b = MAP_LOCATIONS[seg[1]];
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
+      var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    // Layer 3: lighter center
+    ctx.strokeStyle = '#b89b6a';
+    ctx.lineWidth = 6;
+    for (var i = 0; i < PATH_SEGMENTS.length; i++) {
+      var seg = PATH_SEGMENTS[i];
+      var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    // Dirt texture dots along paths
+    ctx.fillStyle = '#8a6b3a';
+    for (var i = 0; i < PATH_SEGMENTS.length; i++) {
+      var seg = PATH_SEGMENTS[i];
+      var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var len = Math.sqrt(dx * dx + dy * dy);
+      var steps = Math.floor(len / 12);
+      for (var j = 0; j < steps; j++) {
+        var t = j / steps;
+        var h = tileHash(i * 100 + j, 9999);
+        var ox = ((h >>> 0) % 9) - 4;
+        var oy = ((h >>> 8) % 9) - 4;
+        ctx.fillRect(a.x + dx * t + ox, a.y + dy * t + oy, 2, 2);
+      }
     }
   }
 
+  // ── Decorations ─────────────────────────────────
   function drawDecorations(ctx) {
     for (var i = 0; i < MAP_DECO.length; i++) {
       var d = MAP_DECO[i];
-      if (d[2] === 0) {
-        // Flower
-        ctx.fillStyle = '#e84060';
-        ctx.fillRect(d[0], d[1], 3, 3);
+      var dx = d[0], dy = d[1], type = d[2];
+      var h = tileHash(dx, dy);
+
+      if (type === 0) {
+        // Flower — multi-petal with color variant
+        var flowerColors = ['#e84060','#e8a040','#d050d0','#40a0e8'];
+        var fc = flowerColors[((h >>> 0) % 4)];
+        ctx.fillStyle = fc;
+        ctx.fillRect(dx, dy, 2, 2);
+        ctx.fillRect(dx + 2, dy + 1, 2, 2);
+        ctx.fillRect(dx, dy + 2, 2, 2);
+        ctx.fillRect(dx - 1, dy + 1, 2, 2);
         ctx.fillStyle = '#f0e040';
-        ctx.fillRect(d[0] + 1, d[1] + 1, 1, 1);
+        ctx.fillRect(dx + 1, dy + 1, 1, 1);
         ctx.fillStyle = '#2d6e28';
-        ctx.fillRect(d[0] + 1, d[1] + 3, 1, 3);
-      } else if (d[2] === 1) {
-        // Rock
+        ctx.fillRect(dx + 1, dy + 3, 1, 4);
+        ctx.fillStyle = '#3a8030';
+        ctx.fillRect(dx, dy + 5, 1, 1);
+      } else if (type === 1) {
+        // Rock — highlight + shadow + specular
+        ctx.fillStyle = '#606060';
+        ctx.fillRect(dx, dy + 3, 8, 5);
         ctx.fillStyle = '#808080';
-        ctx.fillRect(d[0], d[1] + 2, 6, 4);
+        ctx.fillRect(dx + 1, dy + 2, 6, 4);
         ctx.fillStyle = '#999999';
-        ctx.fillRect(d[0] + 1, d[1] + 1, 4, 3);
+        ctx.fillRect(dx + 2, dy + 1, 4, 3);
         ctx.fillStyle = '#b0b0b0';
-        ctx.fillRect(d[0] + 2, d[1], 2, 2);
-      } else {
-        // Bush
-        ctx.fillStyle = '#2d6e28';
-        ctx.fillRect(d[0], d[1] + 2, 8, 5);
-        ctx.fillStyle = '#3a8a34';
-        ctx.fillRect(d[0] + 1, d[1], 6, 6);
-        ctx.fillStyle = '#4aa044';
-        ctx.fillRect(d[0] + 2, d[1] + 1, 4, 3);
+        ctx.fillRect(dx + 3, dy, 2, 2);
+        // Specular highlight
+        ctx.fillStyle = '#d0d0d0';
+        ctx.fillRect(dx + 3, dy + 1, 1, 1);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(dx + 1, dy + 7, 7, 2);
+      } else if (type === 2) {
+        // Bush with berry dots
+        ctx.fillStyle = '#1e5e18';
+        ctx.fillRect(dx, dy + 3, 10, 6);
+        ctx.fillStyle = '#2d7a28';
+        ctx.fillRect(dx + 1, dy + 1, 8, 6);
+        ctx.fillStyle = '#3a9a34';
+        ctx.fillRect(dx + 2, dy, 6, 5);
+        ctx.fillStyle = '#4ab044';
+        ctx.fillRect(dx + 3, dy + 1, 4, 3);
+        // Berry dots
+        if ((h & 1) === 0) {
+          ctx.fillStyle = '#cc3030';
+          ctx.fillRect(dx + 2, dy + 2, 1, 1);
+          ctx.fillRect(dx + 6, dy + 3, 1, 1);
+          ctx.fillRect(dx + 4, dy + 5, 1, 1);
+        }
+      } else if (type === 3) {
+        // Tree (12x18px with trunk, crown, shadow)
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(dx - 1, dy + 16, 14, 3);
+        // Trunk
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(dx + 4, dy + 10, 4, 8);
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(dx + 4, dy + 10, 2, 8);
+        // Crown layers
+        ctx.fillStyle = '#1e5e18';
+        ctx.fillRect(dx, dy + 3, 12, 9);
+        ctx.fillStyle = '#2d7a28';
+        ctx.fillRect(dx + 1, dy + 1, 10, 8);
+        ctx.fillStyle = '#3a9a34';
+        ctx.fillRect(dx + 2, dy, 8, 6);
+        ctx.fillStyle = '#4ab044';
+        ctx.fillRect(dx + 3, dy + 1, 6, 4);
+        // Highlight
+        ctx.fillStyle = '#58c050';
+        ctx.fillRect(dx + 4, dy + 2, 3, 2);
+      } else if (type === 4) {
+        // Mushroom (4x5px)
+        ctx.fillStyle = '#c8a878';
+        ctx.fillRect(dx + 1, dy + 3, 2, 3);
+        ctx.fillStyle = '#d03030';
+        ctx.fillRect(dx, dy + 1, 4, 2);
+        ctx.fillRect(dx + 1, dy, 2, 1);
+        // Spots
+        ctx.fillStyle = '#f0e0c0';
+        ctx.fillRect(dx + 1, dy + 1, 1, 1);
+        ctx.fillRect(dx + 3, dy + 2, 1, 1);
+      } else if (type === 5) {
+        // Stump (6x4px)
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(dx, dy + 2, 6, 3);
+        ctx.fillStyle = '#8b6e3b';
+        ctx.fillRect(dx + 1, dy, 4, 3);
+        // Ring detail
+        ctx.fillStyle = '#c8a878';
+        ctx.fillRect(dx + 2, dy + 1, 2, 1);
+      } else if (type === 6) {
+        // Signpost (4x10px)
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(dx + 1, dy + 3, 2, 8);
+        ctx.fillStyle = '#8b6e3b';
+        ctx.fillRect(dx - 1, dy, 6, 3);
+        ctx.fillStyle = '#a08858';
+        ctx.fillRect(dx, dy + 1, 4, 1);
+      } else if (type === 7) {
+        // Fence segment (12x6px)
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(dx, dy + 1, 2, 6);
+        ctx.fillRect(dx + 10, dy + 1, 2, 6);
+        ctx.fillStyle = '#8b6e3b';
+        ctx.fillRect(dx, dy + 2, 12, 2);
+        ctx.fillRect(dx, dy + 5, 12, 1);
+        ctx.fillStyle = '#a08858';
+        ctx.fillRect(dx + 1, dy, 1, 2);
+        ctx.fillRect(dx + 11, dy, 1, 2);
       }
     }
   }
 
-  function drawLocationMarkers(ctx) {
+  // ── Location Markers (static parts) ─────────────
+  function drawStaticLocationParts(ctx) {
     for (var i = 0; i < MAP_LOC_ORDER.length; i++) {
       var id = MAP_LOC_ORDER[i];
       var loc = MAP_LOCATIONS[id];
-      drawLocationMarker(ctx, id, loc.x, loc.y);
+      drawLocationMarkerStatic(ctx, id, loc.x, loc.y);
+    }
+  }
 
-      // Label
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.font = '9px monospace';
-      ctx.textAlign = 'center';
-      ctx.strokeText(loc.name, loc.x, loc.y + 22);
-      ctx.fillText(loc.name, loc.x, loc.y + 22);
+  function drawLocationMarkerStatic(ctx, id, x, y) {
+    var ox = x - 16, oy = y - 24;
+    if (id === 'town') {
+      // ── Town Hub — Multi-story building ───
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(ox - 2, oy + 36, 38, 4);
+      // Walls
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox, oy + 12, 32, 24);
+      ctx.fillStyle = '#a08858';
+      ctx.fillRect(ox + 2, oy + 14, 28, 20);
+      // Roof with ridge
+      ctx.fillStyle = '#b03020';
+      ctx.fillRect(ox - 3, oy + 6, 38, 8);
+      ctx.fillStyle = '#c44030';
+      ctx.fillRect(ox - 1, oy + 4, 34, 6);
+      ctx.fillStyle = '#d04838';
+      ctx.fillRect(ox + 2, oy + 2, 28, 4);
+      ctx.fillStyle = '#e05848';
+      ctx.fillRect(ox + 6, oy, 20, 3);
+      // Ridge line
+      ctx.fillStyle = '#f0d040';
+      ctx.fillRect(ox + 8, oy, 16, 1);
+      // Upper windows (two with panes)
+      ctx.fillStyle = '#3868a0';
+      ctx.fillRect(ox + 5, oy + 16, 8, 6);
+      ctx.fillRect(ox + 19, oy + 16, 8, 6);
+      ctx.fillStyle = '#4888c8';
+      ctx.fillRect(ox + 6, oy + 17, 3, 2);
+      ctx.fillRect(ox + 20, oy + 17, 3, 2);
+      // Window pane cross
+      ctx.fillStyle = '#6b5030';
+      ctx.fillRect(ox + 9, oy + 16, 1, 6);
+      ctx.fillRect(ox + 5, oy + 19, 8, 1);
+      ctx.fillRect(ox + 23, oy + 16, 1, 6);
+      ctx.fillRect(ox + 19, oy + 19, 8, 1);
+      // Lower window
+      ctx.fillStyle = '#3868a0';
+      ctx.fillRect(ox + 5, oy + 26, 8, 5);
+      ctx.fillStyle = '#6b5030';
+      ctx.fillRect(ox + 9, oy + 26, 1, 5);
+      ctx.fillRect(ox + 5, oy + 28, 8, 1);
+      // Door
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox + 19, oy + 26, 8, 10);
+      ctx.fillStyle = '#3a1a08';
+      ctx.fillRect(ox + 20, oy + 27, 6, 8);
+      // Door knob
+      ctx.fillStyle = '#f0d040';
+      ctx.fillRect(ox + 24, oy + 31, 1, 1);
+      // Chimney
+      ctx.fillStyle = '#706050';
+      ctx.fillRect(ox + 24, oy - 6, 5, 8);
+      ctx.fillStyle = '#887868';
+      ctx.fillRect(ox + 25, oy - 7, 3, 2);
+      // Flag pole
+      ctx.fillStyle = '#a08858';
+      ctx.fillRect(ox - 1, oy - 4, 2, 14);
+      ctx.fillStyle = '#c04040';
+      ctx.fillRect(ox + 1, oy - 4, 6, 4);
+      ctx.fillStyle = '#d05050';
+      ctx.fillRect(ox + 1, oy - 3, 5, 2);
+    } else if (id === 'mine') {
+      // ── Mining Camp — Rocky mountain + cave ───
+      // Mountain backdrop
+      ctx.fillStyle = '#585858';
+      ctx.fillRect(ox, oy + 8, 32, 28);
+      ctx.fillStyle = '#686868';
+      ctx.fillRect(ox + 2, oy + 4, 28, 8);
+      ctx.fillStyle = '#787878';
+      ctx.fillRect(ox + 4, oy + 2, 24, 6);
+      ctx.fillStyle = '#888888';
+      ctx.fillRect(ox + 8, oy, 16, 4);
+      ctx.fillStyle = '#989898';
+      ctx.fillRect(ox + 10, oy - 2, 12, 4);
+      // Mountain highlight
+      ctx.fillStyle = '#a0a0a0';
+      ctx.fillRect(ox + 12, oy - 2, 4, 2);
+      // Cave entrance (dark)
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(ox + 8, oy + 14, 16, 22);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(ox + 6, oy + 18, 20, 18);
+      // Cave arch
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(ox + 6, oy + 12, 20, 4);
+      ctx.fillRect(ox + 8, oy + 10, 16, 4);
+      // Wooden support beams
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 7, oy + 14, 3, 22);
+      ctx.fillRect(ox + 22, oy + 14, 3, 22);
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox + 8, oy + 13, 16, 2);
+      // Cart tracks
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillRect(ox + 10, oy + 34, 12, 2);
+      ctx.fillRect(ox + 12, oy + 32, 8, 2);
+      // Pickaxe leaning
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 28, oy + 10, 2, 14);
+      ctx.fillStyle = '#a0a0a0';
+      ctx.fillRect(ox + 26, oy + 8, 6, 3);
+      ctx.fillStyle = '#b8b8b8';
+      ctx.fillRect(ox + 27, oy + 8, 4, 2);
+    } else if (id === 'dock') {
+      // ── Fishing Dock — Pier with posts, barrel, boat ───
+      // Pier planks
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox - 4, oy + 10, 40, 20);
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox - 2, oy + 12, 36, 16);
+      // Plank lines
+      ctx.fillStyle = '#5a3e1b';
+      ctx.fillRect(ox - 2, oy + 16, 36, 1);
+      ctx.fillRect(ox - 2, oy + 21, 36, 1);
+      ctx.fillRect(ox - 2, oy + 26, 36, 1);
+      // 3 vertical posts
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox, oy + 6, 4, 30);
+      ctx.fillRect(ox + 14, oy + 6, 4, 30);
+      ctx.fillRect(ox + 28, oy + 6, 4, 30);
+      // Post tops
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox - 1, oy + 4, 6, 3);
+      ctx.fillRect(ox + 13, oy + 4, 6, 3);
+      ctx.fillRect(ox + 27, oy + 4, 6, 3);
+      // Barrel
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 5, oy + 12, 6, 7);
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox + 6, oy + 13, 4, 5);
+      ctx.fillStyle = '#555555';
+      ctx.fillRect(ox + 5, oy + 14, 6, 1);
+      ctx.fillRect(ox + 5, oy + 17, 6, 1);
+      // Rope coil
+      ctx.fillStyle = '#c8b478';
+      ctx.fillRect(ox + 20, oy + 14, 4, 3);
+      ctx.fillStyle = '#a89458';
+      ctx.fillRect(ox + 21, oy + 15, 2, 1);
+      // Fishing rod
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox + 30, oy - 4, 2, 18);
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox + 30, oy - 5, 2, 2);
+      // Line
+      ctx.fillStyle = '#cccccc';
+      ctx.fillRect(ox + 32, oy - 4, 1, 1);
+      ctx.fillRect(ox + 33, oy - 3, 1, 4);
+      ctx.fillRect(ox + 34, oy + 1, 1, 6);
+      // Rowboat alongside
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox - 8, oy + 28, 14, 6);
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox - 6, oy + 29, 10, 4);
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox - 4, oy + 30, 6, 2);
+    } else if (id === 'forest') {
+      // ── Lumber Forest — Two large trees, axe, stump, log pile ───
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(ox - 4, oy + 34, 42, 4);
+      // Left tree — trunk
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox + 2, oy + 16, 5, 20);
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox + 3, oy + 16, 3, 20);
+      // Left tree — crown
+      ctx.fillStyle = '#1e5e18';
+      ctx.fillRect(ox - 4, oy + 4, 16, 14);
+      ctx.fillStyle = '#2d7a28';
+      ctx.fillRect(ox - 2, oy + 2, 12, 12);
+      ctx.fillStyle = '#3a9a34';
+      ctx.fillRect(ox, oy, 8, 8);
+      ctx.fillStyle = '#4ab044';
+      ctx.fillRect(ox + 1, oy + 1, 6, 5);
+      ctx.fillStyle = '#58c050';
+      ctx.fillRect(ox + 2, oy + 2, 4, 3);
+      // Right tree — trunk
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox + 24, oy + 14, 5, 22);
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox + 25, oy + 14, 3, 22);
+      // Right tree — crown
+      ctx.fillStyle = '#1e5e18';
+      ctx.fillRect(ox + 18, oy + 2, 16, 14);
+      ctx.fillStyle = '#2d7a28';
+      ctx.fillRect(ox + 20, oy, 12, 12);
+      ctx.fillStyle = '#3a9a34';
+      ctx.fillRect(ox + 22, oy - 2, 8, 8);
+      ctx.fillStyle = '#4ab044';
+      ctx.fillRect(ox + 23, oy - 1, 6, 5);
+      // Axe embedded in right tree
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 29, oy + 18, 2, 8);
+      ctx.fillStyle = '#a0a0a0';
+      ctx.fillRect(ox + 30, oy + 16, 4, 4);
+      ctx.fillStyle = '#b8b8b8';
+      ctx.fillRect(ox + 31, oy + 17, 2, 2);
+      // Stump
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox + 12, oy + 30, 7, 6);
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox + 13, oy + 28, 5, 4);
+      ctx.fillStyle = '#c8a878';
+      ctx.fillRect(ox + 14, oy + 29, 3, 2);
+      // Log pile with visible rings
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox + 10, oy + 36, 10, 4);
+      ctx.fillRect(ox + 12, oy + 34, 8, 4);
+      ctx.fillStyle = '#c8a878';
+      ctx.fillRect(ox + 11, oy + 37, 2, 2);
+      ctx.fillRect(ox + 16, oy + 37, 2, 2);
+      ctx.fillRect(ox + 13, oy + 35, 2, 2);
+    } else if (id === 'smithy') {
+      // ── Smithy — Stone building, forge, anvil ───
+      // Warm glow aura
+      ctx.fillStyle = '#ff8030';
+      ctx.globalAlpha = 0.15;
+      ctx.fillRect(ox - 6, oy - 6, 44, 48);
+      ctx.globalAlpha = 1;
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(ox - 2, oy + 34, 38, 4);
+      // Stone walls
+      ctx.fillStyle = '#585858';
+      ctx.fillRect(ox, oy + 10, 32, 26);
+      ctx.fillStyle = '#686868';
+      ctx.fillRect(ox + 2, oy + 12, 28, 22);
+      // Stone texture
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(ox + 4, oy + 14, 8, 4);
+      ctx.fillRect(ox + 16, oy + 20, 10, 4);
+      ctx.fillRect(ox + 4, oy + 26, 10, 4);
+      // Dark roof
+      ctx.fillStyle = '#404040';
+      ctx.fillRect(ox - 2, oy + 6, 36, 6);
+      ctx.fillStyle = '#484848';
+      ctx.fillRect(ox, oy + 4, 32, 4);
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(ox + 4, oy + 2, 24, 4);
+      // Chimney
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(ox + 4, oy - 8, 6, 12);
+      ctx.fillStyle = '#606060';
+      ctx.fillRect(ox + 5, oy - 9, 4, 2);
+      // Glowing forge window
+      ctx.fillStyle = '#ff6020';
+      ctx.fillRect(ox + 5, oy + 14, 8, 6);
+      ctx.fillStyle = '#ff8040';
+      ctx.fillRect(ox + 6, oy + 15, 6, 4);
+      ctx.fillStyle = '#ffa060';
+      ctx.fillRect(ox + 7, oy + 16, 4, 2);
+      // Door
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox + 20, oy + 24, 8, 12);
+      ctx.fillStyle = '#3a1a08';
+      ctx.fillRect(ox + 21, oy + 25, 6, 10);
+      ctx.fillStyle = '#f0d040';
+      ctx.fillRect(ox + 25, oy + 29, 1, 1);
+      // Outdoor anvil
+      ctx.fillStyle = '#404040';
+      ctx.fillRect(ox + 34, oy + 26, 8, 6);
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(ox + 32, oy + 24, 12, 3);
+      ctx.fillStyle = '#606060';
+      ctx.fillRect(ox + 35, oy + 22, 6, 3);
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(ox + 36, oy + 32, 3, 4);
+      ctx.fillRect(ox + 40, oy + 32, 3, 4);
+    } else if (id === 'arena') {
+      // ── Training Arena — Fenced ring, gate, banners ───
+      // Dirt floor
+      ctx.fillStyle = '#9b7b4a';
+      ctx.fillRect(ox + 2, oy + 6, 28, 28);
+      ctx.fillStyle = '#b89b6a';
+      ctx.fillRect(ox + 4, oy + 8, 24, 24);
+      // Fence
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox, oy + 4, 32, 3);
+      ctx.fillRect(ox, oy + 31, 32, 3);
+      ctx.fillRect(ox, oy + 4, 3, 30);
+      ctx.fillRect(ox + 29, oy + 4, 3, 30);
+      // Fence highlights
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox + 1, oy + 5, 30, 1);
+      ctx.fillRect(ox + 1, oy + 32, 30, 1);
+      // Corner posts
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox - 1, oy + 2, 4, 5);
+      ctx.fillRect(ox + 29, oy + 2, 4, 5);
+      ctx.fillRect(ox - 1, oy + 30, 4, 5);
+      ctx.fillRect(ox + 29, oy + 30, 4, 5);
+      // Gate opening (top center)
+      ctx.fillStyle = '#b89b6a';
+      ctx.fillRect(ox + 12, oy + 4, 8, 3);
+      // Gate posts
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(ox + 10, oy, 3, 8);
+      ctx.fillRect(ox + 19, oy, 3, 8);
+      // Shield above gate (crossed swords)
+      ctx.fillStyle = '#8b6e3b';
+      ctx.fillRect(ox + 13, oy - 4, 6, 5);
+      ctx.fillStyle = '#c0c0c0';
+      ctx.fillRect(ox + 14, oy - 6, 1, 8);
+      ctx.fillRect(ox + 17, oy - 6, 1, 8);
+      // Banner poles
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox - 3, oy - 6, 2, 14);
+      ctx.fillRect(ox + 33, oy - 6, 2, 14);
+      // Red banners
+      ctx.fillStyle = '#c04040';
+      ctx.fillRect(ox - 5, oy - 6, 4, 8);
+      ctx.fillRect(ox + 33, oy - 6, 4, 8);
+      ctx.fillStyle = '#d05050';
+      ctx.fillRect(ox - 4, oy - 5, 2, 6);
+      ctx.fillRect(ox + 34, oy - 5, 2, 6);
+    }
+  }
 
-      // Skill level
-      if (loc.skill && activeSlot >= 0) {
-        var lvl = getSkillLevel(activeSlot, loc.skill);
-        ctx.fillStyle = '#ffdd44';
-        ctx.strokeText('Lv ' + lvl, loc.x, loc.y + 32);
-        ctx.fillText('Lv ' + lvl, loc.x, loc.y + 32);
+  // ── Animated Location Parts ─────────────────────
+  function drawAnimatedLocationParts(ctx) {
+    for (var i = 0; i < MAP_LOC_ORDER.length; i++) {
+      var id = MAP_LOC_ORDER[i];
+      var loc = MAP_LOCATIONS[id];
+      var ox = loc.x - 16, oy = loc.y - 24;
+
+      if (id === 'town') {
+        // Chimney smoke
+        drawSmoke(ctx, ox + 25, oy - 10, smokeFrame, 0);
+      } else if (id === 'mine') {
+        // Two torches flanking cave entrance
+        drawTorch(ctx, ox + 4, oy + 12, smokeFrame, 0);
+        drawTorch(ctx, ox + 26, oy + 12, smokeFrame, 7);
+      } else if (id === 'smithy') {
+        // Chimney smoke
+        drawSmoke(ctx, ox + 6, oy - 12, smokeFrame, 3);
+        // Sparks from anvil
+        drawSparks(ctx, ox + 37, oy + 20, smokeFrame);
+      } else if (id === 'arena') {
+        // Two torches at gate
+        drawTorch(ctx, ox + 10, oy - 2, smokeFrame, 5);
+        drawTorch(ctx, ox + 20, oy - 2, smokeFrame, 9);
       }
     }
   }
 
-  function drawLocationMarker(ctx, id, x, y) {
-    var ox = x - 10, oy = y - 14;
-    if (id === 'town') {
-      // House: brown walls, red roof, door
-      ctx.fillStyle = '#8b5e2b';
-      ctx.fillRect(ox, oy + 6, 20, 12);
-      ctx.fillStyle = '#c44030';
-      ctx.fillRect(ox - 2, oy + 2, 24, 6);
-      ctx.fillStyle = '#a83020';
-      ctx.fillRect(ox, oy, 20, 4);
-      ctx.fillStyle = '#4a2a10';
-      ctx.fillRect(ox + 8, oy + 10, 5, 8);
-      ctx.fillStyle = '#f0e040';
-      ctx.fillRect(ox + 11, oy + 13, 1, 1);
-    } else if (id === 'mine') {
-      // Cave entrance
-      ctx.fillStyle = '#666666';
-      ctx.fillRect(ox, oy + 4, 20, 14);
+  // ── Animation Helpers ───────────────────────────
+  function drawSmoke(ctx, x, y, frame, seed) {
+    var particles = 4;
+    ctx.globalAlpha = 0.4;
+    for (var i = 0; i < particles; i++) {
+      var t = ((frame + seed * 17 + i * 12) % 60) / 60;
+      var py = y - t * 18;
+      var px = x + Math.sin(t * 4 + i) * 3;
+      var a = 0.4 * (1 - t);
+      if (a <= 0) continue;
+      ctx.globalAlpha = a;
       ctx.fillStyle = '#888888';
-      ctx.fillRect(ox + 2, oy + 2, 16, 4);
-      ctx.fillStyle = '#999999';
-      ctx.fillRect(ox + 4, oy, 12, 4);
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(ox + 4, oy + 6, 12, 12);
-      ctx.fillStyle = '#2a2a2a';
-      ctx.fillRect(ox + 6, oy + 4, 8, 14);
-      // Pickaxe
-      ctx.fillStyle = '#8b5e2b';
-      ctx.fillRect(ox + 16, oy + 2, 2, 10);
-      ctx.fillStyle = '#a0a0a0';
-      ctx.fillRect(ox + 14, oy, 6, 3);
-    } else if (id === 'dock') {
-      // Wooden planks into water
-      ctx.fillStyle = '#8b6e3b';
-      ctx.fillRect(ox, oy + 8, 20, 4);
-      ctx.fillRect(ox, oy + 14, 20, 4);
-      ctx.fillStyle = '#6b4e2b';
-      ctx.fillRect(ox + 2, oy + 4, 3, 14);
-      ctx.fillRect(ox + 15, oy + 4, 3, 14);
-      // Fishing rod
-      ctx.fillStyle = '#5a3a1a';
-      ctx.fillRect(ox + 18, oy, 2, 12);
-      ctx.fillStyle = '#cccccc';
-      ctx.fillRect(ox + 19, oy, 1, 1);
-    } else if (id === 'forest') {
-      // Tree cluster
-      ctx.fillStyle = '#5a3a1a';
-      ctx.fillRect(ox + 4, oy + 10, 3, 8);
-      ctx.fillRect(ox + 13, oy + 10, 3, 8);
-      ctx.fillStyle = '#2d7a28';
-      ctx.fillRect(ox + 1, oy + 2, 9, 10);
-      ctx.fillRect(ox + 10, oy + 2, 9, 10);
-      ctx.fillStyle = '#3a9a34';
-      ctx.fillRect(ox + 3, oy, 5, 8);
-      ctx.fillRect(ox + 12, oy, 5, 8);
-      ctx.fillStyle = '#4ab044';
-      ctx.fillRect(ox + 4, oy + 2, 3, 4);
-      ctx.fillRect(ox + 13, oy + 2, 3, 4);
-    } else if (id === 'smithy') {
-      // Anvil + orange glow
-      ctx.fillStyle = '#ff8030';
-      ctx.globalAlpha = 0.3;
-      ctx.fillRect(ox - 2, oy - 2, 24, 24);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = '#555555';
-      ctx.fillRect(ox + 4, oy + 6, 12, 8);
-      ctx.fillStyle = '#444444';
-      ctx.fillRect(ox + 2, oy + 4, 16, 4);
-      ctx.fillStyle = '#333333';
-      ctx.fillRect(ox + 6, oy + 2, 8, 4);
-      ctx.fillStyle = '#666666';
-      ctx.fillRect(ox + 6, oy + 14, 3, 4);
-      ctx.fillRect(ox + 11, oy + 14, 3, 4);
-      // Sparks
-      ctx.fillStyle = '#ffaa30';
-      ctx.fillRect(ox + 7, oy, 1, 1);
-      ctx.fillRect(ox + 12, oy + 1, 1, 1);
-      ctx.fillRect(ox + 9, oy - 1, 1, 1);
-    } else if (id === 'arena') {
-      // Fenced ring with crossed swords
-      ctx.fillStyle = '#8b6e3b';
-      ctx.fillRect(ox, oy + 2, 20, 2);
-      ctx.fillRect(ox, oy + 16, 20, 2);
-      ctx.fillRect(ox, oy + 2, 2, 16);
-      ctx.fillRect(ox + 18, oy + 2, 2, 16);
-      // Fence posts
-      ctx.fillRect(ox + 6, oy, 2, 4);
-      ctx.fillRect(ox + 12, oy, 2, 4);
-      // Crossed swords
-      ctx.fillStyle = '#c0c0c0';
-      ctx.fillRect(ox + 6, oy + 4, 2, 12);
-      ctx.fillRect(ox + 12, oy + 4, 2, 12);
-      ctx.fillStyle = '#8b5e2b';
-      ctx.fillRect(ox + 5, oy + 12, 4, 2);
-      ctx.fillRect(ox + 11, oy + 12, 4, 2);
+      var s = 2 + t * 3;
+      ctx.fillRect(px, py, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawTorch(ctx, x, y, frame, seed) {
+    // Base
+    ctx.fillStyle = '#6b4e2b';
+    ctx.fillRect(x, y + 2, 2, 6);
+    // Flame (flickers)
+    var flicker = ((frame + seed * 13) % 6);
+    var colors = ['#ff6020','#ffa040','#ff8030','#ffc040','#ff6020','#ff8030'];
+    ctx.fillStyle = colors[flicker];
+    ctx.fillRect(x - 1, y - 2, 4, 4);
+    ctx.fillStyle = '#ffd060';
+    ctx.fillRect(x, y - 1, 2, 2);
+    // Glow
+    ctx.fillStyle = '#ff8030';
+    ctx.globalAlpha = 0.15;
+    ctx.fillRect(x - 3, y - 4, 8, 8);
+    ctx.globalAlpha = 1;
+  }
+
+  function drawSparks(ctx, x, y, frame) {
+    var sparks = 5;
+    for (var i = 0; i < sparks; i++) {
+      var t = ((frame + i * 11) % 30) / 30;
+      if (t > 0.8) continue;
+      var px = x + Math.sin(t * 6 + i * 2) * 6;
+      var py = y - t * 14;
+      ctx.globalAlpha = 0.8 * (1 - t);
+      var sparkColors = ['#ffcc30','#ffaa20','#ff8810','#ffdd50','#ffbb30'];
+      ctx.fillStyle = sparkColors[i];
+      ctx.fillRect(px, py, 1, 1);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Location Labels ─────────────────────────────
+  function drawLocationLabels(ctx) {
+    for (var i = 0; i < MAP_LOC_ORDER.length; i++) {
+      var id = MAP_LOC_ORDER[i];
+      var loc = MAP_LOCATIONS[id];
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.strokeText(loc.name, loc.x, loc.y + 30);
+      ctx.fillText(loc.name, loc.x, loc.y + 30);
+
+      if (loc.skill && activeSlot >= 0) {
+        var lvl = getSkillLevel(activeSlot, loc.skill);
+        ctx.fillStyle = '#ffdd44';
+        ctx.strokeText('Lv ' + lvl, loc.x, loc.y + 42);
+        ctx.fillText('Lv ' + lvl, loc.x, loc.y + 42);
+      }
     }
   }
 
+  // ── Map Border Frame ────────────────────────────
+  function drawMapBorder(ctx) {
+    // Dark outer border
+    ctx.strokeStyle = '#2a1a0a';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, MAP_W - 4, MAP_H - 4);
+    // Gold inner border
+    ctx.strokeStyle = '#c0a040';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(5, 5, MAP_W - 10, MAP_H - 10);
+    // Corner ornament squares
+    ctx.fillStyle = '#c0a040';
+    var cs = 5;
+    ctx.fillRect(3, 3, cs, cs);
+    ctx.fillRect(MAP_W - 3 - cs, 3, cs, cs);
+    ctx.fillRect(3, MAP_H - 3 - cs, cs, cs);
+    ctx.fillRect(MAP_W - 3 - cs, MAP_H - 3 - cs, cs, cs);
+  }
+
+  // ── Player Drawing ──────────────────────────────
   function drawPlayer(ctx) {
     var frames = CHAR_FRAMES[playerDir];
     if (!frames) return;
@@ -1128,35 +1644,58 @@
     var ox = Math.round(playerPos.x) - 8 * s;
     var oy = Math.round(playerPos.y) - 12 * s;
 
+    // Shadow ellipse
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(Math.round(playerPos.x), Math.round(playerPos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     for (var i = 0; i < frame.length; i++) {
       var px = frame[i];
-      ctx.fillStyle = CHAR_COLORS[parseInt(px[2])];
+      var ci = parseInt(px[2], 16);
+      ctx.fillStyle = CHAR_COLORS[ci];
       ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
     }
   }
 
+  // ── Enter Prompt (OSRS style) ───────────────────
   function drawEnterPrompt(ctx) {
     if (!playerAtLocation) return;
     var loc = MAP_LOCATIONS[playerAtLocation];
     if (!loc) return;
 
-    var text = '> Enter ' + loc.name;
-    ctx.font = 'bold 10px monospace';
+    var text = 'Enter ' + loc.name;
+    ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
     var tw = ctx.measureText(text).width;
     var px = playerPos.x;
-    var py = playerPos.y - 30;
+    var py = playerPos.y - 36;
+    var bw = tw + 20, bh = 22;
+    var bx = px - bw / 2, by = py - 12;
 
-    // Box
-    ctx.fillStyle = 'rgba(0,0,0,0.75)';
-    ctx.fillRect(px - tw / 2 - 6, py - 10, tw + 12, 16);
-    ctx.strokeStyle = '#ffdd44';
+    // Dark background with drop shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(bx + 2, by + 2, bw, bh);
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(bx, by, bw, bh);
+    // Outer gold border
+    ctx.strokeStyle = '#c0a040';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bx, by, bw, bh);
+    // Inner gold border
+    ctx.strokeStyle = '#e0c060';
     ctx.lineWidth = 1;
-    ctx.strokeRect(px - tw / 2 - 6, py - 10, tw + 12, 16);
+    ctx.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
 
     // Text
     ctx.fillStyle = '#ffdd44';
     ctx.fillText(text, px, py + 2);
+
+    // Click arrow indicator
+    var arrowPhase = Math.sin(smokeFrame * 0.08) * 2;
+    ctx.fillStyle = '#ffdd44';
+    ctx.fillRect(px - 2, by + bh + 2 + arrowPhase, 4, 2);
+    ctx.fillRect(px - 1, by + bh + 4 + arrowPhase, 2, 2);
   }
 
   // ── Map Click Handling ──────────────────────────
@@ -1171,8 +1710,8 @@
     // Check enter prompt click
     if (enterPromptVisible && playerAtLocation) {
       var loc = MAP_LOCATIONS[playerAtLocation];
-      var promptY = playerPos.y - 30;
-      if (Math.abs(cx - playerPos.x) < 60 && Math.abs(cy - promptY) < 12) {
+      var promptY = playerPos.y - 36;
+      if (Math.abs(cx - playerPos.x) < 80 && Math.abs(cy - promptY) < 16) {
         onEnterLocation(playerAtLocation);
         return;
       }
