@@ -636,15 +636,82 @@
   display: none;
 }
 
-/* Skills list in chatbox: compact, display-only */
+/* ── Skills Grid (OSRS-style compact grid) ──── */
+.osrs-chatbox .skills-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
 .osrs-chatbox .skill-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 4px 6px;
+  margin-bottom: 0;
   cursor: default;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.osrs-chatbox .skill-row:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .osrs-chatbox .skill-row.selected {
   border-color: transparent;
-  background: transparent;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.osrs-chatbox .skill-row.mastered {
+  border-color: color-mix(in srgb, #ffd700 30%, transparent);
+}
+
+.osrs-chatbox .skill-icon {
+  font-size: 0.9rem;
+  width: 1.1rem;
+}
+
+.osrs-chatbox .skill-icon-sprite {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.osrs-chatbox .skill-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.osrs-chatbox .skill-name {
+  font-size: 0.7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.osrs-chatbox .skill-level {
+  font-size: 0.7rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.osrs-chatbox .skill-xp-bar {
+  display: none;
+}
+
+/* Total level footer in skills tab */
+.osrs-skills-total {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  padding: 3px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  margin-top: 2px;
 }
 
 /* ── Location Pane (in chatbox) ─────────────── */

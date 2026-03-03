@@ -1520,7 +1520,11 @@
       }
     }
     var totalEl = $('skills-total-levels');
-    if (totalEl) totalEl.textContent = getTotalLevels();
+    var total = getTotalLevels();
+    if (totalEl) totalEl.textContent = total;
+    // Update chatbox OSRS grid total (RPG mode)
+    var gridTotal = $('osrs-skills-total');
+    if (gridTotal) gridTotal.textContent = 'Total Level: ' + total;
   }
 
   // ── Render right panel ────────────────────────

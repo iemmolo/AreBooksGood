@@ -262,6 +262,15 @@ Pet Skills Expansion — Phase 2
 - [x] Star Shower → 2x XP only, Mastery → +5% XP, Mining perks → XP bonuses
 - [ ] Rebuild tool system using bar crafting (TOOL_BAR_COSTS, crafting UI, inventory integration)
 
+### Phase 6D.6: Collection Logs for All Skills (Location Tab)
+- [ ] Fishing collection log: state.skills.fishing.log — fishCaught{}, totalRare, goldenCatches, sizes{}
+- [ ] Woodcutting collection log: state.skills.woodcutting.log — treesChopped{}, birdNests, doubleChops
+- [ ] Smithing collection log: state.skills.smithing.log — barsSmelted{}, itemsForged{}, masterworks, perfectSmelts
+- [ ] Combat collection log: state.skills.combat.log — enemiesKilled, crits, dodges, deaths, potionsUsed
+- [ ] Update __RPG_SKILLS_API.renderCollectionLogInto() to handle all 5 skills (currently mining-only)
+- [ ] Track stats in each skill's action handlers (onFishCatch, onTreeChop, onSmelt, onForge, onCombatAction)
+- [ ] State migration for new log fields (safe getMiningLog-style accessors for each)
+
 ### Phase 6E: Combat Integration
 - [ ] Fish as food (consume from inventory → heal HP in combat mini-game)
 - [ ] Potions craftable or buyable (using sprites from static/images/skills/potions/)

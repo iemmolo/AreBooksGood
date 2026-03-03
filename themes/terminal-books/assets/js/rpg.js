@@ -638,13 +638,21 @@
     var charPane = $('osrs-chat-character');
     var milestonesPane = $('osrs-chat-milestones');
 
-    // Skills pane: skill list (display-only in RPG mode)
+    // Skills pane: skill list as OSRS-style grid (display-only in RPG mode)
     var skillsList = $('skills-list');
     if (skillsList && skillsPane) {
       skillsPane.appendChild(skillsList);
       var selectedRows = skillsList.querySelectorAll('.skill-row.selected');
       for (var i = 0; i < selectedRows.length; i++) {
         selectedRows[i].classList.remove('selected');
+      }
+      // Add total level footer inside the grid
+      if (!$('osrs-skills-total')) {
+        var totalEl = document.createElement('div');
+        totalEl.className = 'osrs-skills-total';
+        totalEl.id = 'osrs-skills-total';
+        totalEl.textContent = 'Total Level: 5';
+        skillsList.appendChild(totalEl);
       }
     }
 
@@ -817,7 +825,11 @@
     var nameEl = $('rpg-game-topbar-name');
     var lvlEl = $('rpg-game-topbar-level');
     if (nameEl) nameEl.textContent = slot.name;
-    if (lvlEl) lvlEl.textContent = 'Total Lv: ' + getTotalLevel(activeSlot);
+    var total = getTotalLevel(activeSlot);
+    if (lvlEl) lvlEl.textContent = 'Total Lv: ' + total;
+    // Update chatbox skills grid total
+    var gridTotal = $('osrs-skills-total');
+    if (gridTotal) gridTotal.textContent = 'Total Level: ' + total;
   }
 
   function updateCharInfo() {
