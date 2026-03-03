@@ -385,11 +385,33 @@
   height: 100%;
 }
 
-.osrs-chatbox-welcome {
-  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+/* ── Game Message Log ──────────────────────────── */
+.osrs-game-msg {
+  padding: 2px 0;
   font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.osrs-game-msg--system {
+  color: color-mix(in srgb, var(--accent) 70%, var(--foreground));
   font-style: italic;
-  padding: 4px 0;
+}
+
+.osrs-game-msg--travel {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.osrs-game-msg--arrival {
+  color: var(--accent);
+}
+
+.osrs-game-msg--enter {
+  color: var(--foreground);
+}
+
+.osrs-game-msg--return {
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  font-style: italic;
 }
 
 .osrs-chatbox-empty {
@@ -555,12 +577,9 @@
   display: none;
 }
 
-#rpg-game-screen {
-  position: relative;
-}
-
-/* Reserve space at bottom so content isn't hidden behind the chatbox */
+/* Game panel is the positioning parent for the chatbox */
 .rpg-page .skills-game-panel {
+  position: relative;
   padding-bottom: 180px;
 }
 

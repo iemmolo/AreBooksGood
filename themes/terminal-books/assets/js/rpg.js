@@ -28,6 +28,16 @@
     arena:  { x: 0, y: 0 }       // Sword (placeholder — rework later)
   };
 
+  // ── Location Flavor Text ─────────────────────
+  var LOCATION_FLAVOR = {
+    town:   'The townsfolk go about their business. A merchant beckons from his stall.',
+    mine:   'The clang of pickaxes echoes through the cavern. Ore veins glisten in the torchlight.',
+    dock:   'Gulls cry overhead. The salt air carries the promise of a good catch.',
+    forest: 'Sunlight filters through the canopy. Ancient oaks creak in the breeze.',
+    smithy: 'Heat rolls from the forge in waves. The anvil stands ready.',
+    arena:  'The roar of the crowd fills the air. Blades clash in the distance.'
+  };
+
   // ── Pet Data ─────────────────────────────────
   var PET_KEY = 'arebooksgood-pet';
   var petSpriteData = null;
@@ -270,6 +280,7 @@
   var createTargetSlot = -1;
   var osrsPanelSetUp = false;
   var programmaticSkillClick = false;
+  var centerMode = 'map';
 
   // ── Helpers ───────────────────────────────────
   function $(id) { return document.getElementById(id); }
@@ -404,14 +415,37 @@
     currentScreen = id;
   }
 
+  // ── Game Message Log ─────────────────────────
+  function addGameMessage(text, type) {
+    var pane = $('osrs-chat-game');
+    if (!pane) return;
+    var msg = document.createElement('div');
+    msg.className = 'osrs-game-msg osrs-game-msg--' + (type || 'system');
+    msg.textContent = text;
+    pane.appendChild(msg);
+    // Cap at 50 messages (skip non-msg children like #skills-game-log)
+    var msgs = pane.querySelectorAll('.osrs-game-msg');
+    while (msgs.length > 50) {
+      msgs[0].parentNode.removeChild(msgs[0]);
+      msgs = pane.querySelectorAll('.osrs-game-msg');
+    }
+    // Auto-scroll chatbox body
+    var body = $('osrs-chatbox-body');
+    if (body) body.scrollTop = body.scrollHeight;
+    // Auto-switch to Game tab only when on the map
+    if (centerMode === 'map') {
+      switchChatTab('game');
+    }
+  }
+
   // ── Center Panel Toggle ───────────────────────
   function showCenterContent(mode) {
+    centerMode = mode;
     var mapContainer = $('rpg-world-map-container');
     var gameHeader = $('skills-game-header');
     var gameArea = $('skills-game-area');
     var gameLog = $('skills-game-log');
     var skillTopbar = $('rpg-skill-topbar');
-    var welcomeMsg = $('osrs-chatbox-welcome');
 
     if (mode === 'skill') {
       if (mapContainer) mapContainer.style.display = 'none';
@@ -419,14 +453,12 @@
       if (gameArea) gameArea.style.display = '';
       if (gameLog) gameLog.style.display = '';
       if (skillTopbar) skillTopbar.style.display = '';
-      if (welcomeMsg) welcomeMsg.style.display = 'none';
     } else {
       if (mapContainer) mapContainer.style.display = 'block';
       if (gameHeader) gameHeader.style.display = 'none';
       if (gameArea) gameArea.style.display = 'none';
       if (gameLog) gameLog.style.display = 'none';
       if (skillTopbar) skillTopbar.style.display = 'none';
-      if (welcomeMsg) welcomeMsg.style.display = '';
     }
   }
 
@@ -637,8 +669,11 @@
     var gameLog = $('skills-game-log');
     if (gamePane && gameLog) gamePane.appendChild(gameLog);
 
-    // Create skill topbar at top of center game panel
+    // Move chatbox into skills-game-panel so it matches the play area width
     var gamePanel = $('skills-game-panel');
+    if (gamePanel && chatbox) gamePanel.appendChild(chatbox);
+
+    // Create skill topbar at top of center game panel
     var mapContainer = $('rpg-world-map-container');
     if (gamePanel && !$('rpg-skill-topbar')) {
       var topbar = document.createElement('div');
@@ -745,17 +780,21 @@
     // Set up OSRS floating panel (moves DOM nodes on first call)
     setupOsrsPanel();
 
-    // Update welcome message
-    var welcomeEl = $('osrs-chatbox-welcome');
-    if (welcomeEl) {
-      var pName = escapeHtml(meta.slots[slot].name);
-      if (isFirstLogin) {
-        welcomeEl.innerHTML = 'Welcome, ' + pName + '. This is your first time here — Jack greets you.';
-      } else if (Date.now() - prevLastPlayed < 300000) {
-        welcomeEl.innerHTML = 'Welcome back, ' + pName + '.';
-      } else {
-        welcomeEl.innerHTML = 'Welcome back, ' + pName + '. You last logged in ' + timeAgo(prevLastPlayed) + '.';
-      }
+    // Clear old game messages (preserve #skills-game-log)
+    var gamePane = $('osrs-chat-game');
+    if (gamePane) {
+      var oldMsgs = gamePane.querySelectorAll('.osrs-game-msg');
+      for (var m = 0; m < oldMsgs.length; m++) oldMsgs[m].parentNode.removeChild(oldMsgs[m]);
+    }
+
+    // Welcome message as first log entry
+    var pName = meta.slots[slot].name;
+    if (isFirstLogin) {
+      addGameMessage('Welcome, ' + pName + '. This is your first time here \u2014 Jack greets you.', 'system');
+    } else if (Date.now() - prevLastPlayed < 300000) {
+      addGameMessage('Welcome back, ' + pName + '.', 'system');
+    } else {
+      addGameMessage('Welcome back, ' + pName + '. You last logged in ' + timeAgo(prevLastPlayed) + '.', 'system');
     }
 
     // Show game screen
@@ -879,6 +918,11 @@
           playerAtLocation = MAP_LOC_ORDER[i];
           break;
         }
+      }
+      if (playerAtLocation) {
+        var arrivalName = MAP_LOCATIONS[playerAtLocation].name;
+        var flavor = LOCATION_FLAVOR[playerAtLocation] || '';
+        addGameMessage('You arrive at ' + arrivalName + '. ' + flavor, 'arrival');
       }
       enterPromptVisible = !!playerAtLocation;
       savePlayerLocation();
@@ -1742,6 +1786,7 @@
         enterPromptVisible = false;
         playerFrame = 1;
         playerAnimTimer = 0;
+        addGameMessage('You set off towards ' + MAP_LOCATIONS[closest].name + '...', 'travel');
       }
     }
   }
@@ -1758,6 +1803,7 @@
     }
     if (!locData) return;
 
+    addGameMessage('You enter ' + loc.name + '.', 'enter');
     stopMapLoop();
     enterSkillLocation(locData);
   }
@@ -1802,6 +1848,7 @@
       window.__RPG_SKILLS_CLEANUP();
     }
 
+    addGameMessage('You return to the world map.', 'return');
     showCenterContent('map');
     enterPromptVisible = !!playerAtLocation;
     startMapLoop();
