@@ -228,6 +228,35 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] Forest extras sprite sheet (logs, stumps, vines, props) packed via pack-forest-extras.py
 - [x] Stump position jump fix (min-height + flex on .wc-tree-wrap)
 
+### Fishing Overhaul Polish — Round 1 (Done)
+- [x] Fix text selectability in game area — added user-select:none to .skills-game-area
+- [x] Fish dropdown auto-updates on level up — added updateFishDropdown() + wired into onLevelUp (also wired updateWcTreeDropdown)
+- [x] Build fishing sprite catalog tool — tools/fish-sprite-catalog.html (current fish, row scan, extras)
+- [x] Review FISH_SPRITES coordinates — all match ITEMS-REFERENCE.md; fixed Shark→Shrimp typo in sprite-catalog.html KNOWN_NAMES
+- [x] Extra fishing items cataloged (bait, shells, seafood, coral from rows 12 + 31)
+- [ ] Visual sprite verification — open tools/fish-sprite-catalog.html in browser to confirm each sprite matches its fish name
+
+### Fishing Overhaul Polish — Round 2: Bugs & Visuals (Done)
+- [x] Fix treasure chest emoji — was 🧰 (toolbox), changed to 💎 (gem)
+- [x] Fix fishing dropdown CSS class — renamed smithing-recipe-select → skill-recipe-select (mining/fishing/WC all use shared class now)
+- [x] Fix Kraken perk description — netMaster now says "Size bonus multipliers doubled + enables Kraken events"
+- [x] Fish sprites inside fishing spots — 48x48 sprite from FISH_SPRITES rendered in each spot, fades on cast, restores on respawn
+- [x] Catch splash animation — 8 water droplets burst outward from spot on fish catch (CSS keyframe + JS spawner)
+- [x] Responsive fish sprite scaling — 40px on tablet, 32px on phone
+
+### Fishing Overhaul Polish — Round 3: Future Improvements (TODO)
+- [ ] Replace bobber emoji (🎣) with pixel art sprite or CSS element
+- [ ] Replace event emojis (🐟🐟🐟, 🦈, 🦑) with sprite-based icons
+- [ ] Tier-colored spot borders — green for low-tier, blue mid, purple high-tier fish using TIER_COLORS
+- [ ] HP bar color transition — green→yellow→red as fish HP drops (struggle feedback)
+- [ ] Size visual feedback — scale pulse on fish particle for Large/Huge catches
+- [ ] Combo multiplier display — show "(1.5x)" next to "Combo x5!" text
+- [ ] Respawn ripple animation — subtle water ripple CSS during spot respawn instead of just "2s" text
+- [ ] Waiting phase mini-game — "keep line steady" click zone during cast wait to reduce bite time
+- [ ] Tension bar reel mechanic — click speed affects tension, too fast = line snap, too slow = escape
+- [ ] Event mechanical variety — School = click fish swimming across, Treasure = hold-to-pull strength bar
+- [ ] Spot bite indicator — more prominent visual for which spots have active bites (screen edge glow, pulsing border)
+
 ### Fishing Overhaul (Done)
 - [x] FISH_HP map (12 fish, HP 1-5) — multi-hit system matching mining/WC
 - [x] 3-spot layout with flex row, bottom-aligned (mirrors mining rocks)

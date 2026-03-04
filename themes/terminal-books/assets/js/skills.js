@@ -29,7 +29,7 @@
       { id: 'bigGame', name: 'Big Game', level: 45, desc: 'Large/Huge fish more common' },
       { id: 'doubleCatch', name: 'Double Catch', level: 60, desc: '10% chance for 2x fish' },
       { id: 'patience', name: 'Patience', level: 75, desc: 'Bite wait time reduced 25%' },
-      { id: 'netMaster', name: 'Net Master', level: 85, desc: 'Size bonus multipliers doubled' },
+      { id: 'netMaster', name: 'Net Master', level: 85, desc: 'Size bonus multipliers doubled + enables Kraken events' },
       { id: 'fishMastery', name: 'Fishing Mastery', level: 99, desc: 'Permanent 2x XP from all fishing' }
     ],
     woodcutting: [
@@ -1231,9 +1231,11 @@
       }
     }
 
-    // Update ore dropdown on mining level-up (adds newly unlocked ores without resetting game state)
-    if (skill === 'mining' && skill === activeSkill) {
-      updateMiningOreDropdown();
+    // Update resource dropdown on level-up (adds newly unlocked resources without resetting game state)
+    if (skill === activeSkill) {
+      if (skill === 'mining') updateMiningOreDropdown();
+      if (skill === 'fishing') updateFishDropdown();
+      if (skill === 'woodcutting') updateWcTreeDropdown();
     }
   }
 
@@ -3492,7 +3494,7 @@
     var selectWrap = document.createElement('div');
     selectWrap.className = 'mining-ore-select-wrap';
     var sel = document.createElement('select');
-    sel.className = 'smithing-recipe-select';
+    sel.className = 'skill-recipe-select';
     sel.id = 'mining-ore-select';
     var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
@@ -4357,6 +4359,56 @@
     fishingClouds = [];
   }
 
+  // ── Fishing dropdown update on level-up ─────
+  function updateFishDropdown() {
+    var sel = $('fishing-select');
+    if (!sel) return;
+    var level = state.skills.fishing.level;
+    var resources = SKILLS.fishing.resources;
+    var oldVal = parseInt(sel.value);
+    sel.innerHTML = '';
+    var highestIdx = 0;
+    for (var si = 0; si < resources.length; si++) {
+      if (resources[si].level > level) continue;
+      highestIdx = si;
+      var opt = document.createElement('option');
+      opt.value = si;
+      opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
+      sel.appendChild(opt);
+    }
+    if (highestIdx > oldVal) {
+      sel.value = highestIdx;
+      selectedFish = highestIdx;
+      updateGameHeader();
+    } else {
+      sel.value = oldVal;
+    }
+  }
+
+  // ── Fishing catch splash ────────────────────
+  function spawnFishSplash(spotEl) {
+    var rect = spotEl.getBoundingClientRect();
+    var area = $('skills-game-area');
+    if (!area) return;
+    var areaRect = area.getBoundingClientRect();
+    var cx = rect.left - areaRect.left + rect.width / 2;
+    var cy = rect.top - areaRect.top + rect.height / 2;
+    for (var i = 0; i < 8; i++) {
+      var drop = document.createElement('div');
+      drop.className = 'fish-splash-drop';
+      var angle = (Math.PI * 2 / 8) * i + (Math.random() - 0.5) * 0.4;
+      var dist = 20 + Math.random() * 25;
+      var dx = Math.cos(angle) * dist;
+      var dy = Math.sin(angle) * dist - 15;
+      drop.style.left = cx + 'px';
+      drop.style.top = cy + 'px';
+      drop.style.setProperty('--dx', dx + 'px');
+      drop.style.setProperty('--dy', dy + 'px');
+      area.appendChild(drop);
+      setTimeout(function(el) { return function() { if (el.parentNode) el.parentNode.removeChild(el); }; }(drop), 600);
+    }
+  }
+
   // ── Fishing HP bar helper ───────────────────
   function updateFishHpBar(idx) {
     var bar = $('fish-hp-bar-' + idx);
@@ -4412,7 +4464,7 @@
     var selectWrap = document.createElement('div');
     selectWrap.className = 'fishing-select-wrap';
     var sel = document.createElement('select');
-    sel.className = 'smithing-recipe-select';
+    sel.className = 'skill-recipe-select';
     sel.id = 'fishing-select';
     var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
@@ -4448,6 +4500,17 @@
       var spot = document.createElement('div');
       spot.className = 'fishing-spot';
       spot.setAttribute('data-idx', i);
+
+      // Fish sprite inside spot
+      var fishPos = FISH_SPRITES[res.name];
+      if (fishPos) {
+        var fishSprite = createSpriteEl(fishPos.sheet || 'items_sheet', fishPos.x, fishPos.y, 16, 16, 48, 48);
+        if (fishSprite) {
+          fishSprite.className = 'skill-sprite fishing-fish-sprite';
+          fishSprite.id = 'fish-sprite-' + i;
+          spot.appendChild(fishSprite);
+        }
+      }
 
       // Bobber
       var bobber = document.createElement('div');
@@ -4520,6 +4583,8 @@
     var spot = document.querySelector('.fishing-spot[data-idx="' + idx + '"]');
     if (spot) {
       spot.classList.remove('waiting', 'bite', 'reeling', 'depleted');
+      var fishSpr = $('fish-sprite-' + idx);
+      if (fishSpr) fishSpr.style.opacity = '';
       var bobber = $('fish-bobber-' + idx);
       var line = $('fish-line-' + idx);
       var exclaim = $('fish-exclaim-' + idx);
@@ -4547,6 +4612,8 @@
       // ── Cast: idle → waiting ──
       fs.phase = 'waiting';
       spot.classList.add('waiting');
+      var fishSpr = $('fish-sprite-' + idx);
+      if (fishSpr) fishSpr.style.opacity = '0.3';
       var bobber = $('fish-bobber-' + idx);
       var line = $('fish-line-' + idx);
       if (bobber) bobber.classList.add('visible');
@@ -4702,6 +4769,8 @@
         var fishPos = FISH_SPRITES[res.name];
         if (fishPos) spawnSpriteParticle(area3, fishPos.sheet || 'fish', fishPos.x, fishPos.y);
         spawnParticle(area3, '+' + xpGain + ' XP', 'xp');
+        // Water splash burst
+        spawnFishSplash(spot);
       }
 
       onAction('fishing');
@@ -4741,6 +4810,9 @@
           if (ii !== -1) fishSpotRespawnIntervals.splice(ii, 1);
           spotRef.classList.remove('depleted');
           if (timerEl.parentNode) timerEl.parentNode.removeChild(timerEl);
+          // Restore fish sprite
+          var respawnSpr = $('fish-sprite-' + spotIdx);
+          if (respawnSpr) respawnSpr.style.opacity = '';
           var curRes = getSelectedFishResource();
           var newMaxHp = FISH_HP[curRes.name] || 1;
           fishSpotState[spotIdx] = { phase: 'idle', hp: newMaxHp, maxHp: newMaxHp, biteTimer: null, missTimer: null };
@@ -4842,7 +4914,7 @@
     var el = createFishingEventSpot('treasure-chest', 'Treasure Chest!', 10000);
     if (!el) { cleanupFishingEvent(); return; }
 
-    el.innerHTML += '<div class="fishing-event-icon">\uD83E\uDDF0</div>';
+    el.innerHTML += '<div class="fishing-event-icon">\uD83D\uDC8E</div>';
     var chestHp = { hp: 3, maxHp: 3 };
     var hpBar = document.createElement('div');
     hpBar.className = 'fish-hp-bar';
@@ -5171,7 +5243,7 @@
     var selectWrap = document.createElement('div');
     selectWrap.className = 'wc-tree-select-wrap';
     var sel = document.createElement('select');
-    sel.className = 'smithing-recipe-select';
+    sel.className = 'skill-recipe-select';
     sel.id = 'wc-tree-select';
     var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
