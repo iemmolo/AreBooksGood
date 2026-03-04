@@ -671,7 +671,7 @@
   background-position: -700px -504px;
 }
 
-.osrs-tab[data-side-tab="character"] {
+.osrs-tab[data-side-tab="pets"] {
   background-size: 1008px 980px;
   background-position: 0px -224px;
 }
@@ -1006,6 +1006,197 @@
   .rpg-location-tile { padding: 10px 6px; }
   .rpg-location-name { font-size: 0.85em; }
   .rpg-location-desc { display: none; }
+}
+
+/* ── RPG Pet Tab (Side Panel) ────────────────── */
+.rpg-pet-follower-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.rpg-pet-follower-slot .rpg-pet-follower-label {
+  font-size: 0.7em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rpg-pet-follower-slot .rpg-pet-follower-name {
+  font-size: 0.8em;
+  color: var(--accent);
+}
+
+.rpg-pet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 42px);
+  gap: 3px;
+}
+
+.rpg-pet-cell {
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+  transition: border-color 0.15s;
+}
+
+.rpg-pet-cell:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.rpg-pet-cell.rpg-pet-following {
+  border-color: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.rpg-pet-cell.rpg-pet-stationed {
+  opacity: 0.6;
+}
+
+.rpg-pet-status {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--background);
+}
+
+.rpg-pet-status.rpg-pet-status-follow { background: var(--accent); }
+.rpg-pet-status.rpg-pet-status-station { background: #6688cc; }
+
+.rpg-pet-cell .rpg-pet-loc-tag {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  font-size: 0.45em;
+  text-align: center;
+  background: color-mix(in srgb, #000 70%, transparent);
+  color: #aaa;
+  line-height: 1.3;
+  padding: 0 1px;
+}
+
+/* Pet action popup */
+.rpg-pet-popup {
+  position: absolute;
+  z-index: 200;
+  background: var(--background);
+  border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, #000 40%, transparent);
+  padding: 10px;
+  width: 180px;
+  font-size: 0.8em;
+  animation: rpgFadeIn 0.15s ease;
+}
+
+.rpg-pet-popup-name {
+  font-size: 1em;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.rpg-pet-popup-info {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-bottom: 6px;
+}
+
+.rpg-pet-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.rpg-pet-stat-label {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  text-transform: uppercase;
+}
+
+.rpg-pet-stat-val {
+  font-size: 0.85em;
+  color: var(--foreground);
+}
+
+.rpg-pet-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rpg-pet-popup-actions .rpg-btn {
+  padding: 4px 8px;
+  font-size: 0.85em;
+  width: 100%;
+  text-align: center;
+}
+
+.rpg-pet-popup-status {
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  margin-top: 4px;
+  text-align: center;
+  font-style: italic;
+}
+
+.rpg-pet-empty {
+  font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  font-style: italic;
+  padding: 12px 4px;
+}
+
+/* Collection overlay (on map canvas) */
+.rpg-collect-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 150;
+  background: var(--background);
+  border: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 6px 24px color-mix(in srgb, #000 50%, transparent);
+  padding: 16px 20px;
+  text-align: center;
+  min-width: 200px;
+  animation: rpgFadeIn 0.3s ease;
+}
+
+.rpg-collect-overlay-title {
+  font-size: 1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.rpg-collect-overlay-time {
+  font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin-bottom: 8px;
+}
+
+.rpg-collect-overlay-rewards {
+  font-size: 0.85em;
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+.rpg-collect-overlay-rewards span {
+  color: var(--accent);
 }
 
 /* ── RPG Pet Store Modal ──────────────────────── */

@@ -43,6 +43,124 @@
   var petSpriteData = null;
   var petCatalog = null;
 
+  // ── RPG Pet System (per-slot, isolated from main site pets) ──
+  var RPG_EXCLUDED_PETS = ['cat', 'dragon', 'golem'];
+  var RPG_PET_DEFAULT_SKIN = 'alt';
+  var RPG_PET_BASE_STATS = {
+    common:    { hp: 80,  atk: 12, def: 8,  spd: 10, cri: 5 },
+    rare:      { hp: 100, atk: 15, def: 10, spd: 12, cri: 7 },
+    legendary: { hp: 130, atk: 20, def: 14, spd: 15, cri: 10 }
+  };
+  var RPG_TYPE_LEANINGS = {
+    fire:   'atk', aqua:  'def', nature: 'hp',
+    tech:   'spd', shadow:'cri', mystic: null
+  };
+  var RPG_STATION_SKILL_MAP = {
+    mine: 'mining', dock: 'fishing', forest: 'woodcutting',
+    smithy: 'smithing', arena: 'combat'
+  };
+  var RPG_SKILL_TYPE_BONUS = {
+    fire: 'smithing', aqua: 'fishing', nature: 'woodcutting',
+    tech: 'mining', shadow: 'combat', mystic: null
+  };
+
+  // Follower state
+  var followerSpriteSheet = null;
+  var followerFrameIdx = 0;
+  var followerPos = { x: 0, y: 0 };
+  var followerDir = 'down';
+  var followerPetId = null;
+  var FOLLOWER_SIZE = 24;
+  var FOLLOWER_TRAIL = 28;
+
+  // Stationed sprite cache: locationId → { img, frameIdx }
+  var stationedSpriteSheets = {};
+
+  function getRpgCreatures() {
+    if (!petCatalog || !petCatalog.creatures) return [];
+    var result = [];
+    for (var id in petCatalog.creatures) {
+      if (!petCatalog.creatures.hasOwnProperty(id)) continue;
+      if (RPG_EXCLUDED_PETS.indexOf(id) !== -1) continue;
+      result.push(id);
+    }
+    return result;
+  }
+
+  function getRpgCreaturesByTier(tier) {
+    var all = getRpgCreatures();
+    var result = [];
+    for (var i = 0; i < all.length; i++) {
+      if (petCatalog.creatures[all[i]].tier === tier) result.push(all[i]);
+    }
+    return result;
+  }
+
+  function getDefaultRpgPets() {
+    return {
+      follower: null,
+      stations: {},
+      owned: {},
+      pity: { common: 0, rare: 0, legendary: 0 },
+      totalHatched: 0
+    };
+  }
+
+  function getRpgPetState() {
+    if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return getDefaultRpgPets();
+    var s = meta.slots[activeSlot];
+    if (!s.rpgPets) s.rpgPets = getDefaultRpgPets();
+    return s.rpgPets;
+  }
+
+  function saveRpgPetState(rpgPets) {
+    if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return;
+    meta.slots[activeSlot].rpgPets = rpgPets;
+    saveMeta();
+  }
+
+  function getPetStatus(petId) {
+    var rp = getRpgPetState();
+    if (rp.follower === petId) return 'following';
+    for (var loc in rp.stations) {
+      if (rp.stations[loc] && rp.stations[loc].petId === petId) return 'stationed:' + loc;
+    }
+    return 'unassigned';
+  }
+
+  function getRpgPetStats(petId, level) {
+    if (!petCatalog || !petCatalog.creatures[petId]) return { hp: 0, atk: 0, def: 0, spd: 0, cri: 0 };
+    var c = petCatalog.creatures[petId];
+    var base = RPG_PET_BASE_STATS[c.tier] || RPG_PET_BASE_STATS.common;
+    var leaning = RPG_TYPE_LEANINGS[c.type];
+    var stats = {};
+    var keys = ['hp', 'atk', 'def', 'spd', 'cri'];
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      var val = base[k] * (1 + (level - 1) * 0.08);
+      if (leaning === k) val *= 1.15;
+      stats[k] = Math.floor(val);
+    }
+    return stats;
+  }
+
+  function rpgPetXpForLevel(lvl) {
+    return Math.floor(50 * Math.pow(1.08, lvl - 1));
+  }
+
+  function renderRpgPetSprite(petId, level) {
+    if (!petCatalog || !petCatalog.creatures[petId]) return null;
+    var spriteId = petCatalog.creatures[petId].spriteId;
+    if (window.PetSprites && window.PetSprites.renderPreview) {
+      return window.PetSprites.renderPreview(spriteId, level || 1, RPG_PET_DEFAULT_SKIN);
+    }
+    // Fallback: try without skin param
+    if (window.PetSprites && window.PetSprites.renderPreview) {
+      return window.PetSprites.renderPreview(spriteId, level || 1);
+    }
+    return null;
+  }
+
   // ── Map Constants ────────────────────────────
   var MAP_W = 1060, MAP_H = 660;
   var MAP_LOCATIONS = {
@@ -845,7 +963,8 @@
     meta.slots[createTargetSlot] = {
       name: name,
       created: now,
-      lastPlayed: now
+      lastPlayed: now,
+      rpgPets: getDefaultRpgPets()
     };
     meta.currentSlot = createTargetSlot;
     saveMeta();
@@ -873,7 +992,7 @@
     // Move DOM nodes from hidden panels into side panel panes
     var skillsPane = $('osrs-side-skills');
     var invPane = $('osrs-side-inventory');
-    var charPane = $('osrs-side-character');
+    var petsPane = $('osrs-side-pets');
     var milestonesPane = $('osrs-side-milestones');
 
     // Skills pane: skill list as OSRS-style grid (display-only in RPG mode)
@@ -898,13 +1017,14 @@
     var invPanel = $('skills-inv-panel');
     if (invPanel && invPane) invPane.appendChild(invPanel);
 
-    // Character pane: char info, pet assignment, idle status
+    // Pets pane: dynamically populated by renderPetTab()
+    // Move char info + pet assignment + idle status into skills pane footer instead
     var charInfo = $('rpg-char-info');
-    if (charInfo && charPane) charPane.appendChild(charInfo);
+    if (charInfo && skillsPane) skillsPane.appendChild(charInfo);
     var petSlot = $('skills-pet-slot');
-    if (petSlot && charPane) charPane.appendChild(petSlot);
+    if (petSlot && skillsPane) skillsPane.appendChild(petSlot);
     var idleStatus = $('skills-idle-status');
-    if (idleStatus && charPane) charPane.appendChild(idleStatus);
+    if (idleStatus && skillsPane) skillsPane.appendChild(idleStatus);
 
     // Milestones pane
     var milestones = $('skills-milestones');
@@ -1021,6 +1141,8 @@
     panel.classList.remove('collapsed');
     var toggle = $('osrs-side-panel-toggle');
     if (toggle) toggle.innerHTML = '&#9660;';
+    // Render pet tab contents when switching to it
+    if (tabId === 'pets') renderPetTab();
   }
 
   function onSideTabClick(e) {
@@ -1087,6 +1209,16 @@
     } else {
       addGameMessage('Welcome back, ' + pName + '. You last logged in ' + timeAgo(prevLastPlayed) + '.', 'system');
     }
+
+    // Preload pet sprites from per-slot state
+    var rpgPetsEntry = getRpgPetState();
+    if (rpgPetsEntry.follower && rpgPetsEntry.owned[rpgPetsEntry.follower]) {
+      loadFollowerSprite(rpgPetsEntry.follower);
+    } else {
+      followerSpriteSheet = null;
+      followerPetId = null;
+    }
+    preloadAllStationedSprites();
 
     // Show game screen
     showScreen('rpg-game-screen');
@@ -1191,6 +1323,10 @@
     smokeFrame = 0;
     initAnimatedEffects();
 
+    // Init follower position near player
+    followerPos.x = playerPos.x;
+    followerPos.y = playerPos.y + FOLLOWER_TRAIL;
+
     startMapLoop();
   }
 
@@ -1214,6 +1350,7 @@
 
     smokeFrame++;
     updatePlayer(dt);
+    updateFollowerPosition(dt);
     drawMap();
 
     mapAnimId = requestAnimationFrame(mapLoop);
@@ -1319,6 +1456,8 @@
     drawAnimatedWater(ctx);
     drawAnimatedEffects(ctx);
     drawAnimatedLocationParts(ctx);
+    drawStationedPets(ctx);
+    drawFollower(ctx);
     drawPlayer(ctx);
     drawLocationLabels(ctx);
     if (enterPromptVisible && playerAtLocation) {
@@ -2868,24 +3007,47 @@
     ctx.fillRect(bx + 2, by + 2, bw, bh);
     ctx.fillStyle = 'rgba(0,0,0,0.85)';
     ctx.fillRect(bx, by, bw, bh);
-    // Outer gold border
     ctx.strokeStyle = '#c0a040';
     ctx.lineWidth = 2;
     ctx.strokeRect(bx, by, bw, bh);
-    // Inner gold border
     ctx.strokeStyle = '#e0c060';
     ctx.lineWidth = 1;
     ctx.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
 
-    // Text
     ctx.fillStyle = '#ffdd44';
     ctx.fillText(text, px, py + 2);
 
-    // Click arrow indicator
     var arrowPhase = Math.sin(smokeFrame * 0.08) * 2;
     ctx.fillStyle = '#ffdd44';
     ctx.fillRect(px - 2, by + bh + 2 + arrowPhase, 4, 2);
     ctx.fillRect(px - 1, by + bh + 4 + arrowPhase, 2, 2);
+
+    // Collect prompt below if stationed pet has uncollected rewards
+    if (hasUncollectedRewards(playerAtLocation)) {
+      var rpgPets = getRpgPetState();
+      var station = rpgPets.stations[playerAtLocation];
+      if (station && station.petId && petCatalog.creatures[station.petId]) {
+        var petName = petCatalog.creatures[station.petId].name;
+        var elapsed = Date.now() - (station.lastCollected || station.stationedAt);
+        var collectText = 'Collect from ' + petName + ' \u2014 ' + formatDuration(elapsed);
+        ctx.font = 'bold 10px monospace';
+        var ctw = ctx.measureText(collectText).width;
+        var cpy = by + bh + 16;
+        var cbw = ctw + 16, cbh = 18;
+        var cbx = px - cbw / 2, cby = cpy - 10;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(cbx + 2, cby + 2, cbw, cbh);
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillRect(cbx, cby, cbw, cbh);
+        ctx.strokeStyle = '#66aa44';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cbx, cby, cbw, cbh);
+
+        ctx.fillStyle = '#88cc66';
+        ctx.fillText(collectText, px, cpy + 2);
+      }
+    }
   }
 
   // ── Map Click Handling ──────────────────────────
@@ -2897,6 +3059,15 @@
     var scaleY = MAP_H / rect.height;
     var cx = (e.clientX - rect.left) * scaleX;
     var cy = (e.clientY - rect.top) * scaleY;
+
+    // Check collect prompt click (below enter prompt)
+    if (enterPromptVisible && playerAtLocation && hasUncollectedRewards(playerAtLocation)) {
+      var collectY = playerPos.y - 36 + 22 + 16; // below enter prompt box
+      if (Math.abs(cx - playerPos.x) < 100 && Math.abs(cy - collectY) < 12) {
+        collectAtLocation(playerAtLocation);
+        return;
+      }
+    }
 
     // Check enter prompt click
     if (enterPromptVisible && playerAtLocation) {
@@ -3082,6 +3253,12 @@
     stopMapLoop();
     stopTownMapLoop();
     closePetStoreModal();
+    closePetPopup();
+
+    // Clear pet sprite refs
+    followerSpriteSheet = null;
+    followerPetId = null;
+    stationedSpriteSheets = {};
 
     if (activeSlot >= 0 && meta.slots[activeSlot]) {
       meta.slots[activeSlot].lastPlayed = Date.now();
@@ -3153,6 +3330,10 @@
     townLastTimestamp = 0;
     townStaticBuffer = null; // force re-render
 
+    // Init follower position in town
+    followerPos.x = 530;
+    followerPos.y = 580 + FOLLOWER_TRAIL;
+
     addGameMessage('You enter the Town Hub.', 'enter');
 
     if (skipFade) {
@@ -3184,6 +3365,10 @@
     enterPromptVisible = true;
     staticDirty = true;
 
+    // Reset follower position
+    followerPos.x = MAP_LOCATIONS.town.x;
+    followerPos.y = MAP_LOCATIONS.town.y + FOLLOWER_TRAIL;
+
     fadeTransition(function () {
       addGameMessage('You return to the world map.', 'return');
       showCenterContent('map');
@@ -3211,6 +3396,7 @@
     townLastTimestamp = ts;
     townSmokeFrame++;
     updateTownPlayer(dt);
+    updateTownFollowerPosition(dt);
     drawTownMap();
     townAnimId = requestAnimationFrame(townMapLoop);
   }
@@ -4004,6 +4190,7 @@
 
     // Animated parts
     drawTownAnimatedParts(ctx);
+    drawTownFollower(ctx);
     drawTownPlayer(ctx);
     drawTownLabels(ctx);
     if (townEnterPromptVisible && townPlayerAtLocation) {
@@ -4018,43 +4205,8 @@
   // ══  PET STORE MODAL                         ══
   // ══════════════════════════════════════════════
 
-  // PET_KEY already defined at top of file
-  var PITY_KEY = 'arebooksgood-pity';
-
-  function loadPetStateForShop() {
-    try {
-      var raw = localStorage.getItem(PET_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return { activePet: null, pets: {} };
-  }
-
-  function savePetStateForShop(state) {
-    try { localStorage.setItem(PET_KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  function loadPityState() {
-    try {
-      var raw = localStorage.getItem(PITY_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return { common: 0, rare: 0, legendary: 0 };
-  }
-
-  function savePityState(pity) {
-    try { localStorage.setItem(PITY_KEY, JSON.stringify(pity)); } catch (e) {}
-  }
-
-  function getCreaturesByTier(tier) {
-    if (!petCatalog || !petCatalog.creatures) return [];
-    var result = [];
-    for (var id in petCatalog.creatures) {
-      if (petCatalog.creatures.hasOwnProperty(id) && petCatalog.creatures[id].tier === tier) {
-        result.push(id);
-      }
-    }
-    return result;
-  }
+  // PET_KEY already defined at top of file — legacy, kept for reference
+  // RPG pet store now uses per-slot rpgPets state (no global reads/writes)
 
   function openPetStoreModal() {
     if (petStoreModalOpen) return;
@@ -4128,8 +4280,7 @@
   }
 
   function renderPetStoreContents() {
-    var petState = loadPetStateForShop();
-    var pity = loadPityState();
+    var rpgPets = getRpgPetState();
 
     // Balance
     var balEl = document.getElementById('rpg-petstore-balance');
@@ -4156,7 +4307,6 @@
         card.className = 'rpg-egg-card';
         card.style.borderColor = t.color;
 
-        // Egg visual
         var eggIcon = document.createElement('div');
         eggIcon.className = 'rpg-egg-icon';
         eggIcon.style.background = t.color;
@@ -4173,19 +4323,19 @@
         cost.textContent = eggDef.cost + (eggDef.currency === 'jb' ? ' JB' : ' Coins');
         card.appendChild(cost);
 
-        // Pool info
-        var pool = getCreaturesByTier(t.key);
+        // Pool from RPG creatures only (excludes cat/dragon/golem)
+        var pool = getRpgCreaturesByTier(t.key);
         var ownedCount = 0;
         for (var pi = 0; pi < pool.length; pi++) {
-          if (petState.pets && petState.pets[pool[pi]]) ownedCount++;
+          if (rpgPets.owned[pool[pi]]) ownedCount++;
         }
         var poolInfo = document.createElement('div');
         poolInfo.className = 'rpg-egg-pool';
         poolInfo.textContent = ownedCount + '/' + pool.length + ' owned';
         card.appendChild(poolInfo);
 
-        // Pity counter
-        var pityCount = pity[t.key] || 0;
+        // Pity counter from per-slot state
+        var pityCount = rpgPets.pity[t.key] || 0;
         var pityThreshold = t.key === 'legendary' ? 5 : t.key === 'rare' ? 8 : 6;
         if (pityCount > 0 && ownedCount < pool.length) {
           var pityEl = document.createElement('div');
@@ -4199,7 +4349,6 @@
           card.appendChild(pityEl);
         }
 
-        // Hatch button
         var canAfford = eggDef.currency === 'jb'
           ? (window.JackBucks && window.JackBucks.getBalance() >= eggDef.cost)
           : (window.Wallet && window.Wallet.getBalance() >= eggDef.cost);
@@ -4220,25 +4369,26 @@
     }
 
     // Collection grid
-    renderPetStoreCollection(petState);
+    renderPetStoreCollection(rpgPets);
   }
 
-  function renderPetStoreCollection(petState) {
+  function renderPetStoreCollection(rpgPets) {
     var collEl = document.getElementById('rpg-petstore-collection');
     if (!collEl || !petCatalog) return;
     collEl.innerHTML = '';
 
-    for (var id in petCatalog.creatures) {
-      if (!petCatalog.creatures.hasOwnProperty(id)) continue;
+    var rpgIds = getRpgCreatures();
+    for (var ri = 0; ri < rpgIds.length; ri++) {
+      var id = rpgIds[ri];
       var creature = petCatalog.creatures[id];
-      var owned = petState.pets && petState.pets[id];
+      var owned = rpgPets.owned[id];
 
       var cell = document.createElement('div');
       cell.className = 'rpg-petstore-pet-cell' + (owned ? ' rpg-petstore-pet-owned' : '');
 
-      if (owned && window.PetSprites && window.PetSprites.renderPreview) {
-        var level = petState.pets[id].level || 1;
-        var preview = window.PetSprites.renderPreview(creature.spriteId, level);
+      if (owned) {
+        var level = owned.level || 1;
+        var preview = renderRpgPetSprite(id, level);
         if (preview) {
           preview.style.width = '36px';
           preview.style.height = '36px';
@@ -4251,11 +4401,20 @@
       nameEl.textContent = owned ? creature.name : '???';
       cell.appendChild(nameEl);
 
-      if (petState.activePet === id) {
-        var activeTag = document.createElement('div');
-        activeTag.className = 'rpg-petstore-active-tag';
-        activeTag.textContent = 'Active';
-        cell.appendChild(activeTag);
+      if (owned) {
+        var status = getPetStatus(id);
+        if (status === 'following') {
+          var tag = document.createElement('div');
+          tag.className = 'rpg-petstore-active-tag';
+          tag.textContent = 'Following';
+          cell.appendChild(tag);
+        } else if (status.indexOf('stationed') === 0) {
+          var tag = document.createElement('div');
+          tag.className = 'rpg-petstore-active-tag';
+          tag.style.color = '#6688cc';
+          tag.textContent = 'Stationed';
+          cell.appendChild(tag);
+        }
       }
 
       collEl.appendChild(cell);
@@ -4274,22 +4433,22 @@
       if (!window.Wallet || window.Wallet.getBalance() < eggDef.cost) return;
     }
 
-    var pool = getCreaturesByTier(tier === 'common' ? 'common' : tier === 'rare' ? 'rare' : 'legendary');
+    // Use RPG creature pool (excludes cat/dragon/golem)
+    var pool = getRpgCreaturesByTier(tier);
     if (pool.length === 0) return;
 
-    var petState = loadPetStateForShop();
-    var pity = loadPityState();
+    var rpgPets = getRpgPetState();
 
-    // Pity system
+    // Pity system from per-slot state
     var pityThreshold = tier === 'legendary' ? 5 : tier === 'rare' ? 8 : 6;
-    var forceNew = pity[tier] >= pityThreshold;
+    var forceNew = (rpgPets.pity[tier] || 0) >= pityThreshold;
 
     // Roll creature
     var rolled;
     if (forceNew) {
       var unowned = [];
       for (var i = 0; i < pool.length; i++) {
-        if (!petState.pets || !petState.pets[pool[i]]) unowned.push(pool[i]);
+        if (!rpgPets.owned[pool[i]]) unowned.push(pool[i]);
       }
       rolled = unowned.length > 0
         ? unowned[Math.floor(Math.random() * unowned.length)]
@@ -4305,26 +4464,29 @@
       window.Wallet.deduct(eggDef.cost);
     }
 
-    var isDuplicate = petState.pets && petState.pets[rolled];
+    var isDuplicate = !!rpgPets.owned[rolled];
     var mergeXP = eggDef.dupMergeXP || 0;
 
     if (isDuplicate) {
-      petState.pets[rolled].mergeXP = (petState.pets[rolled].mergeXP || 0) + mergeXP;
-      pity[tier]++;
-    } else {
-      if (!petState.pets) petState.pets = {};
-      petState.pets[rolled] = {
-        level: 1, mood: 'happy', totalWins: 0, totalLosses: 0,
-        gamesWatched: 0, flingCount: 0, acquired: Date.now(), mergeXP: 0
-      };
-      if (!petState.activePet) {
-        petState.activePet = rolled;
+      // Duplicate: add XP to existing pet
+      rpgPets.owned[rolled].xp = (rpgPets.owned[rolled].xp || 0) + mergeXP;
+      // Check level up
+      var needed = rpgPetXpForLevel(rpgPets.owned[rolled].level);
+      if (rpgPets.owned[rolled].xp >= needed) {
+        var maxLv = petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].maxLevel : 3;
+        if (rpgPets.owned[rolled].level < maxLv) {
+          rpgPets.owned[rolled].level++;
+          rpgPets.owned[rolled].xp -= needed;
+        }
       }
-      pity[tier] = 0;
+      rpgPets.pity[tier] = (rpgPets.pity[tier] || 0) + 1;
+    } else {
+      rpgPets.owned[rolled] = { level: 1, xp: 0, skin: RPG_PET_DEFAULT_SKIN };
+      rpgPets.pity[tier] = 0;
     }
 
-    savePetStateForShop(petState);
-    savePityState(pity);
+    rpgPets.totalHatched = (rpgPets.totalHatched || 0) + 1;
+    saveRpgPetState(rpgPets);
 
     // Show result
     var resultEl = document.getElementById('rpg-petstore-result');
@@ -4333,14 +4495,12 @@
       resultEl.innerHTML = '';
 
       var creature = petCatalog.creatures[rolled];
-      if (creature && window.PetSprites && window.PetSprites.renderPreview) {
-        var preview = window.PetSprites.renderPreview(creature.spriteId, 1);
-        if (preview) {
-          preview.style.width = '64px';
-          preview.style.height = '64px';
-          preview.className = 'rpg-petstore-result-sprite';
-          resultEl.appendChild(preview);
-        }
+      var preview = renderRpgPetSprite(rolled, rpgPets.owned[rolled].level);
+      if (preview) {
+        preview.style.width = '64px';
+        preview.style.height = '64px';
+        preview.className = 'rpg-petstore-result-sprite';
+        resultEl.appendChild(preview);
       }
 
       var nameEl = document.createElement('div');
@@ -4355,24 +4515,693 @@
       resultEl.appendChild(tagEl);
     }
 
-    // Reload pet system if new active pet
-    if (!isDuplicate && petState.activePet === rolled) {
-      if (window.PetSystem && window.PetSystem.spawnNew) {
-        window.PetSystem.spawnNew();
-      } else if (window.PetSystem && window.PetSystem.reload) {
-        window.PetSystem.reload();
-      }
-    } else if (window.PetSystem && window.PetSystem.reload) {
-      window.PetSystem.reload();
-    }
-
     addGameMessage(isDuplicate
       ? 'The egg hatches... another ' + (petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled) + '. (+' + mergeXP + ' merge XP)'
       : 'The egg hatches! A ' + (petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled) + ' emerges!',
       'system');
 
-    // Re-render modal
+    // Re-render modal + pet tab
     renderPetStoreContents();
+    renderPetTab();
+  }
+
+  // ══════════════════════════════════════════════
+  // ══  PET TAB UI                               ══
+  // ══════════════════════════════════════════════
+
+  var activePetPopup = null; // currently open popup petId
+
+  function renderPetTab() {
+    var pane = $('osrs-side-pets');
+    if (!pane) return;
+    pane.innerHTML = '';
+
+    var rpgPets = getRpgPetState();
+    var ownedIds = Object.keys(rpgPets.owned);
+
+    if (ownedIds.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'rpg-pet-empty';
+      empty.textContent = 'Visit the Pet Store in Town to hatch your first pet!';
+      pane.appendChild(empty);
+      return;
+    }
+
+    // Follower slot header
+    var followerSlot = document.createElement('div');
+    followerSlot.className = 'rpg-pet-follower-slot';
+    var fLabel = document.createElement('div');
+    fLabel.className = 'rpg-pet-follower-label';
+    fLabel.textContent = 'Follower';
+    followerSlot.appendChild(fLabel);
+    if (rpgPets.follower && rpgPets.owned[rpgPets.follower]) {
+      var fName = document.createElement('div');
+      fName.className = 'rpg-pet-follower-name';
+      fName.textContent = petCatalog.creatures[rpgPets.follower] ? petCatalog.creatures[rpgPets.follower].name : rpgPets.follower;
+      followerSlot.appendChild(fName);
+      var fSprite = renderRpgPetSprite(rpgPets.follower, rpgPets.owned[rpgPets.follower].level);
+      if (fSprite) {
+        fSprite.style.width = '28px';
+        fSprite.style.height = '28px';
+        fSprite.style.marginLeft = 'auto';
+        followerSlot.appendChild(fSprite);
+      }
+    } else {
+      var fNone = document.createElement('div');
+      fNone.className = 'rpg-pet-follower-name';
+      fNone.style.color = 'color-mix(in srgb, var(--foreground) 35%, transparent)';
+      fNone.textContent = 'None';
+      followerSlot.appendChild(fNone);
+    }
+    pane.appendChild(followerSlot);
+
+    // Pet grid
+    var grid = document.createElement('div');
+    grid.className = 'rpg-pet-grid';
+
+    for (var oi = 0; oi < ownedIds.length; oi++) {
+      var pid = ownedIds[oi];
+      var petData = rpgPets.owned[pid];
+      var status = getPetStatus(pid);
+
+      var cell = document.createElement('div');
+      cell.className = 'rpg-pet-cell';
+      if (status === 'following') cell.classList.add('rpg-pet-following');
+      if (status.indexOf('stationed') === 0) cell.classList.add('rpg-pet-stationed');
+
+      var sprite = renderRpgPetSprite(pid, petData.level);
+      if (sprite) {
+        sprite.style.width = '36px';
+        sprite.style.height = '36px';
+        cell.appendChild(sprite);
+      }
+
+      // Status badge
+      if (status === 'following') {
+        var badge = document.createElement('div');
+        badge.className = 'rpg-pet-status rpg-pet-status-follow';
+        cell.appendChild(badge);
+      } else if (status.indexOf('stationed') === 0) {
+        var badge = document.createElement('div');
+        badge.className = 'rpg-pet-status rpg-pet-status-station';
+        cell.appendChild(badge);
+        // Location tag
+        var locId = status.split(':')[1];
+        var locName = MAP_LOCATIONS[locId] ? MAP_LOCATIONS[locId].name : locId;
+        var locTag = document.createElement('div');
+        locTag.className = 'rpg-pet-loc-tag';
+        locTag.textContent = locName.substring(0, 6);
+        cell.appendChild(locTag);
+      }
+
+      cell.setAttribute('data-pet-id', pid);
+      cell.addEventListener('click', (function (petId) {
+        return function (e) { onPetCellClick(petId, e); };
+      })(pid));
+
+      grid.appendChild(cell);
+    }
+
+    pane.appendChild(grid);
+  }
+
+  function onPetCellClick(petId, e) {
+    // Close existing popup
+    closePetPopup();
+
+    var rpgPets = getRpgPetState();
+    var petData = rpgPets.owned[petId];
+    if (!petData) return;
+
+    var creature = petCatalog.creatures[petId];
+    if (!creature) return;
+
+    var status = getPetStatus(petId);
+    var stats = getRpgPetStats(petId, petData.level);
+
+    activePetPopup = petId;
+
+    var popup = document.createElement('div');
+    popup.className = 'rpg-pet-popup';
+    popup.id = 'rpg-pet-popup';
+
+    // Name
+    var nameEl = document.createElement('div');
+    nameEl.className = 'rpg-pet-popup-name';
+    nameEl.textContent = creature.name;
+    popup.appendChild(nameEl);
+
+    // Info line
+    var info = document.createElement('div');
+    info.className = 'rpg-pet-popup-info';
+    var tierColors = { common: '#88aa66', rare: '#6688cc', legendary: '#cc8844' };
+    info.innerHTML = '<span style="color:' + (tierColors[creature.tier] || 'inherit') + '">' +
+      creature.tier.charAt(0).toUpperCase() + creature.tier.slice(1) + '</span> ' +
+      creature.type + ' &middot; Lv ' + petData.level;
+    popup.appendChild(info);
+
+    // XP bar
+    var maxLv = creature.maxLevel || 3;
+    if (petData.level < maxLv) {
+      var needed = rpgPetXpForLevel(petData.level);
+      var xpInfo = document.createElement('div');
+      xpInfo.style.cssText = 'font-size:0.75em;color:color-mix(in srgb,var(--foreground) 45%,transparent);margin-bottom:6px';
+      xpInfo.textContent = 'XP: ' + (petData.xp || 0) + '/' + needed;
+      popup.appendChild(xpInfo);
+    }
+
+    // Stats grid
+    var statsGrid = document.createElement('div');
+    statsGrid.className = 'rpg-pet-stats';
+    var statKeys = ['hp', 'atk', 'def', 'spd', 'cri'];
+    for (var si = 0; si < statKeys.length; si++) {
+      var lbl = document.createElement('div');
+      lbl.className = 'rpg-pet-stat-label';
+      lbl.textContent = statKeys[si].toUpperCase();
+      statsGrid.appendChild(lbl);
+    }
+    for (var si = 0; si < statKeys.length; si++) {
+      var val = document.createElement('div');
+      val.className = 'rpg-pet-stat-val';
+      val.textContent = stats[statKeys[si]];
+      statsGrid.appendChild(val);
+    }
+    popup.appendChild(statsGrid);
+
+    // Actions
+    var actions = document.createElement('div');
+    actions.className = 'rpg-pet-popup-actions';
+
+    if (status === 'unassigned') {
+      // Set Follower
+      var followBtn = document.createElement('button');
+      followBtn.className = 'rpg-btn rpg-btn-small rpg-btn-primary';
+      followBtn.textContent = 'Set Follower';
+      followBtn.addEventListener('click', function () {
+        setFollower(petId);
+        closePetPopup();
+        renderPetTab();
+      });
+      actions.appendChild(followBtn);
+
+      // Station Here — only if at a skill location on world map
+      if (playerAtLocation && RPG_STATION_SKILL_MAP[playerAtLocation]) {
+        var stationBtn = document.createElement('button');
+        stationBtn.className = 'rpg-btn rpg-btn-small';
+        stationBtn.textContent = 'Station at ' + MAP_LOCATIONS[playerAtLocation].name;
+        stationBtn.addEventListener('click', function () {
+          stationPet(petId, playerAtLocation);
+          closePetPopup();
+          renderPetTab();
+        });
+        actions.appendChild(stationBtn);
+      }
+    } else {
+      // Unassign
+      var unassignBtn = document.createElement('button');
+      unassignBtn.className = 'rpg-btn rpg-btn-small rpg-btn-danger';
+      unassignBtn.textContent = 'Unassign';
+      unassignBtn.addEventListener('click', function () {
+        if (status === 'following') {
+          clearFollower();
+        } else {
+          unstationPet(petId);
+        }
+        closePetPopup();
+        renderPetTab();
+      });
+      actions.appendChild(unassignBtn);
+    }
+
+    popup.appendChild(actions);
+
+    // Status indicator
+    if (status !== 'unassigned') {
+      var statusEl = document.createElement('div');
+      statusEl.className = 'rpg-pet-popup-status';
+      if (status === 'following') {
+        statusEl.textContent = 'Currently following you';
+      } else {
+        var sLocId = status.split(':')[1];
+        var sLocName = MAP_LOCATIONS[sLocId] ? MAP_LOCATIONS[sLocId].name : sLocId;
+        statusEl.textContent = 'Stationed at ' + sLocName;
+      }
+      popup.appendChild(statusEl);
+    }
+
+    // Close on outside click
+    popup.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    // Position in pane
+    var pane = $('osrs-side-pets');
+    if (pane) {
+      pane.appendChild(popup);
+    }
+
+    // Close on any click outside popup
+    setTimeout(function () {
+      document.addEventListener('click', closePetPopupOnOutside);
+    }, 0);
+  }
+
+  function closePetPopup() {
+    activePetPopup = null;
+    var popup = document.getElementById('rpg-pet-popup');
+    if (popup && popup.parentNode) popup.parentNode.removeChild(popup);
+    document.removeEventListener('click', closePetPopupOnOutside);
+  }
+
+  function closePetPopupOnOutside(e) {
+    var popup = document.getElementById('rpg-pet-popup');
+    if (popup && !popup.contains(e.target)) {
+      closePetPopup();
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // ══  STATION / COLLECT LOGIC                  ══
+  // ══════════════════════════════════════════════
+
+  function stationPet(petId, locationId) {
+    if (!RPG_STATION_SKILL_MAP[locationId]) return;
+    var rpgPets = getRpgPetState();
+    if (!rpgPets.owned[petId]) return;
+
+    // Unassign from any current role
+    if (rpgPets.follower === petId) rpgPets.follower = null;
+    for (var loc in rpgPets.stations) {
+      if (rpgPets.stations[loc] && rpgPets.stations[loc].petId === petId) {
+        rpgPets.stations[loc] = null;
+      }
+    }
+
+    var now = Date.now();
+    rpgPets.stations[locationId] = {
+      petId: petId,
+      stationedAt: now,
+      lastCollected: now
+    };
+
+    saveRpgPetState(rpgPets);
+    preloadStationedSprite(petId, locationId);
+    addGameMessage(petCatalog.creatures[petId].name + ' stationed at ' + MAP_LOCATIONS[locationId].name + '.', 'system');
+  }
+
+  function unstationPet(petId) {
+    var rpgPets = getRpgPetState();
+    for (var loc in rpgPets.stations) {
+      if (rpgPets.stations[loc] && rpgPets.stations[loc].petId === petId) {
+        rpgPets.stations[loc] = null;
+        delete stationedSpriteSheets[loc];
+      }
+    }
+    saveRpgPetState(rpgPets);
+    addGameMessage((petCatalog.creatures[petId] ? petCatalog.creatures[petId].name : petId) + ' unassigned.', 'system');
+  }
+
+  function setFollower(petId) {
+    var rpgPets = getRpgPetState();
+    if (!rpgPets.owned[petId]) return;
+
+    // Unassign from station if needed
+    for (var loc in rpgPets.stations) {
+      if (rpgPets.stations[loc] && rpgPets.stations[loc].petId === petId) {
+        rpgPets.stations[loc] = null;
+        delete stationedSpriteSheets[loc];
+      }
+    }
+
+    rpgPets.follower = petId;
+    saveRpgPetState(rpgPets);
+    loadFollowerSprite(petId);
+    addGameMessage((petCatalog.creatures[petId] ? petCatalog.creatures[petId].name : petId) + ' is now following you!', 'system');
+  }
+
+  function clearFollower() {
+    var rpgPets = getRpgPetState();
+    var oldFollower = rpgPets.follower;
+    rpgPets.follower = null;
+    saveRpgPetState(rpgPets);
+    followerSpriteSheet = null;
+    followerPetId = null;
+    if (oldFollower && petCatalog.creatures[oldFollower]) {
+      addGameMessage(petCatalog.creatures[oldFollower].name + ' dismissed.', 'system');
+    }
+  }
+
+  // ── Passive Gain Formula ──────────────────────
+  function calculateStationRewards(locationId) {
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[locationId];
+    if (!station || !station.petId) return null;
+
+    var petId = station.petId;
+    var petData = rpgPets.owned[petId];
+    if (!petData) return null;
+
+    var creature = petCatalog.creatures[petId];
+    if (!creature) return null;
+
+    var now = Date.now();
+    var elapsed = now - (station.lastCollected || station.stationedAt);
+    var elapsedSec = elapsed / 1000;
+    var maxSec = 8 * 3600; // 8 hour cap
+    if (elapsedSec > maxSec) elapsedSec = maxSec;
+
+    var actions = Math.floor(elapsedSec / 60); // 1 action per minute
+    if (actions < 1) return { xpGain: 0, resourceCount: 0, petXpGain: 0, elapsed: elapsed, actions: 0 };
+
+    // Skill level from per-slot skills state
+    var skill = RPG_STATION_SKILL_MAP[locationId];
+    var skillLevel = 1;
+    var ss = getSlotSkillsState(activeSlot);
+    if (ss && ss.skills && ss.skills[skill]) {
+      skillLevel = ss.skills[skill].level || 1;
+    }
+
+    // Type bonus
+    var typeBonus = 1;
+    if (RPG_SKILL_TYPE_BONUS[creature.type] === skill) typeBonus = 2;
+    else if (creature.type === 'mystic') typeBonus = 1.5;
+
+    // Tier bonus
+    var tierBonus = creature.tier === 'legendary' ? 2 : creature.tier === 'rare' ? 1.5 : 1;
+
+    var xpPerAction = (5 + Math.floor(skillLevel * 0.5)) * typeBonus * tierBonus;
+    var xpGain = Math.floor(xpPerAction * actions);
+
+    // Resources: 30% chance per action
+    var resourceCount = 0;
+    for (var a = 0; a < actions; a++) {
+      if (Math.random() < 0.3) resourceCount++;
+    }
+
+    var petXpGain = Math.floor(actions * 0.5);
+
+    return {
+      xpGain: xpGain,
+      resourceCount: resourceCount,
+      petXpGain: petXpGain,
+      elapsed: elapsed,
+      actions: actions,
+      skill: skill,
+      petId: petId
+    };
+  }
+
+  function hasUncollectedRewards(locationId) {
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[locationId];
+    if (!station || !station.petId) return false;
+    var elapsed = Date.now() - (station.lastCollected || station.stationedAt);
+    return elapsed > 5 * 60 * 1000; // > 5 minutes
+  }
+
+  function collectAtLocation(locationId) {
+    var rewards = calculateStationRewards(locationId);
+    if (!rewards || rewards.actions < 1) return;
+
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[locationId];
+    if (!station) return;
+
+    // Apply skill XP via skills.js API (addXp may not exist yet — future integration)
+    var api = window.__RPG_SKILLS_API;
+    if (api && api.addXp && rewards.skill && rewards.xpGain > 0) {
+      api.addXp(rewards.skill, rewards.xpGain);
+    }
+
+    // Add pet XP
+    var petData = rpgPets.owned[station.petId];
+    if (petData && rewards.petXpGain > 0) {
+      petData.xp = (petData.xp || 0) + rewards.petXpGain;
+      var maxLv = petCatalog.creatures[station.petId] ? petCatalog.creatures[station.petId].maxLevel : 3;
+      var needed = rpgPetXpForLevel(petData.level);
+      while (petData.xp >= needed && petData.level < maxLv) {
+        petData.level++;
+        petData.xp -= needed;
+        needed = rpgPetXpForLevel(petData.level);
+        addGameMessage(petCatalog.creatures[station.petId].name + ' leveled up to Lv ' + petData.level + '!', 'system');
+      }
+    }
+
+    // Reset collection timer
+    station.lastCollected = Date.now();
+    saveRpgPetState(rpgPets);
+
+    // Show collection overlay
+    showCollectOverlay(station.petId, rewards);
+
+    // Log
+    var petName = petCatalog.creatures[station.petId] ? petCatalog.creatures[station.petId].name : station.petId;
+    addGameMessage('Collected from ' + petName + ': +' + rewards.xpGain + ' ' + rewards.skill + ' XP, +' + rewards.petXpGain + ' pet XP.', 'system');
+
+    // Re-render pet tab if open
+    renderPetTab();
+  }
+
+  function showCollectOverlay(petId, rewards) {
+    // Remove existing overlay
+    var old = document.querySelector('.rpg-collect-overlay');
+    if (old) old.parentNode.removeChild(old);
+
+    var gamePanel = $('skills-game-panel');
+    if (!gamePanel) return;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'rpg-collect-overlay';
+
+    var title = document.createElement('div');
+    title.className = 'rpg-collect-overlay-title';
+    title.textContent = 'Collection from ' + (petCatalog.creatures[petId] ? petCatalog.creatures[petId].name : petId);
+    overlay.appendChild(title);
+
+    // Pet sprite
+    var sprite = renderRpgPetSprite(petId, getRpgPetState().owned[petId] ? getRpgPetState().owned[petId].level : 1);
+    if (sprite) {
+      sprite.style.width = '48px';
+      sprite.style.height = '48px';
+      sprite.style.margin = '0 auto 8px';
+      sprite.style.display = 'block';
+      overlay.appendChild(sprite);
+    }
+
+    var timeEl = document.createElement('div');
+    timeEl.className = 'rpg-collect-overlay-time';
+    timeEl.textContent = 'Stationed for ' + formatDuration(rewards.elapsed);
+    overlay.appendChild(timeEl);
+
+    var rewardsEl = document.createElement('div');
+    rewardsEl.className = 'rpg-collect-overlay-rewards';
+    rewardsEl.innerHTML =
+      '<span>+' + rewards.xpGain + '</span> ' + (rewards.skill || '') + ' XP<br>' +
+      '<span>+' + rewards.petXpGain + '</span> Pet XP';
+    overlay.appendChild(rewardsEl);
+
+    overlay.addEventListener('click', function () {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    });
+
+    gamePanel.appendChild(overlay);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(function () {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }, 5000);
+  }
+
+  function formatDuration(ms) {
+    var sec = Math.floor(ms / 1000);
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    if (h > 0) return h + 'h ' + m + 'm';
+    return m + 'm';
+  }
+
+  // ══════════════════════════════════════════════
+  // ══  FOLLOWER PET ON CANVAS                   ══
+  // ══════════════════════════════════════════════
+
+  function loadFollowerSprite(petId) {
+    if (!petSpriteData || !petId) { followerSpriteSheet = null; followerPetId = null; return; }
+    var spriteId = petCatalog.creatures[petId] ? petCatalog.creatures[petId].spriteId : petId;
+    var data = petSpriteData[spriteId];
+    if (!data) { followerSpriteSheet = null; followerPetId = null; return; }
+
+    var sheetPath = data.altSheet || data.sheet;
+    var img = new Image();
+    img.src = sheetPath;
+    followerSpriteSheet = img;
+    followerPetId = petId;
+
+    // Calculate frame index from level
+    var rpgPets = getRpgPetState();
+    var petData = rpgPets.owned[petId];
+    var level = petData ? petData.level : 1;
+    followerFrameIdx = Math.min(level - 1, (data.frames || 3) - 1);
+
+    // Init position near player
+    followerPos.x = playerPos.x;
+    followerPos.y = playerPos.y + FOLLOWER_TRAIL;
+    followerDir = 'down';
+  }
+
+  function updateFollowerPosition(dt) {
+    if (!followerSpriteSheet || !followerPetId) return;
+
+    // Target position: behind the player based on direction
+    var tx = playerPos.x;
+    var ty = playerPos.y;
+    switch (playerDir) {
+      case 'up':    ty += FOLLOWER_TRAIL; break;
+      case 'down':  ty -= FOLLOWER_TRAIL; break;
+      case 'left':  tx += FOLLOWER_TRAIL; break;
+      case 'right': tx -= FOLLOWER_TRAIL; break;
+      default:      ty += FOLLOWER_TRAIL; break;
+    }
+
+    // Lerp
+    var lerpSpeed = 3.0 * dt;
+    followerPos.x += (tx - followerPos.x) * lerpSpeed;
+    followerPos.y += (ty - followerPos.y) * lerpSpeed;
+
+    // Determine facing direction
+    var dx = tx - followerPos.x;
+    var dy = ty - followerPos.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        followerDir = dx > 0 ? 'right' : 'left';
+      } else {
+        followerDir = dy > 0 ? 'down' : 'up';
+      }
+    }
+  }
+
+  function drawFollower(ctx) {
+    if (!followerSpriteSheet || !followerSpriteSheet.complete || !followerPetId) return;
+
+    var x = Math.round(followerPos.x);
+    var y = Math.round(followerPos.y);
+    var bob = Math.sin(smokeFrame * 0.1) * 1;
+    var half = FOLLOWER_SIZE / 2;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + half + 1, half * 0.7, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw sprite frame
+    var fw = 48, fh = 48;
+    var sx = followerFrameIdx * fw;
+    var flip = (followerDir === 'left');
+
+    if (flip) {
+      ctx.save();
+      ctx.translate(x, y + bob);
+      ctx.scale(-1, 1);
+      ctx.drawImage(followerSpriteSheet, sx, 0, fw, fh, -half, -half, FOLLOWER_SIZE, FOLLOWER_SIZE);
+      ctx.restore();
+    } else {
+      ctx.drawImage(followerSpriteSheet, sx, 0, fw, fh, x - half, y - half + bob, FOLLOWER_SIZE, FOLLOWER_SIZE);
+    }
+  }
+
+  function updateTownFollowerPosition(dt) {
+    if (!followerSpriteSheet || !followerPetId) return;
+
+    var tx = townPlayerPos.x;
+    var ty = townPlayerPos.y;
+    switch (townPlayerDir) {
+      case 'up':    ty += FOLLOWER_TRAIL; break;
+      case 'down':  ty -= FOLLOWER_TRAIL; break;
+      case 'left':  tx += FOLLOWER_TRAIL; break;
+      case 'right': tx -= FOLLOWER_TRAIL; break;
+      default:      ty += FOLLOWER_TRAIL; break;
+    }
+
+    var lerpSpeed = 3.0 * dt;
+    followerPos.x += (tx - followerPos.x) * lerpSpeed;
+    followerPos.y += (ty - followerPos.y) * lerpSpeed;
+
+    var dx = tx - followerPos.x;
+    var dy = ty - followerPos.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        followerDir = dx > 0 ? 'right' : 'left';
+      } else {
+        followerDir = dy > 0 ? 'down' : 'up';
+      }
+    }
+  }
+
+  function drawTownFollower(ctx) {
+    // Reuse drawFollower — same logic, positions are shared
+    drawFollower(ctx);
+  }
+
+  // ══════════════════════════════════════════════
+  // ══  STATIONED PET SPRITES ON WORLD MAP       ══
+  // ══════════════════════════════════════════════
+
+  function preloadStationedSprite(petId, locationId) {
+    if (!petSpriteData || !petCatalog || !petCatalog.creatures[petId]) return;
+    var spriteId = petCatalog.creatures[petId].spriteId;
+    var data = petSpriteData[spriteId];
+    if (!data) return;
+
+    var sheetPath = data.altSheet || data.sheet;
+    var img = new Image();
+    img.src = sheetPath;
+
+    var rpgPets = getRpgPetState();
+    var petData = rpgPets.owned[petId];
+    var level = petData ? petData.level : 1;
+    var frameIdx = Math.min(level - 1, (data.frames || 3) - 1);
+
+    stationedSpriteSheets[locationId] = { img: img, frameIdx: frameIdx };
+  }
+
+  function preloadAllStationedSprites() {
+    stationedSpriteSheets = {};
+    var rpgPets = getRpgPetState();
+    for (var loc in rpgPets.stations) {
+      if (rpgPets.stations[loc] && rpgPets.stations[loc].petId) {
+        preloadStationedSprite(rpgPets.stations[loc].petId, loc);
+      }
+    }
+  }
+
+  function drawStationedPets(ctx) {
+    var rpgPets = getRpgPetState();
+    for (var loc in rpgPets.stations) {
+      var station = rpgPets.stations[loc];
+      if (!station || !station.petId) continue;
+      var mapLoc = MAP_LOCATIONS[loc];
+      if (!mapLoc) continue;
+
+      var spriteData = stationedSpriteSheets[loc];
+      if (!spriteData || !spriteData.img || !spriteData.img.complete) continue;
+
+      var px = mapLoc.x + 22;
+      var py = mapLoc.y + 18;
+      var size = 20;
+      var fw = 48, fh = 48;
+      var sx = spriteData.frameIdx * fw;
+
+      ctx.drawImage(spriteData.img, sx, 0, fw, fh, px - size / 2, py - size / 2, size, size);
+
+      // Uncollected indicator
+      if (hasUncollectedRewards(loc)) {
+        var pulse = Math.sin(smokeFrame * 0.12) * 0.3 + 0.7;
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = '#ffdd44';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', px, py - size / 2 - 2);
+        ctx.globalAlpha = 1;
+      }
+    }
   }
 
   // ── Keyboard Interceptor ────────────────────────
@@ -4381,8 +5210,9 @@
     if (currentScreen !== 'rpg-game-screen') return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
-    // Escape: close pet store modal → exit town → return to map
+    // Escape: close pet popup → close pet store modal → exit town → return to map
     if (e.key === 'Escape') {
+      if (activePetPopup) { closePetPopup(); return; }
       if (petStoreModalOpen) { closePetStoreModal(); return; }
       if (insideTown) { returnToWorldMap(); return; }
     }
