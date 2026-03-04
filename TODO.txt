@@ -188,6 +188,8 @@ AreBooksGood - Improvement TODO
 - [x] Pet integration: pet sprite in game area, skill-specific speech, level-up congrats, type visual particles
 - [x] Visual polish: tier colors, themed backgrounds, XP bar glow
 - [ ] Economy balancing pass — target: level 99 ≈ 40-60h active
+- [x] Mobile polish — RPG grid min-height fix, chatbox z-index above farm bar, screen-flash scoped to game area, select dropdowns static on mobile
+- [ ] Mobile polish — verify on real device: chatbox position, dropdown rendering, fish sprite sizing
 - [ ] Mobile polish — bottom sheet pet picker, stacked layout tuning, touch-friendly mini-game sizing
 
 ### Phase 3 (Done) — Pixel Art Sprite Upgrade

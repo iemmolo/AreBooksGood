@@ -7,7 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 10;
+  var STATE_VERSION = 11;
   var STACK_CAP = 999;
 
   // ── Mining Perks (level-gated passives) ────────
@@ -107,6 +107,13 @@
     { id: 'goldenTree',   name: 'Golden Tree',   weight: 40 },
     { id: 'storm',        name: 'Storm',         weight: 35 },
     { id: 'ancientGrove', name: 'Ancient Grove',  weight: 25 }
+  ];
+
+  // ── Smithing Events (random encounters) ──────────
+  var SMITHING_EVENTS = [
+    { id: 'blessedForge', name: 'Blessed Forge', weight: 40 },
+    { id: 'oreSurge',     name: 'Ore Surge',     weight: 35 },
+    { id: 'masterTouch',  name: "Master's Touch", weight: 25 }
   ];
 
   // ── Resource tier colors (D1) ─────────────────
@@ -853,7 +860,22 @@
   var wcEventActive = false;
   var wcEventTimer = null;
   var treeRespawnIntervals = [];
-  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
+  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null, blessedActive: false, oreSurgeCount: 0, masterTouchActive: false };
+
+  // Smithing animation overlay state
+  var smithingBgDataUrl = null;
+  var smithingAnimFrameId = null;
+  var smithingAnimCanvas = null;
+  var smithingAnimCtx = null;
+  var smithingAnimFrame = 0;
+  var smithingAnimLastTs = 0;
+  var smithingEmbers = [];
+  var smithingSmokeWisps = [];
+  var smithingCombo = { count: 0, lastClickTime: 0 };
+  var smithingEventActive = false;
+  var smithingEventTimer = null;
+  var SMITHING_W = 640, SMITHING_H = 400;
+  var SMITHING_FURNACE_X = 290, SMITHING_FURNACE_Y = 120;
   var combatState = {
     enemyHp: 0, enemyMaxHp: 0, enemyName: '', streak: 0, enemyTimer: null, cooldown: false,
     playerHp: 0, playerMaxHp: 0, potions: 3, dodgeCooldown: false, dead: false,
@@ -882,6 +904,14 @@
       // Woodcutting collection log (v8)
       if (SKILL_KEYS[i] === 'woodcutting') {
         skillDef.log = { treesChopped: {}, birdNests: 0, doubleChops: 0, criticalHits: 0, totalClicks: 0, events: { goldenTree: 0, storm: 0, ancientGrove: 0, fairyRing: 0 } };
+      }
+      // Smithing collection log (v11)
+      if (SKILL_KEYS[i] === 'smithing') {
+        skillDef.log = {
+          barsSmelted: {}, itemsForged: {}, perfectSmelts: 0, masterworks: 0,
+          totalSmelts: 0, totalForges: 0, doubleBars: 0, noOreProcs: 0,
+          totalClicks: 0, events: { blessedForge: 0, oreSurge: 0, masterTouch: 0, inferno: 0 }
+        };
       }
       // Fishing collection log (v9)
       if (SKILL_KEYS[i] === 'fishing') {
@@ -1040,6 +1070,27 @@
                     schoolOfFish: (flog.events && flog.events.schoolOfFish) || 0,
                     sharkAttack: (flog.events && flog.events.sharkAttack) || 0,
                     kraken: (flog.events && flog.events.kraken) || 0
+                  }
+                };
+              }
+              // v11: smithing collection log
+              if (key === 'smithing') {
+                var slog = saved.skills[key].log || {};
+                s.skills[key].log = {
+                  barsSmelted: slog.barsSmelted || {},
+                  itemsForged: slog.itemsForged || {},
+                  perfectSmelts: slog.perfectSmelts || 0,
+                  masterworks: slog.masterworks || 0,
+                  totalSmelts: slog.totalSmelts || 0,
+                  totalForges: slog.totalForges || 0,
+                  doubleBars: slog.doubleBars || 0,
+                  noOreProcs: slog.noOreProcs || 0,
+                  totalClicks: slog.totalClicks || 0,
+                  events: {
+                    blessedForge: (slog.events && slog.events.blessedForge) || 0,
+                    oreSurge: (slog.events && slog.events.oreSurge) || 0,
+                    masterTouch: (slog.events && slog.events.masterTouch) || 0,
+                    inferno: (slog.events && slog.events.inferno) || 0
                   }
                 };
               }
@@ -1358,12 +1409,7 @@
       setTimeout(function () { if (container.parentNode) container.parentNode.removeChild(container); }, 2200);
     }
 
-    // Screen flash
-    var page = $('skills-page');
-    if (page) {
-      page.classList.add('screen-flash');
-      setTimeout(function () { page.classList.remove('screen-flash'); }, 200);
-    }
+    // Screen flash removed — filter:brightness creates new containing block, causing layout shift
   }
 
   // ── B1: Milestone Banner ──────────────────────
@@ -1513,6 +1559,18 @@
       };
     }
     return state.skills.fishing.log;
+  }
+
+  // ── Smithing Collection Log helper ──────────
+  function getSmithingLog() {
+    if (!state.skills.smithing.log) {
+      state.skills.smithing.log = {
+        barsSmelted: {}, itemsForged: {}, perfectSmelts: 0, masterworks: 0,
+        totalSmelts: 0, totalForges: 0, doubleBars: 0, noOreProcs: 0,
+        totalClicks: 0, events: { blessedForge: 0, oreSurge: 0, masterTouch: 0, inferno: 0 }
+      };
+    }
+    return state.skills.smithing.log;
   }
 
   // ── Perk helpers ────────────────────────────
@@ -2193,6 +2251,8 @@
       renderWcCollectionLog();
     } else if (activeSkill === 'fishing') {
       renderFishingCollectionLog();
+    } else if (activeSkill === 'smithing') {
+      renderSmithingCollectionLog();
     } else {
       renderCollectionLog();
     }
@@ -2803,6 +2863,221 @@
     grad = ctx.createLinearGradient(W - 30, 0, W, 0);
     grad.addColorStop(0, 'rgba(0,0,0,0)');
     grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(W - 30, 0, 30, H);
+
+    return c.toDataURL('image/png');
+  }
+
+  // ── Forge Interior Pixel Art Background ──────
+  function generateForgeBg() {
+    var W = SMITHING_W, H = SMITHING_H, T = 10;
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var ctx = c.getContext('2d');
+    var h, i, grad;
+
+    // ── Pass 1: Stone brick back wall ──
+    var brickGrays = ['#3a3630', '#423e38', '#4a4640', '#3e3a34'];
+    var brickH = 8, brickW = 14;
+    var brickRows = Math.ceil(H / brickH);
+    var brickCols = Math.ceil(W / brickW) + 1;
+    for (var br = 0; br < brickRows; br++) {
+      var stOff = (br % 2) * Math.floor(brickW / 2);
+      for (var bc = -1; bc < brickCols; bc++) {
+        var bx = bc * brickW + stOff;
+        var by = br * brickH;
+        h = tileHash(bx + 3000, by + 3000);
+        ctx.fillStyle = brickGrays[((h >>> 0) % brickGrays.length)];
+        ctx.fillRect(bx, by, brickW - 1, brickH - 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.fillRect(bx, by, brickW - 1, 1);
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(bx, by + brickH - 2, brickW - 1, 1);
+      }
+      // Mortar row
+      ctx.fillStyle = '#2a2620';
+      ctx.fillRect(0, br * brickH + brickH - 1, W, 1);
+    }
+
+    // ── Pass 2: Furnace alcove (center, arched) ──
+    var furnX = 250, furnY = 40, furnW = 140, furnH = 180;
+    // Dark recess
+    ctx.fillStyle = '#1a1612';
+    ctx.fillRect(furnX, furnY + 20, furnW, furnH - 20);
+    // Arch top (rounded using stepped rectangles)
+    for (var ay = 0; ay < 20; ay++) {
+      var frac = ay / 20;
+      var archW = Math.round(furnW * (0.5 + frac * 0.5));
+      var archX = furnX + Math.floor((furnW - archW) / 2);
+      ctx.fillStyle = '#1a1612';
+      ctx.fillRect(archX, furnY + ay, archW, 1);
+    }
+    // Arch border bricks
+    var archBrickC = ['#5a5650', '#625e58', '#6a6660'];
+    for (var ab = 0; ab < 20; ab++) {
+      var abFrac = ab / 20;
+      var abW = Math.round(furnW * (0.5 + abFrac * 0.5));
+      var abX = furnX + Math.floor((furnW - abW) / 2);
+      h = tileHash(ab + 5555, 5555);
+      ctx.fillStyle = archBrickC[((h >>> 0) % archBrickC.length)];
+      ctx.fillRect(abX - 3, furnY + ab, 3, 1);
+      ctx.fillRect(abX + abW, furnY + ab, 3, 1);
+    }
+    // Side columns
+    ctx.fillStyle = '#504c46';
+    ctx.fillRect(furnX - 6, furnY + 20, 6, furnH - 20);
+    ctx.fillRect(furnX + furnW, furnY + 20, 6, furnH - 20);
+    // Column highlights
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(furnX - 6, furnY + 20, 1, furnH - 20);
+    ctx.fillRect(furnX + furnW + 5, furnY + 20, 1, furnH - 20);
+
+    // Fire glow inside furnace
+    var fireY = furnY + furnH - 60;
+    grad = ctx.createRadialGradient(furnX + furnW / 2, fireY, 5, furnX + furnW / 2, fireY, 70);
+    grad.addColorStop(0, 'rgba(255,140,30,0.6)');
+    grad.addColorStop(0.4, 'rgba(255,80,20,0.3)');
+    grad.addColorStop(1, 'rgba(255,40,10,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(furnX, furnY + 20, furnW, furnH - 20);
+
+    // Fire bed (bottom of furnace)
+    for (var fx = 0; fx < furnW; fx += 4) {
+      h = tileHash(fx + 6666, 6666);
+      var fh = 6 + ((h >>> 0) % 10);
+      ctx.fillStyle = ((h >>> 4) & 1) ? '#ff6020' : '#cc3010';
+      ctx.fillRect(furnX + fx, fireY + 20, 4, fh);
+      ctx.fillStyle = '#ffa040';
+      ctx.fillRect(furnX + fx + 1, fireY + 20, 2, Math.floor(fh * 0.6));
+    }
+
+    // ── Pass 3: Wooden ceiling beams ──
+    var beamC = ['#4a3828', '#523e2c', '#3e2e1e'];
+    var beamY = 15, beamH = 10;
+    ctx.fillStyle = beamC[0];
+    ctx.fillRect(0, beamY, W, beamH);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(0, beamY, W, 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, beamY + beamH - 1, W, 1);
+    // Cross beams (3 vertical supports)
+    var crossX = [160, 320, 480];
+    for (i = 0; i < crossX.length; i++) {
+      ctx.fillStyle = beamC[1];
+      ctx.fillRect(crossX[i] - 4, beamY, 8, 210);
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(crossX[i] - 4, beamY, 1, 210);
+      ctx.fillStyle = 'rgba(0,0,0,0.10)';
+      ctx.fillRect(crossX[i] + 3, beamY, 1, 210);
+    }
+
+    // ── Pass 4: Stone flagstone floor ──
+    var floorY = 280;
+    ctx.fillStyle = '#38342e';
+    ctx.fillRect(0, floorY, W, H - floorY);
+    // Uneven top edge
+    for (var ex = 0; ex < Math.ceil(W / T); ex++) {
+      h = tileHash(ex, 999);
+      var bump = ((h >>> 0) % 6);
+      ctx.fillStyle = '#38342e';
+      ctx.fillRect(ex * T, floorY - bump, T, bump + 2);
+      ctx.fillStyle = '#5a564e';
+      ctx.fillRect(ex * T, floorY - bump, T, 1);
+    }
+    // Flagstone grid
+    var fsW = 20, fsH = 14;
+    var fsPal = ['#342e28', '#3c3830', '#403a32', '#38342e', '#443e36'];
+    var fsRows = Math.ceil((H - floorY) / fsH);
+    var fsCols = Math.ceil(W / fsW) + 1;
+    for (var fsr = 0; fsr < fsRows; fsr++) {
+      var fsOff = (fsr % 2) * 10;
+      for (var fsc = -1; fsc < fsCols; fsc++) {
+        var fsx = fsc * fsW + fsOff;
+        var fsy = floorY + fsr * fsH;
+        h = tileHash(fsx + 4000, fsy + 4000);
+        ctx.fillStyle = fsPal[((h >>> 0) % fsPal.length)];
+        ctx.fillRect(fsx, fsy, fsW - 1, fsH - 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.fillRect(fsx, fsy, fsW - 1, 1);
+        ctx.fillStyle = 'rgba(0,0,0,0.06)';
+        ctx.fillRect(fsx, fsy + fsH - 2, fsW - 1, 1);
+      }
+      ctx.fillStyle = '#2a2620';
+      ctx.fillRect(0, floorY + fsr * fsH + fsH - 1, W, 1);
+    }
+
+    // ── Pass 5: Water quench trough (right side) ──
+    var trX = 480, trY = 260, trW = 80, trH = 20;
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(trX, trY, trW, trH);
+    ctx.fillStyle = '#2a3a5a';
+    ctx.fillRect(trX + 3, trY + 3, trW - 6, trH - 6);
+    // Water surface highlight
+    ctx.fillStyle = 'rgba(100,160,220,0.3)';
+    ctx.fillRect(trX + 3, trY + 3, trW - 6, 2);
+    // Trough legs
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(trX + 4, trY + trH, 4, 18);
+    ctx.fillRect(trX + trW - 8, trY + trH, 4, 18);
+
+    // ── Pass 6: Tool rack silhouettes (left wall) ──
+    var rackX = 60, rackY = 100;
+    ctx.fillStyle = '#4a3828';
+    ctx.fillRect(rackX, rackY, 60, 4); // shelf
+    // Tool silhouettes (hammer, tongs, chisel)
+    ctx.fillStyle = '#2a2620';
+    // Hammer
+    ctx.fillRect(rackX + 8, rackY - 30, 3, 30);
+    ctx.fillRect(rackX + 4, rackY - 34, 11, 6);
+    // Tongs
+    ctx.fillRect(rackX + 25, rackY - 40, 2, 40);
+    ctx.fillRect(rackX + 23, rackY - 42, 6, 3);
+    // Chisel
+    ctx.fillRect(rackX + 42, rackY - 25, 2, 25);
+    ctx.fillRect(rackX + 40, rackY - 28, 6, 4);
+
+    // ── Pass 7: Anvil silhouette (center floor) ──
+    var anvX = 300, anvY = 255;
+    ctx.fillStyle = '#2e2a24';
+    // Base
+    ctx.fillRect(anvX - 12, anvY + 8, 24, 10);
+    // Pillar
+    ctx.fillRect(anvX - 6, anvY, 12, 10);
+    // Top (horn shape)
+    ctx.fillRect(anvX - 16, anvY - 6, 32, 8);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(anvX - 16, anvY - 6, 32, 1);
+
+    // ── Pass 8: Warm ambient lighting ──
+    grad = ctx.createRadialGradient(furnX + furnW / 2, fireY, 20, furnX + furnW / 2, fireY, 300);
+    grad.addColorStop(0, 'rgba(255,120,30,0.12)');
+    grad.addColorStop(0.5, 'rgba(255,80,20,0.06)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Ceiling shadow
+    grad = ctx.createLinearGradient(0, 0, 0, 60);
+    grad.addColorStop(0, 'rgba(0,0,0,0.4)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 60);
+
+    // Edge vignette
+    grad = ctx.createLinearGradient(0, H - 30, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, H - 30, W, 30);
+    grad = ctx.createLinearGradient(0, 0, 30, 0);
+    grad.addColorStop(0, 'rgba(0,0,0,0.25)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 30, H);
+    grad = ctx.createLinearGradient(W - 30, 0, W, 0);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.25)');
     ctx.fillStyle = grad;
     ctx.fillRect(W - 30, 0, 30, H);
 
@@ -3647,6 +3922,7 @@
     var level = state.skills.mining.level;
     var resources = SKILLS.mining.resources;
     var oldVal = parseInt(sel.value);
+    var oldHighest = sel.options.length > 0 ? parseInt(sel.options[sel.options.length - 1].value) : 0;
     sel.innerHTML = '';
     var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
@@ -3657,10 +3933,11 @@
       opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
       sel.appendChild(opt);
     }
-    // Auto-switch to newly unlocked ore
-    if (highestIdx > oldVal) {
+    // Auto-switch only when a NEW ore is unlocked (not if user chose a lower ore)
+    if (highestIdx > oldHighest) {
       sel.value = highestIdx;
       selectedMiningOre = highestIdx;
+      renderMining();
       updateGameHeader();
     } else {
       sel.value = oldVal;
@@ -4430,6 +4707,7 @@
     var level = state.skills.fishing.level;
     var resources = SKILLS.fishing.resources;
     var oldVal = parseInt(sel.value);
+    var oldHighest = sel.options.length > 0 ? parseInt(sel.options[sel.options.length - 1].value) : 0;
     sel.innerHTML = '';
     var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
@@ -4440,7 +4718,8 @@
       opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
       sel.appendChild(opt);
     }
-    if (highestIdx > oldVal) {
+    // Auto-switch only when a NEW fish is unlocked
+    if (highestIdx > oldHighest) {
       sel.value = highestIdx;
       selectedFish = highestIdx;
       updateGameHeader();
@@ -5382,6 +5661,108 @@
     content.appendChild(evSection);
   }
 
+  function renderSmithingCollectionLog() {
+    var content = $('skills-log-content');
+    if (!content) return;
+    content.innerHTML = '';
+
+    var log = getSmithingLog();
+
+    // Bars Smelted table
+    var barSection = document.createElement('div');
+    barSection.innerHTML = '<h4 class="skills-log-section-title">Bars Smelted</h4>';
+    var barTable = document.createElement('table');
+    barTable.className = 'skills-log-table';
+    for (var bi = 0; bi < SMELTING_ORDER.length; bi++) {
+      var barName = SMELTING_ORDER[bi];
+      var bcount = log.barsSmelted[barName] || 0;
+      var btr = document.createElement('tr');
+      var bnameTd = document.createElement('td');
+      var bsp = BAR_DROP_SPRITES[barName];
+      if (bsp) {
+        var bIcon = createSpriteEl(bsp.sheet || 'ores', bsp.x, bsp.y, 16, 16, 16, 16);
+        if (bIcon) { bIcon.className = 'skill-sprite'; bIcon.style.verticalAlign = 'middle'; bIcon.style.marginRight = '4px'; bnameTd.appendChild(bIcon); }
+      }
+      bnameTd.appendChild(document.createTextNode(barName));
+      var bcountTd = document.createElement('td');
+      bcountTd.textContent = formatNum(bcount);
+      btr.appendChild(bnameTd);
+      btr.appendChild(bcountTd);
+      if (bcount === 0) btr.style.opacity = '0.4';
+      barTable.appendChild(btr);
+    }
+    barSection.appendChild(barTable);
+    content.appendChild(barSection);
+
+    // Items Forged table
+    var forgeSection = document.createElement('div');
+    forgeSection.innerHTML = '<h4 class="skills-log-section-title">Items Forged</h4>';
+    var forgeTable = document.createElement('table');
+    forgeTable.className = 'skills-log-table';
+    for (var fi = 0; fi < FORGING_RECIPES.length; fi++) {
+      var fname = FORGING_RECIPES[fi].name;
+      var fcount = log.itemsForged[fname] || 0;
+      var ftr = document.createElement('tr');
+      var fnameTd = document.createElement('td');
+      var fsp = FORGING_RECIPES[fi].sprite;
+      if (fsp) {
+        var fIcon = createSpriteEl('items_sheet', fsp.x, fsp.y, 16, 16, 16, 16);
+        if (fIcon) { fIcon.className = 'skill-sprite'; fIcon.style.verticalAlign = 'middle'; fIcon.style.marginRight = '4px'; fnameTd.appendChild(fIcon); }
+      }
+      fnameTd.appendChild(document.createTextNode(fname));
+      var fcountTd = document.createElement('td');
+      fcountTd.textContent = formatNum(fcount);
+      ftr.appendChild(fnameTd);
+      ftr.appendChild(fcountTd);
+      if (fcount === 0) ftr.style.opacity = '0.4';
+      forgeTable.appendChild(ftr);
+    }
+    forgeSection.appendChild(forgeTable);
+    content.appendChild(forgeSection);
+
+    // Stats
+    var statsSection = document.createElement('div');
+    statsSection.innerHTML = '<h4 class="skills-log-section-title">Stats</h4>';
+    var stats = [
+      ['Total Clicks', formatNum(log.totalClicks)],
+      ['Total Smelts', formatNum(log.totalSmelts)],
+      ['Total Forges', formatNum(log.totalForges)],
+      ['Perfect Smelts', formatNum(log.perfectSmelts)],
+      ['Masterworks', formatNum(log.masterworks)],
+      ['Double Bars', formatNum(log.doubleBars)],
+      ['Free Smelts', formatNum(log.noOreProcs)]
+    ];
+    var statsTable = document.createElement('table');
+    statsTable.className = 'skills-log-table';
+    for (var si = 0; si < stats.length; si++) {
+      var str = document.createElement('tr');
+      str.innerHTML = '<td>' + stats[si][0] + '</td><td>' + stats[si][1] + '</td>';
+      statsTable.appendChild(str);
+    }
+    statsSection.appendChild(statsTable);
+    content.appendChild(statsSection);
+
+    // Events
+    var evSection = document.createElement('div');
+    evSection.innerHTML = '<h4 class="skills-log-section-title">Events</h4>';
+    var evTable = document.createElement('table');
+    evTable.className = 'skills-log-table';
+    var evNames = [
+      ['Blessed Forge', log.events.blessedForge],
+      ['Ore Surge', log.events.oreSurge],
+      ["Master's Touch", log.events.masterTouch],
+      ['Inferno', log.events.inferno]
+    ];
+    for (var ek = 0; ek < evNames.length; ek++) {
+      var etr = document.createElement('tr');
+      etr.innerHTML = '<td>' + evNames[ek][0] + '</td><td>' + evNames[ek][1] + '</td>';
+      if (evNames[ek][1] === 0) etr.style.opacity = '0.4';
+      evTable.appendChild(etr);
+    }
+    evSection.appendChild(evTable);
+    content.appendChild(evSection);
+  }
+
   // ══════════════════════════════════════════════
   // ── WOODCUTTING MINI-GAME (A3 enhanced) ────────
   // ══════════════════════════════════════════════
@@ -5527,6 +5908,7 @@
     var level = state.skills.woodcutting.level;
     var resources = SKILLS.woodcutting.resources;
     var oldVal = parseInt(sel.value);
+    var oldHighest = sel.options.length > 0 ? parseInt(sel.options[sel.options.length - 1].value) : 0;
     sel.innerHTML = '';
     var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
@@ -5537,9 +5919,11 @@
       opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
       sel.appendChild(opt);
     }
-    if (highestIdx > oldVal) {
+    // Auto-switch only when a NEW tree is unlocked
+    if (highestIdx > oldHighest) {
       sel.value = highestIdx;
       selectedWcTree = highestIdx;
+      renderWoodcutting();
       updateGameHeader();
     } else {
       sel.value = oldVal;
@@ -6067,12 +6451,149 @@
   }
 
   // ══════════════════════════════════════════════
+  // ══════════════════════════════════════════════
+  // ── SMITHING FORGE ANIMATION OVERLAY ─────────
+  // ══════════════════════════════════════════════
+
+  function startSmithingAnim() {
+    if (smithingAnimFrameId) return;
+    smithingAnimFrame = 0;
+    smithingAnimLastTs = 0;
+    smithingEmbers = [];
+    smithingSmokeWisps = [];
+    // Init smoke wisps (4 persistent wisps)
+    for (var i = 0; i < 4; i++) {
+      smithingSmokeWisps.push({
+        x: SMITHING_FURNACE_X + 30 + Math.random() * 20,
+        y: SMITHING_FURNACE_Y - 20 - Math.random() * 40,
+        r: 8 + Math.random() * 12,
+        alpha: 0.02 + Math.random() * 0.03,
+        drift: (Math.random() - 0.5) * 0.3,
+        speed: 8 + Math.random() * 6,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+    smithingAnimLoop(0);
+  }
+
+  function stopSmithingAnim() {
+    if (smithingAnimFrameId) {
+      cancelAnimationFrame(smithingAnimFrameId);
+      smithingAnimFrameId = null;
+    }
+    smithingAnimCanvas = null;
+    smithingAnimCtx = null;
+    smithingEmbers = [];
+    smithingSmokeWisps = [];
+  }
+
+  function smithingAnimLoop(ts) {
+    if (!smithingAnimCtx || !smithingAnimCanvas) { smithingAnimFrameId = null; return; }
+    smithingAnimFrameId = requestAnimationFrame(smithingAnimLoop);
+    var dt = smithingAnimLastTs ? Math.min((ts - smithingAnimLastTs) / 1000, 0.1) : 0.016;
+    smithingAnimLastTs = ts;
+    smithingAnimFrame++;
+    var ctx = smithingAnimCtx;
+    ctx.clearRect(0, 0, SMITHING_W, SMITHING_H);
+
+    // ── Fire glow pulse ──
+    var glowPhase = Math.sin(smithingAnimFrame * 0.06);
+    var glowAlpha = 0.08 + glowPhase * 0.04;
+    var glowR = 80 + glowPhase * 15;
+    var grad = ctx.createRadialGradient(
+      SMITHING_FURNACE_X + 35, SMITHING_FURNACE_Y + 80, 5,
+      SMITHING_FURNACE_X + 35, SMITHING_FURNACE_Y + 80, glowR
+    );
+    grad.addColorStop(0, 'rgba(255,140,30,' + (glowAlpha + 0.06) + ')');
+    grad.addColorStop(0.5, 'rgba(255,80,20,' + (glowAlpha * 0.4) + ')');
+    grad.addColorStop(1, 'rgba(255,40,10,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(SMITHING_FURNACE_X - 60, SMITHING_FURNACE_Y, 190, 180);
+
+    // ── Embers (rising from furnace mouth) ──
+    if (smithingAnimFrame % 8 === 0) {
+      smithingEmbers.push({
+        x: SMITHING_FURNACE_X + 15 + Math.random() * 40,
+        y: SMITHING_FURNACE_Y + 60 + Math.random() * 30,
+        vx: (Math.random() - 0.5) * 10,
+        vy: -(20 + Math.random() * 25),
+        life: 1.0
+      });
+      if (smithingEmbers.length > 40) smithingEmbers.shift();
+    }
+    for (var ei = smithingEmbers.length - 1; ei >= 0; ei--) {
+      var e = smithingEmbers[ei];
+      e.x += e.vx * dt;
+      e.y += e.vy * dt;
+      e.vy += 3 * dt;
+      e.life -= 1.0 * dt;
+      if (e.life <= 0) { smithingEmbers.splice(ei, 1); continue; }
+      ctx.globalAlpha = e.life * 0.8;
+      ctx.fillStyle = e.life > 0.6 ? '#ffa040' : e.life > 0.3 ? '#ff6020' : '#8b2010';
+      ctx.fillRect(Math.round(e.x), Math.round(e.y), 1, 1);
+    }
+    ctx.globalAlpha = 1;
+
+    // ── Smoke wisps ──
+    for (var si = 0; si < smithingSmokeWisps.length; si++) {
+      var w = smithingSmokeWisps[si];
+      w.y -= w.speed * dt;
+      w.x += Math.sin(smithingAnimFrame * 0.03 + w.phase) * w.drift;
+      w.r += 1.5 * dt;
+      w.alpha -= 0.008 * dt;
+      if (w.y < -20 || w.alpha <= 0) {
+        w.x = SMITHING_FURNACE_X + 30 + Math.random() * 20;
+        w.y = SMITHING_FURNACE_Y - 10;
+        w.r = 8 + Math.random() * 12;
+        w.alpha = 0.02 + Math.random() * 0.03;
+        w.drift = (Math.random() - 0.5) * 0.3;
+        w.speed = 8 + Math.random() * 6;
+      }
+      ctx.globalAlpha = Math.max(0, w.alpha);
+      ctx.fillStyle = '#888';
+      ctx.beginPath();
+      ctx.ellipse(Math.round(w.x), Math.round(w.y), Math.round(w.r), Math.round(w.r * 0.6), 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // ── Heat shimmer (wavy lines above furnace) ──
+    ctx.globalAlpha = 0.03;
+    for (var hi = 0; hi < 6; hi++) {
+      var hy = SMITHING_FURNACE_Y - 20 - hi * 8;
+      var hx = SMITHING_FURNACE_X + Math.sin(smithingAnimFrame * 0.04 + hi * 1.5) * 8;
+      ctx.fillStyle = '#ffaa44';
+      ctx.fillRect(hx, hy, 60, 1);
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // ── SMITHING MINI-GAME (Phase 6C: Smelting + Forging) ──
   // ══════════════════════════════════════════════
   function renderSmithing() {
     var area = $('skills-game-area');
     if (!area) return;
+
+    // Apply forge pixel art background (cached)
+    if (!smithingBgDataUrl) smithingBgDataUrl = generateForgeBg();
+    area.style.backgroundImage = 'url(' + smithingBgDataUrl + ')';
+    area.style.backgroundSize = 'cover';
+    area.style.backgroundPosition = 'center';
+
     area.innerHTML = '';
+
+    // Stop previous animation if re-rendering
+    stopSmithingAnim();
+
+    // Animation overlay canvas
+    var animCanvas = document.createElement('canvas');
+    animCanvas.width = SMITHING_W;
+    animCanvas.height = SMITHING_H;
+    animCanvas.className = 'mining-anim-overlay';
+    area.appendChild(animCanvas);
+    smithingAnimCanvas = animCanvas;
+    smithingAnimCtx = animCanvas.getContext('2d');
+    startSmithingAnim();
 
     // Mode toggle tabs
     var tabs = document.createElement('div');
@@ -6089,6 +6610,8 @@
       smithingState.phase = 'idle';
       smithingState.hits = 0;
       smithingState.bonusHits = 0;
+      smithingCombo = { count: 0, lastClickTime: 0 };
+      cleanupSmithingEvent();
       renderSmithing();
     });
     var forgeTab = document.createElement('button');
@@ -6103,6 +6626,8 @@
       smithingState.phase = 'idle';
       smithingState.hits = 0;
       smithingState.bonusHits = 0;
+      smithingCombo = { count: 0, lastClickTime: 0 };
+      cleanupSmithingEvent();
       renderSmithing();
     });
     tabs.appendChild(smeltTab);
@@ -6114,6 +6639,13 @@
     } else {
       renderForgingGame(area);
     }
+
+    // Combo counter
+    var comboEl = document.createElement('div');
+    comboEl.className = 'smithing-combo';
+    comboEl.id = 'smithing-combo';
+    comboEl.style.display = 'none';
+    area.appendChild(comboEl);
 
     // C1: Render pet
     renderPetInGameArea();
@@ -6163,7 +6695,7 @@
 
     // Furnace sprite
     var furnaceEl = $('smelt-furnace');
-    var furnaceSprite = createSpriteEl('furnace', 0, 0, 16, 16, 64, 64);
+    var furnaceSprite = createSpriteEl('furnace', 0, 32, 32, 32, 96, 96);
     if (furnaceSprite && furnaceEl) {
       furnaceSprite.className = 'skill-sprite smithing-anvil-sprite';
       furnaceEl.appendChild(furnaceSprite);
@@ -6279,12 +6811,34 @@
     if (hasPerk('pyromaniac', 'smithing')) perfectRange *= 1.5;
     var isPerfect = Math.abs(temp - zoneMid) <= perfectRange;
 
+    // Blessed Forge: wider green zone if active
+    if (smithingState.blessedActive) {
+      zoneHeight *= 1.30;
+      zoneBottom = Math.floor(50 - zoneHeight / 2);
+      zoneTop = zoneBottom + zoneHeight;
+      zoneMid = zoneBottom + zoneHeight / 2;
+      inZone = temp >= zoneBottom && temp <= zoneTop;
+      perfectRange = zoneHeight * 0.15;
+      if (hasPerk('pyromaniac', 'smithing')) perfectRange *= 1.5;
+      isPerfect = Math.abs(temp - zoneMid) <= perfectRange;
+    }
+
     var progress = $('smelt-progress');
     var status = $('smelt-status');
+    var slog = getSmithingLog();
+    slog.totalClicks++;
 
     if (!inZone) {
       if (progress) progress.textContent = 'Temperature missed! Try again...';
       if (status) status.textContent = temp < zoneBottom ? 'Too cold!' : 'Too hot!';
+      // Combo lost on miss
+      if (smithingCombo.count > 0) {
+        smithingCombo.count = 0;
+        var comboEl = $('smithing-combo');
+        if (comboEl) comboEl.style.display = 'none';
+        var gameArea0 = $('skills-game-area');
+        if (gameArea0) spawnParticle(gameArea0, 'Combo lost!', 'combo-lost');
+      }
       var cooldown = getToolCooldown('smithing', 800);
       smithingState.cooldownTimer = setTimeout(function () {
         smithingState.cooldownTimer = null;
@@ -6320,26 +6874,57 @@
       return;
     }
 
-    // Perk: Efficient Smelt — 15% chance to not consume ores
-    if (hasPerk('efficientSmelt', 'smithing') && Math.random() < 0.15) {
+    // Combo tracking (3s window for smelting)
+    var now = Date.now();
+    var timeSince = now - smithingCombo.lastClickTime;
+    if (smithingCombo.lastClickTime > 0 && timeSince <= 3000) {
+      smithingCombo.count = Math.min(smithingCombo.count + 1, 10);
+    } else if (timeSince > 3000) {
+      smithingCombo.count = 1;
+    }
+    smithingCombo.lastClickTime = now;
+    var comboMult = 1 + (smithingCombo.count * 0.1);
+    updateSmithingComboDisplay();
+
+    // Perk: Efficient Smelt — 15% chance to not consume ores (or Ore Surge active)
+    var skipOres = smithingState.oreSurgeCount > 0;
+    if (!skipOres && hasPerk('efficientSmelt', 'smithing') && Math.random() < 0.15) {
+      skipOres = true;
+      slog.noOreProcs++;
       addLog('Efficient smelt! Ores preserved.');
+    }
+    if (skipOres) {
+      if (smithingState.oreSurgeCount > 0) {
+        smithingState.oreSurgeCount--;
+        addLog('Ore Surge! Ores preserved. (' + smithingState.oreSurgeCount + ' left)');
+        if (smithingState.oreSurgeCount <= 0) {
+          var furnaceEl0 = $('smelt-furnace');
+          if (furnaceEl0) furnaceEl0.classList.remove('ore-surge-glow');
+        }
+      }
     } else {
       consumeSmeltingOres(barName);
     }
     // Perk: Double Bar — 10% chance for 2x bars
     var barCount = (hasPerk('doubleBar', 'smithing') && Math.random() < 0.10) ? 2 : 1;
     addItem(barName, barCount);
-    if (barCount > 1) addLog('Double bar! +' + barCount + ' ' + barName);
+    if (barCount > 1) { addLog('Double bar! +' + barCount + ' ' + barName); slog.doubleBars++; }
     updateSmeltMats();
 
+    // Collection log
+    slog.totalSmelts++;
+    slog.barsSmelted[barName] = (slog.barsSmelted[barName] || 0) + barCount;
+    if (isPerfect) slog.perfectSmelts++;
+
     var bonusMult = isPerfect ? 5 : 1;
-    var xpGain = Math.floor(res.xp * bonusMult * getXpMult());
+    var xpGain = Math.floor(res.xp * bonusMult * comboMult * getXpMult());
 
     addXp('smithing', xpGain);
 
     var logText = isPerfect
       ? 'PERFECT SMELT! ' + barName + ' (+' + xpGain + ' XP)'
       : 'Smelted ' + barName + ' (+' + xpGain + ' XP)';
+    if (smithingCombo.count > 1) logText += ' [x' + smithingCombo.count + ']';
     addLog(logText);
 
     var gameArea = $('skills-game-area');
@@ -6369,9 +6954,12 @@
     // Furnace glow
     var furnace = $('smelt-furnace');
     if (furnace) {
-      furnace.classList.add('smelting-glow');
-      setTimeout(function () { furnace.classList.remove('smelting-glow'); }, 600);
+      furnace.classList.add(isPerfect ? 'smelting-glow-perfect' : 'smelting-glow');
+      setTimeout(function () { furnace.classList.remove('smelting-glow', 'smelting-glow-perfect'); }, 600);
     }
+
+    // Try trigger event (2% chance)
+    tryTriggerSmithingEvent();
 
     var resetCooldown = getToolCooldown('smithing', 1000);
     smithingState.cooldownTimer = setTimeout(function () {
@@ -6560,15 +7148,26 @@
       anvil.classList.add('hit');
     }
 
-    // Get zone bounds
+    // Spawn anvil sparks
+    spawnAnvilSparks(anvil);
+
+    // Get zone bounds (Blessed Forge: wider zone)
     var zone = $('smithing-zone');
     var zoneLeft = zone ? parseFloat(zone.style.left) : 35;
     var zoneWidth = zone ? parseFloat(zone.style.width) : 30;
+    if (smithingState.blessedActive) {
+      zoneWidth *= 1.30;
+      zoneLeft = Math.floor(50 - zoneWidth / 2);
+    }
     var zoneRight = zoneLeft + zoneWidth;
 
-    var inZone = smithingState.cursorPos >= zoneLeft && smithingState.cursorPos <= zoneRight;
+    // Master's Touch: auto-hit every time
+    var inZone = smithingState.masterTouchActive || (smithingState.cursorPos >= zoneLeft && smithingState.cursorPos <= zoneRight);
     smithingState.hits++;
     if (inZone) smithingState.bonusHits++;
+
+    var slog = getSmithingLog();
+    slog.totalClicks++;
 
     // Hammer glow
     if (anvil) {
@@ -6588,11 +7187,17 @@
       if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
       smithingState.phase = 'done';
 
-      var recipe = getSelectedForgeRecipe();
+      // Clear Master's Touch after use
+      if (smithingState.masterTouchActive) {
+        smithingState.masterTouchActive = false;
+        if (anvil) anvil.classList.remove('master-touch-glow');
+      }
+
+      var recipe2 = getSelectedForgeRecipe();
 
       // Check materials and stack cap
-      if (!canForge(recipe) || getItemCount(recipe.name) >= STACK_CAP) {
-        if (progress) progress.textContent = !canForge(recipe) ? 'Not enough materials!' : 'Item stack is full (999)!';
+      if (!canForge(recipe2) || getItemCount(recipe2.name) >= STACK_CAP) {
+        if (progress) progress.textContent = !canForge(recipe2) ? 'Not enough materials!' : 'Item stack is full (999)!';
         var resetCd = getToolCooldown('smithing', 1000);
         smithingState.cooldownTimer = setTimeout(function () {
           smithingState.cooldownTimer = null;
@@ -6605,32 +7210,50 @@
       }
 
       // Consume materials and produce item
-      consumeForgingMats(recipe);
-      addItem(recipe.name, 1);
+      consumeForgingMats(recipe2);
+      addItem(recipe2.name, 1);
       updateForgeMats();
 
       // Masterwork check (5/5 perfect)
       var isMasterwork = smithingState.bonusHits >= 5;
+
+      // Combo tracking (5s window for forging)
+      var now = Date.now();
+      var timeSince = now - smithingCombo.lastClickTime;
+      if (smithingCombo.lastClickTime > 0 && timeSince <= 5000) {
+        smithingCombo.count = Math.min(smithingCombo.count + 1, 10);
+      } else if (timeSince > 5000) {
+        smithingCombo.count = 1;
+      }
+      smithingCombo.lastClickTime = now;
+      var comboMult = 1 + (smithingCombo.count * 0.1);
+      updateSmithingComboDisplay();
+
+      // Collection log
+      slog.totalForges++;
+      slog.itemsForged[recipe2.name] = (slog.itemsForged[recipe2.name] || 0) + 1;
+      if (isMasterwork) slog.masterworks++;
+
       var bonusMult = isMasterwork ? 5 : (1 + (smithingState.bonusHits * 0.25));
-      var xpGain = Math.floor(recipe.xp * bonusMult * getXpMult());
+      var xpGain = Math.floor(recipe2.xp * bonusMult * comboMult * getXpMult());
 
       addXp('smithing', xpGain);
 
       var logText = isMasterwork
-        ? 'MASTERWORK! Forged ' + recipe.name + ' (+' + xpGain + ' XP) [5/5 perfect]'
-        : 'Forged ' + recipe.name + ' (+' + xpGain + ' XP) [' + smithingState.bonusHits + '/5 perfect]';
+        ? 'MASTERWORK! Forged ' + recipe2.name + ' (+' + xpGain + ' XP) [5/5 perfect]'
+        : 'Forged ' + recipe2.name + ' (+' + xpGain + ' XP) [' + smithingState.bonusHits + '/5 perfect]';
+      if (smithingCombo.count > 1) logText += ' [x' + smithingCombo.count + ']';
       addLog(logText);
 
       var gameArea = $('skills-game-area');
       if (gameArea) {
-        // Item sprite particle
-        if (recipe.sprite) {
-          spawnSpriteParticle(gameArea, 'items_sheet', recipe.sprite.x, recipe.sprite.y);
+        if (recipe2.sprite) {
+          spawnSpriteParticle(gameArea, 'items_sheet', recipe2.sprite.x, recipe2.sprite.y);
         }
         spawnParticle(gameArea, '+' + xpGain + ' XP', 'xp');
       }
 
-      // Masterwork flash
+      // Masterwork flash + screen flash
       if (isMasterwork && gameArea) {
         var mw = document.createElement('div');
         mw.className = 'smithing-masterwork';
@@ -6648,6 +7271,9 @@
       onAction('smithing');
       animatePetAction('pet-bounce');
 
+      // Try trigger event (2% chance)
+      tryTriggerSmithingEvent();
+
       var cooldown = getToolCooldown('smithing', 1000);
       smithingState.cooldownTimer = setTimeout(function () {
         smithingState.cooldownTimer = null;
@@ -6657,6 +7283,221 @@
         updateGameHeader();
       }, cooldown);
     }
+  }
+
+  // ══════════════════════════════════════════════
+  // ── SMITHING COMBO & EVENTS ──────────────────
+  // ══════════════════════════════════════════════
+
+  function updateSmithingComboDisplay() {
+    var el = $('smithing-combo');
+    if (!el) return;
+    if (smithingCombo.count > 1) {
+      el.style.display = '';
+      el.textContent = 'Combo x' + smithingCombo.count + ' (' + (1 + smithingCombo.count * 0.1).toFixed(1) + 'x XP)';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  function spawnAnvilSparks(anvil) {
+    if (!anvil) return;
+    var gameArea = $('skills-game-area');
+    if (!gameArea) return;
+    for (var i = 0; i < 3; i++) {
+      var spark = document.createElement('div');
+      spark.className = 'smithing-spark';
+      var dx = (Math.random() - 0.5) * 60;
+      var dy = -(20 + Math.random() * 40);
+      spark.style.cssText = 'left:50%;top:50%;--spark-dx:' + dx + 'px;--spark-dy:' + dy + 'px;';
+      var rect = anvil.getBoundingClientRect();
+      var areaRect = gameArea.getBoundingClientRect();
+      spark.style.left = (rect.left - areaRect.left + rect.width / 2) + 'px';
+      spark.style.top = (rect.top - areaRect.top + rect.height / 2) + 'px';
+      gameArea.appendChild(spark);
+      (function (s) {
+        setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 500);
+      })(spark);
+    }
+  }
+
+  function tryTriggerSmithingEvent() {
+    if (smithingEventActive) return;
+    if (Math.random() > 0.02) return;
+
+    var pool = [];
+    var totalWeight = 0;
+    for (var i = 0; i < SMITHING_EVENTS.length; i++) {
+      pool.push(SMITHING_EVENTS[i]);
+      totalWeight += SMITHING_EVENTS[i].weight;
+    }
+    // Inferno (perk-gated: Pyromaniac Lv85)
+    if (hasPerk('pyromaniac', 'smithing')) {
+      pool.push({ id: 'inferno', name: 'Inferno', weight: 20 });
+      totalWeight += 20;
+    }
+
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    var selected = pool[0];
+    for (var j = 0; j < pool.length; j++) {
+      cumulative += pool[j].weight;
+      if (roll < cumulative) { selected = pool[j]; break; }
+    }
+
+    smithingEventActive = true;
+    addLog('EVENT: ' + selected.name + '!');
+
+    if (selected.id === 'blessedForge') triggerBlessedForge();
+    else if (selected.id === 'oreSurge') triggerOreSurge();
+    else if (selected.id === 'masterTouch') triggerMasterTouch();
+    else if (selected.id === 'inferno') triggerInferno();
+  }
+
+  function cleanupSmithingEvent() {
+    smithingEventActive = false;
+    smithingState.blessedActive = false;
+    smithingState.oreSurgeCount = 0;
+    smithingState.masterTouchActive = false;
+    if (smithingEventTimer) { clearTimeout(smithingEventTimer); smithingEventTimer = null; }
+    var evEls = document.querySelectorAll('.smithing-event-spot');
+    for (var i = 0; i < evEls.length; i++) {
+      if (evEls[i].parentNode) evEls[i].parentNode.removeChild(evEls[i]);
+    }
+    // Remove glow classes
+    var furnace = $('smelt-furnace');
+    if (furnace) furnace.classList.remove('ore-surge-glow');
+    var anvil = $('forge-anvil');
+    if (anvil) anvil.classList.remove('master-touch-glow');
+  }
+
+  function createSmithingEventSpot(cssClass, label, icon, timeLimit) {
+    var area = $('skills-game-area');
+    if (!area) return null;
+    var spot = document.createElement('div');
+    spot.className = 'smithing-event-spot ' + cssClass;
+    spot.innerHTML =
+      '<div class="smithing-event-label">' + label + '</div>' +
+      '<div class="smithing-event-icon">' + icon + '</div>';
+    var timerBar = document.createElement('div');
+    timerBar.className = 'smithing-event-timer';
+    var timerFill = document.createElement('div');
+    timerFill.className = 'smithing-event-timer-fill';
+    timerFill.style.width = '100%';
+    timerFill.style.transition = 'width ' + (timeLimit / 1000) + 's linear';
+    timerBar.appendChild(timerFill);
+    spot.appendChild(timerBar);
+    area.appendChild(spot);
+    setTimeout(function () { timerFill.style.width = '0%'; }, 50);
+    return spot;
+  }
+
+  function triggerBlessedForge() {
+    var spot = createSmithingEventSpot('blessed-forge', 'Blessed Forge!', '\u2728', 10000);
+    if (!spot) { cleanupSmithingEvent(); return; }
+    spot.addEventListener('click', function () {
+      if (spot.parentNode) spot.parentNode.removeChild(spot);
+      smithingState.blessedActive = true;
+      var slog = getSmithingLog();
+      slog.events.blessedForge++;
+      addLog('Blessed Forge activated! Green zones 30% wider for 15s.');
+      var gameArea = $('skills-game-area');
+      if (gameArea) spawnParticle(gameArea, '+3x XP!', 'xp');
+      var xpBonus = Math.floor(50 * getXpMult() * 3);
+      addXp('smithing', xpBonus);
+      smithingEventTimer = setTimeout(function () {
+        smithingState.blessedActive = false;
+        smithingEventActive = false;
+        addLog('Blessed Forge faded...');
+      }, 15000);
+    });
+    smithingEventTimer = setTimeout(function () {
+      addLog('Blessed Forge expired...');
+      cleanupSmithingEvent();
+    }, 10000);
+  }
+
+  function triggerOreSurge() {
+    var spot = createSmithingEventSpot('ore-surge', 'Ore Surge!', '\uD83D\uDCA0', 8000);
+    if (!spot) { cleanupSmithingEvent(); return; }
+    spot.addEventListener('click', function () {
+      if (spot.parentNode) spot.parentNode.removeChild(spot);
+      smithingState.oreSurgeCount = 3;
+      var slog = getSmithingLog();
+      slog.events.oreSurge++;
+      addLog('Ore Surge! Next 3 smelts use no ores.');
+      var furnace = $('smelt-furnace');
+      if (furnace) furnace.classList.add('ore-surge-glow');
+      smithingEventActive = false;
+    });
+    smithingEventTimer = setTimeout(function () {
+      addLog('Ore Surge expired...');
+      cleanupSmithingEvent();
+    }, 8000);
+  }
+
+  function triggerMasterTouch() {
+    var spot = createSmithingEventSpot('master-touch', "Master's Touch!", '\uD83D\uDD28', 8000);
+    if (!spot) { cleanupSmithingEvent(); return; }
+    spot.addEventListener('click', function () {
+      if (spot.parentNode) spot.parentNode.removeChild(spot);
+      smithingState.masterTouchActive = true;
+      var slog = getSmithingLog();
+      slog.events.masterTouch++;
+      addLog("Master's Touch! Next forge is automatic masterwork.");
+      var anvil = $('forge-anvil');
+      if (anvil) anvil.classList.add('master-touch-glow');
+      smithingEventActive = false;
+    });
+    smithingEventTimer = setTimeout(function () {
+      addLog("Master's Touch expired...");
+      cleanupSmithingEvent();
+    }, 8000);
+  }
+
+  function triggerInferno() {
+    var spot = createSmithingEventSpot('inferno-event', 'Inferno!', '\uD83D\uDD25', 12000);
+    if (!spot) { cleanupSmithingEvent(); return; }
+    var infernoHp = { hp: 5, maxHp: 5 };
+    var hpBar = document.createElement('div');
+    hpBar.className = 'rock-hp-bar';
+    hpBar.style.cssText = 'position:absolute;bottom:2px;left:4px;right:4px;';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'rock-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    spot.appendChild(hpBar);
+
+    spot.addEventListener('click', function () {
+      infernoHp.hp--;
+      hpFill.style.width = (infernoHp.hp / infernoHp.maxHp * 100) + '%';
+      spot.classList.add('hit');
+      setTimeout(function () { spot.classList.remove('hit'); }, 200);
+      if (infernoHp.hp <= 0) {
+        if (spot.parentNode) spot.parentNode.removeChild(spot);
+        var slog = getSmithingLog();
+        slog.events.inferno++;
+        // Reward: 10x smelting XP + 2 of highest available bar
+        var level = state.skills.smithing.level;
+        var bestBar = SMELTING_ORDER[0];
+        for (var bi = 0; bi < SMELTING_ORDER.length; bi++) {
+          if (SMELTING_RECIPES[SMELTING_ORDER[bi]].level <= level) bestBar = SMELTING_ORDER[bi];
+        }
+        addItem(bestBar, 2);
+        slog.barsSmelted[bestBar] = (slog.barsSmelted[bestBar] || 0) + 2;
+        var xpReward = Math.floor(200 * getXpMult() * 10);
+        addXp('smithing', xpReward);
+        addLog('Inferno defeated! +' + xpReward + ' XP, +2 ' + bestBar);
+        var gameArea = $('skills-game-area');
+        if (gameArea) spawnParticle(gameArea, '+' + xpReward + ' XP', 'xp');
+        smithingEventActive = false;
+        if (smithingEventTimer) { clearTimeout(smithingEventTimer); smithingEventTimer = null; }
+      }
+    });
+    smithingEventTimer = setTimeout(function () {
+      addLog('Inferno burned out...');
+      cleanupSmithingEvent();
+    }, 12000);
   }
 
   // ══════════════════════════════════════════════
@@ -7079,11 +7920,15 @@
     if (fishingState.castTimer) clearInterval(fishingState.castTimer);
     fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
     wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
+    // Smithing cleanup
+    smithingCombo = { count: 0, lastClickTime: 0 };
+    cleanupSmithingEvent();
+    stopSmithingAnim();
     if (smithingState.cursorTimer) clearInterval(smithingState.cursorTimer);
     if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
     if (smithingState.cooldownTimer) clearTimeout(smithingState.cooldownTimer);
     var prevMode = smithingState.mode || 'smelting';
-    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
+    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null, blessedActive: false, oreSurgeCount: 0, masterTouchActive: false };
     if (combatState.enemyTimer) clearInterval(combatState.enemyTimer);
     if (combatState.dodgeWindowTimer) clearTimeout(combatState.dodgeWindowTimer);
     combatState = {

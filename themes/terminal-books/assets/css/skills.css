@@ -2800,3 +2800,186 @@
 
   .skill-name { font-size: 0.7rem; }
 }
+
+/* ══════════════════════════════════════════════ */
+/* ── Smithing Overhaul: Combo, Events, Polish ── */
+/* ══════════════════════════════════════════════ */
+
+/* ── Smithing combo counter ──────────────────── */
+.smithing-combo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #ff8c00;
+  pointer-events: none;
+  text-shadow: 0 0 6px #ff8c00;
+  z-index: 15;
+}
+
+/* ── Anvil strike sparks ─────────────────────── */
+.smithing-spark {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #ffd700;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 15;
+  animation: sparkFly 0.5s ease-out forwards;
+  box-shadow: 0 0 3px #ffa000;
+}
+
+@keyframes sparkFly {
+  0% { opacity: 1; transform: translate(0, 0); }
+  100% { opacity: 0; transform: translate(var(--spark-dx, 20px), var(--spark-dy, -30px)); }
+}
+
+/* ── Smelting glow enhancements ──────────────── */
+.smithing-furnace.smelting-glow-perfect {
+  filter: brightness(2.0);
+  transition: filter 0.1s;
+}
+
+.smithing-furnace.ore-surge-glow {
+  filter: brightness(1.3);
+  box-shadow: 0 0 12px rgba(0, 200, 255, 0.4);
+}
+
+.smithing-anvil.master-touch-glow {
+  filter: brightness(1.4);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+}
+
+/* ── Smithing event spots ────────────────────── */
+.smithing-event-spot {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: eventAppear 0.3s ease-out;
+  user-select: none;
+}
+
+.smithing-event-label {
+  font-family: monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+}
+
+.smithing-event-icon {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.smithing-event-timer {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  overflow: hidden;
+}
+
+.smithing-event-timer-fill {
+  height: 100%;
+  background: #ff8c00;
+}
+
+/* Blessed Forge */
+.blessed-forge {
+  border: 2px solid #ffd700;
+  background: color-mix(in srgb, #ffd700 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #ffd700 30%, transparent);
+  animation: eventAppear 0.3s ease-out, blessedPulse 1.5s ease-in-out infinite;
+}
+
+.blessed-forge .smithing-event-label { color: #ffd700; }
+.blessed-forge .smithing-event-timer-fill { background: #ffd700; }
+
+@keyframes blessedPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #ffd700 30%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, #ffd700 50%, transparent); }
+}
+
+/* Ore Surge */
+.ore-surge {
+  border: 2px solid #00bcd4;
+  background: color-mix(in srgb, #00838f 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #00bcd4 30%, transparent);
+  animation: eventAppear 0.3s ease-out, surgePulse 1s ease-in-out infinite;
+}
+
+.ore-surge .smithing-event-label { color: #00bcd4; }
+.ore-surge .smithing-event-timer-fill { background: #00bcd4; }
+
+@keyframes surgePulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #00bcd4 30%, transparent); }
+  50% { box-shadow: 0 0 18px color-mix(in srgb, #00bcd4 50%, transparent); }
+}
+
+/* Master's Touch */
+.master-touch {
+  border: 2px solid #ff8f00;
+  background: color-mix(in srgb, #e65100 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #ff8f00 30%, transparent);
+  animation: eventAppear 0.3s ease-out, masterPulse 1.2s ease-in-out infinite;
+}
+
+.master-touch .smithing-event-label { color: #ff8f00; }
+.master-touch .smithing-event-timer-fill { background: #ff8f00; }
+
+@keyframes masterPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #ff8f00 30%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, #ffd700 40%, transparent); }
+}
+
+/* Inferno */
+.inferno-event {
+  border: 2px solid #f44336;
+  background: color-mix(in srgb, #b71c1c 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #f44336 30%, transparent);
+  animation: eventAppear 0.3s ease-out, infernoPulse 0.8s ease-in-out infinite;
+  width: 96px;
+  height: 96px;
+}
+
+.inferno-event .smithing-event-label { color: #f44336; }
+.inferno-event .smithing-event-timer-fill { background: #f44336; }
+
+@keyframes infernoPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #f44336 30%, transparent); }
+  50% { box-shadow: 0 0 24px color-mix(in srgb, #ff6f00 50%, transparent); }
+}
+
+.smithing-event-spot.hit {
+  animation: anvilHit 0.2s ease-out;
+}
+
+/* ── Animated smelting gauge fire effect ──────── */
+.smelting-gauge-fill {
+  background: linear-gradient(to top, #ff6600, #ff3300, #ff6600) !important;
+  background-size: 100% 200% !important;
+  animation: gaugeFireAnim 0.6s linear infinite;
+}
+
+@keyframes gaugeFireAnim {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
