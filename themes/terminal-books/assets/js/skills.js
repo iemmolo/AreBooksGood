@@ -659,7 +659,7 @@
   var miningAnimFrame = 0;
   var miningAnimLastTs = 0;
   var miningCartState = { x: 260, dir: 1 };
-  var miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseFrames: 0 };
+  var miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseTime: 0 };
   var miningEmbers = []; // small particles floating from torches
 
   // Constants matching static BG coordinates
@@ -2490,7 +2490,7 @@
     miningAnimFrame = 0;
     miningAnimLastTs = 0;
     miningCartState = { x: 20, dir: 1 };
-    miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseFrames: 0 };
+    miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseTime: 0 };
     miningEmbers = [];
     miningAnimLoop(0);
   }
@@ -2506,19 +2506,19 @@
   }
 
   function miningAnimLoop(ts) {
+    if (!miningAnimCtx || !miningAnimCanvas) { miningAnimFrameId = null; return; }
     miningAnimFrameId = requestAnimationFrame(miningAnimLoop);
-    if (!miningAnimCtx || !miningAnimCanvas) return;
     var dt = miningAnimLastTs ? Math.min((ts - miningAnimLastTs) / 1000, 0.1) : 0.016;
     miningAnimLastTs = ts;
     miningAnimFrame++;
 
     miningAnimCtx.clearRect(0, 0, MINING_W, MINING_H);
-    drawTorchFlicker(miningAnimCtx, miningAnimFrame);
+    drawTorchFlicker(miningAnimCtx, miningAnimFrame, dt);
     drawWaterDrip(miningAnimCtx, miningAnimFrame, dt);
     drawMineCart(miningAnimCtx, miningAnimFrame, dt);
   }
 
-  function drawTorchFlicker(ctx, frame) {
+  function drawTorchFlicker(ctx, frame, dt) {
     var i, tp, phase, flameShift, glowAlpha, glowR, grad;
 
     // Draw torch flames + glow for 4 wall torches
@@ -2586,10 +2586,10 @@
     // Update & draw embers
     for (i = miningEmbers.length - 1; i >= 0; i--) {
       var e = miningEmbers[i];
-      e.x += e.vx * 0.016;
-      e.y += e.vy * 0.016;
-      e.vy += 5 * 0.016; // slight gravity
-      e.life -= 0.02;
+      e.x += e.vx * dt;
+      e.y += e.vy * dt;
+      e.vy += 5 * dt; // slight gravity
+      e.life -= 1.2 * dt; // ~0.83s lifetime
       if (e.life <= 0) { miningEmbers.splice(i, 1); continue; }
       ctx.globalAlpha = e.life * 0.8;
       ctx.fillStyle = e.life > 0.5 ? '#ffa040' : '#ff6020';
@@ -2616,7 +2616,7 @@
       ctx.fillStyle = 'rgba(140,180,220,0.7)';
       ctx.fillRect(MINING_PUD_X + 13, Math.round(ds.y) + 1, 1, 2);
     } else if (ds.phase === 'splash') {
-      ds.splashFrame++;
+      ds.splashFrame += dt * 60; // normalize to ~60fps units
       var sf = ds.splashFrame;
       // Ripple rings expanding outward
       var r1 = sf * 0.8;
@@ -2641,17 +2641,17 @@
       if (sf < 12) {
         var splAlpha = Math.max(0, 1 - sf / 12);
         ctx.fillStyle = 'rgba(120,170,220,' + (splAlpha * 0.6) + ')';
-        ctx.fillRect(MINING_PUD_X + 11, MINING_PUD_Y - 4 - sf, 1, 2);
-        ctx.fillRect(MINING_PUD_X + 16, MINING_PUD_Y - 3 - sf * 0.7, 1, 2);
-        ctx.fillRect(MINING_PUD_X + 14, MINING_PUD_Y - 5 - sf * 0.9, 1, 2);
+        ctx.fillRect(MINING_PUD_X + 11, MINING_PUD_Y - 4 - Math.round(sf), 1, 2);
+        ctx.fillRect(MINING_PUD_X + 16, MINING_PUD_Y - 3 - Math.round(sf * 0.7), 1, 2);
+        ctx.fillRect(MINING_PUD_X + 14, MINING_PUD_Y - 5 - Math.round(sf * 0.9), 1, 2);
       }
       if (sf > 30) {
         ds.phase = 'pause';
-        ds.pauseFrames = 0;
+        ds.pauseTime = 0;
       }
     } else if (ds.phase === 'pause') {
-      ds.pauseFrames++;
-      if (ds.pauseFrames > 60) {
+      ds.pauseTime += dt;
+      if (ds.pauseTime > 1.0) { // ~1 second pause
         ds.phase = 'falling';
         ds.y = 50;
       }
@@ -2744,6 +2744,9 @@
 
     area.innerHTML = '';
     miningCombo = { count: 0, lastClickTime: 0 };
+
+    // Stop previous animation if re-rendering (e.g. ore dropdown change)
+    stopMiningAnim();
 
     // Animation overlay canvas
     var animCanvas = document.createElement('canvas');
