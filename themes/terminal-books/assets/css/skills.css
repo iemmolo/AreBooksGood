@@ -305,56 +305,134 @@
 }
 
 /* ── Fishing Mini-Game ────────────────────────── */
-.fishing-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
+/* ── Fishing selector ─────────────────────────── */
+.fishing-select-wrap {
+  text-align: center;
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  z-index: 5;
 }
 
-.fishing-water {
-  width: 200px;
-  height: 120px;
-  border: 2px solid color-mix(in srgb, #4fc3f7 40%, transparent);
-  background: color-mix(in srgb, #1a3a5c 80%, var(--background));
+/* ── Fishing spots (3-spot layout) ─────────────── */
+.fishing-spots {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  user-select: none;
+  -webkit-user-select: none;
+  position: absolute;
+  bottom: 22%;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.fishing-spot-wrap {
   position: relative;
-  overflow: hidden;
+  width: 80px;
+  flex-shrink: 0;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fishing-spot {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  border: 2px solid color-mix(in srgb, #4fc3f7 30%, transparent);
+  background: color-mix(in srgb, #1a3a5c 40%, transparent);
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  user-select: none;
+  flex-shrink: 0;
 }
 
-.fishing-line {
-  width: 2px;
-  height: 0;
-  background: color-mix(in srgb, var(--foreground) 60%, transparent);
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transition: height 0.5s ease-out;
+.fishing-spot:hover {
+  border-color: #4fc3f7;
+  background: color-mix(in srgb, #1a3a5c 60%, transparent);
 }
 
-.fishing-line.cast {
-  height: 80px;
+.fishing-spot:active {
+  filter: brightness(1.3);
 }
 
-.fishing-bobber {
-  position: absolute;
-  font-size: 1.5rem;
-  top: 70px;
-  left: calc(50% - 10px);
+.fishing-spot.waiting {
+  border-color: color-mix(in srgb, #4fc3f7 50%, transparent);
+}
+
+.fishing-spot.bite {
+  border-color: #ff5252;
+  box-shadow: 0 0 12px rgba(255, 82, 82, 0.4);
+  animation: fishBitePulse 0.4s ease-in-out infinite;
+}
+
+.fishing-spot.reeling {
+  border-color: #66bb6a;
+  background: color-mix(in srgb, #66bb6a 15%, transparent);
+}
+
+.fishing-spot.depleted {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+  pointer-events: none;
+}
+
+.fishing-spot.hit {
+  animation: fishSpotHit 0.2s ease-in-out;
+}
+
+.fishing-spot.cracking {
+  animation: fishSpotCrack 0.3s ease-out;
+}
+
+@keyframes fishBitePulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 82, 82, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 82, 82, 0.7); }
+}
+
+@keyframes fishSpotHit {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes fishSpotCrack {
+  0% { transform: translateX(0); filter: brightness(1); }
+  30% { transform: translateX(-3px); filter: brightness(1.8); }
+  60% { transform: translateX(3px); filter: brightness(1.5); }
+  100% { transform: translateX(0); filter: brightness(0.6); }
+}
+
+/* ── Fishing bobber/line/exclaim per spot ──────── */
+.fishing-bobber-el {
+  font-size: 1.8rem;
   opacity: 0;
   transition: opacity 0.3s;
+  animation: bobberFloat 2s ease-in-out infinite;
 }
 
-.fishing-bobber.visible {
+.fishing-bobber-el.visible {
   opacity: 1;
 }
 
-.fishing-bobber.bite {
+.fishing-bobber-el.bite-anim {
   animation: bobberBite 0.15s ease-in-out infinite;
-  color: #ff5252;
+}
+
+@keyframes bobberFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 @keyframes bobberBite {
@@ -362,51 +440,225 @@
   50% { transform: translateY(5px); }
 }
 
-.fishing-exclaim {
+.fishing-line-el {
+  width: 2px;
+  height: 0;
+  background: color-mix(in srgb, var(--foreground) 50%, transparent);
   position: absolute;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #ff5252;
-  top: 30px;
-  left: calc(50% - 10px);
-  animation: exclaimPulse 0.3s ease-in-out infinite;
-  display: none;
+  top: 0;
+  left: 50%;
+  transition: height 0.4s ease-out;
 }
 
-.fishing-exclaim.visible {
+.fishing-line-el.cast {
+  height: 20px;
+}
+
+.fishing-exclaim-el {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff5252;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  animation: exclaimPulse 0.3s ease-in-out infinite;
+}
+
+.fishing-exclaim-el.visible {
   display: block;
 }
 
 @keyframes exclaimPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.3); }
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.3); }
 }
 
-.fishing-btn {
+/* ── Fish HP bar ──────────────────────────────── */
+.fish-hp-bar {
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  z-index: 5;
+  overflow: hidden;
+}
+
+.fish-hp-fill {
+  height: 100%;
+  background: #4fc3f7;
+  transition: width 0.2s;
+}
+
+/* ── Fishing spot label ──────────────────────── */
+.fishing-spot-label {
   font-family: monospace;
-  font-size: 1rem;
-  padding: 0.6rem 1.5rem;
-  border: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-  color: var(--foreground);
-  cursor: pointer;
-  transition: background 0.15s;
+  font-size: 0.6rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  white-space: nowrap;
+  margin-top: 4px;
 }
 
-.fishing-btn:hover {
-  background: color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.fishing-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.fishing-status {
+/* ── Fishing respawn timer ───────────────────── */
+.fishing-respawn-timer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: bold;
   color: color-mix(in srgb, var(--foreground) 60%, transparent);
-  min-height: 1.2em;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ── Fishing combo counter ───────────────────── */
+.fishing-combo {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #4fc3f7;
+  pointer-events: none;
+  text-shadow: 0 0 6px #4fc3f7;
+  z-index: 15;
+}
+
+/* ── Fishing animation overlay ───────────────── */
+.fishing-anim-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Fishing events ──────────────────────────── */
+.fishing-event-spot {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: eventAppear 0.3s ease-out;
+  user-select: none;
+}
+
+.fishing-event-label {
+  font-family: monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+}
+
+.fishing-event-icon {
+  font-size: 2rem;
+}
+
+.fishing-event-timer {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  overflow: hidden;
+}
+
+.fishing-event-timer-fill {
+  height: 100%;
+  background: #4fc3f7;
+}
+
+.treasure-chest {
+  border: 2px solid #ffd700;
+  background: color-mix(in srgb, #ffd700 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #ffd700 30%, transparent);
+  animation: eventAppear 0.3s ease-out, treasurePulse 1.5s ease-in-out infinite;
+}
+
+.treasure-chest .fishing-event-label { color: #ffd700; }
+
+@keyframes treasurePulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #ffd700 30%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, #ffd700 50%, transparent); }
+}
+
+.school-of-fish {
+  border: 2px solid #4fc3f7;
+  background: color-mix(in srgb, #1565c0 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #4fc3f7 30%, transparent);
+  animation: eventAppear 0.3s ease-out, schoolPulse 1s ease-in-out infinite;
+}
+
+.school-of-fish .fishing-event-label { color: #4fc3f7; }
+
+@keyframes schoolPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #4fc3f7 30%, transparent); }
+  50% { box-shadow: 0 0 18px color-mix(in srgb, #4fc3f7 50%, transparent); }
+}
+
+.kraken-event {
+  border: 2px solid #7b1fa2;
+  background: color-mix(in srgb, #7b1fa2 15%, var(--background));
+  box-shadow: 0 0 12px color-mix(in srgb, #ce93d8 30%, transparent);
+  animation: eventAppear 0.3s ease-out, krakenPulse 2s ease-in-out infinite;
+  width: 96px;
+  height: 96px;
+}
+
+.kraken-event .fishing-event-label { color: #ce93d8; }
+
+@keyframes krakenPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, #ce93d8 30%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, #7b1fa2 50%, transparent); }
+}
+
+/* ── Shark fins (falling targets) ────────────── */
+.shark-fin {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  cursor: pointer;
+  top: -60px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  animation: sharkSwim 2s ease-in forwards;
+  user-select: none;
+  border: 2px solid #ef5350;
+  background: color-mix(in srgb, #ef5350 15%, var(--background));
+}
+
+.shark-fin.clicked {
+  opacity: 0.3;
+  pointer-events: none;
+  border-color: #66bb6a;
+}
+
+@keyframes sharkSwim {
+  0% { top: -60px; opacity: 0; }
+  20% { opacity: 1; }
+  100% { top: 60%; }
 }
 
 /* ── Woodcutting Mini-Game ────────────────────── */
@@ -1906,22 +2158,7 @@
   60% { transform: translateX(2px); }
 }
 
-/* ── A2: Fishing Enhancements ─────────────────── */
-.fishing-power-bar {
-  width: 160px;
-  height: 12px;
-  background: color-mix(in srgb, var(--foreground) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
-  overflow: hidden;
-}
-
-.fishing-power-fill {
-  height: 100%;
-  background: var(--accent);
-  width: 0%;
-  transition: width 0.05s linear;
-}
-
+/* ── A2: Fishing Enhancements (legacy classes kept for compatibility) ── */
 .fishing-golden {
   color: #ffd700 !important;
   text-shadow: 0 0 8px #ffd700;
@@ -1932,12 +2169,6 @@
   color: #e040fb !important;
   text-shadow: 0 0 8px #e040fb;
   font-weight: bold;
-}
-
-.fishing-size {
-  font-family: monospace;
-  font-size: 0.7rem;
-  color: color-mix(in srgb, var(--foreground) 50%, transparent);
 }
 
 /* ── A3: Woodcutting Enhancements ─────────────── */
@@ -2382,6 +2613,10 @@
 
   .wc-tree.stumped { height: 42px; }
 
+  .fishing-spots { gap: 0.75rem; }
+
+  .fishing-spot, .fishing-spot-wrap { width: 64px; min-width: 64px; height: 64px; min-height: 64px; }
+
   .skills-right-panel { padding: 0.25rem; overflow: hidden; min-width: 0; }
 
   .skills-inv-grid { grid-template-columns: repeat(5, 1fr); }
@@ -2410,6 +2645,12 @@
   .wc-tree { width: 64px; height: 96px; }
 
   .wc-tree.stumped { height: 34px; }
+
+  .fishing-spots { gap: 0.5rem; }
+
+  .fishing-spot, .fishing-spot-wrap { width: 56px; min-width: 56px; height: 56px; min-height: 56px; }
+
+  .fishing-bobber-el { font-size: 1.2rem; }
 
   .skill-row { min-width: 60px; padding: 0.2rem; }
 

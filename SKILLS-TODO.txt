@@ -228,6 +228,23 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] Forest extras sprite sheet (logs, stumps, vines, props) packed via pack-forest-extras.py
 - [x] Stump position jump fix (min-height + flex on .wc-tree-wrap)
 
+### Fishing Overhaul (Done)
+- [x] FISH_HP map (12 fish, HP 1-5) — multi-hit system matching mining/WC
+- [x] 3-spot layout with flex row, bottom-aligned (mirrors mining rocks)
+- [x] Fish selector dropdown (pick any unlocked fish to catch)
+- [x] Hybrid gameplay: click spot → auto-cast → wait → bite → multi-reel → catch
+- [x] Combo system (400-800ms window, max 10 = 2x multiplier)
+- [x] Critical hit system (min(1%+level*0.2%, 20%) instant catch)
+- [x] Fish HP bars, depletion/respawn timer per spot (2-3s)
+- [x] Fishing events: Treasure Chest (gem+5xXP), School of Fish (3 fish+3xXP), Shark Attack (5xXP), Kraken (perk-gated, 5 fish+10xXP)
+- [x] Collection log: fishCaught, sizes, goldenCatches, totalRare, doubleCatches, crits, events
+- [x] Procedural background: dock/ocean canvas, wave texture, clouds, distant boat
+- [x] Animation overlay: water ripples, seagull silhouettes, cloud wisps, wave motion
+- [x] State migration v8→v9 for fishing log
+- [x] All 8 fishing perks integrated with new system
+- [x] Responsive breakpoints (768px, 480px)
+- [x] showCollectionLog() dispatches to fishing
+
 ### Phase 5: Star System Cleanup (Done)
 - [x] Remove star stat bonuses from battle.js createPlayerFighter()
 - [x] Remove star migration from pet.js loadPetState()
@@ -315,8 +332,8 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [ ] Rebuild tool system using bar crafting (TOOL_BAR_COSTS, crafting UI, inventory integration)
 
 ### Phase 6D.6: Collection Logs for All Skills (Location Tab)
-- [ ] Fishing collection log: state.skills.fishing.log — fishCaught{}, totalRare, goldenCatches, sizes{}
-- [ ] Woodcutting collection log: state.skills.woodcutting.log — treesChopped{}, birdNests, doubleChops
+- [x] Fishing collection log: state.skills.fishing.log — fishCaught{}, totalRare, goldenCatches, sizes{}, events{}
+- [x] Woodcutting collection log: state.skills.woodcutting.log — treesChopped{}, birdNests, doubleChops
 - [ ] Smithing collection log: state.skills.smithing.log — barsSmelted{}, itemsForged{}, masterworks, perfectSmelts
 - [ ] Combat collection log: state.skills.combat.log — enemiesKilled, crits, dodges, deaths, potionsUsed
 - [ ] Update __RPG_SKILLS_API.renderCollectionLogInto() to handle all 5 skills (currently mining-only)
