@@ -223,7 +223,7 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] State migration v7→v8 for woodcutting log
 - [x] Power Chop perk deals 2 HP damage per chop
 - [x] All 8 woodcutting perks integrated with new system
-- [ ] Woodcutting-specific perks system (like mining perks) — perks exist, visual perk panel already shared
+- [x] Woodcutting-specific perks system (like mining perks) — perks exist, visual perk panel already shared
 
 ### Phase 5: Star System Cleanup (Done)
 - [x] Remove star stat bonuses from battle.js createPlayerFighter()

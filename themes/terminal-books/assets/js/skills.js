@@ -2647,17 +2647,68 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, WC_GROUND_Y);
 
-    // ── Pass 2: Distant treeline (jagged dark-green silhouettes at horizon) ──
-    var distTreeCol = ['#1a4a20', '#1e5228', '#16421c', '#224e2a'];
-    for (x = 0; x < W; x += 6) {
-      h = tileHash(x, 100);
-      var treeH = 20 + ((h >>> 0) % 30);
-      var treeW = 8 + ((h >>> 8) % 8);
-      ctx.fillStyle = distTreeCol[((h >>> 16) % distTreeCol.length)];
-      ctx.fillRect(x, WC_HORIZON_Y - treeH, treeW, treeH + 10);
-      // Rounded top: smaller rects stacked upward
-      ctx.fillRect(x + 1, WC_HORIZON_Y - treeH - 4, treeW - 2, 6);
-      ctx.fillRect(x + 2, WC_HORIZON_Y - treeH - 6, treeW - 4, 4);
+    // ── Pass 2: Distant treeline (3-layer tree silhouettes at horizon) ──
+    // Helper: draw a single tree silhouette using canvas paths
+    // type 0 = conifer (pointed spire), 1 = deciduous (round canopy), 2 = bush (wide & low)
+    function drawTreeSil(cx, baseY, type, tH, col) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      var hw;
+      if (type === 0) {
+        // Conifer: wide pointed triangle
+        hw = Math.floor(tH * 0.45);
+        ctx.moveTo(cx, baseY - tH);
+        ctx.lineTo(cx - hw * 0.35, baseY - tH * 0.7);
+        ctx.lineTo(cx - hw * 0.75, baseY - tH * 0.4);
+        ctx.lineTo(cx - hw, baseY);
+        ctx.lineTo(cx + hw, baseY);
+        ctx.lineTo(cx + hw * 0.75, baseY - tH * 0.4);
+        ctx.lineTo(cx + hw * 0.35, baseY - tH * 0.7);
+      } else if (type === 1) {
+        // Deciduous: wide round canopy
+        var r = Math.floor(tH * 0.5);
+        var canopyY = baseY - tH + r;
+        ctx.arc(cx, canopyY, r, Math.PI, 0);
+        ctx.lineTo(cx + 3, baseY);
+        ctx.lineTo(cx - 3, baseY);
+      } else {
+        // Bush: very wide low dome
+        hw = Math.floor(tH * 1.1);
+        ctx.moveTo(cx - hw, baseY);
+        ctx.quadraticCurveTo(cx - hw, baseY - tH * 1.2, cx, baseY - tH);
+        ctx.quadraticCurveTo(cx + hw, baseY - tH * 1.2, cx + hw, baseY);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Base band: solid dark green strip behind all trees to guarantee no sky peeks through
+    ctx.fillStyle = '#0d3012';
+    ctx.fillRect(0, WC_HORIZON_Y - 8, W, 28);
+
+    // Layer 1 — Far (darkest, tallest, tight spacing)
+    var farCol = ['#0d3012', '#102a14', '#0a2810', '#0e3414'];
+    for (x = -20; x < W + 20; x += 14 + ((tileHash(x, 101) >>> 0) % 10)) {
+      h = tileHash(x, 102);
+      var farH = 45 + ((h >>> 0) % 30);
+      var farType = ((h >>> 8) % 3 === 0) ? 1 : 0;
+      drawTreeSil(x, WC_HORIZON_Y + 8, farType, farH, farCol[(h >>> 12) % farCol.length]);
+    }
+    // Layer 2 — Mid (medium dark, tight overlap)
+    var midTreeCol = ['#1a4a20', '#1e5228', '#16421c', '#1c4e24'];
+    for (x = -10; x < W + 10; x += 12 + ((tileHash(x, 103) >>> 0) % 9)) {
+      h = tileHash(x + 7, 104);
+      var midH = 28 + ((h >>> 0) % 24);
+      var midType = ((h >>> 8) % 5 < 2) ? 1 : (((h >>> 10) % 3 === 0) ? 2 : 0);
+      drawTreeSil(x, WC_HORIZON_Y + 10, midType, midH, midTreeCol[(h >>> 12) % midTreeCol.length]);
+    }
+    // Layer 3 — Near undergrowth (lighter, dense short bushes and small conifers)
+    var nearCol = ['#224e2a', '#286432', '#1e5228', '#2a5a30'];
+    for (x = -6; x < W + 6; x += 8 + ((tileHash(x, 105) >>> 0) % 6)) {
+      h = tileHash(x + 13, 106);
+      var nearH = 12 + ((h >>> 0) % 14);
+      var nearType = ((h >>> 8) % 3 === 0) ? 0 : 2;
+      drawTreeSil(x, WC_HORIZON_Y + 12, nearType, nearH, nearCol[(h >>> 12) % nearCol.length]);
     }
 
     // ── Pass 3: Mid-ground trees (4 scattered sprites, pushed back visually) ──
