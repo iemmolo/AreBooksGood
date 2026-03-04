@@ -2128,16 +2128,25 @@
     if (!sel) return;
     var level = state.skills.mining.level;
     var resources = SKILLS.mining.resources;
-    var currentVal = sel.value;
+    var oldVal = parseInt(sel.value);
     sel.innerHTML = '';
+    var highestIdx = 0;
     for (var si = 0; si < resources.length; si++) {
       if (resources[si].level > level) continue;
+      highestIdx = si;
       var opt = document.createElement('option');
       opt.value = si;
       opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
       sel.appendChild(opt);
     }
-    sel.value = currentVal;
+    // Auto-switch to newly unlocked ore
+    if (highestIdx > oldVal) {
+      sel.value = highestIdx;
+      selectedMiningOre = highestIdx;
+      updateGameHeader();
+    } else {
+      sel.value = oldVal;
+    }
   }
 
   var veinMinerTriggered = false;
