@@ -521,10 +521,12 @@
     return el;
   }
 
-  function spawnSpriteParticle(parentEl, sheetKey, sx, sy, sw, sh) {
+  function spawnSpriteParticle(parentEl, sheetKey, sx, sy, sw, sh, displayW, displayH) {
     sw = sw || 16;
     sh = sh || 16;
-    var el = createSpriteEl(sheetKey, sx, sy, sw, sh, 32, 32);
+    var dw = displayW || 32;
+    var dh = displayH || 32;
+    var el = createSpriteEl(sheetKey, sx, sy, sw, sh, dw, dh);
     if (!el) return;
     el.className = 'ore-particle sprite-particle';
     el.style.left = (Math.random() * 30 + 35) + '%';
@@ -4505,7 +4507,9 @@
     var fill = bar.querySelector('.fish-hp-fill');
     if (!fill) return;
     var fs = fishSpotState[idx];
-    fill.style.width = (fs.hp / fs.maxHp * 100) + '%';
+    var pct = fs.hp / fs.maxHp;
+    fill.style.width = (pct * 100) + '%';
+    fill.style.backgroundColor = pct > 0.5 ? '#66bb6a' : pct > 0.25 ? '#ffeb3b' : '#f44336';
   }
 
   // ══════════════════════════════════════════════
@@ -4590,6 +4594,10 @@
       spot.className = 'fishing-spot';
       spot.setAttribute('data-idx', i);
 
+      // Tier-colored border
+      var tierIdx = Math.min(Math.floor(res.level / 20), 5);
+      spot.style.borderColor = TIER_COLORS[tierIdx];
+
       // Fish sprite inside spot
       var fishPos = FISH_SPRITES[res.name];
       if (fishPos) {
@@ -4615,11 +4623,13 @@
       line.id = 'fish-line-' + i;
       spot.appendChild(line);
 
-      // Exclaim
+      // Exclaim — lure sprite instead of "!" text
       var exclaim = document.createElement('div');
       exclaim.className = 'fishing-exclaim-el';
       exclaim.id = 'fish-exclaim-' + i;
-      exclaim.textContent = '!';
+      var lureSpr = createSpriteEl('items_sheet', FISHING_EQUIP_SPRITES.lure.x, FISHING_EQUIP_SPRITES.lure.y, 16, 16, 24, 24);
+      if (lureSpr) { lureSpr.className = 'skill-sprite'; exclaim.appendChild(lureSpr); }
+      else exclaim.textContent = '!';
       spot.appendChild(exclaim);
 
       // HP bar (hidden when maxHp === 1)
@@ -4738,10 +4748,10 @@
   }
 
   function onFishSpotClick(e) {
-    if (fishingCooldown) return;
-    if (fishingEventActive) return;
     var spot = e.currentTarget;
     if (spot.classList.contains('depleted')) return;
+    if (fishingCooldown) return;
+    if (fishingEventActive) return;
 
     var idx = parseInt(spot.getAttribute('data-idx'));
     var fs = fishSpotState[idx];
@@ -4802,6 +4812,10 @@
       fs.missTimer = setTimeout(function () {
         if (fs.phase === 'reeling') {
           addLog('Fish got away!');
+          if (fishingCombo.count > 0) {
+            var lostArea = $('skills-game-area');
+            if (lostArea) spawnParticle(lostArea, 'COMBO LOST!', 'combo-lost');
+          }
           fishingCombo.count = 0;
           var comboEl = $('fishing-combo');
           if (comboEl) comboEl.style.display = 'none';
@@ -4815,6 +4829,10 @@
       if (timeSinceLast >= comboMin && timeSinceLast <= 800) {
         fishingCombo.count = Math.min(fishingCombo.count + 1, 10);
       } else if (timeSinceLast > 800) {
+        if (fishingCombo.count > 0) {
+          var lostArea2 = $('skills-game-area');
+          if (lostArea2) spawnParticle(lostArea2, 'COMBO LOST!', 'combo-lost');
+        }
         fishingCombo.count = 0;
       }
       fishingCombo.lastClickTime = now;
@@ -4823,7 +4841,7 @@
       var comboEl = $('fishing-combo');
       if (comboEl) {
         if (fishingCombo.count > 0) {
-          comboEl.textContent = 'Combo x' + fishingCombo.count + '!';
+          comboEl.textContent = 'Combo x' + fishingCombo.count + ' (' + comboMult.toFixed(1) + 'x)';
           comboEl.style.display = '';
         } else {
           comboEl.style.display = 'none';
@@ -4836,20 +4854,20 @@
 
       if (isCrit) {
         fs.hp = 0;
-        spot.classList.add('cracking');
+        spot.classList.add('fishing-crit');
         var area = $('skills-game-area');
         if (area) spawnParticle(area, 'CRIT!', 'crit');
         log.criticalHits++;
         addLog('Critical hit!');
       } else {
         fs.hp = Math.max(fs.hp - 1, 0);
-        spot.classList.add('hit');
+        spot.classList.add('hit', 'shaking');
       }
       updateFishHpBar(idx);
 
       setTimeout(function () {
-        spot.classList.remove('hit', 'cracking');
-      }, 200);
+        spot.classList.remove('hit', 'shaking', 'fishing-crit');
+      }, 250);
 
       if (fs.hp > 0) {
         // Partial reel — award fraction of XP
@@ -4910,7 +4928,15 @@
       var area3 = $('skills-game-area');
       if (area3) {
         var fishPos = FISH_SPRITES[res.name];
-        if (fishPos) spawnSpriteParticle(area3, fishPos.sheet || 'fish', fishPos.x, fishPos.y);
+        if (fishPos) {
+          var sizeScales = [0.6, 0.8, 1, 1.3, 1.6];
+          var sc = sizeScales[sizeIdx] || 1;
+          var fishDispW = Math.round(32 * sc);
+          var fishDispH = Math.round(32 * sc);
+          spawnSpriteParticle(area3, fishPos.sheet || 'fish', fishPos.x, fishPos.y, 16, 16, fishDispW, fishDispH);
+        }
+        var sizeClass = sizeIdx >= 4 ? 'size-huge' : sizeIdx >= 3 ? 'size-large' : '';
+        if (sizeClass) spawnParticle(area3, sizeName + '!', sizeClass);
         spawnParticle(area3, '+' + xpGain + ' XP', 'xp');
         // Water splash burst
         spawnFishSplash(spot);
@@ -4930,7 +4956,7 @@
       // Remove old HP bar before depletion (avoid duplicates on respawn)
       var oldHpBar = $('fish-hp-bar-' + idx);
       if (oldHpBar && oldHpBar.parentNode) oldHpBar.parentNode.removeChild(oldHpBar);
-      spot.classList.add('depleted');
+      spot.classList.add('depleted', 'respawn-ripple');
 
       fishingCombo.count = 0;
       if (comboEl) comboEl.style.display = 'none';
@@ -4951,7 +4977,7 @@
           clearInterval(respawnInterval);
           var ii = fishSpotRespawnIntervals.indexOf(respawnInterval);
           if (ii !== -1) fishSpotRespawnIntervals.splice(ii, 1);
-          spotRef.classList.remove('depleted');
+          spotRef.classList.remove('depleted', 'respawn-ripple');
           if (timerEl.parentNode) timerEl.parentNode.removeChild(timerEl);
           // Restore fish sprite
           var respawnSpr = $('fish-sprite-' + spotIdx);

@@ -255,17 +255,24 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] State migration v10: remove old 12-fish inventory items
 - [x] Fish sprite catalog tool with editable names + checkbox picker (tools/fish-sprite-catalog.html)
 
-### Fishing Overhaul Polish — Round 4: Future Improvements (TODO)
-- [ ] Tier-colored spot borders — green for low-tier, blue mid, purple high-tier fish using TIER_COLORS
-- [ ] HP bar color transition — green→yellow→red as fish HP drops (struggle feedback)
-- [ ] Size visual feedback — scale pulse on fish particle for Large/Huge catches
-- [ ] Combo multiplier display — show "(1.5x)" next to "Combo x5!" text
-- [ ] Respawn ripple animation — subtle water ripple CSS during spot respawn instead of just "2s" text
+### Fishing Overhaul Polish — Round 4: Visual Polish (Done)
+- [x] Bug fix: click handler order — check depleted before cooldown in onFishSpotClick
+- [x] HP bar color transition — green→yellow→red as fish HP drops (dynamic backgroundColor)
+- [x] Combo multiplier display — show "(1.5x)" next to "Combo x5!" text
+- [x] Combo break feedback — red "COMBO LOST!" particle on miss timer or >800ms gap
+- [x] Multi-hit spot shake — fishSpotShake keyframe with translate+rotate
+- [x] Critical hit gold flash — fishing-crit class with gold border, brightness burst, box-shadow glow
+- [x] Tier-colored spot borders — TIER_COLORS[floor(level/20)] as inline borderColor, hover uses brightness
+- [x] Lure sprite as bite indicator — replaced "!" text with FISHING_EQUIP_SPRITES.lure sprite + red drop-shadow
+- [x] Size-scaled catch particle — fish sprite scales by size (0.6x–1.6x), size name colored for Large/Huge
+- [x] Respawn ripple — CSS ::before/::after expanding water rings during respawn timer
+- [x] Shark fin click feedback — scale(0.5) shrink + fade + green box-shadow glow on click
+
+### Fishing Overhaul Polish — Round 5: Future Improvements (TODO)
 - [ ] Waiting phase mini-game — "keep line steady" click zone during cast wait to reduce bite time
 - [ ] Tension bar reel mechanic — click speed affects tension, too fast = line snap, too slow = escape
 - [ ] Event mechanical variety — School = click fish swimming across, Treasure = hold-to-pull strength bar
 - [ ] Spot bite indicator — more prominent visual for which spots have active bites (screen edge glow, pulsing border)
-- [ ] Use Fishing Lure sprite for bite phase indicator
 
 ### Fishing Overhaul (Done)
 - [x] FISH_HP map (12 fish, HP 1-5) — multi-hit system matching mining/WC

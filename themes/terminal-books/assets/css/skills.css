@@ -385,7 +385,7 @@
 }
 
 .fishing-spot:hover {
-  border-color: #4fc3f7;
+  filter: brightness(1.2);
   background: color-mix(in srgb, #1a3a5c 60%, transparent);
 }
 
@@ -394,17 +394,17 @@
 }
 
 .fishing-spot.waiting {
-  border-color: color-mix(in srgb, #4fc3f7 50%, transparent);
+  border-color: color-mix(in srgb, #4fc3f7 50%, transparent) !important;
 }
 
 .fishing-spot.bite {
-  border-color: #ff5252;
+  border-color: #ff5252 !important;
   box-shadow: 0 0 12px rgba(255, 82, 82, 0.4);
   animation: fishBitePulse 0.4s ease-in-out infinite;
 }
 
 .fishing-spot.reeling {
-  border-color: #66bb6a;
+  border-color: #66bb6a !important;
   background: color-mix(in srgb, #66bb6a 15%, transparent);
 }
 
@@ -442,8 +442,14 @@
   animation: fishSpotHit 0.2s ease-in-out;
 }
 
-.fishing-spot.cracking {
-  animation: fishSpotCrack 0.3s ease-out;
+.fishing-spot.shaking {
+  animation: fishSpotShake 0.25s ease-in-out;
+}
+
+.fishing-spot.fishing-crit {
+  animation: fishingCritFlash 0.4s ease-out;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.6), 0 0 32px rgba(255, 215, 0, 0.3);
 }
 
 @keyframes fishBitePulse {
@@ -457,11 +463,19 @@
   75% { transform: translateX(2px); }
 }
 
-@keyframes fishSpotCrack {
-  0% { transform: translateX(0); filter: brightness(1); }
-  30% { transform: translateX(-3px); filter: brightness(1.8); }
-  60% { transform: translateX(3px); filter: brightness(1.5); }
-  100% { transform: translateX(0); filter: brightness(0.6); }
+@keyframes fishSpotShake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-3px) rotate(-2deg); }
+  40% { transform: translateX(3px) rotate(2deg); }
+  60% { transform: translateX(-2px) rotate(-1deg); }
+  80% { transform: translateX(2px) rotate(1deg); }
+}
+
+@keyframes fishingCritFlash {
+  0% { filter: brightness(1); box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+  30% { filter: brightness(1.8); box-shadow: 0 0 24px rgba(255, 215, 0, 0.8); }
+  60% { filter: brightness(1.4); box-shadow: 0 0 16px rgba(255, 215, 0, 0.5); }
+  100% { filter: brightness(1); box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
 }
 
 /* ── Fishing bobber/line/exclaim per spot ──────── */
@@ -511,11 +525,12 @@
   font-size: 1.5rem;
   font-weight: bold;
   color: #ff5252;
-  top: -20px;
+  top: -24px;
   left: 50%;
   transform: translateX(-50%);
   display: none;
   animation: exclaimPulse 0.3s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(255, 50, 50, 0.6));
 }
 
 .fishing-exclaim-el.visible {
@@ -541,8 +556,8 @@
 
 .fish-hp-fill {
   height: 100%;
-  background: #4fc3f7;
-  transition: width 0.2s;
+  background: #66bb6a;
+  transition: width 0.2s, background-color 0.3s;
 }
 
 /* ── Fishing spot label ──────────────────────── */
@@ -581,6 +596,57 @@
   pointer-events: none;
   text-shadow: 0 0 6px #4fc3f7;
   z-index: 15;
+}
+
+/* ── Combo lost particle ────────────────────── */
+.ore-particle.combo-lost {
+  color: #f44336;
+  text-shadow: 0 0 8px rgba(244, 67, 54, 0.8);
+  font-size: 1rem;
+}
+
+/* ── Size catch particles ───────────────────── */
+.ore-particle.size-huge {
+  color: #ffd700;
+  text-shadow: 0 0 8px #ffd700;
+  font-size: 1.1rem;
+}
+
+.ore-particle.size-large {
+  color: #66bb6a;
+  text-shadow: 0 0 6px #66bb6a;
+  font-size: 1rem;
+}
+
+/* ── Respawn ripple rings ───────────────────── */
+.fishing-spot.respawn-ripple {
+  filter: none;
+  opacity: 0.5;
+}
+
+.fishing-spot.respawn-ripple::before,
+.fishing-spot.respawn-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(79, 195, 247, 0.5);
+  transform: translate(-50%, -50%) scale(0);
+  animation: respawnRipple 2s ease-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.fishing-spot.respawn-ripple::after {
+  animation-delay: 0.7s;
+}
+
+@keyframes respawnRipple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
 }
 
 /* ── Fishing animation overlay ───────────────── */
@@ -717,9 +783,12 @@
 }
 
 .shark-fin.clicked {
-  opacity: 0.3;
+  opacity: 0;
   pointer-events: none;
   border-color: #66bb6a;
+  transform: scale(0.5);
+  transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 12px rgba(102, 187, 106, 0.6);
 }
 
 @keyframes sharkSwim {
