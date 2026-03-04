@@ -1280,6 +1280,7 @@
         }
         renderLocationPane(resumeLoc.id, resumeLoc.skill);
         stopMapLoop();
+        setTimeout(function () { renderStationedPetInGameArea(resumeLoc.id); }, 100);
       }, 50);
     } else {
       showCenterContent('map');
@@ -3247,6 +3248,8 @@
         }
         // Populate location pane after skill switch
         renderLocationPane(loc.id, loc.skill);
+        // Inject stationed pet sprite into game area after skills.js renders
+        setTimeout(function () { renderStationedPetInGameArea(loc.id); }, 100);
       }, 50);
     });
   }
@@ -5257,6 +5260,61 @@
         ctx.globalAlpha = 1;
       }
     }
+  }
+
+  // ══════════════════════════════════════════════
+  // ══  STATIONED PET IN SKILL GAME AREA         ══
+  // ══════════════════════════════════════════════
+
+  function renderStationedPetInGameArea(locationId) {
+    // Remove any existing stationed pet sprite
+    var existing = document.querySelector('.rpg-stationed-game-pet');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    if (!locationId || !RPG_STATION_SKILL_MAP[locationId]) return;
+
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[locationId];
+    if (!station || !station.petId) return;
+
+    var petId = station.petId;
+    var petData = rpgPets.owned[petId];
+    if (!petData) return;
+
+    var creature = petCatalog ? petCatalog.creatures[petId] : null;
+    if (!creature) return;
+
+    var area = document.getElementById('skills-game-area');
+    if (!area) return;
+
+    // Container
+    var container = document.createElement('div');
+    container.className = 'rpg-stationed-game-pet';
+
+    // Sprite
+    var sprite = renderRpgPetSprite(petId, petData.level, 56);
+    if (sprite) {
+      sprite.style.display = 'block';
+      sprite.style.margin = '0 auto';
+      container.appendChild(sprite);
+    }
+
+    // Name label
+    var label = document.createElement('div');
+    label.className = 'rpg-stationed-game-pet-label';
+    label.textContent = creature.name;
+    container.appendChild(label);
+
+    // Status (time stationed)
+    var elapsed = Date.now() - (station.lastCollected || station.stationedAt);
+    if (elapsed > 5 * 60 * 1000) {
+      var statusEl = document.createElement('div');
+      statusEl.className = 'rpg-stationed-game-pet-status';
+      statusEl.textContent = formatDuration(elapsed) + ' working';
+      container.appendChild(statusEl);
+    }
+
+    area.appendChild(container);
   }
 
   // ── Keyboard Interceptor ────────────────────────
