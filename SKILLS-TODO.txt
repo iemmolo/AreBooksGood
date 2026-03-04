@@ -176,6 +176,47 @@ Pet Skills Expansion — Phase 2
 - [x] State migration for renamed ore keys in collection log
 - [x] Fix mobile horizontal overflow (overflow-x, rock sizing breakpoints)
 
+### Woodcutting Overhaul (In Progress)
+Asset reference: `tools/tree-crops.json` (user-verified crop coordinates)
+Sprite picker tool: `tools/tree-sprite-catalog.html`
+Pack script: `scripts/pack-tree-sprites.py`
+Source sheets: `tools/tree-sources/` (13 PNGs)
+
+#### Step 1: Tree Sprites (Done)
+- [x] New trees.png (384×100) with 8 distinct trees from source asset sheets
+- [x] TREE_SPRITES map with per-tree coordinates
+- [x] STUMP_SPRITE (shared for all trees, from pine.png stump region)
+- [x] DECO_SPRITES (6 decoration trees: mushroom, mine, cherry, apple, bush)
+- [x] Tree display scales 3x native per sprite dimensions
+
+#### Step 2: Forest Clearing Background (Done)
+- [x] generateForestClearingBg() — 14-pass procedural pixel art (sky, treeline, grass, clearing, stumps, logs, props, canopy frame, vignette)
+- [x] Cached as dataURL in wcBgDataUrl, same pattern as mining cavern
+
+#### Step 3: Animation Overlay (Done)
+- [x] Falling leaves (autumn colors, diamond particles, sine wobble, max 20)
+- [x] Sunbeams (3 oscillating warm gradient beams with dust motes)
+- [x] startWcAnim()/stopWcAnim() matching mining overlay pattern
+
+#### Step 4: Wiring (Done)
+- [x] renderWoodcutting() applies forest BG + overlay
+- [x] cleanupActiveGame() calls stopWcAnim()
+
+#### Step 5: XP/Drop Polish (Done)
+- [x] WOOD_DROP_SPRITES keyed by tree name (was array)
+- [x] Correct log sprite per tree tier, 40x40 display
+- [x] XP text delayed 200ms, positioned at top:55%
+- [x] Double Chop flash relative to tree element
+
+#### Step 6: Still TODO
+- [ ] Show STUMP_SPRITE when tree is chopped down (replace tree with stump, regrow after timer)
+- [ ] Add DECO_SPRITES as pixel-art props in forest clearing background
+- [ ] Improve forest clearing BG detail and polish
+- [ ] Woodcutting-specific perks system (like mining perks)
+- [ ] Tree HP system (multi-hit like rock HP)
+- [ ] Woodcutting events (like mining events)
+- [ ] Woodcutting collection log
+
 ### Phase 5: Star System Cleanup (Done)
 - [x] Remove star stat bonuses from battle.js createPlayerFighter()
 - [x] Remove star migration from pet.js loadPetState()
