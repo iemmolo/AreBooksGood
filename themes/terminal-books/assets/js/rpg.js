@@ -908,6 +908,7 @@
     sidePanel.style.display = '';
     switchChatTab('game');
     switchSideTab('skills');
+    updateLocationTab(null);
     osrsPanelSetUp = true;
   }
 
@@ -2935,8 +2936,10 @@
     if (!tab) return;
     if (locId && MAP_LOCATIONS[locId]) {
       tab.textContent = MAP_LOCATIONS[locId].name;
+      tab.style.display = '';
     } else {
       tab.textContent = 'Location';
+      tab.style.display = 'none';
     }
   }
 
@@ -2944,47 +2947,34 @@
     currentLocationId = locId;
     currentLocationSkill = skill;
     updateLocationTab(locId);
-    var header = $('rpg-loc-header');
-    var statsC = $('rpg-loc-stats');
     var perksC = $('rpg-loc-perks');
-    var logC = $('rpg-loc-log');
-    if (!header) return;
-
-    // Header: name + flavor
-    var loc = null;
-    for (var i = 0; i < LOCATIONS.length; i++) {
-      if (LOCATIONS[i].id === locId) { loc = LOCATIONS[i]; break; }
-    }
-    var name = loc ? escapeHtml(loc.name) : escapeHtml(locId);
-    var flavor = LOCATION_FLAVOR[locId] || '';
-    header.innerHTML = '<span class="rpg-loc-name">' + name + '</span>' +
-      (flavor ? '<span class="rpg-loc-flavor">' + escapeHtml(flavor) + '</span>' : '');
+    var resC = $('rpg-loc-resources');
+    if (!perksC) return;
 
     // Delegate to skills API
     var api = window.__RPG_SKILLS_API;
     if (!api || !skill) {
-      if (statsC) statsC.innerHTML = '';
       if (perksC) perksC.innerHTML = '';
-      if (logC) logC.innerHTML = '<div class="rpg-loc-muted">No skill at this location.</div>';
+      if (resC) resC.innerHTML = '<div class="rpg-loc-muted">No skill at this location.</div>';
       return;
     }
-    api.renderSkillStatsInto(statsC, skill);
     api.renderPerksInto(perksC, skill);
-    api.renderCollectionLogInto(logC);
+    api.renderResourcesInto(resC, skill);
   }
 
   function clearLocationPane() {
+    // If location tab is active, switch to game tab before hiding it
+    var tab = document.querySelector('[data-chat-tab="location"]');
+    if (tab && tab.classList.contains('active')) {
+      switchChatTab('game');
+    }
     currentLocationId = null;
     currentLocationSkill = null;
     updateLocationTab(null);
-    var header = $('rpg-loc-header');
-    var statsC = $('rpg-loc-stats');
     var perksC = $('rpg-loc-perks');
-    var logC = $('rpg-loc-log');
-    if (header) header.innerHTML = '';
-    if (statsC) statsC.innerHTML = '';
+    var resC = $('rpg-loc-resources');
     if (perksC) perksC.innerHTML = '';
-    if (logC) logC.innerHTML = '';
+    if (resC) resC.innerHTML = '';
   }
 
   // ── Skill Location Entry ──────────────────────

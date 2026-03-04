@@ -4254,6 +4254,15 @@
     if (starShowerTimer) { clearTimeout(starShowerTimer); starShowerTimer = null; }
   };
 
+  // ── Skill → inventory category mapping ──────
+  var SKILL_INVENTORY_CATEGORIES = {
+    mining:      ['Ores', 'Gems'],
+    fishing:     ['Fish'],
+    woodcutting: ['Logs'],
+    smithing:    ['Bars', 'Equipment'],
+    combat:      []
+  };
+
   // ── RPG Skills API (for location pane) ───────────
   window.__RPG_SKILLS_API = {
     getActiveSkill: function () { return activeSkill; },
@@ -4266,6 +4275,10 @@
         container.innerHTML = '<div class="rpg-loc-muted">No perks data.</div>';
         return;
       }
+      var hdr = document.createElement('div');
+      hdr.className = 'rpg-loc-col-header';
+      hdr.textContent = 'UNLOCKS';
+      container.appendChild(hdr);
       var level = state.skills[skill].level;
       var unlocked = 0;
       for (var i = 0; i < perks.length; i++) {
@@ -4283,7 +4296,7 @@
         row.title = p.desc;
         var nameSpan = document.createElement('span');
         nameSpan.className = 'rpg-loc-perk-name';
-        nameSpan.textContent = (isUnlocked ? '\u2713 ' : '') + p.name;
+        nameSpan.textContent = (isUnlocked ? '\u2713 ' : '\u25CB ') + p.name;
         row.appendChild(nameSpan);
         var lvSpan = document.createElement('span');
         lvSpan.className = 'rpg-loc-perk-level';
@@ -4293,95 +4306,88 @@
       }
     },
 
-    renderCollectionLogInto: function (container) {
+    renderResourcesInto: function (container, skill) {
       if (!container) return;
       container.innerHTML = '';
-      if (activeSkill !== 'mining' || !state || !state.skills.mining) {
-        container.innerHTML = '<div class="rpg-loc-muted">No collection log yet.</div>';
+
+      var hdr = document.createElement('div');
+      hdr.className = 'rpg-loc-col-header';
+      hdr.textContent = 'RESOURCES';
+      container.appendChild(hdr);
+
+      // Combat special case: show enemies defeated
+      if (skill === 'combat') {
+        var actions = (state && state.skills.combat) ? (state.skills.combat.totalActions || 0) : 0;
+        var statRow = document.createElement('div');
+        statRow.className = 'rpg-loc-resource-stat';
+        statRow.textContent = 'Enemies Defeated: ' + formatNum(actions);
+        container.appendChild(statRow);
         return;
       }
-      var log = getMiningLog();
-      // Ore counts (nonzero only)
-      var ores = log.oresMined || {};
-      var hasAny = false;
-      for (var k in ores) { if (ores[k] > 0) { hasAny = true; break; } }
-      if (hasAny) {
-        var hdr = document.createElement('div');
-        hdr.className = 'rpg-loc-log-header';
-        hdr.textContent = 'Ores Mined';
-        container.appendChild(hdr);
-        for (var k in ores) {
-          if (ores[k] > 0) {
-            var row = document.createElement('div');
-            row.className = 'rpg-loc-log-row';
-            row.textContent = k + ': ' + formatNum(ores[k]);
-            container.appendChild(row);
-          }
-        }
-      }
-      // Stats
-      var statsHdr = document.createElement('div');
-      statsHdr.className = 'rpg-loc-log-header';
-      statsHdr.textContent = 'Stats';
-      container.appendChild(statsHdr);
-      var stats = [
-        ['Clicks', formatNum(log.totalClicks || 0)],
-        ['Gems', formatNum(log.totalGems || 0)],
-        ['Crits', formatNum(log.criticalHits || 0)]
-      ];
-      for (var i = 0; i < stats.length; i++) {
-        var row = document.createElement('div');
-        row.className = 'rpg-loc-log-row';
-        row.textContent = stats[i][0] + ': ' + stats[i][1];
-        container.appendChild(row);
-      }
-      // Events (nonzero only)
-      var evts = log.events || {};
-      var evtNames = { gemVein: 'Gem Vein', shootingStar: 'Shooting Star', caveIn: 'Cave-In', deepVein: 'Deep Vein' };
-      var hasEvt = false;
-      for (var k in evts) { if (evts[k] > 0) { hasEvt = true; break; } }
-      if (hasEvt) {
-        var evtHdr = document.createElement('div');
-        evtHdr.className = 'rpg-loc-log-header';
-        evtHdr.textContent = 'Events';
-        container.appendChild(evtHdr);
-        for (var k in evts) {
-          if (evts[k] > 0) {
-            var row = document.createElement('div');
-            row.className = 'rpg-loc-log-row';
-            row.textContent = (evtNames[k] || k) + ': ' + evts[k];
-            container.appendChild(row);
-          }
-        }
-      }
-    },
 
-    renderSkillStatsInto: function (container, skill) {
-      if (!container) return;
-      container.innerHTML = '';
-      if (!state || !state.skills[skill]) return;
-      var s = state.skills[skill];
-      var skillDef = SKILLS[skill];
-      var skillName = skillDef ? skillDef.name : skill;
-      var nextXp = xpForLevel(s.level + 1);
-      var lines = [
-        ['Skill', skillName],
-        ['Level', String(s.level)],
-        ['XP', formatNum(s.xp) + ' / ' + formatNum(nextXp)],
-        ['Actions', formatNum(s.totalActions || 0)]
-      ];
-      for (var i = 0; i < lines.length; i++) {
-        var row = document.createElement('div');
-        row.className = 'rpg-loc-stat-row';
-        var label = document.createElement('span');
-        label.className = 'rpg-loc-stat-label';
-        label.textContent = lines[i][0];
-        row.appendChild(label);
-        var val = document.createElement('span');
-        val.className = 'rpg-loc-stat-value';
-        val.textContent = lines[i][1];
-        row.appendChild(val);
-        container.appendChild(row);
+      var catLabels = SKILL_INVENTORY_CATEGORIES[skill];
+      if (!catLabels || catLabels.length === 0) {
+        container.innerHTML = '<div class="rpg-loc-muted">No resources for this skill.</div>';
+        return;
+      }
+
+      var inv = (state && state.inventory) ? state.inventory : {};
+      var anyItems = false;
+
+      for (var c = 0; c < ITEM_CATEGORIES.length; c++) {
+        var cat = ITEM_CATEGORIES[c];
+        // Only show categories relevant to this skill
+        var relevant = false;
+        for (var r = 0; r < catLabels.length; r++) {
+          if (catLabels[r] === cat.label) { relevant = true; break; }
+        }
+        if (!relevant) continue;
+
+        // Filter to items player has
+        var hasAny = false;
+        for (var j = 0; j < cat.items.length; j++) {
+          if (inv[cat.items[j]]) { hasAny = true; break; }
+        }
+        if (!hasAny) continue;
+        anyItems = true;
+
+        var label = document.createElement('div');
+        label.className = 'rpg-loc-resource-label';
+        label.textContent = cat.label;
+        container.appendChild(label);
+
+        var grid = document.createElement('div');
+        grid.className = 'rpg-loc-resource-grid';
+        container.appendChild(grid);
+
+        for (var i = 0; i < cat.items.length; i++) {
+          var itemKey = cat.items[i];
+          var qty = inv[itemKey];
+          if (!qty) continue;
+          var iconData = ITEM_ICON_MAP[itemKey];
+          if (!iconData) continue;
+
+          var cell = document.createElement('div');
+          cell.className = 'rpg-loc-resource-cell';
+          cell.title = itemKey;
+
+          var sprite = createSpriteEl(iconData.sheet, iconData.x, iconData.y, 16, 16, 24, 24);
+          if (sprite) cell.appendChild(sprite);
+
+          var countEl = document.createElement('span');
+          countEl.className = 'rpg-loc-resource-count';
+          countEl.textContent = formatNum(qty);
+          cell.appendChild(countEl);
+
+          grid.appendChild(cell);
+        }
+      }
+
+      if (!anyItems) {
+        var empty = document.createElement('div');
+        empty.className = 'rpg-loc-muted';
+        empty.textContent = 'No items yet. Start skilling!';
+        container.appendChild(empty);
       }
     }
   };
