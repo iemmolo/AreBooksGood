@@ -56,12 +56,13 @@ print(json.dumps(events))
     break
   fi
 
-  ALL_EVENTS=$(python3 -c "
+  ALL_EVENTS=$(printf '%s\n%s' "${ALL_EVENTS}" "${PAGE_EVENTS}" | python3 -c "
 import sys, json
-a = json.loads(sys.argv[1])
-b = json.loads(sys.argv[2])
+lines = sys.stdin.read().split('\n', 1)
+a = json.loads(lines[0])
+b = json.loads(lines[1])
 print(json.dumps(a + b))
-" "${ALL_EVENTS}" "${PAGE_EVENTS}")
+")
 
   if [ "$COUNT" -lt "$ROWS" ]; then
     break
@@ -81,12 +82,13 @@ CATS_RESPONSE=$(curl -sf -u "${AUTH}" \
 echo "Normalizing data..."
 FETCHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
 
-python3 -c "
+printf '%s\n%s\n%s' "${ALL_EVENTS}" "${CATS_RESPONSE}" "${FETCHED_AT}" | python3 -c "
 import json, sys
 
-events_raw = json.loads(sys.argv[1])
-cats_raw = json.loads(sys.argv[2])
-fetched_at = sys.argv[3]
+lines = sys.stdin.read().split('\n', 2)
+events_raw = json.loads(lines[0])
+cats_raw = lines[1]
+fetched_at = lines[2].strip()
 
 events = []
 for e in events_raw:
@@ -138,7 +140,7 @@ output = {
 }
 
 print(json.dumps(output, indent=2))
-" "${ALL_EVENTS}" "${CATS_RESPONSE}" "${FETCHED_AT}" > "${OUT}"
+" > "${OUT}"
 
 TOTAL=$(python3 -c "import json; print(len(json.load(open('${OUT}'))['events']))")
 echo "Done! Wrote ${TOTAL} events to ${OUT}"
