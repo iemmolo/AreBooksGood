@@ -350,19 +350,36 @@ AreBooksGood - Improvement TODO
 - [ ] LPC walk animation during travel (swap fillRect sprite for real sprite sheet)
 - [ ] Replace Training Arena icon (currently placeholder Sword #1)
 
-### Phase 5: Game Integration — All Site Games as RPG Activities
+### Phase 5: Town Hub Interior Sub-Map (Done)
+- [x] Town Hub interior sub-map with 11 hotspots (canvas, same aspect ratio)
+- [x] Pixel art buildings: Tavern, General Store, Bank, Casino, Fountain, Arcade, Chapel, Dungeon Gate, Library, Guard Barracks, Pet Store
+- [x] Click-to-walk inside town, wall collision, return-to-world-map button
+- [x] Animated fountain water, chimney smoke, torches, arcade/casino lights
+- [x] Placeholder hotspots show "Coming soon!" message
+- [x] Fountain is decorative (flavor text only, no enter prompt)
+- [x] Pet Store modal: egg hatching (common/rare/legendary), gacha + pity system, collection grid
+- [x] Save/resume town state on refresh, clear on Save & Quit
+- [x] Escape key: close modal → exit town → return to map
+- [x] Mobile responsive modal (stacked egg cards, scrollable)
+
+### Phase 5b: Town Hub Hotspot Implementations (Future)
+- [ ] **Tavern**: Quest system (NPCs give objectives + rewards)
+- [ ] **General Store**: Buy/sell items, ties into Silk Road economy
+- [ ] **Bank**: Deposit/withdraw coins and JB, interest system
+- [ ] **Casino**: Poker, Blackjack, Casino Wars, Slots (coins/JB feed into RPG wallet)
+- [ ] **Arcade**: Flappy Bird, Doodle Jump (high scores per RPG save slot)
+- [ ] **Chapel**: Prayer skill integration
+- [ ] **Dungeon Gate**: Battle/dungeon system as RPG activity
+- [ ] **Library**: Lore, bestiary, achievement tracker
+- [ ] **Guard Barracks**: Combat training, Slayer tasks
+
+### Phase 6: Game Integration — All Site Games as RPG Activities
 Goal: Every standalone game on the site becomes accessible as an RPG activity at a map location.
 
-- [ ] **Casino District** (new map location): Poker, Blackjack, Casino Wars, Slots
-  - Coins/JB earned in-game feed into RPG slot wallet
-- [ ] **Arcade** (new map location): Flappy Bird, Doodle Jump
-  - High scores tracked per RPG save slot
 - [ ] **Tower Defense Outpost** (new map location): TD game launches from RPG
   - Materials/JB earned carry back to RPG slot
 - [ ] **Farm** (new map location): Farm system accessible from RPG map
   - JB wallet, crops, farmhouse tied to RPG save slot
-- [ ] **Dungeon Gate** (new map location): Battle/dungeon system as RPG activity
-  - Gear drops and dungeon progress scoped to RPG slot
 - [ ] **Chess Parlor** (new map location): Chess puzzles from RPG
 - [ ] Expand world map grid to accommodate new locations (3×2 → larger grid)
 - [ ] Location unlock progression (some locations gated by total level or quest)

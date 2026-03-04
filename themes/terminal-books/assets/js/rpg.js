@@ -461,6 +461,52 @@
   var programmaticSkillClick = false;
   var centerMode = 'map';
 
+  // ── Town Hub Constants ────────────────────────
+  var TOWN_W = MAP_W, TOWN_H = MAP_H;
+  var TOWN_WALL = 40;
+  var TOWN_LOCATIONS = {
+    tavern:    { x: 200,  y: 140, name: 'Tavern',          type: 'placeholder', desc: 'Ale and quests await.' },
+    store:     { x: 530,  y: 140, name: 'General Store',   type: 'placeholder', desc: 'Buy and sell goods.' },
+    bank:      { x: 860,  y: 140, name: 'Bank',            type: 'placeholder', desc: 'Keep your gold safe.' },
+    casino:    { x: 200,  y: 330, name: 'Casino',          type: 'placeholder', desc: 'Try your luck.' },
+    fountain:  { x: 530,  y: 330, name: 'Fountain',        type: 'decorative',  desc: 'A tranquil fountain.' },
+    arcade:    { x: 860,  y: 330, name: 'Arcade',          type: 'placeholder', desc: 'Play mini-games.' },
+    chapel:    { x: 120,  y: 520, name: 'Chapel',          type: 'placeholder', desc: 'A place of prayer.' },
+    dungeon:   { x: 290,  y: 520, name: 'Dungeon Gate',    type: 'placeholder', desc: 'Descend into darkness.' },
+    library:   { x: 480,  y: 520, name: 'Library',         type: 'placeholder', desc: 'Knowledge is power.' },
+    barracks:  { x: 670,  y: 520, name: 'Guard Barracks',  type: 'placeholder', desc: 'The town guard rests here.' },
+    petstore:  { x: 870,  y: 520, name: 'Pet Store',       type: 'petstore',    desc: 'Hatch new companions!' }
+  };
+  var TOWN_LOC_ORDER = ['tavern','store','bank','casino','fountain','arcade','chapel','dungeon','library','barracks','petstore'];
+  var TOWN_FLAVOR = {
+    tavern:   'The smell of roast meat and spilled ale fills the air.',
+    store:    'Shelves lined with provisions and curiosities.',
+    bank:     'Vaults of iron and gold. Your assets are secure.',
+    casino:   'The clink of coins and shuffle of cards beckon.',
+    fountain: 'Crystal water cascades down three stone tiers. Coins glint from the basin.',
+    arcade:   'Colorful signs flash. Excited shouts echo from within.',
+    chapel:   'Candlelight flickers through stained glass.',
+    dungeon:  'Cold air rises from the depths. Something stirs below.',
+    library:  'Dusty tomes line every wall. A scholar peers over spectacles.',
+    barracks: 'Weapons hang in orderly rows. Guards train in the yard.',
+    petstore: 'Mysterious eggs sit in warm nests. A shopkeeper grins.'
+  };
+
+  // ── Town State ────────────────────────────────
+  var townStaticBuffer = null, townStaticBufferCtx = null;
+  var townAnimId = null;
+  var insideTown = false;
+  var townPlayerPos = { x: 530, y: 580 };
+  var townPlayerTarget = null;
+  var townPlayerAtLocation = null;
+  var townEnterPromptVisible = false;
+  var townSmokeFrame = 0;
+  var townLastTimestamp = 0;
+  var townPlayerDir = 'up';
+  var townPlayerFrame = 0;
+  var townPlayerAnimTimer = 0;
+  var petStoreModalOpen = false;
+
   // ── Helpers ───────────────────────────────────
   function $(id) { return document.getElementById(id); }
 
@@ -611,8 +657,8 @@
     // Auto-scroll chatbox body
     var body = $('osrs-chatbox-body');
     if (body) body.scrollTop = body.scrollHeight;
-    // Auto-switch to Game tab only when on the map
-    if (centerMode === 'map') {
+    // Auto-switch to Game tab when on the map or in town
+    if (centerMode === 'map' || insideTown) {
       switchChatTab('game');
     }
   }
@@ -1048,8 +1094,9 @@
     // Render world map in center
     renderWorldMap();
 
-    // Check if player was inside a skill location on last session
+    // Check if player was inside a skill location or town on last session
     var resumeLocId = meta.slots[slot].insideLocation || null;
+    var resumeTown = meta.slots[slot].insideTown || false;
     var resumeLoc = null;
     if (resumeLocId && MAP_LOCATIONS[resumeLocId] && MAP_LOCATIONS[resumeLocId].skill) {
       for (var li = 0; li < LOCATIONS.length; li++) {
@@ -1057,7 +1104,12 @@
       }
     }
 
-    if (resumeLoc) {
+    if (resumeTown) {
+      // Resume inside town
+      showCenterContent('map');
+      window.dispatchEvent(new Event('rpg-skills-init'));
+      enterTown(true); // true = skip fade (already loading)
+    } else if (resumeLoc) {
       // Go straight into skill view — no map flash, no fade
       showCenterContent('skill');
       window.dispatchEvent(new Event('rpg-skills-init'));
@@ -2839,6 +2891,7 @@
   // ── Map Click Handling ──────────────────────────
   function onMapCanvasClick(e) {
     if (!mapCanvas) return;
+    if (insideTown) { onTownMapCanvasClick(e); return; }
     var rect = mapCanvas.getBoundingClientRect();
     var scaleX = MAP_W / rect.width;
     var scaleY = MAP_H / rect.height;
@@ -2888,7 +2941,12 @@
   function onEnterLocation(locId) {
     var loc = MAP_LOCATIONS[locId];
     if (!loc) return;
-    if (!loc.skill) return; // Town hub — no action yet
+
+    // Town Hub → enter town sub-map
+    if (!loc.skill) {
+      enterTown();
+      return;
+    }
 
     // Find matching LOCATIONS entry
     var locData = null;
@@ -3022,10 +3080,14 @@
   // ── Save & Quit ───────────────────────────────
   function onSaveQuit() {
     stopMapLoop();
+    stopTownMapLoop();
+    closePetStoreModal();
 
     if (activeSlot >= 0 && meta.slots[activeSlot]) {
       meta.slots[activeSlot].lastPlayed = Date.now();
+      meta.slots[activeSlot].insideTown = false;
     }
+    insideTown = false;
     meta.currentSlot = -1;
     saveMeta();
 
@@ -3065,11 +3127,1266 @@
     e.stopPropagation();
   }
 
+  // ══════════════════════════════════════════════
+  // ══  TOWN HUB INTERIOR SUB-MAP               ══
+  // ══════════════════════════════════════════════
+
+  function enterTown(skipFade) {
+    stopMapLoop();
+    insideTown = true;
+
+    // Persist to save slot
+    if (activeSlot >= 0 && meta.slots[activeSlot]) {
+      meta.slots[activeSlot].insideTown = true;
+      saveMeta();
+    }
+
+    // Reset town player state — enter from south gate
+    townPlayerPos = { x: 530, y: 580 };
+    townPlayerTarget = null;
+    townPlayerAtLocation = null;
+    townEnterPromptVisible = false;
+    townPlayerDir = 'up';
+    townPlayerFrame = 0;
+    townPlayerAnimTimer = 0;
+    townSmokeFrame = 0;
+    townLastTimestamp = 0;
+    townStaticBuffer = null; // force re-render
+
+    addGameMessage('You enter the Town Hub.', 'enter');
+
+    if (skipFade) {
+      showCenterContent('map');
+      startTownMapLoop();
+    } else {
+      fadeTransition(function () {
+        showCenterContent('map');
+        startTownMapLoop();
+      });
+    }
+  }
+
+  function returnToWorldMap() {
+    stopTownMapLoop();
+    closePetStoreModal();
+    insideTown = false;
+
+    // Clear town from save
+    if (activeSlot >= 0 && meta.slots[activeSlot]) {
+      meta.slots[activeSlot].insideTown = false;
+      saveMeta();
+    }
+
+    // Restore player to town coords on world map
+    playerPos.x = MAP_LOCATIONS.town.x;
+    playerPos.y = MAP_LOCATIONS.town.y;
+    playerAtLocation = 'town';
+    enterPromptVisible = true;
+    staticDirty = true;
+
+    fadeTransition(function () {
+      addGameMessage('You return to the world map.', 'return');
+      showCenterContent('map');
+      startMapLoop();
+    });
+  }
+
+  // ── Town Map Loop ─────────────────────────────
+  function startTownMapLoop() {
+    if (townAnimId) return;
+    townLastTimestamp = 0;
+    townAnimId = requestAnimationFrame(townMapLoop);
+  }
+
+  function stopTownMapLoop() {
+    if (townAnimId) {
+      cancelAnimationFrame(townAnimId);
+      townAnimId = null;
+    }
+  }
+
+  function townMapLoop(ts) {
+    if (!townLastTimestamp) townLastTimestamp = ts;
+    var dt = Math.min((ts - townLastTimestamp) / 1000, 0.1);
+    townLastTimestamp = ts;
+    townSmokeFrame++;
+    updateTownPlayer(dt);
+    drawTownMap();
+    townAnimId = requestAnimationFrame(townMapLoop);
+  }
+
+  // ── Town Player Movement ──────────────────────
+  function updateTownPlayer(dt) {
+    if (!townPlayerTarget) return;
+
+    var dx = townPlayerTarget.x - townPlayerPos.x;
+    var dy = townPlayerTarget.y - townPlayerPos.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < 3) {
+      townPlayerPos.x = townPlayerTarget.x;
+      townPlayerPos.y = townPlayerTarget.y;
+      townPlayerTarget = null;
+      townPlayerFrame = 0;
+
+      // Check which town hotspot we're at
+      townPlayerAtLocation = null;
+      for (var i = 0; i < TOWN_LOC_ORDER.length; i++) {
+        var id = TOWN_LOC_ORDER[i];
+        var loc = TOWN_LOCATIONS[id];
+        var ldx = townPlayerPos.x - loc.x;
+        var ldy = townPlayerPos.y - loc.y;
+        if (Math.sqrt(ldx * ldx + ldy * ldy) < 40) {
+          townPlayerAtLocation = id;
+          break;
+        }
+      }
+      if (townPlayerAtLocation) {
+        var arr = TOWN_LOCATIONS[townPlayerAtLocation];
+        var flavor = TOWN_FLAVOR[townPlayerAtLocation] || '';
+        if (arr.type === 'decorative') {
+          addGameMessage(flavor, 'arrival');
+        } else {
+          addGameMessage('You approach the ' + arr.name + '. ' + flavor, 'arrival');
+        }
+      }
+      townEnterPromptVisible = !!townPlayerAtLocation && TOWN_LOCATIONS[townPlayerAtLocation].type !== 'decorative';
+      return;
+    }
+
+    // Direction
+    if (Math.abs(dx) > Math.abs(dy)) {
+      townPlayerDir = dx > 0 ? 'right' : 'left';
+    } else {
+      townPlayerDir = dy > 0 ? 'down' : 'up';
+    }
+
+    // Move (enforce wall collision)
+    var step = PLAYER_SPEED * dt;
+    if (step > dist) step = dist;
+    var nx = townPlayerPos.x + (dx / dist) * step;
+    var ny = townPlayerPos.y + (dy / dist) * step;
+    // Clamp to inside walls
+    nx = Math.max(TOWN_WALL + 16, Math.min(TOWN_W - TOWN_WALL - 16, nx));
+    ny = Math.max(TOWN_WALL + 16, Math.min(TOWN_H - TOWN_WALL - 16, ny));
+    townPlayerPos.x = nx;
+    townPlayerPos.y = ny;
+
+    // Animate
+    townPlayerAnimTimer += dt;
+    if (townPlayerAnimTimer > 0.2) {
+      townPlayerAnimTimer = 0;
+      townPlayerFrame = townPlayerFrame === 1 ? 2 : 1;
+    }
+    townEnterPromptVisible = false;
+  }
+
+  // ── Town Click Handling ───────────────────────
+  function onTownMapCanvasClick(e) {
+    var rect = mapCanvas.getBoundingClientRect();
+    var scaleX = TOWN_W / rect.width;
+    var scaleY = TOWN_H / rect.height;
+    var cx = (e.clientX - rect.left) * scaleX;
+    var cy = (e.clientY - rect.top) * scaleY;
+
+    // Check return button click (top-left)
+    if (cx < 150 && cy < 40) {
+      returnToWorldMap();
+      return;
+    }
+
+    // Check enter prompt click
+    if (townEnterPromptVisible && townPlayerAtLocation) {
+      var promptY = townPlayerPos.y - 36;
+      if (Math.abs(cx - townPlayerPos.x) < 80 && Math.abs(cy - promptY) < 16) {
+        onEnterTownHotspot(townPlayerAtLocation);
+        return;
+      }
+    }
+
+    // Check if clicking near a hotspot
+    var closest = null, closestDist = Infinity;
+    for (var i = 0; i < TOWN_LOC_ORDER.length; i++) {
+      var id = TOWN_LOC_ORDER[i];
+      var loc = TOWN_LOCATIONS[id];
+      var dx = cx - loc.x;
+      var dy = cy - loc.y;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 50 && d < closestDist) {
+        closest = id;
+        closestDist = d;
+      }
+    }
+
+    if (closest) {
+      if (townPlayerAtLocation === closest) {
+        onEnterTownHotspot(closest);
+      } else {
+        // Walk to hotspot
+        var tx = TOWN_LOCATIONS[closest].x;
+        var ty = TOWN_LOCATIONS[closest].y + 30; // stand in front of building
+        townPlayerTarget = { x: tx, y: ty };
+        townPlayerAtLocation = null;
+        townEnterPromptVisible = false;
+        townPlayerFrame = 1;
+        townPlayerAnimTimer = 0;
+      }
+    } else {
+      // Free walk — clamp target to inside walls
+      var tx2 = Math.max(TOWN_WALL + 16, Math.min(TOWN_W - TOWN_WALL - 16, cx));
+      var ty2 = Math.max(TOWN_WALL + 16, Math.min(TOWN_H - TOWN_WALL - 16, cy));
+      townPlayerTarget = { x: tx2, y: ty2 };
+      townPlayerAtLocation = null;
+      townEnterPromptVisible = false;
+      townPlayerFrame = 1;
+      townPlayerAnimTimer = 0;
+    }
+  }
+
+  // ── Hotspot Entry Logic ───────────────────────
+  function onEnterTownHotspot(locId) {
+    var loc = TOWN_LOCATIONS[locId];
+    if (!loc) return;
+
+    if (loc.type === 'decorative') {
+      // Fountain — just flavor text
+      addGameMessage(TOWN_FLAVOR[locId] || loc.desc, 'system');
+      return;
+    }
+    if (loc.type === 'petstore') {
+      openPetStoreModal();
+      return;
+    }
+    // placeholder
+    addGameMessage(loc.name + ' is not yet open. Coming soon!', 'system');
+  }
+
+  // ── Town Static Buffer Rendering ──────────────
+  function renderTownStaticBuffer() {
+    if (!townStaticBuffer) {
+      townStaticBuffer = document.createElement('canvas');
+      townStaticBuffer.width = TOWN_W;
+      townStaticBuffer.height = TOWN_H;
+      townStaticBufferCtx = townStaticBuffer.getContext('2d');
+    }
+    var ctx = townStaticBufferCtx;
+
+    drawTownGround(ctx);
+    drawTownWalls(ctx);
+    drawTownGate(ctx);
+    drawTownPaths(ctx);
+
+    // Draw buildings
+    for (var i = 0; i < TOWN_LOC_ORDER.length; i++) {
+      var id = TOWN_LOC_ORDER[i];
+      var loc = TOWN_LOCATIONS[id];
+      drawTownBuilding(ctx, id, loc.x, loc.y);
+    }
+  }
+
+  function drawTownGround(ctx) {
+    // Warm dirt/cobblestone base
+    var TILE = 8;
+    var cols = Math.ceil(TOWN_W / TILE);
+    var rows = Math.ceil(TOWN_H / TILE);
+    var dirtColors = ['#c4a06a','#bfa068','#c8a870','#c0a064','#b89860','#caac72'];
+
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var h = tileHash(c + 1000, r + 1000);
+        ctx.fillStyle = dirtColors[(h >>> 0) % dirtColors.length];
+        ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+        // Occasional detail pebble
+        if ((h >>> 8) % 12 === 0) {
+          ctx.fillStyle = 'rgba(0,0,0,0.08)';
+          ctx.fillRect(c * TILE + (h >>> 4) % 5, r * TILE + (h >>> 6) % 5, 2, 2);
+        }
+      }
+    }
+  }
+
+  function drawTownWalls(ctx) {
+    var W = TOWN_WALL;
+    var stoneColors = ['#6a6a70','#606068','#707078','#5a5a62','#68686e'];
+
+    // Draw all 4 walls
+    var walls = [
+      [0, 0, TOWN_W, W],          // top
+      [0, TOWN_H - W, TOWN_W, W], // bottom
+      [0, 0, W, TOWN_H],          // left
+      [TOWN_W - W, 0, W, TOWN_H]  // right
+    ];
+    for (var wi = 0; wi < walls.length; wi++) {
+      var wx = walls[wi][0], wy = walls[wi][1], ww = walls[wi][2], wh = walls[wi][3];
+      // Stone fill
+      for (var sy = wy; sy < wy + wh; sy += 8) {
+        for (var sx = wx; sx < wx + ww; sx += 12) {
+          var h = tileHash(sx + 2000, sy + 2000);
+          ctx.fillStyle = stoneColors[(h >>> 0) % stoneColors.length];
+          ctx.fillRect(sx, sy, 12, 8);
+          // Mortar lines
+          ctx.fillStyle = 'rgba(0,0,0,0.15)';
+          ctx.fillRect(sx, sy + 7, 12, 1);
+          ctx.fillRect(sx + 11, sy, 1, 8);
+        }
+      }
+      // Darker edge
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      if (wi === 0) ctx.fillRect(wx, wy + wh - 2, ww, 2);
+      if (wi === 1) ctx.fillRect(wx, wy, ww, 2);
+      if (wi === 2) ctx.fillRect(wx + ww - 2, wy, 2, wh);
+      if (wi === 3) ctx.fillRect(wx, wy, 2, wh);
+    }
+
+    // Crenellations on top wall
+    for (var cx = W; cx < TOWN_W - W; cx += 24) {
+      ctx.fillStyle = '#5a5a62';
+      ctx.fillRect(cx, 0, 12, 6);
+      ctx.fillStyle = '#707078';
+      ctx.fillRect(cx + 1, 1, 10, 4);
+    }
+
+    // Corner towers (8 darker squares)
+    var towerSize = 24;
+    var corners = [[0,0],[TOWN_W - towerSize,0],[0,TOWN_H - towerSize],[TOWN_W - towerSize,TOWN_H - towerSize]];
+    for (var ti = 0; ti < corners.length; ti++) {
+      ctx.fillStyle = '#4a4a52';
+      ctx.fillRect(corners[ti][0], corners[ti][1], towerSize, towerSize);
+      ctx.fillStyle = '#5a5a62';
+      ctx.fillRect(corners[ti][0] + 2, corners[ti][1] + 2, towerSize - 4, towerSize - 4);
+      // Tower top
+      ctx.fillStyle = '#3a3a42';
+      ctx.fillRect(corners[ti][0], corners[ti][1], towerSize, 3);
+      ctx.fillRect(corners[ti][0], corners[ti][1], 3, towerSize);
+    }
+  }
+
+  function drawTownGate(ctx) {
+    // South wall opening
+    var gx = TOWN_W / 2 - 30;
+    var gy = TOWN_H - TOWN_WALL;
+    // Clear gate area
+    ctx.fillStyle = '#c4a06a';
+    ctx.fillRect(gx, gy, 60, TOWN_WALL);
+    // Portcullis arch
+    ctx.fillStyle = '#4a4a52';
+    ctx.fillRect(gx - 4, gy, 4, TOWN_WALL);
+    ctx.fillRect(gx + 60, gy, 4, TOWN_WALL);
+    // Arch top
+    ctx.beginPath();
+    ctx.arc(gx + 30, gy + 4, 30, Math.PI, 0);
+    ctx.fillStyle = '#4a4a52';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(gx + 30, gy + 4, 26, Math.PI, 0);
+    ctx.fillStyle = '#c4a06a';
+    ctx.fill();
+    // Portcullis bars
+    ctx.fillStyle = 'rgba(60,60,60,0.3)';
+    for (var bi = 0; bi < 5; bi++) {
+      ctx.fillRect(gx + 6 + bi * 12, gy, 1, TOWN_WALL);
+    }
+  }
+
+  function drawTownPaths(ctx) {
+    // Cobblestone paths connecting hotspots to center
+    var pathColor = '#a89060';
+    var pathDark = '#988050';
+    var centerX = 530, centerY = 330;
+
+    // Horizontal path through middle row
+    ctx.fillStyle = pathColor;
+    ctx.fillRect(TOWN_WALL, centerY - 12, TOWN_W - TOWN_WALL * 2, 24);
+    // Vertical path from gate to center
+    ctx.fillRect(centerX - 12, centerY, 24, TOWN_H - TOWN_WALL - centerY);
+    // Vertical path from center to top row
+    ctx.fillRect(centerX - 12, TOWN_WALL, 24, centerY - TOWN_WALL);
+
+    // Cross paths to top-row buildings
+    ctx.fillRect(TOWN_WALL, 140 - 12, TOWN_W - TOWN_WALL * 2, 24);
+    // Cross path to bottom-row buildings
+    ctx.fillRect(TOWN_WALL, 520 - 12, TOWN_W - TOWN_WALL * 2, 24);
+    // Verticals to bottom row
+    ctx.fillRect(centerX - 12, centerY, 24, 520 - centerY);
+
+    // Cobblestone detail
+    ctx.fillStyle = pathDark;
+    var pathAreas = [
+      [TOWN_WALL, centerY - 12, TOWN_W - TOWN_WALL * 2, 24],
+      [centerX - 12, TOWN_WALL, 24, TOWN_H - TOWN_WALL * 2],
+      [TOWN_WALL, 128, TOWN_W - TOWN_WALL * 2, 24],
+      [TOWN_WALL, 508, TOWN_W - TOWN_WALL * 2, 24]
+    ];
+    for (var pi = 0; pi < pathAreas.length; pi++) {
+      var pa = pathAreas[pi];
+      for (var pj = 0; pj < 30; pj++) {
+        var ph = tileHash(pj + 3000, pi + 3000);
+        ctx.fillRect(pa[0] + (ph >>> 0) % pa[2], pa[1] + (ph >>> 8) % pa[3], 3, 2);
+      }
+    }
+  }
+
+  function drawTownBuilding(ctx, id, bx, by) {
+    // Each building drawn as a ~60x50 pixel art sprite centered on (bx, by)
+    var ox = bx - 30, oy = by - 25;
+
+    switch (id) {
+      case 'tavern':
+        // Wooden walls with sign
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillStyle = '#7a5c30';
+        ctx.fillRect(ox, oy, 60, 4); // roof
+        ctx.fillStyle = '#5c3a1a';
+        ctx.fillRect(ox - 4, oy - 8, 68, 12); // peaked roof
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(ox + 14, oy - 12, 32, 6); // roof peak
+        // Door
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(ox + 22, oy + 32, 16, 18);
+        // Windows
+        ctx.fillStyle = '#ffd080';
+        ctx.fillRect(ox + 6, oy + 14, 10, 10);
+        ctx.fillRect(ox + 44, oy + 14, 10, 10);
+        // Sign
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 48, oy + 6, 14, 10);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 50, oy + 8, 10, 6);
+        // Chimney
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 50, oy - 18, 8, 12);
+        // Barrel
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(ox + 2, oy + 40, 10, 10);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 3, oy + 43, 8, 2);
+        break;
+
+      case 'store':
+        // Awning and crates
+        ctx.fillStyle = '#b89060';
+        ctx.fillRect(ox, oy, 60, 50);
+        // Striped awning
+        for (var ai = 0; ai < 6; ai++) {
+          ctx.fillStyle = ai % 2 === 0 ? '#cc4444' : '#ffffff';
+          ctx.fillRect(ox + ai * 10, oy - 6, 10, 8);
+        }
+        // Door
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 22, oy + 30, 16, 20);
+        // Windows
+        ctx.fillStyle = '#c8e0ff';
+        ctx.fillRect(ox + 6, oy + 12, 12, 12);
+        ctx.fillRect(ox + 42, oy + 12, 12, 12);
+        // Window panes
+        ctx.fillStyle = '#8a7050';
+        ctx.fillRect(ox + 11, oy + 12, 2, 12);
+        ctx.fillRect(ox + 47, oy + 12, 2, 12);
+        // Crates
+        ctx.fillStyle = '#a08050';
+        ctx.fillRect(ox + 48, oy + 38, 12, 12);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 49, oy + 43, 10, 2);
+        break;
+
+      case 'bank':
+        // Reinforced stone
+        ctx.fillStyle = '#808088';
+        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillStyle = '#70707a';
+        ctx.fillRect(ox, oy, 60, 6); // ledge
+        // Iron door
+        ctx.fillStyle = '#404048';
+        ctx.fillRect(ox + 20, oy + 28, 20, 22);
+        ctx.fillStyle = '#c0a040'; // gold handle
+        ctx.fillRect(ox + 36, oy + 38, 3, 3);
+        // Gold trim
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox, oy + 6, 60, 2);
+        ctx.fillRect(ox, oy + 48, 60, 2);
+        // Columns
+        ctx.fillStyle = '#90909a';
+        ctx.fillRect(ox + 4, oy + 8, 6, 40);
+        ctx.fillRect(ox + 50, oy + 8, 6, 40);
+        // $ sign
+        ctx.fillStyle = '#c0a040';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('$', bx, oy + 22);
+        break;
+
+      case 'casino':
+        // Flashy facade
+        ctx.fillStyle = '#8a2040';
+        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillStyle = '#b03050';
+        ctx.fillRect(ox + 2, oy + 2, 56, 46);
+        // Door
+        ctx.fillStyle = '#4a1020';
+        ctx.fillRect(ox + 20, oy + 30, 20, 20);
+        // Card suits
+        ctx.fillStyle = '#ffd700';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('\u2660', bx - 12, oy + 18);
+        ctx.fillText('\u2665', bx, oy + 18);
+        ctx.fillText('\u2666', bx + 12, oy + 18);
+        // Sign border
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(ox, oy, 60, 2);
+        ctx.fillRect(ox, oy + 48, 60, 2);
+        break;
+
+      case 'fountain':
+        // 3-tier stone basin
+        // Bottom pool
+        ctx.fillStyle = '#6090c0';
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 12, 28, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Pool rim
+        ctx.fillStyle = '#909098';
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 12, 28, 14, 0, 0, Math.PI * 2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#909098';
+        ctx.stroke();
+        // Middle tier
+        ctx.fillStyle = '#a0a0a8';
+        ctx.fillRect(bx - 8, by - 4, 16, 16);
+        // Top tier
+        ctx.fillStyle = '#b0b0b8';
+        ctx.fillRect(bx - 4, by - 14, 8, 12);
+        // Top cap
+        ctx.fillStyle = '#c0c0c8';
+        ctx.fillRect(bx - 6, by - 16, 12, 4);
+        break;
+
+      case 'arcade':
+        // Colorful building
+        ctx.fillStyle = '#4060a0';
+        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillStyle = '#5070b0';
+        ctx.fillRect(ox + 2, oy + 2, 56, 46);
+        // GAMES sign
+        ctx.fillStyle = '#ff4444';
+        ctx.fillRect(ox + 8, oy + 4, 44, 14);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAMES', bx, oy + 14);
+        // Door
+        ctx.fillStyle = '#203060';
+        ctx.fillRect(ox + 22, oy + 30, 16, 20);
+        // Colored lights
+        var arcadeColors = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
+        for (var li = 0; li < 5; li++) {
+          ctx.fillStyle = arcadeColors[li];
+          ctx.fillRect(ox + 6 + li * 10, oy + 22, 6, 4);
+        }
+        break;
+
+      case 'chapel':
+        // Peaked roof with cross
+        ctx.fillStyle = '#c8c0b0';
+        ctx.fillRect(ox, oy + 8, 50, 42);
+        // Peaked roof
+        ctx.fillStyle = '#8b4040';
+        ctx.fillRect(ox - 2, oy + 4, 54, 8);
+        // Roof triangle
+        ctx.fillStyle = '#7a3030';
+        ctx.fillRect(ox + 8, oy, 34, 6);
+        ctx.fillRect(ox + 14, oy - 4, 22, 6);
+        // Cross
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 22, oy - 14, 6, 14);
+        ctx.fillRect(ox + 18, oy - 10, 14, 4);
+        // Door
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 16, oy + 32, 18, 18);
+        // Stained glass
+        ctx.fillStyle = '#6080c0';
+        ctx.fillRect(ox + 18, oy + 14, 14, 12);
+        ctx.fillStyle = '#c06040';
+        ctx.fillRect(ox + 22, oy + 14, 6, 12);
+        // Bell tower
+        ctx.fillStyle = '#b0a898';
+        ctx.fillRect(ox + 40, oy - 6, 12, 20);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 43, oy, 6, 6);
+        break;
+
+      case 'dungeon':
+        // Iron portcullis with descending steps
+        ctx.fillStyle = '#4a4a52';
+        ctx.fillRect(ox, oy, 50, 50);
+        ctx.fillStyle = '#3a3a42';
+        ctx.fillRect(ox + 2, oy + 2, 46, 46);
+        // Gate arch
+        ctx.fillStyle = '#5a5a62';
+        ctx.fillRect(ox + 10, oy + 14, 30, 36);
+        ctx.fillStyle = '#1a1a22';
+        ctx.fillRect(ox + 14, oy + 18, 22, 32);
+        // Portcullis bars
+        ctx.fillStyle = '#606068';
+        for (var bi = 0; bi < 4; bi++) {
+          ctx.fillRect(ox + 16 + bi * 6, oy + 18, 2, 32);
+        }
+        // Descending steps
+        ctx.fillStyle = '#2a2a32';
+        ctx.fillRect(ox + 16, oy + 38, 18, 4);
+        ctx.fillStyle = '#222228';
+        ctx.fillRect(ox + 18, oy + 42, 14, 4);
+        // Skull
+        ctx.fillStyle = '#d0d0c0';
+        ctx.fillRect(ox + 20, oy + 6, 10, 8);
+        ctx.fillStyle = '#1a1a22';
+        ctx.fillRect(ox + 22, oy + 8, 2, 2);
+        ctx.fillRect(ox + 26, oy + 8, 2, 2);
+        break;
+
+      case 'library':
+        // Tall arched windows
+        ctx.fillStyle = '#b0a088';
+        ctx.fillRect(ox, oy, 55, 50);
+        ctx.fillStyle = '#a09078';
+        ctx.fillRect(ox, oy, 55, 6); // top ledge
+        // Arched windows
+        ctx.fillStyle = '#c8e0ff';
+        ctx.fillRect(ox + 6, oy + 10, 8, 20);
+        ctx.fillRect(ox + 22, oy + 10, 8, 20);
+        ctx.fillRect(ox + 38, oy + 10, 8, 20);
+        // Window arches
+        ctx.fillStyle = '#a09078';
+        ctx.fillRect(ox + 6, oy + 8, 8, 3);
+        ctx.fillRect(ox + 22, oy + 8, 8, 3);
+        ctx.fillRect(ox + 38, oy + 8, 8, 3);
+        // Door
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 20, oy + 34, 14, 16);
+        // Book motif on sign
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 44, oy + 10, 8, 10);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 46, oy + 12, 4, 6);
+        break;
+
+      case 'barracks':
+        // Weapon rack and shield
+        ctx.fillStyle = '#7a7a60';
+        ctx.fillRect(ox, oy, 55, 50);
+        ctx.fillStyle = '#6a6a50';
+        ctx.fillRect(ox, oy, 55, 6); // roof
+        // Door
+        ctx.fillStyle = '#4a4a30';
+        ctx.fillRect(ox + 18, oy + 30, 18, 20);
+        // Shield emblem
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 22, oy + 8, 10, 12);
+        ctx.fillStyle = '#8b2020';
+        ctx.fillRect(ox + 24, oy + 10, 6, 8);
+        // Weapon rack
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(ox + 44, oy + 12, 8, 30);
+        ctx.fillStyle = '#a0a0a0';
+        ctx.fillRect(ox + 46, oy + 14, 2, 16); // sword blade
+        ctx.fillRect(ox + 50, oy + 18, 2, 12); // spear shaft
+        break;
+
+      case 'petstore':
+        // Egg display window, paw print sign
+        ctx.fillStyle = '#c09060';
+        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillStyle = '#b08050';
+        ctx.fillRect(ox, oy, 60, 6); // roof
+        ctx.fillStyle = '#a07040';
+        ctx.fillRect(ox - 2, oy - 4, 64, 8); // overhang
+        // Egg display window
+        ctx.fillStyle = '#fff8e0';
+        ctx.fillRect(ox + 6, oy + 12, 20, 16);
+        // Eggs in window
+        ctx.fillStyle = '#ff9090';
+        ctx.beginPath();
+        ctx.ellipse(ox + 12, oy + 24, 4, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#90c0ff';
+        ctx.beginPath();
+        ctx.ellipse(ox + 22, oy + 24, 4, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Door
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 34, oy + 28, 16, 22);
+        // Paw print sign
+        ctx.fillStyle = '#ffd080';
+        ctx.fillRect(ox + 34, oy + 8, 18, 14);
+        // Paw print (simple)
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 40, oy + 14, 3, 3); // pad
+        ctx.fillRect(ox + 38, oy + 11, 2, 2); // toe
+        ctx.fillRect(ox + 42, oy + 11, 2, 2); // toe
+        ctx.fillRect(ox + 44, oy + 13, 2, 2); // toe
+        break;
+    }
+  }
+
+  // ── Town Animated Parts ───────────────────────
+  function drawTownAnimatedParts(ctx) {
+    // Fountain water particles
+    var ft = TOWN_LOCATIONS.fountain;
+    var t = townSmokeFrame * 0.05;
+    ctx.globalAlpha = 0.6;
+    for (var i = 0; i < 12; i++) {
+      var angle = (i / 12) * Math.PI * 2 + t;
+      var r = 6 + Math.sin(t * 2 + i) * 2;
+      var fy = ft.y - 10 - Math.abs(Math.sin(angle + t)) * 12;
+      var fx = ft.x + Math.cos(angle) * r;
+      var splash = Math.sin(townSmokeFrame * 0.1 + i) * 0.3 + 0.4;
+      ctx.globalAlpha = splash;
+      ctx.fillStyle = '#80c0ff';
+      ctx.fillRect(fx, fy, 2, 2);
+    }
+    // Splash ring
+    ctx.globalAlpha = 0.2 + Math.sin(t * 3) * 0.1;
+    ctx.strokeStyle = '#80c0ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(ft.x, ft.y + 12, 24 + Math.sin(t * 2) * 2, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Chimney smoke on tavern
+    drawSmoke(ctx, TOWN_LOCATIONS.tavern.x + 20, TOWN_LOCATIONS.tavern.y - 40, townSmokeFrame, 100);
+
+    // Torches on dungeon gate
+    drawTorch(ctx, TOWN_LOCATIONS.dungeon.x - 28, TOWN_LOCATIONS.dungeon.y - 10, townSmokeFrame, 200);
+    drawTorch(ctx, TOWN_LOCATIONS.dungeon.x + 22, TOWN_LOCATIONS.dungeon.y - 10, townSmokeFrame, 201);
+
+    // Torches on barracks
+    drawTorch(ctx, TOWN_LOCATIONS.barracks.x - 24, TOWN_LOCATIONS.barracks.y, townSmokeFrame, 210);
+
+    // Lantern flicker on casino
+    var casinoLoc = TOWN_LOCATIONS.casino;
+    var flicker = 0.5 + Math.sin(townSmokeFrame * 0.15) * 0.3;
+    ctx.fillStyle = '#ffd700';
+    ctx.globalAlpha = flicker;
+    ctx.fillRect(casinoLoc.x - 28, casinoLoc.y - 20, 56, 3);
+    ctx.globalAlpha = 1;
+
+    // Arcade light animation
+    var arcadeLoc = TOWN_LOCATIONS.arcade;
+    var aColors = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
+    for (var ai = 0; ai < 5; ai++) {
+      var ci = (ai + Math.floor(townSmokeFrame / 8)) % 5;
+      ctx.fillStyle = aColors[ci];
+      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.2 + ai) * 0.3;
+      ctx.fillRect(arcadeLoc.x - 24 + ai * 10, arcadeLoc.y - 3, 6, 4);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Town Labels ───────────────────────────────
+  function drawTownLabels(ctx) {
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+
+    for (var i = 0; i < TOWN_LOC_ORDER.length; i++) {
+      var id = TOWN_LOC_ORDER[i];
+      var loc = TOWN_LOCATIONS[id];
+      var labelY = loc.y + 36;
+
+      var nameWidth = ctx.measureText(loc.name).width;
+      var bgW = nameWidth + 10;
+      var bgH = 14;
+      var bgX = loc.x - bgW / 2;
+      var bgY = labelY - 10;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(bgX, bgY, bgW, bgH);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bgX, bgY, bgW, bgH);
+
+      ctx.fillStyle = '#000000';
+      ctx.fillText(loc.name, loc.x + 1, labelY + 1);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(loc.name, loc.x, labelY);
+    }
+  }
+
+  // ── Town Return Button ────────────────────────
+  function drawTownReturnButton(ctx) {
+    var text = '<< World Map';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'left';
+    var tw = ctx.measureText(text).width;
+    var bx = TOWN_WALL + 8, by = TOWN_WALL + 6;
+    var bw = tw + 12, bh = 16;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = '#c0a040';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = '#ffdd44';
+    ctx.fillText(text, bx + 6, by + 12);
+  }
+
+  // ── Town Enter Prompt ─────────────────────────
+  function drawTownEnterPrompt(ctx) {
+    if (!townPlayerAtLocation) return;
+    var loc = TOWN_LOCATIONS[townPlayerAtLocation];
+    if (!loc) return;
+
+    var text = 'Enter ' + loc.name;
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    var tw = ctx.measureText(text).width;
+    var px = townPlayerPos.x;
+    var py = townPlayerPos.y - 36;
+    var bw = tw + 20, bh = 22;
+    var bx = px - bw / 2, by = py - 12;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(bx + 2, by + 2, bw, bh);
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = '#c0a040';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.strokeStyle = '#e0c060';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
+
+    ctx.fillStyle = '#ffdd44';
+    ctx.fillText(text, px, py + 2);
+
+    var arrowPhase = Math.sin(townSmokeFrame * 0.08) * 2;
+    ctx.fillStyle = '#ffdd44';
+    ctx.fillRect(px - 2, by + bh + 2 + arrowPhase, 4, 2);
+    ctx.fillRect(px - 1, by + bh + 4 + arrowPhase, 2, 2);
+  }
+
+  // ── Town Player Drawing ───────────────────────
+  function drawTownPlayer(ctx) {
+    var frames = CHAR_FRAMES[townPlayerDir];
+    if (!frames) return;
+    var frame = frames[townPlayerFrame] || frames[0];
+
+    var s = CHAR_SCALE;
+    var ox = Math.round(townPlayerPos.x) - 8 * s;
+    var oy = Math.round(townPlayerPos.y) - 12 * s;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(Math.round(townPlayerPos.x), Math.round(townPlayerPos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (var i = 0; i < frame.length; i++) {
+      var px = frame[i];
+      var ci = parseInt(px[2], 16);
+      ctx.fillStyle = CHAR_COLORS[ci];
+      ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
+    }
+  }
+
+  // ── Town Map Orchestrator ─────────────────────
+  function drawTownMap() {
+    var ctx = mapCtx;
+    if (!ctx) return;
+    ctx.save();
+    ctx.scale(2, 2);
+
+    // Blit static buffer
+    if (!townStaticBuffer) renderTownStaticBuffer();
+    ctx.drawImage(townStaticBuffer, 0, 0);
+
+    // Animated parts
+    drawTownAnimatedParts(ctx);
+    drawTownPlayer(ctx);
+    drawTownLabels(ctx);
+    if (townEnterPromptVisible && townPlayerAtLocation) {
+      drawTownEnterPrompt(ctx);
+    }
+    drawTownReturnButton(ctx);
+
+    ctx.restore();
+  }
+
+  // ══════════════════════════════════════════════
+  // ══  PET STORE MODAL                         ══
+  // ══════════════════════════════════════════════
+
+  // PET_KEY already defined at top of file
+  var PITY_KEY = 'arebooksgood-pity';
+
+  function loadPetStateForShop() {
+    try {
+      var raw = localStorage.getItem(PET_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { activePet: null, pets: {} };
+  }
+
+  function savePetStateForShop(state) {
+    try { localStorage.setItem(PET_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function loadPityState() {
+    try {
+      var raw = localStorage.getItem(PITY_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { common: 0, rare: 0, legendary: 0 };
+  }
+
+  function savePityState(pity) {
+    try { localStorage.setItem(PITY_KEY, JSON.stringify(pity)); } catch (e) {}
+  }
+
+  function getCreaturesByTier(tier) {
+    if (!petCatalog || !petCatalog.creatures) return [];
+    var result = [];
+    for (var id in petCatalog.creatures) {
+      if (petCatalog.creatures.hasOwnProperty(id) && petCatalog.creatures[id].tier === tier) {
+        result.push(id);
+      }
+    }
+    return result;
+  }
+
+  function openPetStoreModal() {
+    if (petStoreModalOpen) return;
+    petStoreModalOpen = true;
+
+    var overlay = document.createElement('div');
+    overlay.className = 'rpg-modal-overlay';
+    overlay.id = 'rpg-petstore-overlay';
+
+    var modal = document.createElement('div');
+    modal.className = 'rpg-petstore-modal';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'rpg-petstore-header';
+    header.innerHTML = '<span class="rpg-petstore-title">Pet Store</span>';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'rpg-petstore-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', closePetStoreModal);
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
+    // Balance bar
+    var balance = document.createElement('div');
+    balance.className = 'rpg-petstore-balance';
+    balance.id = 'rpg-petstore-balance';
+    modal.appendChild(balance);
+
+    // Egg cards container
+    var eggsRow = document.createElement('div');
+    eggsRow.className = 'rpg-petstore-eggs';
+    eggsRow.id = 'rpg-petstore-eggs';
+    modal.appendChild(eggsRow);
+
+    // Hatch result area
+    var result = document.createElement('div');
+    result.className = 'rpg-petstore-result';
+    result.id = 'rpg-petstore-result';
+    result.style.display = 'none';
+    modal.appendChild(result);
+
+    // Collection
+    var collLabel = document.createElement('div');
+    collLabel.className = 'rpg-petstore-section-label';
+    collLabel.textContent = 'Your Collection';
+    modal.appendChild(collLabel);
+
+    var collection = document.createElement('div');
+    collection.className = 'rpg-petstore-collection';
+    collection.id = 'rpg-petstore-collection';
+    modal.appendChild(collection);
+
+    overlay.appendChild(modal);
+
+    // Click overlay background to close
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closePetStoreModal();
+    });
+
+    document.body.appendChild(overlay);
+    renderPetStoreContents();
+  }
+
+  function closePetStoreModal() {
+    petStoreModalOpen = false;
+    var overlay = document.getElementById('rpg-petstore-overlay');
+    if (overlay && overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+  }
+
+  function renderPetStoreContents() {
+    var petState = loadPetStateForShop();
+    var pity = loadPityState();
+
+    // Balance
+    var balEl = document.getElementById('rpg-petstore-balance');
+    if (balEl) {
+      var coins = window.Wallet ? window.Wallet.getBalance() : 0;
+      var jb = window.JackBucks ? window.JackBucks.getBalance() : 0;
+      balEl.textContent = coins + ' Coins | ' + jb + ' JB';
+    }
+
+    // Egg cards
+    var eggsEl = document.getElementById('rpg-petstore-eggs');
+    if (eggsEl && petCatalog && petCatalog.eggs) {
+      eggsEl.innerHTML = '';
+      var tiers = [
+        { key: 'common',    label: 'Common Egg',    color: '#88aa66' },
+        { key: 'rare',      label: 'Rare Egg',      color: '#6688cc' },
+        { key: 'legendary', label: 'Legendary Egg',  color: '#cc8844' }
+      ];
+      for (var ti = 0; ti < tiers.length; ti++) {
+        var t = tiers[ti];
+        var eggDef = petCatalog.eggs[t.key];
+        if (!eggDef) continue;
+        var card = document.createElement('div');
+        card.className = 'rpg-egg-card';
+        card.style.borderColor = t.color;
+
+        // Egg visual
+        var eggIcon = document.createElement('div');
+        eggIcon.className = 'rpg-egg-icon';
+        eggIcon.style.background = t.color;
+        eggIcon.textContent = t.key === 'legendary' ? '\u2728' : t.key === 'rare' ? '\u2b50' : '\ud83e\udd5a';
+        card.appendChild(eggIcon);
+
+        var label = document.createElement('div');
+        label.className = 'rpg-egg-label';
+        label.textContent = t.label;
+        card.appendChild(label);
+
+        var cost = document.createElement('div');
+        cost.className = 'rpg-egg-cost';
+        cost.textContent = eggDef.cost + (eggDef.currency === 'jb' ? ' JB' : ' Coins');
+        card.appendChild(cost);
+
+        // Pool info
+        var pool = getCreaturesByTier(t.key);
+        var ownedCount = 0;
+        for (var pi = 0; pi < pool.length; pi++) {
+          if (petState.pets && petState.pets[pool[pi]]) ownedCount++;
+        }
+        var poolInfo = document.createElement('div');
+        poolInfo.className = 'rpg-egg-pool';
+        poolInfo.textContent = ownedCount + '/' + pool.length + ' owned';
+        card.appendChild(poolInfo);
+
+        // Pity counter
+        var pityCount = pity[t.key] || 0;
+        var pityThreshold = t.key === 'legendary' ? 5 : t.key === 'rare' ? 8 : 6;
+        if (pityCount > 0 && ownedCount < pool.length) {
+          var pityEl = document.createElement('div');
+          pityEl.className = 'rpg-egg-pity';
+          if (pityCount >= pityThreshold - 1) {
+            pityEl.textContent = 'Next: guaranteed new!';
+            pityEl.style.color = 'var(--accent)';
+          } else {
+            pityEl.textContent = 'Pity: ' + pityCount + '/' + pityThreshold;
+          }
+          card.appendChild(pityEl);
+        }
+
+        // Hatch button
+        var canAfford = eggDef.currency === 'jb'
+          ? (window.JackBucks && window.JackBucks.getBalance() >= eggDef.cost)
+          : (window.Wallet && window.Wallet.getBalance() >= eggDef.cost);
+        var hatchBtn = document.createElement('button');
+        hatchBtn.className = 'rpg-btn rpg-btn-small rpg-btn-primary';
+        hatchBtn.textContent = 'Hatch';
+        hatchBtn.disabled = !canAfford;
+        if (!canAfford) hatchBtn.classList.add('rpg-btn-disabled');
+        hatchBtn.setAttribute('data-tier', t.key);
+        hatchBtn.addEventListener('click', function () {
+          var tier = this.getAttribute('data-tier');
+          rpgHatchEgg(tier);
+        });
+        card.appendChild(hatchBtn);
+
+        eggsEl.appendChild(card);
+      }
+    }
+
+    // Collection grid
+    renderPetStoreCollection(petState);
+  }
+
+  function renderPetStoreCollection(petState) {
+    var collEl = document.getElementById('rpg-petstore-collection');
+    if (!collEl || !petCatalog) return;
+    collEl.innerHTML = '';
+
+    for (var id in petCatalog.creatures) {
+      if (!petCatalog.creatures.hasOwnProperty(id)) continue;
+      var creature = petCatalog.creatures[id];
+      var owned = petState.pets && petState.pets[id];
+
+      var cell = document.createElement('div');
+      cell.className = 'rpg-petstore-pet-cell' + (owned ? ' rpg-petstore-pet-owned' : '');
+
+      if (owned && window.PetSprites && window.PetSprites.renderPreview) {
+        var level = petState.pets[id].level || 1;
+        var preview = window.PetSprites.renderPreview(creature.spriteId, level);
+        if (preview) {
+          preview.style.width = '36px';
+          preview.style.height = '36px';
+          cell.appendChild(preview);
+        }
+      }
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'rpg-petstore-pet-name';
+      nameEl.textContent = owned ? creature.name : '???';
+      cell.appendChild(nameEl);
+
+      if (petState.activePet === id) {
+        var activeTag = document.createElement('div');
+        activeTag.className = 'rpg-petstore-active-tag';
+        activeTag.textContent = 'Active';
+        cell.appendChild(activeTag);
+      }
+
+      collEl.appendChild(cell);
+    }
+  }
+
+  function rpgHatchEgg(tier) {
+    if (!petCatalog) return;
+    var eggDef = petCatalog.eggs[tier];
+    if (!eggDef) return;
+
+    // Check currency
+    if (eggDef.currency === 'jb') {
+      if (!window.JackBucks || window.JackBucks.getBalance() < eggDef.cost) return;
+    } else {
+      if (!window.Wallet || window.Wallet.getBalance() < eggDef.cost) return;
+    }
+
+    var pool = getCreaturesByTier(tier === 'common' ? 'common' : tier === 'rare' ? 'rare' : 'legendary');
+    if (pool.length === 0) return;
+
+    var petState = loadPetStateForShop();
+    var pity = loadPityState();
+
+    // Pity system
+    var pityThreshold = tier === 'legendary' ? 5 : tier === 'rare' ? 8 : 6;
+    var forceNew = pity[tier] >= pityThreshold;
+
+    // Roll creature
+    var rolled;
+    if (forceNew) {
+      var unowned = [];
+      for (var i = 0; i < pool.length; i++) {
+        if (!petState.pets || !petState.pets[pool[i]]) unowned.push(pool[i]);
+      }
+      rolled = unowned.length > 0
+        ? unowned[Math.floor(Math.random() * unowned.length)]
+        : pool[Math.floor(Math.random() * pool.length)];
+    } else {
+      rolled = pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    // Deduct currency
+    if (eggDef.currency === 'jb') {
+      window.JackBucks.deduct(eggDef.cost);
+    } else {
+      window.Wallet.deduct(eggDef.cost);
+    }
+
+    var isDuplicate = petState.pets && petState.pets[rolled];
+    var mergeXP = eggDef.dupMergeXP || 0;
+
+    if (isDuplicate) {
+      petState.pets[rolled].mergeXP = (petState.pets[rolled].mergeXP || 0) + mergeXP;
+      pity[tier]++;
+    } else {
+      if (!petState.pets) petState.pets = {};
+      petState.pets[rolled] = {
+        level: 1, mood: 'happy', totalWins: 0, totalLosses: 0,
+        gamesWatched: 0, flingCount: 0, acquired: Date.now(), mergeXP: 0
+      };
+      if (!petState.activePet) {
+        petState.activePet = rolled;
+      }
+      pity[tier] = 0;
+    }
+
+    savePetStateForShop(petState);
+    savePityState(pity);
+
+    // Show result
+    var resultEl = document.getElementById('rpg-petstore-result');
+    if (resultEl) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = '';
+
+      var creature = petCatalog.creatures[rolled];
+      if (creature && window.PetSprites && window.PetSprites.renderPreview) {
+        var preview = window.PetSprites.renderPreview(creature.spriteId, 1);
+        if (preview) {
+          preview.style.width = '64px';
+          preview.style.height = '64px';
+          preview.className = 'rpg-petstore-result-sprite';
+          resultEl.appendChild(preview);
+        }
+      }
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'rpg-petstore-result-name';
+      nameEl.textContent = creature ? creature.name : rolled;
+      resultEl.appendChild(nameEl);
+
+      var tagEl = document.createElement('div');
+      tagEl.className = 'rpg-petstore-result-tag';
+      tagEl.textContent = isDuplicate ? 'Duplicate! (+' + mergeXP + ' XP)' : 'New creature!';
+      tagEl.style.color = isDuplicate ? 'color-mix(in srgb, var(--foreground) 60%, transparent)' : 'var(--accent)';
+      resultEl.appendChild(tagEl);
+    }
+
+    // Reload pet system if new active pet
+    if (!isDuplicate && petState.activePet === rolled) {
+      if (window.PetSystem && window.PetSystem.spawnNew) {
+        window.PetSystem.spawnNew();
+      } else if (window.PetSystem && window.PetSystem.reload) {
+        window.PetSystem.reload();
+      }
+    } else if (window.PetSystem && window.PetSystem.reload) {
+      window.PetSystem.reload();
+    }
+
+    addGameMessage(isDuplicate
+      ? 'The egg hatches... another ' + (petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled) + '. (+' + mergeXP + ' merge XP)'
+      : 'The egg hatches! A ' + (petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled) + ' emerges!',
+      'system');
+
+    // Re-render modal
+    renderPetStoreContents();
+  }
+
   // ── Keyboard Interceptor ────────────────────────
   // Block 1-5 keys from triggering skills.js skill switch in RPG mode
   function onRpgKeyDown(e) {
     if (currentScreen !== 'rpg-game-screen') return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+    // Escape: close pet store modal → exit town → return to map
+    if (e.key === 'Escape') {
+      if (petStoreModalOpen) { closePetStoreModal(); return; }
+      if (insideTown) { returnToWorldMap(); return; }
+    }
+
     var num = parseInt(e.key);
     if (num >= 1 && num <= 5) {
       e.stopPropagation();
