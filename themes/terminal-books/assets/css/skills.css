@@ -1807,7 +1807,7 @@
   100% { box-shadow: none; border-color: transparent; }
 }
 
-.skills-page.screen-flash {
+.skills-page.screen-flash .skills-game-area {
   animation: screenFlash 0.2s ease-out;
 }
 
@@ -2737,6 +2737,13 @@
   .skills-game-resource { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; min-width: 0; }
 
   .skills-game-area { min-height: 240px; }
+
+  .mining-ore-select-wrap,
+  .fishing-select-wrap,
+  .wc-tree-select-wrap {
+    position: static;
+    margin-bottom: 4px;
+  }
 
   .mining-rocks { gap: 0.75rem; }
 

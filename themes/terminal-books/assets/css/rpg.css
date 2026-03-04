@@ -969,7 +969,8 @@
 
   .osrs-chatbox {
     position: fixed;
-    z-index: 99;
+    z-index: 10000;
+    bottom: 56px;
   }
 
   .osrs-chatbox-body {
