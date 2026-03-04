@@ -824,7 +824,7 @@
   var wcEventActive = false;
   var wcEventTimer = null;
   var treeRespawnIntervals = [];
-  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null, blessedActive: false, oreSurgeCount: 0, masterTouchActive: false };
+  var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null, blessedActive: false, oreSurgeCount: 0, masterTouchActive: false, selectedForgeIdx: -1, selectedSmeltIdx: -1 };
 
   // Smithing animation overlay state
   var smithingBgDataUrl = null;
@@ -6659,14 +6659,24 @@
       '<div class="smithing-status" id="smelt-status"></div>';
     area.appendChild(div);
 
-    // Set to highest available recipe
+    // Restore previously selected recipe, or default to first available
     var recipeEl = $('smelt-recipe');
     if (recipeEl) {
-      var bestIdx = 0;
-      for (var b = 0; b < SMELTING_ORDER.length; b++) {
-        if (SMELTING_RECIPES[SMELTING_ORDER[b]].level <= level && canSmelt(SMELTING_ORDER[b])) bestIdx = b;
+      var targetIdx = smithingState.selectedSmeltIdx;
+      if (targetIdx < 0 || targetIdx >= SMELTING_ORDER.length || SMELTING_RECIPES[SMELTING_ORDER[targetIdx]].level > level) {
+        // Find first available
+        targetIdx = 0;
+        for (var b = 0; b < SMELTING_ORDER.length; b++) {
+          if (SMELTING_RECIPES[SMELTING_ORDER[b]].level <= level && canSmelt(SMELTING_ORDER[b])) { targetIdx = b; break; }
+        }
       }
-      recipeEl.selectedIndex = bestIdx;
+      for (var o = 0; o < recipeEl.options.length; o++) {
+        if (parseInt(recipeEl.options[o].value) === targetIdx) {
+          recipeEl.selectedIndex = o;
+          break;
+        }
+      }
+      smithingState.selectedSmeltIdx = targetIdx;
     }
 
     // Furnace sprite
@@ -6680,7 +6690,10 @@
     // Update material display
     updateSmeltMats();
     if (recipeEl) {
-      recipeEl.addEventListener('change', updateSmeltMats);
+      recipeEl.addEventListener('change', function () {
+        smithingState.selectedSmeltIdx = parseInt(recipeEl.value);
+        updateSmeltMats();
+      });
     }
 
     // Set up green zone
@@ -6990,25 +7003,28 @@
       '<div class="smithing-status" id="forge-status"></div>';
     area.appendChild(div);
 
-    // Set to best available recipe
+    // Restore previously selected recipe, or default to first available
     var recipeEl = $('forge-recipe');
     if (recipeEl) {
-      var bestIdx = 0;
-      for (var b = 0; b < FORGING_RECIPES.length; b++) {
-        if (FORGING_RECIPES[b].level <= level && canForge(FORGING_RECIPES[b])) bestIdx = b;
+      var targetIdx = smithingState.selectedForgeIdx;
+      // If no saved selection or saved recipe no longer valid, use first available
+      if (targetIdx < 0 || targetIdx >= FORGING_RECIPES.length || FORGING_RECIPES[targetIdx].level > level) {
+        targetIdx = firstAvailable >= 0 ? firstAvailable : 0;
       }
       for (var o = 0; o < recipeEl.options.length; o++) {
-        if (parseInt(recipeEl.options[o].value) === bestIdx) {
+        if (parseInt(recipeEl.options[o].value) === targetIdx) {
           recipeEl.selectedIndex = o;
           break;
         }
       }
+      smithingState.selectedForgeIdx = targetIdx;
     }
 
     // Update material display
     updateForgeMats();
     if (recipeEl) {
       recipeEl.addEventListener('change', function () {
+        smithingState.selectedForgeIdx = parseInt(recipeEl.value);
         updateForgeMats();
         updateForgeZone();
         updateForgeAnvilSprite();
@@ -7904,7 +7920,7 @@
     if (smithingState.smeltTimer) clearInterval(smithingState.smeltTimer);
     if (smithingState.cooldownTimer) clearTimeout(smithingState.cooldownTimer);
     var prevMode = smithingState.mode || 'smelting';
-    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null, blessedActive: false, oreSurgeCount: 0, masterTouchActive: false };
+    smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: prevMode, smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null, blessedActive: false, oreSurgeCount: 0, masterTouchActive: false, selectedForgeIdx: -1, selectedSmeltIdx: -1 };
     if (combatState.enemyTimer) clearInterval(combatState.enemyTimer);
     if (combatState.dodgeWindowTimer) clearTimeout(combatState.dodgeWindowTimer);
     combatState = {
