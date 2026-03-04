@@ -3086,10 +3086,23 @@
     var cx = (e.clientX - rect.left) * scaleX;
     var cy = (e.clientY - rect.top) * scaleY;
 
-    // Check collect prompt click (well below enter prompt)
+    // Check stationed pet sprite click (collect on tap)
+    if (playerAtLocation && hasUncollectedRewards(playerAtLocation)) {
+      var mapLoc = MAP_LOCATIONS[playerAtLocation];
+      if (mapLoc) {
+        var petSprX = mapLoc.x + 28;
+        var petSprY = mapLoc.y + 22;
+        if (Math.abs(cx - petSprX) < 20 && Math.abs(cy - petSprY) < 20) {
+          collectAtLocation(playerAtLocation);
+          return;
+        }
+      }
+    }
+
+    // Check collect badge click (below enter prompt)
     if (enterPromptVisible && playerAtLocation && hasUncollectedRewards(playerAtLocation)) {
-      var collectY = playerPos.y - 36 + 22 + 32; // 32px below enter box
-      if (Math.abs(cx - playerPos.x) < 100 && Math.abs(cy - collectY) < 10) {
+      var collectY = playerPos.y - 48 + 22 + 32; // must match draw: by + bh + 32
+      if (Math.abs(cx - playerPos.x) < 100 && Math.abs(cy - collectY) < 14) {
         collectAtLocation(playerAtLocation);
         return;
       }
