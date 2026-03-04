@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Tree Individuals Viewer</title>
+<style>
+body { background: #1a1a2e; color: #e0e0e0; font-family: monospace; margin: 20px; }
+h1 { color: #8bc34a; }
+h2 { color: #ffb74d; margin-top: 30px; border-bottom: 1px solid #444; padding-bottom: 6px; }
+.group { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; }
+.sprite-card {
+  background: #2a2a3e; border: 2px solid #444; border-radius: 6px;
+  padding: 8px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.sprite-card:hover { border-color: #8bc34a; }
+.sprite-card.selected { border-color: #ffeb3b; background: #3a3a4e; }
+.sprite-card img {
+  image-rendering: pixelated; image-rendering: -moz-crisp-edges;
+  background: repeating-conic-gradient(#333 0% 25%, #222 0% 50%) 50% / 16px 16px;
+  display: block; margin: 0 auto 6px;
+}
+.sprite-card .name { font-size: 11px; color: #aaa; }
+.sprite-card .dims { font-size: 10px; color: #666; }
+
+.picks-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: #111; border-top: 2px solid #8bc34a; padding: 10px 20px;
+  display: flex; gap: 12px; align-items: center; z-index: 10;
+}
+.picks-bar h3 { margin: 0; color: #8bc34a; white-space: nowrap; }
+.slot {
+  background: #2a2a3e; border: 2px solid #555; border-radius: 4px;
+  padding: 4px 8px; min-width: 70px; text-align: center; font-size: 11px;
+  cursor: pointer;
+}
+.slot.active { border-color: #ffeb3b; }
+.slot.filled { border-color: #8bc34a; }
+.slot img { image-rendering: pixelated; display: block; margin: 0 auto; max-height: 48px; }
+.slot .slot-label { color: #888; }
+#export-btn {
+  background: #8bc34a; color: #111; border: none; padding: 8px 16px;
+  border-radius: 4px; cursor: pointer; font-family: monospace; font-weight: bold;
+  margin-left: auto;
+}
+#export-btn:hover { background: #9ccc65; }
+#output { display: none; background: #111; color: #8bc34a; padding: 12px; margin: 20px 0 80px;
+  border: 1px solid #444; white-space: pre; font-size: 12px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>Tree Individuals Viewer</h1>
+<p>Click a sprite to assign it to the active slot (yellow border). Click a slot to make it active.</p>
+
+<div id="groups"></div>
+<pre id="output"></pre>
+
+<div class="picks-bar">
+  <h3>Picks:</h3>
+  <div id="slots"></div>
+  <button id="export-btn" onclick="doExport()">Export Mapping</button>
+</div>
+
+<script>
+var TREE_NAMES = ['Pine', 'Oak', 'Birch', 'Maple', 'Walnut', 'Mahogany', 'Yew', 'Elder'];
+var activeSlot = 0;
+var picks = new Array(8).fill(null); // filename per slot
+
+// All extracted sprites grouped by source
+var GROUPS = {
+  'Pine (pine.png)': ['pine-1','pine-2','pine-3','pine-4','pine-5','pine-6','pine-7'],
+  'Birch (birch.png)': ['birch-1','birch-2','birch-3','birch-4','birch-5','birch-6'],
+  'Mahogany (mahogany.png)': ['mahogany-1','mahogany-2','mahogany-3','mahogany-4'],
+  'Maple Top (maple.png top)': ['maple-top-1','maple-top-2','maple-top-3'],
+  'Maple Bottom (maple.png bot)': ['maple-bot-1','maple-bot-2','maple-bot-3','maple-bot-4','maple-bot-5','maple-bot-6','maple-bot-7','maple-bot-8'],
+  'Deep Forest (deepforest.png)': ['deepforest-r1-1','deepforest-r1-2','deepforest-r1-3','deepforest-r2-1','deepforest-r2-2','deepforest-r2-3','deepforest-r3-1'],
+  'Mushroom (mushroom.png)': ['mushroom-r1-1','mushroom-r1-2','mushroom-r1-3','mushroom-r2-1','mushroom-r2-2','mushroom-r2-3','mushroom-r3-1','mushroom-r3-2','mushroom-r3-3','mushroom-r4-1','mushroom-r4-2','mushroom-r4-3','mushroom-r5-1','mushroom-r5-2','mushroom-r5-3'],
+  'Mine (mine.png)': ['mine-1'],
+  'Cherry (cherry.png)': ['cherry-1','cherry-2','cherry-3','cherry-4','cherry-5','cherry-6','cherry-7','cherry-8'],
+  'Apple (apple.png)': ['apple-1','apple-2','apple-3','apple-4','apple-5','apple-6','apple-7','apple-8','apple-9']
+};
+
+function buildUI() {
+  var groupsDiv = document.getElementById('groups');
+  for (var label in GROUPS) {
+    var h = document.createElement('h2');
+    h.textContent = label;
+    groupsDiv.appendChild(h);
+
+    var row = document.createElement('div');
+    row.className = 'group';
+    var files = GROUPS[label];
+    for (var i = 0; i < files.length; i++) {
+      (function(fname) {
+        var card = document.createElement('div');
+        card.className = 'sprite-card';
+        card.dataset.file = fname;
+
+        var img = document.createElement('img');
+        img.src = 'tree-individuals/' + fname + '.png';
+        // Scale up small sprites for visibility
+        img.onload = function() {
+          var scale = Math.max(1, Math.floor(96 / Math.max(this.naturalWidth, this.naturalHeight)));
+          scale = Math.min(scale, 6);
+          this.style.width = (this.naturalWidth * scale) + 'px';
+          this.style.height = (this.naturalHeight * scale) + 'px';
+          card.querySelector('.dims').textContent = this.naturalWidth + 'x' + this.naturalHeight;
+        };
+
+        var nameEl = document.createElement('div');
+        nameEl.className = 'name';
+        nameEl.textContent = fname;
+
+        var dimsEl = document.createElement('div');
+        dimsEl.className = 'dims';
+        dimsEl.textContent = '...';
+
+        card.appendChild(img);
+        card.appendChild(nameEl);
+        card.appendChild(dimsEl);
+
+        card.onclick = function() {
+          picks[activeSlot] = fname;
+          updateSlots();
+          // Auto-advance to next empty slot
+          for (var s = 0; s < 8; s++) {
+            var next = (activeSlot + 1 + s) % 8;
+            if (!picks[next]) { activeSlot = next; break; }
+          }
+          updateSlots();
+        };
+
+        row.appendChild(card);
+      })(files[i]);
+    }
+    groupsDiv.appendChild(row);
+  }
+
+  // Build slots
+  var slotsDiv = document.getElementById('slots');
+  for (var s = 0; s < 8; s++) {
+    (function(idx) {
+      var slot = document.createElement('div');
+      slot.className = 'slot' + (idx === 0 ? ' active' : '');
+      slot.id = 'slot-' + idx;
+      slot.innerHTML = '<div class="slot-label">' + TREE_NAMES[idx] + '</div>';
+      slot.onclick = function() { activeSlot = idx; updateSlots(); };
+      slotsDiv.appendChild(slot);
+    })(s);
+  }
+}
+
+function updateSlots() {
+  for (var s = 0; s < 8; s++) {
+    var el = document.getElementById('slot-' + s);
+    el.className = 'slot' + (s === activeSlot ? ' active' : '') + (picks[s] ? ' filled' : '');
+    if (picks[s]) {
+      el.innerHTML = '<img src="tree-individuals/' + picks[s] + '.png"><div class="slot-label">' + TREE_NAMES[s] + '</div>';
+    } else {
+      el.innerHTML = '<div class="slot-label">' + TREE_NAMES[s] + '</div>';
+    }
+    // Re-attach click
+    (function(idx) { el.onclick = function() { activeSlot = idx; updateSlots(); }; })(s);
+  }
+  // Highlight selected cards
+  var cards = document.querySelectorAll('.sprite-card');
+  for (var c = 0; c < cards.length; c++) {
+    cards[c].classList.toggle('selected', picks.indexOf(cards[c].dataset.file) >= 0);
+  }
+}
+
+function doExport() {
+  var out = document.getElementById('output');
+  var lines = ['Tree Sprite Mapping:', ''];
+  for (var i = 0; i < 8; i++) {
+    lines.push(TREE_NAMES[i] + ': ' + (picks[i] || '(not set)'));
+  }
+  out.textContent = lines.join('\n');
+  out.style.display = 'block';
+}
+
+buildUI();
+</script>
+</body>
+</html>

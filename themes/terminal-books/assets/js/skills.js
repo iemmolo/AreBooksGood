@@ -103,7 +103,7 @@
     ores: { w: 256, h: 64 },
     gems: { w: 112, h: 64 },
     fish: { w: 160, h: 240 },
-    trees: { w: 288, h: 192 },
+    trees: { w: 384, h: 100 },
     wood: { w: 64, h: 48 },
     anvil: { w: 128, h: 96 },
     furnace: { w: 160, h: 64 },
@@ -193,18 +193,31 @@
     'Leviathan':  { sheet: 'items_sheet', x: 240, y: 480 }
   };
 
-  // Tree sprites: map name → { x, y, w, h } crop region on trees.png (288×192)
-  // Full trees at y=36, 32×60 (trimmed 4px from top to exclude floating birds/decorations)
-  // Base reference: extract-farm-sprites.py uses y=32..96, we trim top 4px
+  // Tree sprites: map name → { x, y, w, h } crop region on trees.png (384×100)
+  // Row 0: 8 trees in 48px columns, bottom-aligned
+  // Row 1 (y=50): shared stump + 6 decoration trees
   var TREE_SPRITES = {
-    'Pine':     { x: 0, y: 36, w: 32, h: 60 },     // green basic tree
-    'Oak':      { x: 32, y: 36, w: 32, h: 60 },    // green variant
-    'Birch':    { x: 64, y: 36, w: 32, h: 60 },    // orange/autumn tree
-    'Maple':    { x: 96, y: 36, w: 32, h: 60 },    // white/winter tree
-    'Walnut':   { x: 128, y: 36, w: 32, h: 60 },   // mid-green tree
-    'Mahogany': { x: 160, y: 36, w: 32, h: 60 },   // green with blue cap
-    'Yew':      { x: 192, y: 36, w: 32, h: 60 },   // green with base item
-    'Elder':    { x: 224, y: 36, w: 32, h: 60 }     // green with golden fruit
+    'Pine':     { x: 8, y: 2, w: 32, h: 48 },
+    'Oak':      { x: 56, y: 1, w: 32, h: 49 },
+    'Birch':    { x: 104, y: 2, w: 32, h: 48 },
+    'Maple':    { x: 152, y: 2, w: 32, h: 48 },
+    'Walnut':   { x: 200, y: 3, w: 32, h: 47 },
+    'Mahogany': { x: 248, y: 0, w: 32, h: 50 },
+    'Yew':      { x: 296, y: 1, w: 32, h: 49 },
+    'Elder':    { x: 343, y: 1, w: 33, h: 49 }
+  };
+
+  // Shared stump sprite (shown after tree is chopped)
+  var STUMP_SPRITE = { x: 8, y: 83, w: 32, h: 17 };
+
+  // Decoration tree sprites (for forest background props)
+  var DECO_SPRITES = {
+    'Deco1': { x: 56, y: 50, w: 32, h: 50 },   // mushroom tree
+    'Deco2': { x: 104, y: 51, w: 32, h: 49 },  // mine tree
+    'Deco3': { x: 152, y: 67, w: 32, h: 33 },  // mine tree small
+    'Deco4': { x: 200, y: 52, w: 32, h: 48 },  // cherry
+    'Deco5': { x: 248, y: 52, w: 32, h: 48 },  // apple
+    'Deco6': { x: 288, y: 67, w: 47, h: 33 }   // bush
   };
 
   // Anvil sprites: map recipe → { x, y } on anvil.png (128×96, 16×16 cells, 8 cols × 6 rows)
@@ -4059,8 +4072,8 @@
 
     // Phase 3: Tree sprite
     var treeEl = $('wc-tree');
-    var treePos = TREE_SPRITES[res.name] || { x: 0, y: 36, w: 32, h: 60 };
-    var treeSprite = createSpriteEl('trees', treePos.x, treePos.y, treePos.w, treePos.h, 72, 135);
+    var treePos = TREE_SPRITES[res.name] || TREE_SPRITES['Pine'];
+    var treeSprite = createSpriteEl('trees', treePos.x, treePos.y, treePos.w, treePos.h, treePos.w * 3, treePos.h * 3);
     if (treeSprite) {
       treeSprite.className = 'skill-sprite wc-tree-sprite';
       treeEl.appendChild(treeSprite);
