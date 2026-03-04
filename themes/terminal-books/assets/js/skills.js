@@ -652,6 +652,33 @@
   var selectedMiningOre = null; // index into SKILLS.mining.resources, null = highest
   var miningBgDataUrl = null; // cached PNG data URL for cavern background
 
+  // Mining animation overlay state
+  var miningAnimFrameId = null;
+  var miningAnimCanvas = null;
+  var miningAnimCtx = null;
+  var miningAnimFrame = 0;
+  var miningAnimLastTs = 0;
+  var miningCartState = { x: 260, dir: 1 };
+  var miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseFrames: 0 };
+  var miningEmbers = []; // small particles floating from torches
+
+  // Constants matching static BG coordinates
+  var MINING_W = 640, MINING_H = 400;
+  var MINING_FLOOR_Y = 310;
+  var MINING_BEAM_X1 = 125, MINING_BEAM_X2 = 500, MINING_BEAM_W = 14, MINING_CROSS_Y = 60;
+  var MINING_TORCH_POS = [
+    { x: MINING_BEAM_X1 + MINING_BEAM_W + 3, y: MINING_CROSS_Y + 50 },
+    { x: MINING_BEAM_X2 - 8, y: MINING_CROSS_Y + 50 },
+    { x: 60, y: 150 },
+    { x: MINING_W - 68, y: 150 }
+  ];
+  var MINING_LANTERN_X = (MINING_BEAM_X1 + MINING_BEAM_X2 + MINING_BEAM_W) / 2;
+  var MINING_LANTERN_Y = MINING_CROSS_Y + 14;
+  var MINING_PUD_X = 340, MINING_PUD_Y = MINING_H - 16;
+  var MINING_CART_Y = MINING_FLOOR_Y + 12;
+  var MINING_CART_W = 90, MINING_CART_H = 42;
+  var MINING_RAIL_Y = MINING_CART_Y + MINING_CART_H + 6;
+
   // Deterministic tile hash (same as rpg.js)
   function tileHash(x, y) {
     var h = (x * 374761393 + y * 668265263) | 0;
@@ -2292,10 +2319,8 @@
       ctx.fillRect(tp.x - 80, tp.y - 84, 166, 166);
     }
 
-    // ── Pass 9: Mine cart on full-width tracks ──
-    var cartX = 260, cartY = floorY + 12;
-    var cw = 90, ch = 42;
-    var railY = cartY + ch + 6;
+    // ── Pass 9: Full-width tracks (cart drawn in animation overlay) ──
+    var railY = floorY + 12 + 42 + 6; // cartY + cartH + 6
 
     // Full-width rail ties
     ctx.fillStyle = '#4a3a20';
@@ -2316,62 +2341,7 @@
     ctx.fillRect(0, railY + 2, W, 1);
     ctx.fillRect(0, railY + 10, W, 1);
 
-    // Cart body (taller)
-    ctx.fillStyle = '#3a3430';
-    ctx.fillRect(cartX, cartY + 4, cw, ch);
-    ctx.fillStyle = '#4a4438';
-    ctx.fillRect(cartX + 3, cartY + 2, cw - 6, ch - 2);
-    ctx.fillStyle = '#5a4a30';
-    ctx.fillRect(cartX + 5, cartY + 4, cw - 10, ch - 6);
-    ctx.fillStyle = '#6b5a3a';
-    ctx.fillRect(cartX + 7, cartY + 6, cw - 14, ch - 10);
-    // Iron rim around top
-    ctx.fillStyle = '#505058';
-    ctx.fillRect(cartX, cartY + 2, cw, 3);
-    ctx.fillStyle = '#606870';
-    ctx.fillRect(cartX + 1, cartY + 2, cw - 2, 1);
-    // Side rivets
-    ctx.fillStyle = '#606068';
-    for (j = 0; j < 4; j++) {
-      ctx.fillRect(cartX + 10 + j * 22, cartY + 8, 2, 2);
-      ctx.fillStyle = '#787880';
-      ctx.fillRect(cartX + 10 + j * 22, cartY + 8, 1, 1);
-      ctx.fillStyle = '#606068';
-    }
-    // Wood plank lines inside
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ctx.fillRect(cartX + 7, cartY + 16, cw - 14, 1);
-    ctx.fillRect(cartX + 7, cartY + 28, cw - 14, 1);
-
-    // Round wheels via "+" overlap (14px diameter)
-    for (j = 0; j < 2; j++) {
-      var wx = cartX + 12 + j * 58;
-      var wy = cartY + ch - 2;
-      // Axle
-      ctx.fillStyle = '#3a3a42';
-      ctx.fillRect(wx + 1, wy + 5, 12, 2);
-      // Tire
-      ctx.fillStyle = '#383840';
-      ctx.fillRect(wx + 3, wy, 8, 14);
-      ctx.fillRect(wx, wy + 3, 14, 8);
-      // Ring
-      ctx.fillStyle = '#484850';
-      ctx.fillRect(wx + 4, wy + 1, 6, 12);
-      ctx.fillRect(wx + 1, wy + 4, 12, 6);
-      // Inner
-      ctx.fillStyle = '#585860';
-      ctx.fillRect(wx + 5, wy + 2, 4, 10);
-      ctx.fillRect(wx + 2, wy + 5, 10, 4);
-      // Hub
-      ctx.fillStyle = '#686870';
-      ctx.fillRect(wx + 5, wy + 5, 4, 4);
-      ctx.fillStyle = '#808088';
-      ctx.fillRect(wx + 6, wy + 6, 2, 2);
-      // Spokes
-      ctx.fillStyle = '#505058';
-      ctx.fillRect(wx + 6, wy + 2, 2, 10);
-      ctx.fillRect(wx + 2, wy + 6, 10, 2);
-    }
+    // Cart drawn in animation overlay (not static BG)
 
     // ── Pass 10: Props (barrel) ──
     // Barrel (right wall — sits on floor bottom)
@@ -2512,6 +2482,254 @@
   }
 
   // ══════════════════════════════════════════════
+  // ── MINING CAVERN ANIMATION OVERLAY ───────────
+  // ══════════════════════════════════════════════
+
+  function startMiningAnim() {
+    if (miningAnimFrameId) return; // already running
+    miningAnimFrame = 0;
+    miningAnimLastTs = 0;
+    miningCartState = { x: 20, dir: 1 };
+    miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseFrames: 0 };
+    miningEmbers = [];
+    miningAnimLoop(0);
+  }
+
+  function stopMiningAnim() {
+    if (miningAnimFrameId) {
+      cancelAnimationFrame(miningAnimFrameId);
+      miningAnimFrameId = null;
+    }
+    miningAnimCanvas = null;
+    miningAnimCtx = null;
+    miningEmbers = [];
+  }
+
+  function miningAnimLoop(ts) {
+    miningAnimFrameId = requestAnimationFrame(miningAnimLoop);
+    if (!miningAnimCtx || !miningAnimCanvas) return;
+    var dt = miningAnimLastTs ? Math.min((ts - miningAnimLastTs) / 1000, 0.1) : 0.016;
+    miningAnimLastTs = ts;
+    miningAnimFrame++;
+
+    miningAnimCtx.clearRect(0, 0, MINING_W, MINING_H);
+    drawTorchFlicker(miningAnimCtx, miningAnimFrame);
+    drawWaterDrip(miningAnimCtx, miningAnimFrame, dt);
+    drawMineCart(miningAnimCtx, miningAnimFrame, dt);
+  }
+
+  function drawTorchFlicker(ctx, frame) {
+    var i, tp, phase, flameShift, glowAlpha, glowR, grad;
+
+    // Draw torch flames + glow for 4 wall torches
+    for (i = 0; i < MINING_TORCH_POS.length; i++) {
+      tp = MINING_TORCH_POS[i];
+      phase = Math.sin(frame * 0.12 + i * 2.3);
+      var phase2 = Math.sin(frame * 0.08 + i * 1.7);
+      flameShift = Math.round(phase * 1.5);
+      glowAlpha = 0.08 + phase2 * 0.06; // 0.02 - 0.14
+      glowR = 70 + phase * 10; // 60 - 80
+
+      // Animated flame (shifts vertically)
+      var fy = tp.y - 6 + flameShift;
+      ctx.fillStyle = '#cc3010';
+      ctx.fillRect(tp.x + 1, fy, 5, 6);
+      ctx.fillStyle = phase > 0 ? '#ff6020' : '#ff5018';
+      ctx.fillRect(tp.x + 1, fy + 1, 5, 4);
+      ctx.fillStyle = phase > 0 ? '#ff8030' : '#ff7028';
+      ctx.fillRect(tp.x + 2, fy + 1, 3, 3);
+      ctx.fillStyle = '#ffd060';
+      ctx.fillRect(tp.x + 3, fy + 1, 1, 2);
+      // Bright tip flicker
+      if (frame % 6 < 3) {
+        ctx.fillStyle = '#ffe880';
+        ctx.fillRect(tp.x + 3, fy, 1, 1);
+      }
+
+      // Animated glow
+      grad = ctx.createRadialGradient(tp.x + 3, tp.y - 2, 2, tp.x + 3, tp.y - 2, glowR);
+      grad.addColorStop(0, 'rgba(255,160,48,' + (glowAlpha + 0.06) + ')');
+      grad.addColorStop(0.4, 'rgba(255,120,30,' + (glowAlpha * 0.5) + ')');
+      grad.addColorStop(1, 'rgba(255,80,20,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(tp.x - 80, tp.y - 84, 166, 166);
+
+      // Ember particles (spawn 1 every ~20 frames per torch)
+      if (frame % 20 === (i * 5) % 20) {
+        miningEmbers.push({
+          x: tp.x + 2 + Math.random() * 3,
+          y: tp.y - 8,
+          vx: (Math.random() - 0.5) * 8,
+          vy: -(15 + Math.random() * 20),
+          life: 1.0
+        });
+      }
+    }
+
+    // Hanging lantern flicker
+    var lPhase = Math.sin(frame * 0.1 + 5.0);
+    var lAlpha = 0.10 + lPhase * 0.05;
+    var lR = 100 + lPhase * 20;
+    // Lantern glass glow shift
+    ctx.fillStyle = lPhase > 0 ? '#f0d060' : '#e0c050';
+    ctx.fillRect(MINING_LANTERN_X, MINING_LANTERN_Y + 4, 2, 4);
+    ctx.fillStyle = '#ffe880';
+    ctx.fillRect(MINING_LANTERN_X, MINING_LANTERN_Y + 5, 1, 2);
+    // Glow
+    grad = ctx.createRadialGradient(MINING_LANTERN_X, MINING_LANTERN_Y + 5, 4, MINING_LANTERN_X, MINING_LANTERN_Y + 5, lR);
+    grad.addColorStop(0, 'rgba(240,180,60,' + (lAlpha + 0.05) + ')');
+    grad.addColorStop(0.5, 'rgba(240,160,40,' + (lAlpha * 0.4) + ')');
+    grad.addColorStop(1, 'rgba(240,140,20,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(MINING_LANTERN_X - 120, MINING_LANTERN_Y - 115, 240, 240);
+
+    // Update & draw embers
+    for (i = miningEmbers.length - 1; i >= 0; i--) {
+      var e = miningEmbers[i];
+      e.x += e.vx * 0.016;
+      e.y += e.vy * 0.016;
+      e.vy += 5 * 0.016; // slight gravity
+      e.life -= 0.02;
+      if (e.life <= 0) { miningEmbers.splice(i, 1); continue; }
+      ctx.globalAlpha = e.life * 0.8;
+      ctx.fillStyle = e.life > 0.5 ? '#ffa040' : '#ff6020';
+      ctx.fillRect(Math.round(e.x), Math.round(e.y), 1, 1);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawWaterDrip(ctx, frame, dt) {
+    var ds = miningDripState;
+    var dropSpeed = 120; // px/s
+    var targetY = MINING_PUD_Y - 4;
+
+    if (ds.phase === 'falling') {
+      ds.y += dropSpeed * dt;
+      if (ds.y >= targetY) {
+        ds.y = targetY;
+        ds.phase = 'splash';
+        ds.splashFrame = 0;
+      }
+      // Draw falling drop bead (3x4px)
+      ctx.fillStyle = 'rgba(80,120,170,0.6)';
+      ctx.fillRect(MINING_PUD_X + 12, Math.round(ds.y), 3, 4);
+      ctx.fillStyle = 'rgba(140,180,220,0.7)';
+      ctx.fillRect(MINING_PUD_X + 13, Math.round(ds.y) + 1, 1, 2);
+    } else if (ds.phase === 'splash') {
+      ds.splashFrame++;
+      var sf = ds.splashFrame;
+      // Ripple rings expanding outward
+      var r1 = sf * 0.8;
+      var r2 = Math.max(0, (sf - 5) * 0.8);
+      var alpha1 = Math.max(0, 1 - sf / 25);
+      var alpha2 = Math.max(0, 1 - (sf - 5) / 25);
+      // Ring 1
+      if (alpha1 > 0) {
+        ctx.fillStyle = 'rgba(100,150,200,' + (alpha1 * 0.4) + ')';
+        var rw1 = Math.round(r1 * 2 + 4);
+        ctx.fillRect(MINING_PUD_X + 14 - Math.round(r1), MINING_PUD_Y - 2, rw1, 1);
+        ctx.fillRect(MINING_PUD_X + 14 - Math.round(r1), MINING_PUD_Y + 1, rw1, 1);
+      }
+      // Ring 2
+      if (sf > 5 && alpha2 > 0) {
+        ctx.fillStyle = 'rgba(100,150,200,' + (alpha2 * 0.3) + ')';
+        var rw2 = Math.round(r2 * 2 + 6);
+        ctx.fillRect(MINING_PUD_X + 14 - Math.round(r2) - 1, MINING_PUD_Y - 3, rw2, 1);
+        ctx.fillRect(MINING_PUD_X + 14 - Math.round(r2) - 1, MINING_PUD_Y + 2, rw2, 1);
+      }
+      // Small upward splash droplets
+      if (sf < 12) {
+        var splAlpha = Math.max(0, 1 - sf / 12);
+        ctx.fillStyle = 'rgba(120,170,220,' + (splAlpha * 0.6) + ')';
+        ctx.fillRect(MINING_PUD_X + 11, MINING_PUD_Y - 4 - sf, 1, 2);
+        ctx.fillRect(MINING_PUD_X + 16, MINING_PUD_Y - 3 - sf * 0.7, 1, 2);
+        ctx.fillRect(MINING_PUD_X + 14, MINING_PUD_Y - 5 - sf * 0.9, 1, 2);
+      }
+      if (sf > 30) {
+        ds.phase = 'pause';
+        ds.pauseFrames = 0;
+      }
+    } else if (ds.phase === 'pause') {
+      ds.pauseFrames++;
+      if (ds.pauseFrames > 60) {
+        ds.phase = 'falling';
+        ds.y = 50;
+      }
+    }
+  }
+
+  function drawMineCart(ctx, frame, dt) {
+    var cs = miningCartState;
+    var speed = 12; // px/s
+    cs.x += speed * cs.dir * dt;
+    // Bounce between track edges
+    if (cs.x > 530) { cs.x = 530; cs.dir = -1; }
+    if (cs.x < 20) { cs.x = 20; cs.dir = 1; }
+
+    var cx = Math.round(cs.x);
+    var cy = MINING_CART_Y;
+    var cw = 90, ch = 42;
+    var j;
+
+    // Cart body
+    ctx.fillStyle = '#3a3430';
+    ctx.fillRect(cx, cy + 4, cw, ch);
+    ctx.fillStyle = '#4a4438';
+    ctx.fillRect(cx + 3, cy + 2, cw - 6, ch - 2);
+    ctx.fillStyle = '#5a4a30';
+    ctx.fillRect(cx + 5, cy + 4, cw - 10, ch - 6);
+    ctx.fillStyle = '#6b5a3a';
+    ctx.fillRect(cx + 7, cy + 6, cw - 14, ch - 10);
+    // Iron rim
+    ctx.fillStyle = '#505058';
+    ctx.fillRect(cx, cy + 2, cw, 3);
+    ctx.fillStyle = '#606870';
+    ctx.fillRect(cx + 1, cy + 2, cw - 2, 1);
+    // Side rivets
+    ctx.fillStyle = '#606068';
+    for (j = 0; j < 4; j++) {
+      ctx.fillRect(cx + 10 + j * 22, cy + 8, 2, 2);
+      ctx.fillStyle = '#787880';
+      ctx.fillRect(cx + 10 + j * 22, cy + 8, 1, 1);
+      ctx.fillStyle = '#606068';
+    }
+    // Wood plank lines
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(cx + 7, cy + 16, cw - 14, 1);
+    ctx.fillRect(cx + 7, cy + 28, cw - 14, 1);
+
+    // Wheels
+    for (j = 0; j < 2; j++) {
+      var wx = cx + 12 + j * 58;
+      var wy = cy + ch - 2;
+      // Axle
+      ctx.fillStyle = '#3a3a42';
+      ctx.fillRect(wx + 1, wy + 5, 12, 2);
+      // Tire
+      ctx.fillStyle = '#383840';
+      ctx.fillRect(wx + 3, wy, 8, 14);
+      ctx.fillRect(wx, wy + 3, 14, 8);
+      // Ring
+      ctx.fillStyle = '#484850';
+      ctx.fillRect(wx + 4, wy + 1, 6, 12);
+      ctx.fillRect(wx + 1, wy + 4, 12, 6);
+      // Inner
+      ctx.fillStyle = '#585860';
+      ctx.fillRect(wx + 5, wy + 2, 4, 10);
+      ctx.fillRect(wx + 2, wy + 5, 10, 4);
+      // Hub
+      ctx.fillStyle = '#686870';
+      ctx.fillRect(wx + 5, wy + 5, 4, 4);
+      ctx.fillStyle = '#808088';
+      ctx.fillRect(wx + 6, wy + 6, 2, 2);
+      // Spokes
+      ctx.fillStyle = '#505058';
+      ctx.fillRect(wx + 6, wy + 2, 2, 10);
+      ctx.fillRect(wx + 2, wy + 6, 10, 2);
+    }
+  }
+
+  // ══════════════════════════════════════════════
   // ── MINING MINI-GAME (A1 enhanced) ─────────────
   // ══════════════════════════════════════════════
   function renderMining() {
@@ -2526,6 +2744,16 @@
 
     area.innerHTML = '';
     miningCombo = { count: 0, lastClickTime: 0 };
+
+    // Animation overlay canvas
+    var animCanvas = document.createElement('canvas');
+    animCanvas.width = MINING_W;
+    animCanvas.height = MINING_H;
+    animCanvas.className = 'mining-anim-overlay';
+    area.appendChild(animCanvas);
+    miningAnimCanvas = animCanvas;
+    miningAnimCtx = animCanvas.getContext('2d');
+    startMiningAnim();
 
     // Ore selector dropdown
     var level = state.skills.mining.level;
@@ -4469,6 +4697,8 @@
     rockRespawnIntervals = [];
     // Clean up mining event DOM + state
     cleanupEvent();
+    // Stop mining animation overlay
+    stopMiningAnim();
     if (fishingState.timer) clearTimeout(fishingState.timer);
     if (fishingState.biteTimeout) clearTimeout(fishingState.biteTimeout);
     if (fishingState.castTimer) clearInterval(fishingState.castTimer);
