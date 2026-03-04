@@ -590,6 +590,131 @@
 
   var PET_IDLE_SPEECH = ['missed you!', 'been busy!', 'was training hard!', 'back already?'];
 
+  // ── Progressive stationed pet speech (by collection count) ──
+  var PET_STATIONED_SPEECH = {
+    fire: {
+      happy: [
+        'love it here!', '*warms the cave*', 'so cozy by the fire~',
+        'this is MY furnace now', 'toasty!', 'more work? bring it!'
+      ],
+      missing: [
+        'getting lonely here...', '*stares at the exit*', 'you coming back soon?',
+        'it\'s warm but... empty', 'miss our adventures', 'save me some coins?'
+      ],
+      begging: [
+        'PLEASE take me with you!!', '*dramatically collapses*', 'i\'m WITHERING',
+        'my flames are dimming...', 'i\'ll be good i promise!', '*sets fire to the sign-out sheet*',
+        'what if i just... followed you', 'you forgot about me didn\'t you', 'i can hear the fun from here'
+      ]
+    },
+    aqua: {
+      happy: [
+        'making waves!', '*splashes happily*', 'the water is perfect~',
+        'found a cool shell!', 'so peaceful here', 'swimming in XP!'
+      ],
+      missing: [
+        'the tide is pulling me to you...', '*stares at shore*', 'send help? or snacks?',
+        'it\'s getting lonely in the deep', 'miss the surface world', 'come visit?'
+      ],
+      begging: [
+        'I\'M DRYING OUT HERE', '*flops dramatically*', 'mayday!! mayday!!',
+        'i need emotional support', '*cries into the ocean*', 'take me or i flood this place',
+        'please... the fish don\'t talk back', 'i\'ll carry your stuff!', 'FREEDOM'
+      ]
+    },
+    nature: {
+      happy: [
+        '*purrs contentedly*', 'nice and green here~', 'found a sunny spot!',
+        'the plants like me!', 'growing stronger!', 'this is purrfect'
+      ],
+      missing: [
+        '*sad leaf falls*', 'the trees miss you too...', 'it\'s too quiet here',
+        'even the bugs left', 'when are you visiting?', '*wilts slightly*'
+      ],
+      begging: [
+        'i\'ve been talking to a rock', 'PLEASE i\'m going feral', '*claws at nothing*',
+        'i named all the trees. ALL of them', 'the moss is my only friend now',
+        'just one adventure? please?', '*dramatic yawn of despair*', 'i forget what sunlight is', 'take. me. WITH YOU.'
+      ]
+    },
+    tech: {
+      happy: [
+        'systems optimal!', 'efficiency: 100%', 'processing... happy.exe',
+        'this station is adequate', 'BEEP BOOP (that means content)', 'data flow: excellent'
+      ],
+      missing: [
+        'running lonely.exe...', 'social battery: 12%', 'missing companion... you',
+        'calculating days since last visit...', 'memory banks full of... you', 'idle cycles increasing'
+      ],
+      begging: [
+        'ERROR: ABANDONMENT DETECTED', 'please... my circuits ache', 'initiating PLEASE protocol',
+        'i will overclock for you!', 'loneliness.overflow()', 'BOOP... beep? ...anyone?',
+        'memory leak in friendship module', 'i promise i\'ll stop beeping at night', 'TAKE ME WITH YOU OR I REBOOT'
+      ]
+    },
+    shadow: {
+      happy: [
+        '*lurks happily*', 'the shadows are nice here', 'darkness is comforting~',
+        'found a good hiding spot', 'thriving in the dark', '*purrs from the void*'
+      ],
+      missing: [
+        'even shadows get lonely...', '*peers from the dark*', 'the void echoes your name',
+        'it\'s dark and I\'m alone', 'come back to the shadows?', '*sighs into the abyss*'
+      ],
+      begging: [
+        'THE VOID IS TOO VOID', '*emerges dramatically*', 'i\'ve been monologuing to bats',
+        'darkness without you is just... dark', 'PLEASE the shadows are judging me',
+        'i\'ll haunt you if you don\'t come back', 'the abyss blinked first. i\'m that bored',
+        'even my shadow left me', 'i promise to be less spooky'
+      ]
+    },
+    mystic: {
+      happy: [
+        '*sparkles contentedly*', 'the stars are beautiful here~', 'cosmic vibes!',
+        'channeling good energy', 'the crystals hum for me', 'enchanted~'
+      ],
+      missing: [
+        'the stars spell your name...', '*crystal dims*', 'my aura needs company',
+        'foretold: you visiting soon?', 'the cosmos feels empty', 'stargazing alone...'
+      ],
+      begging: [
+        'I FORESEE YOU TAKING ME WITH YOU', '*levitates aggressively*', 'the prophecy says LET ME OUT',
+        'my third eye is crying', 'i hexed myself by accident. from boredom.',
+        'please the crystals are gossiping about me', 'fate says we should be together rn',
+        'astral projecting to follow you anyway', 'the stars aligned to spell HELP'
+      ]
+    }
+  };
+
+  // ── Pick stationed pet speech based on collectCount ──
+  function getStationedSpeech(rewards) {
+    // Find the pet with the highest collectCount from the rewards
+    var bestPetId = null;
+    var bestCount = 0;
+    for (var i = 0; i < rewards.length; i++) {
+      var sk = state.skills[rewards[i].skill];
+      var c = (sk.collectCount || 0);
+      if (c > bestCount || !bestPetId) {
+        bestCount = c;
+        bestPetId = rewards[i].petId;
+      }
+    }
+
+    var type = getPetType(bestPetId);
+    var lines = PET_STATIONED_SPEECH[type];
+
+    // Fallback to generic if type not found
+    if (!lines) return PET_IDLE_SPEECH[Math.floor(Math.random() * PET_IDLE_SPEECH.length)];
+
+    var mood;
+    if (bestCount <= 2) mood = 'happy';
+    else if (bestCount <= 5) mood = 'missing';
+    else mood = 'begging';
+
+    var pool = lines[mood];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
   // ── XP table ──────────────────────────────────
   function xpForLevel(n) {
     if (n <= 1) return 0;
@@ -859,7 +984,8 @@
         xp: 0,
         assignedPet: null,
         lastActiveAt: null,
-        totalActions: 0
+        totalActions: 0,
+        collectCount: 0
       };
       // Mining collection log (v3)
       if (SKILL_KEYS[i] === 'mining') {
@@ -8015,6 +8141,7 @@
   function assignPet(petId) {
     state.skills[activeSkill].assignedPet = petId;
     state.skills[activeSkill].lastActiveAt = Date.now();
+    state.skills[activeSkill].collectCount = 0;
     saveState();
     $('skills-pet-picker').style.display = 'none';
     renderRightPanel();
@@ -8024,6 +8151,7 @@
 
   function unassignPet() {
     state.skills[activeSkill].assignedPet = null;
+    state.skills[activeSkill].collectCount = 0;
     saveState();
     renderRightPanel();
     // C1: Remove pet from game area
@@ -8117,6 +8245,7 @@
         }
       }
 
+      s.collectCount = (s.collectCount || 0) + 1;
       s.lastActiveAt = now;
     }
 
@@ -8130,8 +8259,8 @@
     if (!content) return;
     content.innerHTML = '';
 
-    // C3: Pet speaks "missed you!" on idle report
-    var idleLine = PET_IDLE_SPEECH[Math.floor(Math.random() * PET_IDLE_SPEECH.length)];
+    // C3: Pet speaks progressive mood speech on idle report
+    var idleLine = getStationedSpeech(result.rewards);
     if (window.PetSystem && window.PetSystem.speak) window.PetSystem.speak(idleLine);
 
     for (var i = 0; i < result.rewards.length; i++) {
