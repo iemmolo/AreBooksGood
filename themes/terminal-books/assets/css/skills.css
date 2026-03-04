@@ -1623,8 +1623,8 @@
 
 .cave-in-rock {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   border: 2px solid #ef5350;
   background: color-mix(in srgb, #ef5350 15%, var(--background));
   cursor: pointer;
@@ -1641,6 +1641,22 @@
 
 .cave-in-rock::after {
   content: '\1FAA8';
+}
+
+.cave-in-rock.has-sprite::after {
+  content: none;
+}
+
+.cave-in-rock.has-sprite {
+  font-size: 0;
+}
+
+.cave-in-sprite {
+  pointer-events: none;
+}
+
+.mining-event-sprite {
+  pointer-events: none;
 }
 
 .cave-in-rock.clicked {

@@ -135,6 +135,14 @@
     'Obsidian Ore':  { x: 128, y: 32 }    // dark crystal
   };
 
+  // Mining event rock sprites: map event id → { sheet, x, y } on rocks.png
+  var EVENT_ROCK_SPRITES = {
+    gemVein:      { sheet: 'rocks', x: 32, y: 48 },   // gold crystal (alt form)
+    shootingStar: { sheet: 'rocks', x: 48, y: 80 },   // purple flame (cosmic)
+    caveIn:       { sheet: 'rocks', x: 16, y: 160 },  // brown boulder (debris)
+    deepVein:     { sheet: 'rocks', x: 112, y: 48 }   // blue crystal (alt form)
+  };
+
   // Ore drop particles: map resource → { sheet, x, y } on items_sheet.png (16px grid, row 16)
   var ORE_DROP_SPRITES = {
     'Copper Ore':    { sheet: 'items_sheet', x: 16, y: 256 },
@@ -1601,7 +1609,7 @@
       // Pet activity description
       var activityEl = $('skills-pet-activity');
       if (activityEl) {
-        var res = getHighestResource(activeSkill);
+        var res = (activeSkill === 'mining') ? getSelectedMiningResource() : getHighestResource(activeSkill);
         var skillVerbs = {
           mining: 'Mining', fishing: 'Fishing for', woodcutting: 'Chopping',
           smithing: 'Smithing', combat: 'Fighting'
@@ -2113,6 +2121,7 @@
   var veinMinerTriggered = false;
   var miningEventActive = false;
   var miningEventTimer = null;
+  var rockRespawnIntervals = [];
 
   function updateRockHpBar(idx) {
     var bar = $('rock-hp-bar-' + idx);
@@ -2138,9 +2147,9 @@
 
     // A1: Combo tracking (freeze during events)
     var timeSinceLast = now - miningCombo.lastClickTime;
-    if (timeSinceLast >= 500 && timeSinceLast <= 700) {
+    if (timeSinceLast >= 400 && timeSinceLast <= 800) {
       miningCombo.count = Math.min(miningCombo.count + 1, 10);
-    } else if (timeSinceLast > 700) {
+    } else if (timeSinceLast > 800) {
       miningCombo.count = 0;
     }
     miningCombo.lastClickTime = now;
@@ -2237,12 +2246,11 @@
       }
 
       addXp('mining', xpGain);
-      addLog('Mined ' + res.name + ' (+' + xpGain + ' XP)');
 
       // 6B: Add ore to inventory
       var oreQty = isDouble ? 2 : 1;
       addItem(res.name, oreQty);
-      addLog('+' + oreQty + ' ' + res.name);
+      addLog('Mined ' + oreQty + 'x ' + res.name + ' (+' + xpGain + ' XP)');
 
       onAction('mining');
       animatePetAction('pet-bounce');
@@ -2260,6 +2268,8 @@
         remaining--;
         if (remaining <= 0) {
           clearInterval(respawnInterval);
+          var ii = rockRespawnIntervals.indexOf(respawnInterval);
+          if (ii !== -1) rockRespawnIntervals.splice(ii, 1);
           rock.classList.remove('depleted');
           if (timerEl.parentNode) timerEl.parentNode.removeChild(timerEl);
           // Reset HP
@@ -2269,6 +2279,7 @@
           timerEl.textContent = remaining + 's';
         }
       }, 1000);
+      rockRespawnIntervals.push(respawnInterval);
 
       // Perk: Vein Miner
       if (hasPerk('veinMiner') && !veinMinerTriggered && Math.random() < 0.20) {
@@ -2277,9 +2288,11 @@
         if (allRocks.length > 0) {
           var target = allRocks[Math.floor(Math.random() * allRocks.length)];
           setTimeout(function () {
-            target.click();
+            if (!target.classList.contains('depleted')) {
+              target.click();
+            }
             veinMinerTriggered = false;
-          }, 400);
+          }, 500);
           addLog('Vein Miner triggered!');
         } else {
           veinMinerTriggered = false;
@@ -2338,12 +2351,22 @@
     else if (selected.id === 'deepVein') triggerDeepVein();
   }
 
-  function createEventRock(cssClass, label, timeLimit) {
+  function createEventRock(cssClass, label, timeLimit, eventId) {
     var area = $('skills-game-area');
     if (!area) return null;
     var rock = document.createElement('div');
     rock.className = 'mining-event-rock ' + cssClass;
     rock.innerHTML = '<div class="mining-event-label">' + label + '</div>';
+
+    // Pixel art sprite for event rock
+    var spriteInfo = EVENT_ROCK_SPRITES[eventId];
+    if (spriteInfo) {
+      var sprite = createSpriteEl(spriteInfo.sheet, spriteInfo.x, spriteInfo.y, 16, 16, 56, 56);
+      if (sprite) {
+        sprite.className = 'skill-sprite mining-event-sprite';
+        rock.appendChild(sprite);
+      }
+    }
 
     // Timer bar
     var timerBar = document.createElement('div');
@@ -2379,33 +2402,55 @@
   }
 
   function triggerGemVein() {
-    var rock = createEventRock('gem-vein', 'Gem Vein!', 10000);
+    var rock = createEventRock('gem-vein', 'Gem Vein!', 10000, 'gemVein');
     if (!rock) { cleanupEvent(); return; }
 
+    var veinHp = { hp: 3, maxHp: 3 };
+
+    var hpBar = document.createElement('div');
+    hpBar.className = 'rock-hp-bar';
+    hpBar.style.position = 'absolute';
+    hpBar.style.bottom = '2px';
+    hpBar.style.left = '4px';
+    hpBar.style.right = '4px';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'rock-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    rock.appendChild(hpBar);
+
     rock.addEventListener('click', function () {
-      getMiningLog().events.gemVein++;
-      getMiningLog().totalGems += 3;
-      var area = $('skills-game-area');
-      var res = getSelectedMiningResource();
-      var xpMult = getXpMult();
-      var gemMult = hasPerk('gemSpec') ? 10 : 5;
-      var totalXp = Math.floor(res.xp * xpMult * gemMult * 3);
-      // 3 guaranteed gems
-      for (var i = 0; i < 3; i++) {
-        // 6B: Add random gem to inventory
-        var gemIdx = Math.floor(Math.random() * GEM_NAMES.length);
-        addItem(GEM_NAMES[gemIdx], 1);
-        if (area) {
-          var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
-          spawnSpriteParticle(area, gem.sheet || 'gems', gem.x, gem.y);
+      veinHp.hp--;
+      hpFill.style.width = (veinHp.hp / veinHp.maxHp * 100) + '%';
+      rock.classList.add('hit');
+      setTimeout(function () { rock.classList.remove('hit'); }, 200);
+
+      if (veinHp.hp <= 0) {
+        var log = getMiningLog();
+        log.events.gemVein++;
+        log.totalGems += 3;
+        var area = $('skills-game-area');
+        var res = getSelectedMiningResource();
+        var xpMult = getXpMult();
+        var gemMult = hasPerk('gemSpec') ? 10 : 5;
+        var totalXp = Math.floor(res.xp * xpMult * gemMult * 3);
+        // 3 guaranteed gems
+        for (var i = 0; i < 3; i++) {
+          var gemIdx = Math.floor(Math.random() * GEM_NAMES.length);
+          addItem(GEM_NAMES[gemIdx], 1);
+          if (area) {
+            var gem = GEM_SPRITES[Math.floor(Math.random() * GEM_SPRITES.length)];
+            spawnSpriteParticle(area, gem.sheet || 'gems', gem.x, gem.y);
+          }
         }
+        addXp('mining', totalXp);
+        addLog('Gem Vein! Found 3 gems! (+' + totalXp + ' XP)');
+        if (area) spawnParticle(area, '3 GEMS! +' + totalXp + ' XP', 'gem');
+        saveState();
+        cleanupEvent();
+        renderSkillList();
+        renderRightPanel();
       }
-      addXp('mining', totalXp);
-      addLog('Gem Vein! Found 3 gems! (+' + totalXp + ' XP)');
-      if (area) spawnParticle(area, '3 GEMS! +' + totalXp + ' XP', 'gem');
-      cleanupEvent();
-      renderSkillList();
-      renderRightPanel();
     });
 
     miningEventTimer = setTimeout(function () {
@@ -2415,12 +2460,11 @@
   }
 
   function triggerShootingStar() {
-    var rock = createEventRock('shooting-star', 'Shooting Star!', 8000);
+    var rock = createEventRock('shooting-star', 'Shooting Star!', 8000, 'shootingStar');
     if (!rock) { cleanupEvent(); return; }
 
     var starHp = { hp: 3, maxHp: 3 };
 
-    // Add HP bar
     var hpBar = document.createElement('div');
     hpBar.className = 'rock-hp-bar';
     hpBar.style.position = 'absolute';
@@ -2443,10 +2487,16 @@
         getMiningLog().events.shootingStar++;
         var area = $('skills-game-area');
         var res = getSelectedMiningResource();
-        var xpGain = Math.floor(res.xp * getStarShowerMult() * 10);
+        var xpGain = Math.floor(res.xp * getXpMult() * 10);
         addXp('mining', xpGain);
-        addLog('Shooting Star mined! 10x XP bonus! (+' + xpGain + ' XP)');
-        if (area) spawnParticle(area, '+' + xpGain + ' XP (10x!)', 'xp');
+        addItem(res.name, 2);
+        addLog('Shooting Star mined! +2 ' + res.name + ', 10x XP! (+' + xpGain + ' XP)');
+        if (area) {
+          spawnParticle(area, '+' + xpGain + ' XP (10x!)', 'xp');
+          var orePos = ORE_DROP_SPRITES[res.name];
+          if (orePos) spawnSpriteParticle(area, orePos.sheet || 'ores', orePos.x, orePos.y);
+        }
+        saveState();
         cleanupEvent();
         renderSkillList();
         renderRightPanel();
@@ -2475,6 +2525,16 @@
       rock.className = 'cave-in-rock';
       rock.style.left = (15 + Math.random() * 60) + '%';
       rock.style.animationDelay = (i * 0.3) + 's';
+      // Pixel art boulder sprite
+      var boulderInfo = EVENT_ROCK_SPRITES.caveIn;
+      if (boulderInfo) {
+        var bSprite = createSpriteEl(boulderInfo.sheet, boulderInfo.x, boulderInfo.y, 16, 16, 40, 40);
+        if (bSprite) {
+          bSprite.className = 'skill-sprite cave-in-sprite';
+          rock.classList.add('has-sprite');
+          rock.appendChild(bSprite);
+        }
+      }
       rock.addEventListener('click', (function (el) {
         return function () {
           if (el.classList.contains('clicked')) return;
@@ -2485,10 +2545,10 @@
             var res = getSelectedMiningResource();
             var xpGain = Math.floor(res.xp * getXpMult() * 5);
             addXp('mining', xpGain);
-            // 6B: Add ore to inventory
             addItem(res.name, 1);
-            addLog('Cave-In survived! 5x XP bonus! (+' + xpGain + ' XP)');
+            addLog('Cave-In survived! +1 ' + res.name + ', 5x XP! (+' + xpGain + ' XP)');
             if (area) spawnParticle(area, '5x! +' + xpGain + ' XP', 'xp');
+            saveState();
             cleanupEvent();
             renderSkillList();
             renderRightPanel();
@@ -2504,13 +2564,14 @@
         var comboEl = $('mining-combo');
         if (comboEl) comboEl.style.display = 'none';
         addLog('Cave-In! Rocks crushed you. Combo lost.');
+        if (area) spawnParticle(area, 'Combo Lost!', 'crit');
       }
       cleanupEvent();
     }, 5000);
   }
 
   function triggerDeepVein() {
-    var rock = createEventRock('deep-vein', 'Deep Vein!', 15000);
+    var rock = createEventRock('deep-vein', 'Deep Vein!', 15000, 'deepVein');
     if (!rock) { cleanupEvent(); return; }
 
     var veinHp = { hp: 5, maxHp: 5 };
@@ -2537,10 +2598,16 @@
         getMiningLog().events.deepVein++;
         var area = $('skills-game-area');
         var res = getSelectedMiningResource();
-        var xpGain = Math.floor(res.xp * getStarShowerMult() * 5);
+        var xpGain = Math.floor(res.xp * getXpMult() * 5);
         addXp('mining', xpGain);
-        addLog('Deep Vein mined! 5x XP bonus! (+' + xpGain + ' XP)');
-        if (area) spawnParticle(area, '+' + xpGain + ' XP (5x!)', 'xp');
+        addItem(res.name, 3);
+        addLog('Deep Vein mined! +3 ' + res.name + ', 5x XP! (+' + xpGain + ' XP)');
+        if (area) {
+          spawnParticle(area, '+' + xpGain + ' XP (5x!)', 'xp');
+          var orePos = ORE_DROP_SPRITES[res.name];
+          if (orePos) spawnSpriteParticle(area, orePos.sheet || 'ores', orePos.x, orePos.y);
+        }
+        saveState();
         cleanupEvent();
         renderSkillList();
         renderRightPanel();
@@ -3871,8 +3938,13 @@
   function cleanupActiveGame() {
     miningCooldown = false;
     miningCombo = { count: 0, lastClickTime: 0 };
-    miningEventActive = false;
-    if (miningEventTimer) { clearTimeout(miningEventTimer); miningEventTimer = null; }
+    // Clear all rock respawn intervals
+    for (var ri = 0; ri < rockRespawnIntervals.length; ri++) {
+      clearInterval(rockRespawnIntervals[ri]);
+    }
+    rockRespawnIntervals = [];
+    // Clean up mining event DOM + state
+    cleanupEvent();
     if (fishingState.timer) clearTimeout(fishingState.timer);
     if (fishingState.biteTimeout) clearTimeout(fishingState.biteTimeout);
     if (fishingState.castTimer) clearInterval(fishingState.castTimer);
@@ -4142,7 +4214,7 @@
         var s = state.skills[key];
         if (!s.assignedPet) continue;
 
-        var res = getHighestResource(key);
+        var res = (key === 'mining') ? getSelectedMiningResource() : getHighestResource(key);
         var tierMult = getTierMult(s.assignedPet);
         var typeBonus = getTypeBonus(s.assignedPet, key);
 
