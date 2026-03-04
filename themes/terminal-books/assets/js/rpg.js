@@ -70,8 +70,8 @@
   var followerPos = { x: 0, y: 0 };
   var followerDir = 'down';
   var followerPetId = null;
-  var FOLLOWER_SIZE = 24;
-  var FOLLOWER_TRAIL = 28;
+  var FOLLOWER_SIZE = 32;
+  var FOLLOWER_TRAIL = 30;
 
   // Stationed sprite cache: locationId → { img, frameIdx }
   var stationedSpriteSheets = {};
@@ -148,17 +148,43 @@
     return Math.floor(50 * Math.pow(1.08, lvl - 1));
   }
 
-  function renderRpgPetSprite(petId, level) {
-    if (!petCatalog || !petCatalog.creatures[petId]) return null;
+  /**
+   * Build a pet sprite element with correct scaling at any display size.
+   * Does NOT use PetSprites.renderPreview (which breaks when resized).
+   * @param {string} petId - creature key from petcatalog
+   * @param {number} level - pet level (determines frame)
+   * @param {number} [displaySize=48] - rendered CSS pixel size
+   * @returns {HTMLElement|null}
+   */
+  function renderRpgPetSprite(petId, level, displaySize) {
+    if (!petSpriteData || !petCatalog || !petCatalog.creatures[petId]) return null;
     var spriteId = petCatalog.creatures[petId].spriteId;
-    if (window.PetSprites && window.PetSprites.renderPreview) {
-      return window.PetSprites.renderPreview(spriteId, level || 1, RPG_PET_DEFAULT_SKIN);
-    }
-    // Fallback: try without skin param
-    if (window.PetSprites && window.PetSprites.renderPreview) {
-      return window.PetSprites.renderPreview(spriteId, level || 1);
-    }
-    return null;
+    var info = petSpriteData[spriteId];
+    if (!info) return null;
+
+    var ds = displaySize || 48;
+    var fw = info.frameWidth || 48;
+    var fh = info.frameHeight || 48;
+    var frames = info.frames || 3;
+    var sheetUrl = info.altSheet || info.sheet;
+    var frameOffset = info.frameOffset || 0;
+    var frameIdx = Math.min(frameOffset + (level || 1) - 1, frames - 1);
+
+    // Scale factor: ds / fw (e.g. 64/48 = 1.333)
+    var scale = ds / fw;
+    var bgW = Math.round(fw * frames * scale);
+    var bgH = Math.round(fh * scale);
+    var bgX = Math.round(frameIdx * fw * scale);
+
+    var el = document.createElement('div');
+    el.style.width = ds + 'px';
+    el.style.height = ds + 'px';
+    el.style.backgroundImage = 'url(' + sheetUrl + ')';
+    el.style.backgroundSize = bgW + 'px ' + bgH + 'px';
+    el.style.backgroundPosition = '-' + bgX + 'px 0';
+    el.style.backgroundRepeat = 'no-repeat';
+    el.style.imageRendering = 'pixelated';
+    return el;
   }
 
   // ── Map Constants ────────────────────────────
@@ -4102,20 +4128,29 @@
 
   // ── Town Return Button ────────────────────────
   function drawTownReturnButton(ctx) {
-    var text = '<< World Map';
-    ctx.font = 'bold 10px monospace';
+    var text = '\u2190 Leave Town';
+    ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'left';
     var tw = ctx.measureText(text).width;
-    var bx = TOWN_WALL + 8, by = TOWN_WALL + 6;
-    var bw = tw + 12, bh = 16;
+    var bx = TOWN_WALL + 6, by = TOWN_WALL + 4;
+    var bw = tw + 18, bh = 22;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    // Drop shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(bx + 2, by + 2, bw, bh);
+    // Background
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
     ctx.fillRect(bx, by, bw, bh);
+    // Gold border (double)
     ctx.strokeStyle = '#c0a040';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeRect(bx, by, bw, bh);
+    ctx.strokeStyle = '#e0c060';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
+    // Text
     ctx.fillStyle = '#ffdd44';
-    ctx.fillText(text, bx + 6, by + 12);
+    ctx.fillText(text, bx + 9, by + 15);
   }
 
   // ── Town Enter Prompt ─────────────────────────
@@ -4296,8 +4331,7 @@
       eggsEl.innerHTML = '';
       var tiers = [
         { key: 'common',    label: 'Common Egg',    color: '#88aa66' },
-        { key: 'rare',      label: 'Rare Egg',      color: '#6688cc' },
-        { key: 'legendary', label: 'Legendary Egg',  color: '#cc8844' }
+        { key: 'rare',      label: 'Rare Egg',      color: '#6688cc' }
       ];
       for (var ti = 0; ti < tiers.length; ti++) {
         var t = tiers[ti];
@@ -4388,12 +4422,8 @@
 
       if (owned) {
         var level = owned.level || 1;
-        var preview = renderRpgPetSprite(id, level);
-        if (preview) {
-          preview.style.width = '36px';
-          preview.style.height = '36px';
-          cell.appendChild(preview);
-        }
+        var preview = renderRpgPetSprite(id, level, 36);
+        if (preview) cell.appendChild(preview);
       }
 
       var nameEl = document.createElement('div');
@@ -4495,10 +4525,8 @@
       resultEl.innerHTML = '';
 
       var creature = petCatalog.creatures[rolled];
-      var preview = renderRpgPetSprite(rolled, rpgPets.owned[rolled].level);
+      var preview = renderRpgPetSprite(rolled, rpgPets.owned[rolled].level, 64);
       if (preview) {
-        preview.style.width = '64px';
-        preview.style.height = '64px';
         preview.className = 'rpg-petstore-result-sprite';
         resultEl.appendChild(preview);
       }
@@ -4559,10 +4587,8 @@
       fName.className = 'rpg-pet-follower-name';
       fName.textContent = petCatalog.creatures[rpgPets.follower] ? petCatalog.creatures[rpgPets.follower].name : rpgPets.follower;
       followerSlot.appendChild(fName);
-      var fSprite = renderRpgPetSprite(rpgPets.follower, rpgPets.owned[rpgPets.follower].level);
+      var fSprite = renderRpgPetSprite(rpgPets.follower, rpgPets.owned[rpgPets.follower].level, 28);
       if (fSprite) {
-        fSprite.style.width = '28px';
-        fSprite.style.height = '28px';
         fSprite.style.marginLeft = 'auto';
         followerSlot.appendChild(fSprite);
       }
@@ -4589,12 +4615,8 @@
       if (status === 'following') cell.classList.add('rpg-pet-following');
       if (status.indexOf('stationed') === 0) cell.classList.add('rpg-pet-stationed');
 
-      var sprite = renderRpgPetSprite(pid, petData.level);
-      if (sprite) {
-        sprite.style.width = '36px';
-        sprite.style.height = '36px';
-        cell.appendChild(sprite);
-      }
+      var sprite = renderRpgPetSprite(pid, petData.level, 36);
+      if (sprite) cell.appendChild(sprite);
 
       // Status badge
       if (status === 'following') {
@@ -4977,12 +4999,9 @@
     overlay.appendChild(title);
 
     // Pet sprite
-    var sprite = renderRpgPetSprite(petId, getRpgPetState().owned[petId] ? getRpgPetState().owned[petId].level : 1);
+    var sprite = renderRpgPetSprite(petId, getRpgPetState().owned[petId] ? getRpgPetState().owned[petId].level : 1, 48);
     if (sprite) {
-      sprite.style.width = '48px';
-      sprite.style.height = '48px';
       sprite.style.margin = '0 auto 8px';
-      sprite.style.display = 'block';
       overlay.appendChild(sprite);
     }
 
@@ -5078,24 +5097,34 @@
   }
 
   function drawFollower(ctx) {
-    if (!followerSpriteSheet || !followerSpriteSheet.complete || !followerPetId) return;
+    if (!followerPetId) return;
 
     var x = Math.round(followerPos.x);
     var y = Math.round(followerPos.y);
-    var bob = Math.sin(smokeFrame * 0.1) * 1;
+    var bob = Math.sin((typeof townSmokeFrame !== 'undefined' ? townSmokeFrame : smokeFrame) * 0.1) * 1.5;
     var half = FOLLOWER_SIZE / 2;
 
     // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.ellipse(x, y + half + 1, half * 0.7, 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + half + 2, half * 0.6, 3, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // If sprite not loaded yet, draw a colored placeholder circle
+    if (!followerSpriteSheet || !followerSpriteSheet.complete || !followerSpriteSheet.naturalWidth) {
+      ctx.fillStyle = '#88cc66';
+      ctx.beginPath();
+      ctx.arc(x, y + bob, half * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
 
     // Draw sprite frame
     var fw = 48, fh = 48;
     var sx = followerFrameIdx * fw;
     var flip = (followerDir === 'left');
 
+    ctx.imageSmoothingEnabled = false;
     if (flip) {
       ctx.save();
       ctx.translate(x, y + bob);
@@ -5180,25 +5209,49 @@
       var mapLoc = MAP_LOCATIONS[loc];
       if (!mapLoc) continue;
 
+      var px = mapLoc.x + 28;
+      var py = mapLoc.y + 22;
+      var size = 28;
+
+      // Background circle to make pet stand out
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath();
+      ctx.arc(px, py, size / 2 + 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(100,136,204,0.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(px, py, size / 2 + 3, 0, Math.PI * 2);
+      ctx.stroke();
+
       var spriteData = stationedSpriteSheets[loc];
-      if (!spriteData || !spriteData.img || !spriteData.img.complete) continue;
+      if (spriteData && spriteData.img && spriteData.img.complete && spriteData.img.naturalWidth) {
+        var fw = 48, fh = 48;
+        var sx = spriteData.frameIdx * fw;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(spriteData.img, sx, 0, fw, fh, px - size / 2, py - size / 2, size, size);
+      } else {
+        // Placeholder dot
+        ctx.fillStyle = '#6688cc';
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
-      var px = mapLoc.x + 22;
-      var py = mapLoc.y + 18;
-      var size = 20;
-      var fw = 48, fh = 48;
-      var sx = spriteData.frameIdx * fw;
-
-      ctx.drawImage(spriteData.img, sx, 0, fw, fh, px - size / 2, py - size / 2, size, size);
-
-      // Uncollected indicator
+      // Uncollected rewards indicator — pulsing yellow "!"
       if (hasUncollectedRewards(loc)) {
         var pulse = Math.sin(smokeFrame * 0.12) * 0.3 + 0.7;
         ctx.globalAlpha = pulse;
+        // Yellow circle background
         ctx.fillStyle = '#ffdd44';
-        ctx.font = 'bold 10px monospace';
+        ctx.beginPath();
+        ctx.arc(px + size / 2 + 2, py - size / 2 - 2, 6, 0, Math.PI * 2);
+        ctx.fill();
+        // "!" text
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 9px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('!', px, py - size / 2 - 2);
+        ctx.fillText('!', px + size / 2 + 2, py - size / 2 + 1);
         ctx.globalAlpha = 1;
       }
     }
