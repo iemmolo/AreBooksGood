@@ -224,6 +224,9 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] Power Chop perk deals 2 HP damage per chop
 - [x] All 8 woodcutting perks integrated with new system
 - [x] Woodcutting-specific perks system (like mining perks) — perks exist, visual perk panel already shared
+- [x] Forest background polish: sprite silhouette treeline, raised ground, grounded mid-ground trees
+- [x] Forest extras sprite sheet (logs, stumps, vines, props) packed via pack-forest-extras.py
+- [x] Stump position jump fix (min-height + flex on .wc-tree-wrap)
 
 ### Phase 5: Star System Cleanup (Done)
 - [x] Remove star stat bonuses from battle.js createPlayerFighter()
