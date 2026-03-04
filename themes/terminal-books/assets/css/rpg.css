@@ -955,6 +955,16 @@
     padding-left: 0;
   }
 
+  /* Cap game area height so cavern BG doesn't dominate viewport */
+  .rpg-page .skills-game-area {
+    max-height: 50vh;
+  }
+
+  /* Chatbox is fixed on mobile — remove in-flow spacing */
+  .rpg-page .skills-game-panel {
+    padding-bottom: 0;
+  }
+
   .osrs-chatbox {
     position: fixed;
     z-index: 99;
