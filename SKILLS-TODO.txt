@@ -212,10 +212,18 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] Show STUMP_SPRITE when tree is chopped down (replace tree with stump, regrow after timer)
 - [x] Add DECO_SPRITES as pixel-art props in forest clearing background (mid-ground + canopy silhouettes)
 - [x] Improve forest clearing BG detail and polish (sprite-based trees, canopy silhouettes, fireflies, wood chip particles)
-- [ ] Woodcutting-specific perks system (like mining perks)
-- [ ] Tree HP system (multi-hit like rock HP)
-- [ ] Woodcutting events (like mining events)
-- [ ] Woodcutting collection log
+- [x] Tree HP system (multi-hit like rock HP): TREE_HP map, treeState[], updateTreeHpBar(), HP bars per tree
+- [x] Woodcutting events (like mining events): Golden Tree, Storm, Ancient Grove, Fairy Ring (perk-gated Lv85)
+- [x] Woodcutting collection log: treesChopped, birdNests, doubleChops, criticalHits, events
+- [x] Tree selector dropdown (pick any unlocked tree to chop)
+- [x] 3-tree layout with flex row, bottom-aligned (mirrors mining rocks)
+- [x] Combo system (400-800ms window, max 10 = 2x multiplier)
+- [x] Critical hit system (min(1%+level*0.2%, 20%) instant break)
+- [x] Depletion/stump/respawn timer per tree (3s countdown)
+- [x] State migration v7→v8 for woodcutting log
+- [x] Power Chop perk deals 2 HP damage per chop
+- [x] All 8 woodcutting perks integrated with new system
+- [ ] Woodcutting-specific perks system (like mining perks) — perks exist, visual perk panel already shared
 
 ### Phase 5: Star System Cleanup (Done)
 - [x] Remove star stat bonuses from battle.js createPlayerFighter()

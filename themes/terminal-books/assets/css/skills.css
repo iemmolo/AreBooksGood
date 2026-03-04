@@ -406,13 +406,32 @@
 }
 
 /* ── Woodcutting Mini-Game ────────────────────── */
-.woodcutting-area {
+.wc-tree-select-wrap {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 5;
+}
+
+.wc-trees {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  user-select: none;
+  -webkit-user-select: none;
   position: relative;
   z-index: 2;
+}
+
+.wc-tree-wrap {
+  position: relative;
+  width: 96px;
+  flex-shrink: 0;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .wc-tree {
@@ -435,6 +454,20 @@
   animation: treeFall 0.6s ease-in forwards;
 }
 
+.wc-tree.hit {
+  animation: treeHit 0.2s ease-out;
+}
+
+.wc-tree.cracking {
+  animation: treeCrack 0.3s ease-out;
+}
+
+.wc-tree.depleted {
+  opacity: 0.4;
+  filter: grayscale(0.6);
+  pointer-events: none;
+}
+
 @keyframes treeChop {
   0%, 100% { transform: rotate(0); }
   25% { transform: rotate(-3deg); }
@@ -446,23 +479,174 @@
   100% { transform: rotate(60deg) translateX(40px); opacity: 0; }
 }
 
-.wc-hits-bar {
-  width: 120px;
-  height: 8px;
+@keyframes treeHit {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes treeCrack {
+  0% { transform: translateX(0); filter: brightness(1); }
+  30% { transform: translateX(-3px); filter: brightness(1.8); }
+  60% { transform: translateX(3px); filter: brightness(1.5); }
+  100% { transform: translateX(0); filter: brightness(0.6); }
+}
+
+/* Tree HP bar (mirrors rock HP bar) */
+.tree-hp-bar {
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  right: 4px;
+  height: 4px;
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
+  z-index: 5;
+  overflow: hidden;
+}
+
+.tree-hp-fill {
+  height: 100%;
+  background: #66bb6a;
+  transition: width 0.2s;
+}
+
+/* Combo counter */
+.wc-combo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #66bb6a;
+  pointer-events: none;
+  text-shadow: 0 0 6px #66bb6a;
+  z-index: 15;
+}
+
+/* Respawn timer over depleted trees */
+.wc-respawn-timer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--foreground);
+  text-shadow: 0 0 4px var(--background);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── Woodcutting Events ──────────────────────── */
+.wc-event-tree {
+  position: absolute;
+  width: 96px;
+  height: 160px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: eventAppear 0.3s ease-out;
+  user-select: none;
+}
+
+.wc-event-label {
+  font-family: monospace;
+  font-size: 0.7rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+}
+
+.wc-event-timer {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 3px;
   background: color-mix(in srgb, var(--foreground) 15%, transparent);
   overflow: hidden;
 }
 
-.wc-hits-fill {
+.wc-event-timer-fill {
   height: 100%;
   background: #66bb6a;
-  transition: width 0.15s;
 }
 
-.wc-hit-count {
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+.wc-event-sprite {
+  pointer-events: none;
+}
+
+.golden-tree {
+  border: 2px solid #ffd700;
+  border-radius: 4px;
+  background: rgba(255, 215, 0, 0.08);
+  animation: eventAppear 0.3s ease-out, goldenPulse 1.5s infinite;
+}
+
+.golden-tree .wc-event-label { color: #ffd700; }
+.golden-tree .wc-event-timer-fill { background: #ffd700; }
+
+@keyframes goldenPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+}
+
+.ancient-grove {
+  border: 2px solid #66bb6a;
+  border-radius: 4px;
+  background: rgba(102, 187, 106, 0.08);
+  animation: eventAppear 0.3s ease-out, grovePulse 2s infinite;
+}
+
+.ancient-grove .wc-event-label { color: #66bb6a; }
+.ancient-grove .wc-event-timer-fill { background: #66bb6a; }
+
+@keyframes grovePulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(102, 187, 106, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(102, 187, 106, 0.6); }
+}
+
+.fairy-ring {
+  border: 2px solid #ce93d8;
+  border-radius: 4px;
+  background: rgba(206, 147, 216, 0.08);
+  animation: eventAppear 0.3s ease-out, fairyPulse 1.8s infinite;
+}
+
+.fairy-ring .wc-event-label { color: #ce93d8; }
+.fairy-ring .wc-event-timer-fill { background: #ce93d8; }
+
+@keyframes fairyPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(206, 147, 216, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(206, 147, 216, 0.6); }
+}
+
+/* Storm branches (falling from top, like cave-in rocks) */
+.storm-branch {
+  position: absolute;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 25;
+  animation: caveFall 1.2s ease-in forwards;
+  user-select: none;
+}
+
+.storm-branch.clicked {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.storm-shake {
+  animation: caveShake 0.5s ease-in-out infinite;
 }
 
 /* ── Smithing Mini-Game ───────────────────────── */
@@ -2045,7 +2229,7 @@
   pointer-events: none;
 }
 
-/* Woodcutting tree: sprite container */
+/* Woodcutting tree: sprite container (overrides for sprite mode) */
 .wc-tree {
   font-size: 0;
   width: 96px;
@@ -2063,10 +2247,16 @@
 .wc-tree.stumped {
   height: 51px;
   align-items: flex-end;
-  pointer-events: none;
+  cursor: default;
   animation: none;
   transform: none;
   opacity: 1;
+  filter: none;
+}
+
+.wc-tree.stumped.depleted {
+  opacity: 0.5;
+  filter: grayscale(0.4);
 }
 
 .wood-chip {
@@ -2171,6 +2361,14 @@
 
   .mining-rock, .mining-rock-wrap { width: 64px; min-width: 64px; height: 64px; min-height: 64px; }
 
+  .wc-trees { gap: 0.75rem; }
+
+  .wc-tree-wrap { width: 80px; }
+
+  .wc-tree { width: 80px; height: 120px; }
+
+  .wc-tree.stumped { height: 42px; }
+
   .skills-right-panel { padding: 0.25rem; overflow: hidden; min-width: 0; }
 
   .skills-inv-grid { grid-template-columns: repeat(5, 1fr); }
@@ -2191,6 +2389,14 @@
   .mining-rocks { gap: 0.5rem; }
 
   .mining-rock, .mining-rock-wrap { width: 56px; min-width: 56px; height: 56px; min-height: 56px; }
+
+  .wc-trees { gap: 0.5rem; }
+
+  .wc-tree-wrap { width: 64px; }
+
+  .wc-tree { width: 64px; height: 96px; }
+
+  .wc-tree.stumped { height: 34px; }
 
   .skill-row { min-width: 60px; padding: 0.2rem; }
 

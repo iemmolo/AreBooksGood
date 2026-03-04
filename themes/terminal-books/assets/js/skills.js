@@ -7,7 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 7;
+  var STATE_VERSION = 8;
   var STACK_CAP = 999;
 
   // ── Mining Perks (level-gated passives) ────────
@@ -77,6 +77,19 @@
     'Frost Ore': 5, 'Obsidian Ore': 5
   };
   var rockState = []; // { hp, maxHp } per rock
+
+  // ── Tree HP (multi-hit woodcutting) ──────────────
+  var TREE_HP = {
+    'Pine': 1, 'Oak': 1, 'Birch': 2, 'Maple': 2,
+    'Walnut': 3, 'Mahogany': 3, 'Yew': 4, 'Elder': 5
+  };
+
+  // ── Woodcutting Events (random encounters) ───────
+  var WC_EVENTS = [
+    { id: 'goldenTree',   name: 'Golden Tree',   weight: 40 },
+    { id: 'storm',        name: 'Storm',         weight: 35 },
+    { id: 'ancientGrove', name: 'Ancient Grove',  weight: 25 }
+  ];
 
   // ── Resource tier colors (D1) ─────────────────
   var TIER_COLORS = ['#888', '#ccc', '#4caf50', '#2196f3', '#9c27b0', '#ffd700'];
@@ -715,6 +728,12 @@
   }
   var fishingState = { phase: 'idle', timer: null, biteTimeout: null, biteStartTime: 0, castStartTime: 0, castTimer: null };
   var wcState = { hits: 0, hitsNeeded: 0, cooldown: false, lastChopTime: 0 };
+  var treeState = [];              // [{ hp, maxHp }] per tree (mirrors rockState)
+  var wcCombo = { count: 0, lastClickTime: 0 };
+  var selectedWcTree = null;       // index into SKILLS.woodcutting.resources, null = highest
+  var wcEventActive = false;
+  var wcEventTimer = null;
+  var treeRespawnIntervals = [];
   var smithingState = { phase: 'idle', hits: 0, cursorPos: 0, cursorDir: 1, cursorTimer: null, bonusHits: 0, mode: 'smelting', smeltTemp: 0, smeltTimer: null, smeltHolding: false, cooldownTimer: null };
   var combatState = {
     enemyHp: 0, enemyMaxHp: 0, enemyName: '', streak: 0, enemyTimer: null, cooldown: false,
@@ -740,6 +759,10 @@
       // Mining collection log (v3)
       if (SKILL_KEYS[i] === 'mining') {
         skillDef.log = { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
+      }
+      // Woodcutting collection log (v8)
+      if (SKILL_KEYS[i] === 'woodcutting') {
+        skillDef.log = { treesChopped: {}, birdNests: 0, doubleChops: 0, criticalHits: 0, totalClicks: 0, events: { goldenTree: 0, storm: 0, ancientGrove: 0, fairyRing: 0 } };
       }
       s.skills[SKILL_KEYS[i]] = skillDef;
     }
@@ -819,6 +842,19 @@
               s.skills[key].assignedPet = saved.skills[key].assignedPet || null;
               s.skills[key].lastActiveAt = saved.skills[key].lastActiveAt || null;
               s.skills[key].totalActions = saved.skills[key].totalActions || 0;
+              // v8: woodcutting collection log
+              if (key === 'woodcutting') {
+                s.skills[key].log = saved.skills[key].log || { treesChopped: {}, birdNests: 0, doubleChops: 0, criticalHits: 0, totalClicks: 0, events: { goldenTree: 0, storm: 0, ancientGrove: 0, fairyRing: 0 } };
+                // Ensure all event keys exist for older saves
+                if (!s.skills[key].log.events) s.skills[key].log.events = {};
+                if (!s.skills[key].log.events.goldenTree) s.skills[key].log.events.goldenTree = 0;
+                if (!s.skills[key].log.events.storm) s.skills[key].log.events.storm = 0;
+                if (!s.skills[key].log.events.ancientGrove) s.skills[key].log.events.ancientGrove = 0;
+                if (!s.skills[key].log.events.fairyRing) s.skills[key].log.events.fairyRing = 0;
+                if (!s.skills[key].log.treesChopped) s.skills[key].log.treesChopped = {};
+                if (typeof s.skills[key].log.criticalHits === 'undefined') s.skills[key].log.criticalHits = 0;
+                if (typeof s.skills[key].log.totalClicks === 'undefined') s.skills[key].log.totalClicks = 0;
+              }
               // v3: mining collection log
               if (key === 'mining') {
                 s.skills[key].log = saved.skills[key].log || { oresMined: {}, totalGems: 0, events: { gemVein: 0, shootingStar: 0, caveIn: 0, deepVein: 0 }, criticalHits: 0, totalClicks: 0 };
@@ -1301,6 +1337,14 @@
     return state.skills.mining.log;
   }
 
+  // ── Woodcutting Collection Log helper ──────────
+  function getWcLog() {
+    if (!state.skills.woodcutting.log) {
+      state.skills.woodcutting.log = { treesChopped: {}, birdNests: 0, doubleChops: 0, criticalHits: 0, totalClicks: 0, events: { goldenTree: 0, storm: 0, ancientGrove: 0, fairyRing: 0 } };
+    }
+    return state.skills.woodcutting.log;
+  }
+
   // ── Perk helpers ────────────────────────────
   function hasPerk(perkId, skill) {
     var sk = skill || 'mining';
@@ -1404,6 +1448,14 @@
       if (r && r.level <= state.skills.mining.level) return r;
     }
     return getHighestResource('mining');
+  }
+
+  function getSelectedWcResource() {
+    if (selectedWcTree !== null) {
+      var r = SKILLS.woodcutting.resources[selectedWcTree];
+      if (r && r.level <= state.skills.woodcutting.level) return r;
+    }
+    return getHighestResource('woodcutting');
   }
 
   // ── D1: Resource tier index ───────────────────
@@ -1669,7 +1721,7 @@
       // Pet activity description
       var activityEl = $('skills-pet-activity');
       if (activityEl) {
-        var res = (activeSkill === 'mining') ? getSelectedMiningResource() : getHighestResource(activeSkill);
+        var res = (activeSkill === 'mining') ? getSelectedMiningResource() : (activeSkill === 'woodcutting') ? getSelectedWcResource() : getHighestResource(activeSkill);
         var skillVerbs = {
           mining: 'Mining', fishing: 'Fishing for', woodcutting: 'Chopping',
           smithing: 'Smithing', combat: 'Fighting'
@@ -1706,7 +1758,7 @@
 
     // Collection log button visibility
     var logBtn = $('skills-log-btn');
-    if (logBtn) logBtn.style.display = activeSkill === 'mining' ? '' : 'none';
+    if (logBtn) logBtn.style.display = (activeSkill === 'mining' || activeSkill === 'woodcutting') ? '' : 'none';
 
     // B5: Milestones panel
     renderMilestones();
@@ -1894,8 +1946,76 @@
     content.appendChild(evSection);
   }
 
+  function renderWcCollectionLog() {
+    var content = $('skills-log-content');
+    if (!content) return;
+    content.innerHTML = '';
+
+    var log = getWcLog();
+
+    // Trees chopped table
+    var treeSection = document.createElement('div');
+    treeSection.innerHTML = '<h4 class="skills-log-section-title">Trees Chopped</h4>';
+    var treeTable = document.createElement('table');
+    treeTable.className = 'skills-log-table';
+    var resources = SKILLS.woodcutting.resources;
+    for (var i = 0; i < resources.length; i++) {
+      var count = log.treesChopped[resources[i].name] || 0;
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + resources[i].name + '</td><td>' + formatNum(count) + '</td>';
+      if (count === 0) tr.style.opacity = '0.4';
+      treeTable.appendChild(tr);
+    }
+    treeSection.appendChild(treeTable);
+    content.appendChild(treeSection);
+
+    // Stats
+    var statsSection = document.createElement('div');
+    statsSection.innerHTML = '<h4 class="skills-log-section-title">Stats</h4>';
+    var stats = [
+      ['Total Clicks', formatNum(log.totalClicks)],
+      ['Bird Nests', formatNum(log.birdNests)],
+      ['Double Chops', formatNum(log.doubleChops)],
+      ['Critical Hits', formatNum(log.criticalHits)],
+      ['Crit Rate', log.totalClicks > 0 ? (log.criticalHits / log.totalClicks * 100).toFixed(1) + '%' : '0%']
+    ];
+    var statsTable = document.createElement('table');
+    statsTable.className = 'skills-log-table';
+    for (var j = 0; j < stats.length; j++) {
+      var tr2 = document.createElement('tr');
+      tr2.innerHTML = '<td>' + stats[j][0] + '</td><td>' + stats[j][1] + '</td>';
+      statsTable.appendChild(tr2);
+    }
+    statsSection.appendChild(statsTable);
+    content.appendChild(statsSection);
+
+    // Events
+    var evSection = document.createElement('div');
+    evSection.innerHTML = '<h4 class="skills-log-section-title">Events</h4>';
+    var evTable = document.createElement('table');
+    evTable.className = 'skills-log-table';
+    var evNames = [
+      ['Golden Tree', log.events.goldenTree],
+      ['Storm', log.events.storm],
+      ['Ancient Grove', log.events.ancientGrove],
+      ['Fairy Ring', log.events.fairyRing]
+    ];
+    for (var k = 0; k < evNames.length; k++) {
+      var tr3 = document.createElement('tr');
+      tr3.innerHTML = '<td>' + evNames[k][0] + '</td><td>' + evNames[k][1] + '</td>';
+      if (evNames[k][1] === 0) tr3.style.opacity = '0.4';
+      evTable.appendChild(tr3);
+    }
+    evSection.appendChild(evTable);
+    content.appendChild(evSection);
+  }
+
   function showCollectionLog() {
-    renderCollectionLog();
+    if (activeSkill === 'woodcutting') {
+      renderWcCollectionLog();
+    } else {
+      renderCollectionLog();
+    }
     var overlay = $('skills-log-overlay');
     if (overlay) overlay.style.display = '';
   }
@@ -1923,7 +2043,7 @@
     if (titleEl) titleEl.textContent = SKILLS[activeSkill].name;
     var resEl = $('skills-current-resource');
     if (resEl) {
-      var res = activeSkill === 'mining' ? getSelectedMiningResource() : getHighestResource(activeSkill);
+      var res = activeSkill === 'mining' ? getSelectedMiningResource() : activeSkill === 'woodcutting' ? getSelectedWcResource() : getHighestResource(activeSkill);
       var resources = SKILLS[activeSkill].resources;
       var tierIdx = 0;
       for (var i = 0; i < resources.length; i++) {
@@ -3391,6 +3511,15 @@
     fill.style.width = (rs.hp / rs.maxHp * 100) + '%';
   }
 
+  function updateTreeHpBar(idx) {
+    var bar = $('tree-hp-bar-' + idx);
+    if (!bar) return;
+    var fill = bar.querySelector('.tree-hp-fill');
+    if (!fill) return;
+    var ts = treeState[idx];
+    fill.style.width = (ts.hp / ts.maxHp * 100) + '%';
+  }
+
   function onMineClick(e) {
     if (miningCooldown) return;
     if (miningEventActive) return;
@@ -4102,6 +4231,7 @@
     area.style.backgroundPosition = 'center';
 
     area.innerHTML = '';
+    wcCombo = { count: 0, lastClickTime: 0 };
 
     // Stop previous animation if re-rendering
     stopWcAnim();
@@ -4116,60 +4246,178 @@
     wcAnimCtx = animCanvas.getContext('2d');
     startWcAnim();
 
-    var res = getHighestResource('woodcutting');
-    var div = document.createElement('div');
-    div.className = 'woodcutting-area';
-    var hitsNeeded = 3 + Math.floor(state.skills.woodcutting.level / 20);
-    wcState = { hits: 0, hitsNeeded: hitsNeeded, cooldown: false, lastChopTime: 0 };
+    // Tree selector dropdown (mirrors mining ore selector)
+    var level = state.skills.woodcutting.level;
+    var resources = SKILLS.woodcutting.resources;
+    var selectWrap = document.createElement('div');
+    selectWrap.className = 'wc-tree-select-wrap';
+    var sel = document.createElement('select');
+    sel.className = 'smithing-recipe-select';
+    sel.id = 'wc-tree-select';
+    var highestIdx = 0;
+    for (var si = 0; si < resources.length; si++) {
+      if (resources[si].level > level) continue;
+      highestIdx = si;
+      var opt = document.createElement('option');
+      opt.value = si;
+      opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
+      sel.appendChild(opt);
+    }
+    sel.value = selectedWcTree !== null ? selectedWcTree : highestIdx;
+    if (selectedWcTree === null) selectedWcTree = highestIdx;
+    sel.addEventListener('change', function () {
+      selectedWcTree = parseInt(sel.value);
+      renderWoodcutting();
+      updateGameHeader();
+    });
+    selectWrap.appendChild(sel);
+    area.appendChild(selectWrap);
 
-    // A3: Tree tier label
-    div.innerHTML =
-      '<div class="wc-tree-label" id="wc-tree-label">' + res.name + '</div>' +
-      '<div class="wc-tree" id="wc-tree"></div>' +
-      '<div class="wc-hits-bar"><div class="wc-hits-fill" id="wc-hits-fill" style="width:0%"></div></div>' +
-      '<div class="wc-hit-count" id="wc-hit-count">0 / ' + hitsNeeded + ' chops</div>';
+    var res = getSelectedWcResource();
+    var maxHp = TREE_HP[res.name] || 1;
+    treeState = [];
+
+    var div = document.createElement('div');
+    div.className = 'wc-trees';
+    for (var i = 0; i < 3; i++) {
+      treeState.push({ hp: maxHp, maxHp: maxHp });
+
+      var treeWrap = document.createElement('div');
+      treeWrap.className = 'wc-tree-wrap';
+
+      var tree = document.createElement('div');
+      tree.className = 'wc-tree';
+      tree.setAttribute('data-idx', i);
+
+      // Tree sprite
+      var treePos = TREE_SPRITES[res.name] || TREE_SPRITES['Pine'];
+      var treeSprite = createSpriteEl('trees', treePos.x, treePos.y, treePos.w, treePos.h, treePos.w * 3, treePos.h * 3);
+      if (treeSprite) {
+        treeSprite.className = 'skill-sprite wc-tree-sprite';
+        tree.appendChild(treeSprite);
+      } else {
+        tree.textContent = '\uD83C\uDF33';
+      }
+
+      // HP bar (hidden when maxHp === 1)
+      if (maxHp > 1) {
+        var hpBar = document.createElement('div');
+        hpBar.className = 'tree-hp-bar';
+        hpBar.id = 'tree-hp-bar-' + i;
+        var hpFill = document.createElement('div');
+        hpFill.className = 'tree-hp-fill';
+        hpFill.style.width = '100%';
+        hpBar.appendChild(hpFill);
+        tree.appendChild(hpBar);
+      }
+
+      tree.addEventListener('click', onChopClick);
+      treeWrap.appendChild(tree);
+
+      // Tree name label
+      var label = document.createElement('div');
+      label.className = 'wc-tree-label';
+      label.textContent = res.name;
+      treeWrap.appendChild(label);
+
+      div.appendChild(treeWrap);
+    }
     area.appendChild(div);
 
-    // Phase 3: Tree sprite
-    var treeEl = $('wc-tree');
-    var treePos = TREE_SPRITES[res.name] || TREE_SPRITES['Pine'];
-    var treeSprite = createSpriteEl('trees', treePos.x, treePos.y, treePos.w, treePos.h, treePos.w * 3, treePos.h * 3);
-    if (treeSprite) {
-      treeSprite.className = 'skill-sprite wc-tree-sprite';
-      treeEl.appendChild(treeSprite);
-    } else {
-      treeEl.textContent = '\uD83C\uDF33';
-    }
-    treeEl.addEventListener('click', onChopClick);
+    // Combo counter
+    var comboEl = document.createElement('div');
+    comboEl.className = 'wc-combo';
+    comboEl.id = 'wc-combo';
+    comboEl.style.display = 'none';
+    area.appendChild(comboEl);
 
     // C1: Render pet
     renderPetInGameArea();
   }
 
-  function onChopClick() {
-    if (wcState.cooldown) return;
-    var tree = $('wc-tree');
-    if (!tree) return;
-    var now = Date.now();
+  function updateWcTreeDropdown() {
+    var sel = $('wc-tree-select');
+    if (!sel) return;
+    var level = state.skills.woodcutting.level;
+    var resources = SKILLS.woodcutting.resources;
+    var oldVal = parseInt(sel.value);
+    sel.innerHTML = '';
+    var highestIdx = 0;
+    for (var si = 0; si < resources.length; si++) {
+      if (resources[si].level > level) continue;
+      highestIdx = si;
+      var opt = document.createElement('option');
+      opt.value = si;
+      opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
+      sel.appendChild(opt);
+    }
+    if (highestIdx > oldVal) {
+      sel.value = highestIdx;
+      selectedWcTree = highestIdx;
+      updateGameHeader();
+    } else {
+      sel.value = oldVal;
+    }
+  }
 
-    // A3: Rhythm check (350-450ms = Double Chop!; Perk: Lumberjack widens to 300-500ms)
-    var timeSinceLast = now - wcState.lastChopTime;
-    var dcLow = hasPerk('lumberjack', 'woodcutting') ? 300 : 350;
-    var dcHigh = hasPerk('lumberjack', 'woodcutting') ? 500 : 450;
-    var isDoubleChop = wcState.lastChopTime > 0 && timeSinceLast >= dcLow && timeSinceLast <= dcHigh;
-    wcState.lastChopTime = now;
+  function onChopClick(e) {
+    if (wcState.cooldown) return;
+    if (wcEventActive) return;
+    var tree = e.currentTarget;
+    if (tree.classList.contains('depleted') || tree.classList.contains('falling')) return;
+
+    var idx = parseInt(tree.getAttribute('data-idx'));
+    var res = getSelectedWcResource();
+    var now = Date.now();
+    var ts = treeState[idx];
+    var log = getWcLog();
+    log.totalClicks++;
+
+    // Combo tracking (400-800ms window, mirrors mining)
+    var timeSinceLast = now - wcCombo.lastClickTime;
+    if (timeSinceLast >= 400 && timeSinceLast <= 800) {
+      wcCombo.count = Math.min(wcCombo.count + 1, 10);
+    } else if (timeSinceLast > 800) {
+      wcCombo.count = 0;
+    }
+    wcCombo.lastClickTime = now;
+
+    var comboMult = 1 + (wcCombo.count * 0.1);
+    var comboEl = $('wc-combo');
+    if (comboEl) {
+      if (wcCombo.count > 0) {
+        comboEl.textContent = 'Combo x' + wcCombo.count + '!';
+        comboEl.style.display = '';
+      } else {
+        comboEl.style.display = 'none';
+      }
+    }
+
+    // Critical hit check: min(1% + level*0.2%, 20%)
+    var level = state.skills.woodcutting.level;
+    var critChance = Math.min(0.01 + level * 0.002, 0.20);
+    var isCrit = Math.random() < critChance;
 
     wcState.cooldown = true;
-    // Perk: Power Chop = each hit counts as 2
-    var chopCount = isDoubleChop ? 2 : 1;
-    if (hasPerk('powerChop', 'woodcutting')) chopCount *= 2;
-    wcState.hits += chopCount;
 
-    tree.classList.remove('chopping');
-    void tree.offsetWidth;
-    tree.classList.add('chopping');
+    // Determine damage
+    var chopDamage = 1;
+    if (hasPerk('powerChop', 'woodcutting')) chopDamage = 2;
 
-    // Wood chip particles on each hit
+    if (isCrit) {
+      ts.hp = 0;
+      tree.classList.add('cracking');
+      var area = $('skills-game-area');
+      if (area) spawnParticle(area, 'CRIT!', 'crit');
+      log.criticalHits++;
+      addLog('Critical hit!');
+    } else {
+      ts.hp = Math.max(ts.hp - chopDamage, 0);
+      tree.classList.add(ts.hp > 0 ? 'hit' : 'cracking');
+    }
+    updateTreeHpBar(idx);
+
+    // Wood chip particles
     var chipArea = $('skills-game-area');
     if (chipArea && tree) {
       var chipRect = tree.getBoundingClientRect();
@@ -4195,79 +4443,69 @@
       }
     }
 
-    // A3: Double chop flash (positioned near tree)
-    if (isDoubleChop) {
-      var wcArea = $('skills-game-area');
-      if (wcArea && tree) {
-        var flash = document.createElement('div');
-        flash.className = 'wc-double-chop';
-        flash.textContent = 'Double Chop!';
-        // Position near tree center
-        var treeRect = tree.getBoundingClientRect();
-        var areaRect = wcArea.getBoundingClientRect();
-        var relLeft = treeRect.left - areaRect.left + treeRect.width / 2;
-        var relTop = treeRect.top - areaRect.top - 10;
-        flash.style.left = relLeft + 'px';
-        flash.style.top = relTop + 'px';
-        flash.style.transform = 'translateX(-50%)';
-        wcArea.appendChild(flash);
-        setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 600);
+    setTimeout(function () {
+      tree.classList.remove('shaking', 'hit', 'cracking');
+
+      var area = $('skills-game-area');
+      var xpMult = getXpMult() * comboMult;
+
+      if (ts.hp > 0) {
+        // Partial hit — award fraction of XP
+        var partialXp = Math.max(1, Math.floor(res.xp * xpMult / ts.maxHp));
+        if (area) spawnParticle(area, '+' + partialXp + ' XP', 'xp');
+        addXp('woodcutting', partialXp);
+        animatePetAction('pet-bounce');
+        wcState.cooldown = false;
+        renderSkillList();
+        renderRightPanel();
+        return;
       }
-    }
 
-    var fill = $('wc-hits-fill');
-    var count = $('wc-hit-count');
-    if (fill) fill.style.width = (Math.min(wcState.hits / wcState.hitsNeeded, 1) * 100) + '%';
-    if (count) count.textContent = Math.min(wcState.hits, wcState.hitsNeeded) + ' / ' + wcState.hitsNeeded + ' chops';
-
-    if (wcState.hits >= wcState.hitsNeeded) {
-      // Tree falls!
-      tree.classList.remove('chopping');
-      tree.classList.add('falling');
-      var res = getHighestResource('woodcutting');
-      var xpGain = Math.floor(res.xp * getXpMult());
+      // Tree felled — full rewards
+      log.treesChopped[res.name] = (log.treesChopped[res.name] || 0) + 1;
+      var xpGain = Math.floor(res.xp * xpMult);
 
       // A3: 10% bird nest drop (Perk: Nest Finder → 20%)
       var nestChance = hasPerk('nestFinder', 'woodcutting') ? 0.20 : 0.10;
       var isNest = Math.random() < nestChance;
       if (isNest) {
+        log.birdNests++;
         xpGain *= 10;
         addLog('Found a bird nest! 10x XP bonus!');
-        var gameArea = $('skills-game-area');
-        if (gameArea) spawnParticle(gameArea, '\uD83E\uDD5A Nest!', 'nest');
+        if (area) spawnParticle(area, '\uD83E\uDD5A Nest!', 'nest');
       }
 
       // Perk: Ancient Roots — 5% chance for 10x XP rare log
       if (!isNest && hasPerk('ancientRoots', 'woodcutting') && Math.random() < 0.05) {
         xpGain *= 10;
         addLog('Ancient roots! 10x XP bonus!');
-        var gameArea3 = $('skills-game-area');
-        if (gameArea3) spawnParticle(gameArea3, 'Ancient!', 'gem');
+        if (area) spawnParticle(area, 'Ancient!', 'gem');
+      }
+
+      // Perk: Double Log = 10% chance for 2x
+      var logName = LOG_NAMES[res.name] || (res.name + ' Log');
+      var isDoubleLog = hasPerk('doubleLog', 'woodcutting') && Math.random() < 0.10;
+      var logCount = isDoubleLog ? 2 : 1;
+      if (isDoubleLog) {
+        xpGain *= 2;
+        log.doubleChops++;
+        if (area) spawnParticle(area, '2x!', 'xp');
       }
 
       addXp('woodcutting', xpGain);
-
-      // 6B: Add log to inventory (Perk: Double Log = 10% chance for 2x)
-      var logName = LOG_NAMES[res.name] || (res.name + ' Log');
-      var logCount = (hasPerk('doubleLog', 'woodcutting') && Math.random() < 0.10) ? 2 : 1;
       addItem(logName, logCount);
-      addLog('+' + logCount + ' ' + logName);
+      addLog('Chopped ' + res.name + ' (+' + xpGain + ' XP, +' + logCount + ' ' + logName + ')');
 
-      addLog('Chopped ' + res.name + ' (+' + xpGain + ' XP)');
-
-      var gameArea2 = $('skills-game-area');
-      if (gameArea2) {
-        // Correct log sprite per tree tier (bigger 40x40)
+      if (area) {
         var woodDrop = WOOD_DROP_SPRITES[res.name] || WOOD_DROP_SPRITES['Pine'];
         var woodEl = createSpriteEl(woodDrop.sheet || 'items_sheet', woodDrop.x, woodDrop.y, 16, 16, 40, 40);
         if (woodEl) {
           woodEl.className = 'ore-particle sprite-particle';
           woodEl.style.left = (Math.random() * 20 + 40) + '%';
           woodEl.style.top = '35%';
-          gameArea2.appendChild(woodEl);
+          area.appendChild(woodEl);
           setTimeout(function () { if (woodEl.parentNode) woodEl.parentNode.removeChild(woodEl); }, 1200);
         }
-        // XP text with 200ms delay, positioned below wood sprite
         var xpGainCopy = xpGain;
         setTimeout(function () {
           var ga = $('skills-game-area');
@@ -4283,43 +4521,363 @@
         }, 200);
       }
 
-      // Common action hook
       onAction('woodcutting');
-
-      // C1: Pet cheer
       animatePetAction('pet-cheer');
 
-      // Show stump after falling animation completes (600ms)
+      // Falling animation → stump + depleted + respawn
+      tree.classList.add('falling');
+      var treeRef = tree;
+      var treeIdx = idx;
       setTimeout(function () {
-        var t = $('wc-tree');
-        if (t) {
-          t.innerHTML = '';
-          t.classList.remove('falling');
-          t.classList.add('stumped');
-          var stumpEl = createSpriteEl('trees', STUMP_SPRITE.x, STUMP_SPRITE.y, STUMP_SPRITE.w, STUMP_SPRITE.h, STUMP_SPRITE.w * 3, STUMP_SPRITE.h * 3);
-          if (stumpEl) {
-            stumpEl.className = 'skill-sprite wc-tree-sprite';
-            t.appendChild(stumpEl);
-          }
+        treeRef.innerHTML = '';
+        treeRef.classList.remove('falling');
+        treeRef.classList.add('stumped');
+        var stumpEl = createSpriteEl('trees', STUMP_SPRITE.x, STUMP_SPRITE.y, STUMP_SPRITE.w, STUMP_SPRITE.h, STUMP_SPRITE.w * 3, STUMP_SPRITE.h * 3);
+        if (stumpEl) {
+          stumpEl.className = 'skill-sprite wc-tree-sprite';
+          treeRef.appendChild(stumpEl);
         }
+        treeRef.classList.add('depleted');
+
+        // Respawn timer
+        var respawnTime = 3;
+        var timerEl = document.createElement('div');
+        timerEl.className = 'wc-respawn-timer';
+        timerEl.textContent = respawnTime + 's';
+        treeRef.appendChild(timerEl);
+
+        var remaining = respawnTime;
+        var respawnInterval = setInterval(function () {
+          remaining--;
+          if (remaining <= 0) {
+            clearInterval(respawnInterval);
+            var ii = treeRespawnIntervals.indexOf(respawnInterval);
+            if (ii !== -1) treeRespawnIntervals.splice(ii, 1);
+            treeRef.classList.remove('depleted', 'stumped');
+            if (timerEl.parentNode) timerEl.parentNode.removeChild(timerEl);
+            // Re-render tree sprite with full HP
+            treeRef.innerHTML = '';
+            var curRes = getSelectedWcResource();
+            var tp = TREE_SPRITES[curRes.name] || TREE_SPRITES['Pine'];
+            var newSprite = createSpriteEl('trees', tp.x, tp.y, tp.w, tp.h, tp.w * 3, tp.h * 3);
+            if (newSprite) {
+              newSprite.className = 'skill-sprite wc-tree-sprite';
+              treeRef.appendChild(newSprite);
+            }
+            var maxHp = TREE_HP[curRes.name] || 1;
+            treeState[treeIdx] = { hp: maxHp, maxHp: maxHp };
+            if (maxHp > 1) {
+              var hpBar = document.createElement('div');
+              hpBar.className = 'tree-hp-bar';
+              hpBar.id = 'tree-hp-bar-' + treeIdx;
+              var hpFill = document.createElement('div');
+              hpFill.className = 'tree-hp-fill';
+              hpFill.style.width = '100%';
+              hpBar.appendChild(hpFill);
+              treeRef.appendChild(hpBar);
+            }
+          } else {
+            timerEl.textContent = remaining + 's';
+          }
+        }, 1000);
+        treeRespawnIntervals.push(respawnInterval);
       }, 600);
 
-      // Ensure cooldown is at least 1200ms so stump is visible ~600ms
-      var cooldown = Math.max(getToolCooldown('woodcutting', 800), 1200);
-      setTimeout(function () {
-        renderWoodcutting();
+      tryTriggerWcEvent();
+
+      wcState.cooldown = false;
+      renderSkillList();
+      renderRightPanel();
+      updateGameHeader();
+    }, 300);
+  }
+
+  // ══════════════════════════════════════════════
+  // ── Woodcutting Events (random special encounters) ──
+  // ══════════════════════════════════════════════
+  function tryTriggerWcEvent() {
+    if (wcEventActive) return;
+    if (Math.random() > 0.02) return; // 2% chance per depletion
+
+    var pool = [];
+    var totalWeight = 0;
+    for (var i = 0; i < WC_EVENTS.length; i++) {
+      pool.push(WC_EVENTS[i]);
+      totalWeight += WC_EVENTS[i].weight;
+    }
+    if (hasPerk('ancientRoots', 'woodcutting')) {
+      pool.push({ id: 'fairyRing', name: 'Fairy Ring', weight: 20 });
+      totalWeight += 20;
+    }
+
+    var roll = Math.random() * totalWeight;
+    var cumulative = 0;
+    var selected = pool[0];
+    for (var j = 0; j < pool.length; j++) {
+      cumulative += pool[j].weight;
+      if (roll < cumulative) { selected = pool[j]; break; }
+    }
+
+    wcEventActive = true;
+    addLog('EVENT: ' + selected.name + '!');
+
+    if (selected.id === 'goldenTree') triggerGoldenTree();
+    else if (selected.id === 'storm') triggerStorm();
+    else if (selected.id === 'ancientGrove') triggerAncientGrove();
+    else if (selected.id === 'fairyRing') triggerFairyRing();
+  }
+
+  function createEventTree(cssClass, label, timeLimit) {
+    var area = $('skills-game-area');
+    if (!area) return null;
+    var tree = document.createElement('div');
+    tree.className = 'wc-event-tree ' + cssClass;
+    tree.innerHTML = '<div class="wc-event-label">' + label + '</div>';
+
+    // Use Elder tree sprite for events (scaled up)
+    var treePos = TREE_SPRITES['Elder'];
+    var sprite = createSpriteEl('trees', treePos.x, treePos.y, treePos.w, treePos.h, treePos.w * 3, treePos.h * 3);
+    if (sprite) {
+      sprite.className = 'skill-sprite wc-event-sprite';
+      tree.appendChild(sprite);
+    }
+
+    // Timer bar
+    var timerBar = document.createElement('div');
+    timerBar.className = 'wc-event-timer';
+    var timerFill = document.createElement('div');
+    timerFill.className = 'wc-event-timer-fill';
+    timerFill.style.width = '100%';
+    timerFill.style.transition = 'width ' + (timeLimit / 1000) + 's linear';
+    timerBar.appendChild(timerFill);
+    tree.appendChild(timerBar);
+
+    area.appendChild(tree);
+    setTimeout(function () { timerFill.style.width = '0%'; }, 50);
+
+    return tree;
+  }
+
+  function cleanupWcEvent() {
+    wcEventActive = false;
+    if (wcEventTimer) { clearTimeout(wcEventTimer); wcEventTimer = null; }
+    var evTrees = document.querySelectorAll('.wc-event-tree');
+    for (var i = 0; i < evTrees.length; i++) {
+      if (evTrees[i].parentNode) evTrees[i].parentNode.removeChild(evTrees[i]);
+    }
+    var branches = document.querySelectorAll('.storm-branch');
+    for (var j = 0; j < branches.length; j++) {
+      if (branches[j].parentNode) branches[j].parentNode.removeChild(branches[j]);
+    }
+    var area = $('skills-game-area');
+    if (area) area.classList.remove('storm-shake');
+  }
+
+  function triggerGoldenTree() {
+    var tree = createEventTree('golden-tree', 'Golden Tree!', 10000);
+    if (!tree) { cleanupWcEvent(); return; }
+
+    var treeHp = { hp: 3, maxHp: 3 };
+    var hpBar = document.createElement('div');
+    hpBar.className = 'tree-hp-bar';
+    hpBar.style.position = 'absolute';
+    hpBar.style.bottom = '2px';
+    hpBar.style.left = '4px';
+    hpBar.style.right = '4px';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'tree-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    tree.appendChild(hpBar);
+
+    var goldenDone = false;
+    tree.addEventListener('click', function () {
+      if (goldenDone) return;
+      treeHp.hp--;
+      hpFill.style.width = (treeHp.hp / treeHp.maxHp * 100) + '%';
+      tree.classList.add('hit');
+      setTimeout(function () { tree.classList.remove('hit'); }, 200);
+
+      if (treeHp.hp <= 0) {
+        goldenDone = true;
+        var log = getWcLog();
+        log.events.goldenTree++;
+        log.birdNests++;
+        var area = $('skills-game-area');
+        var res = getSelectedWcResource();
+        var xpGain = Math.floor(res.xp * getXpMult() * 5);
+        addXp('woodcutting', xpGain);
+        var logName = LOG_NAMES[res.name] || (res.name + ' Log');
+        addItem(logName, 1);
+        addLog('Golden Tree! Guaranteed nest + 5x XP! (+' + xpGain + ' XP)');
+        if (area) spawnParticle(area, '5x! +' + xpGain + ' XP', 'gem');
+        saveState();
+        cleanupWcEvent();
+        renderSkillList();
+        renderRightPanel();
+      }
+    });
+
+    wcEventTimer = setTimeout(function () {
+      addLog('Golden Tree vanished...');
+      cleanupWcEvent();
+    }, 10000);
+  }
+
+  function triggerStorm() {
+    var area = $('skills-game-area');
+    if (!area) { cleanupWcEvent(); return; }
+
+    area.classList.add('storm-shake');
+    addLog('STORM! Click the falling branches!');
+
+    var clicked = 0;
+    var total = 3;
+
+    for (var i = 0; i < total; i++) {
+      var branch = document.createElement('div');
+      branch.className = 'storm-branch';
+      branch.style.left = (15 + Math.random() * 60) + '%';
+      branch.style.animationDelay = (i * 0.3) + 's';
+      branch.textContent = '\uD83E\uDEB5';
+      branch.addEventListener('click', (function (el) {
+        return function () {
+          if (el.classList.contains('clicked')) return;
+          el.classList.add('clicked');
+          clicked++;
+          if (clicked >= total) {
+            var log = getWcLog();
+            log.events.storm++;
+            var res = getSelectedWcResource();
+            var xpGain = Math.floor(res.xp * getXpMult() * 5);
+            addXp('woodcutting', xpGain);
+            var logName = LOG_NAMES[res.name] || (res.name + ' Log');
+            addItem(logName, 3);
+            addLog('Storm survived! +3 ' + logName + ', 5x XP! (+' + xpGain + ' XP)');
+            if (area) spawnParticle(area, '5x! +' + xpGain + ' XP', 'xp');
+            saveState();
+            cleanupWcEvent();
+            renderSkillList();
+            renderRightPanel();
+          }
+        };
+      })(branch));
+      area.appendChild(branch);
+    }
+
+    wcEventTimer = setTimeout(function () {
+      if (clicked < total) {
+        wcCombo.count = 0;
+        var comboEl = $('wc-combo');
+        if (comboEl) comboEl.style.display = 'none';
+        addLog('Storm! Branches crushed you. Combo lost.');
+        if (area) spawnParticle(area, 'Combo Lost!', 'crit');
+      }
+      cleanupWcEvent();
+    }, 5000);
+  }
+
+  function triggerAncientGrove() {
+    var tree = createEventTree('ancient-grove', 'Ancient Grove!', 15000);
+    if (!tree) { cleanupWcEvent(); return; }
+
+    var groveHp = { hp: 5, maxHp: 5 };
+    var hpBar = document.createElement('div');
+    hpBar.className = 'tree-hp-bar';
+    hpBar.style.position = 'absolute';
+    hpBar.style.bottom = '2px';
+    hpBar.style.left = '4px';
+    hpBar.style.right = '4px';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'tree-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    tree.appendChild(hpBar);
+
+    var groveDone = false;
+    tree.addEventListener('click', function () {
+      if (groveDone) return;
+      groveHp.hp--;
+      hpFill.style.width = (groveHp.hp / groveHp.maxHp * 100) + '%';
+      tree.classList.add('hit');
+      setTimeout(function () { tree.classList.remove('hit'); }, 200);
+
+      if (groveHp.hp <= 0) {
+        groveDone = true;
+        var log = getWcLog();
+        log.events.ancientGrove++;
+        log.birdNests++;
+        var area = $('skills-game-area');
+        var res = getSelectedWcResource();
+        var xpGain = Math.floor(res.xp * getXpMult() * 10);
+        addXp('woodcutting', xpGain);
+        var logName = LOG_NAMES[res.name] || (res.name + ' Log');
+        addItem(logName, 3);
+        addLog('Ancient Grove! +3 logs + nest + 10x XP! (+' + xpGain + ' XP)');
+        if (area) spawnParticle(area, '10x! +' + xpGain + ' XP', 'gem');
+        saveState();
+        cleanupWcEvent();
         renderSkillList();
         renderRightPanel();
         updateGameHeader();
-      }, cooldown);
-    } else {
-      // Perk: Sharp Axe = chop cooldown 300ms → 200ms
-      var baseCd = hasPerk('sharpAxe', 'woodcutting') ? 200 : 300;
-      var chopCooldown = getToolCooldown('woodcutting', baseCd);
-      setTimeout(function () {
-        wcState.cooldown = false;
-      }, chopCooldown);
-    }
+      }
+    });
+
+    wcEventTimer = setTimeout(function () {
+      addLog('Ancient Grove withered away...');
+      cleanupWcEvent();
+    }, 15000);
+  }
+
+  function triggerFairyRing() {
+    var tree = createEventTree('fairy-ring', 'Fairy Ring!', 12000);
+    if (!tree) { cleanupWcEvent(); return; }
+
+    var ringHp = { hp: 3, maxHp: 3 };
+    var hpBar = document.createElement('div');
+    hpBar.className = 'tree-hp-bar';
+    hpBar.style.position = 'absolute';
+    hpBar.style.bottom = '2px';
+    hpBar.style.left = '4px';
+    hpBar.style.right = '4px';
+    var hpFill = document.createElement('div');
+    hpFill.className = 'tree-hp-fill';
+    hpFill.style.width = '100%';
+    hpBar.appendChild(hpFill);
+    tree.appendChild(hpBar);
+
+    var ringDone = false;
+    tree.addEventListener('click', function () {
+      if (ringDone) return;
+      ringHp.hp--;
+      hpFill.style.width = (ringHp.hp / ringHp.maxHp * 100) + '%';
+      tree.classList.add('hit');
+      setTimeout(function () { tree.classList.remove('hit'); }, 200);
+
+      if (ringHp.hp <= 0) {
+        ringDone = true;
+        var log = getWcLog();
+        log.events.fairyRing++;
+        var area = $('skills-game-area');
+        var res = getSelectedWcResource();
+        var xpGain = Math.floor(res.xp * getXpMult() * 5);
+        addXp('woodcutting', xpGain);
+        var logName = LOG_NAMES[res.name] || (res.name + ' Log');
+        addItem(logName, 3);
+        addLog('Fairy Ring! +3 rare logs + 5x XP! (+' + xpGain + ' XP)');
+        if (area) spawnParticle(area, '5x! +' + xpGain + ' XP', 'gem');
+        saveState();
+        cleanupWcEvent();
+        renderSkillList();
+        renderRightPanel();
+        updateGameHeader();
+      }
+    });
+
+    wcEventTimer = setTimeout(function () {
+      addLog('Fairy Ring faded away...');
+      cleanupWcEvent();
+    }, 12000);
   }
 
   // ══════════════════════════════════════════════
@@ -5305,6 +5863,14 @@
     cleanupEvent();
     // Stop mining animation overlay
     stopMiningAnim();
+    // Woodcutting cleanup
+    wcCombo = { count: 0, lastClickTime: 0 };
+    treeState = [];
+    for (var ti = 0; ti < treeRespawnIntervals.length; ti++) {
+      clearInterval(treeRespawnIntervals[ti]);
+    }
+    treeRespawnIntervals = [];
+    cleanupWcEvent();
     // Stop woodcutting animation overlay
     stopWcAnim();
     if (fishingState.timer) clearTimeout(fishingState.timer);
@@ -5576,7 +6142,7 @@
         var s = state.skills[key];
         if (!s.assignedPet) continue;
 
-        var res = (key === 'mining') ? getSelectedMiningResource() : getHighestResource(key);
+        var res = (key === 'mining') ? getSelectedMiningResource() : (key === 'woodcutting') ? getSelectedWcResource() : getHighestResource(key);
         var tierMult = getTierMult(s.assignedPet);
         var typeBonus = getTypeBonus(s.assignedPet, key);
 
