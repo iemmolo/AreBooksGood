@@ -910,6 +910,8 @@
     padding: 0 8px;
   }
 
+  .rpg-page .skills-grid { min-height: unset; }
+
   .rpg-title { font-size: 1.6em; }
   .rpg-title-block { padding: 40px 0 24px; }
 
