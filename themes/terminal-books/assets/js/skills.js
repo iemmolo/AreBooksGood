@@ -4442,8 +4442,35 @@
       sel.value = highestIdx;
       selectedFish = highestIdx;
       updateGameHeader();
+      updateFishingSpotVisuals();
     } else {
       sel.value = oldVal;
+    }
+  }
+
+  // Update fish sprites + labels in existing spots without resetting spot state
+  function updateFishingSpotVisuals() {
+    var res = getSelectedFishResource();
+    if (!res) return;
+    var fishPos = FISH_SPRITES[res.name];
+    for (var i = 0; i < 3; i++) {
+      // Update sprite
+      var oldSpr = $('fish-sprite-' + i);
+      if (oldSpr && fishPos) {
+        var newSpr = createSpriteEl(fishPos.sheet || 'items_sheet', fishPos.x, fishPos.y, 16, 16, 48, 48);
+        if (newSpr) {
+          newSpr.className = oldSpr.className;
+          newSpr.id = oldSpr.id;
+          newSpr.style.opacity = oldSpr.style.opacity;
+          oldSpr.parentNode.replaceChild(newSpr, oldSpr);
+        }
+      }
+      // Update label
+      var wrap = document.querySelectorAll('.fishing-spot-wrap')[i];
+      if (wrap) {
+        var label = wrap.querySelector('.fishing-spot-label');
+        if (label) label.textContent = res.name;
+      }
     }
   }
 
@@ -4654,7 +4681,7 @@
     if (!spr) return;
     spr.className = 'skill-sprite ambient-fish';
     var fromLeft = Math.random() > 0.5;
-    var topPct = 30 + Math.random() * 55;
+    var topPct = 36 + Math.random() * 28; // water zone only (36%-64%), avoid sky and dock
     var dur = 6 + Math.random() * 6;
     spr.style.position = 'absolute';
     spr.style.top = topPct + '%';
