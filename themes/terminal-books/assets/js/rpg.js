@@ -1035,10 +1035,21 @@
 
     // Render world map in center
     renderWorldMap();
-    showCenterContent('map');
 
-    // (Re-)initialize skills.js with the new slot's storage key
-    window.dispatchEvent(new Event('rpg-skills-init'));
+    // Check if player was inside a skill location on last session
+    var resumeLocId = meta.slots[slot].insideLocation || null;
+    if (resumeLocId && MAP_LOCATIONS[resumeLocId] && MAP_LOCATIONS[resumeLocId].skill) {
+      showCenterContent('map'); // brief map init needed for canvas
+      // (Re-)initialize skills.js first, then enter the location
+      window.dispatchEvent(new Event('rpg-skills-init'));
+      setTimeout(function () {
+        onEnterLocation(resumeLocId);
+      }, 100);
+    } else {
+      showCenterContent('map');
+      // (Re-)initialize skills.js with the new slot's storage key
+      window.dispatchEvent(new Event('rpg-skills-init'));
+    }
   }
 
   // ── Topbar ────────────────────────────────────
@@ -2863,6 +2874,13 @@
 
     addGameMessage('You enter ' + loc.name + '.', 'enter');
     stopMapLoop();
+
+    // Persist that we're inside this location so refresh restores it
+    if (activeSlot >= 0 && meta.slots[activeSlot]) {
+      meta.slots[activeSlot].insideLocation = locId;
+      saveMeta();
+    }
+
     enterSkillLocation(locData);
   }
 
@@ -2954,6 +2972,12 @@
     // Cleanup the active game in skills.js
     if (typeof window.__RPG_SKILLS_CLEANUP === 'function') {
       window.__RPG_SKILLS_CLEANUP();
+    }
+
+    // Clear persisted inside-location flag
+    if (activeSlot >= 0 && meta.slots[activeSlot]) {
+      meta.slots[activeSlot].insideLocation = null;
+      saveMeta();
     }
 
     clearLocationPane();

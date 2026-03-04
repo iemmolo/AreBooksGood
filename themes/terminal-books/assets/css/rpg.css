@@ -612,7 +612,7 @@
 .osrs-side-panel-toggle:hover { color: var(--foreground); }
 
 .osrs-side-panel-body {
-  height: 200px;
+  height: 280px;
   overflow-y: auto;
   padding: 8px 10px;
 }
@@ -691,8 +691,8 @@
 
 /* ── Skills Grid (OSRS-style compact grid in side panel) ──── */
 .osrs-side-panel .skills-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 3px;
 }
 
@@ -735,25 +735,32 @@
   flex: 1;
   min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px;
+  gap: 0 4px;
 }
 
 .osrs-side-panel .skill-name {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  order: 1;
+  flex: 1;
 }
 
 .osrs-side-panel .skill-level {
-  font-size: 0.7rem;
-  margin-left: auto;
+  font-size: 0.65rem;
   flex-shrink: 0;
+  order: 2;
 }
 
 .osrs-side-panel .skill-xp-bar {
-  display: none;
+  display: block;
+  order: 3;
+  flex-basis: 100%;
+  height: 3px;
+  margin-top: 1px;
 }
 
 /* Total level footer in skills tab */

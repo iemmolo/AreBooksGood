@@ -405,7 +405,7 @@
     if (!el) return;
     el.className = 'ore-particle sprite-particle';
     el.style.left = (Math.random() * 60 + 20) + '%';
-    el.style.top = '40%';
+    el.style.top = '45%';
     parentEl.appendChild(el);
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1200);
   }
@@ -1042,7 +1042,7 @@
     }
   }
 
-  // ── B1: Level-Up Visual Effect ────────────────
+  // ── B1: Level-Up Visual Effect (OSRS Circle) ──
   function showLevelUpEffect(skill, level) {
     // Glow pulse on skill row
     var rows = document.querySelectorAll('.skill-row');
@@ -1053,14 +1053,48 @@
       }
     }
 
-    // Big "+1" text in game area
+    // OSRS-style circle overlay in game area
     var area = $('skills-game-area');
     if (area) {
-      var bigText = document.createElement('div');
-      bigText.className = 'level-up-big-text';
-      bigText.textContent = '+1  Lv ' + level;
-      area.appendChild(bigText);
-      setTimeout(function () { if (bigText.parentNode) bigText.parentNode.removeChild(bigText); }, 1200);
+      var container = document.createElement('div');
+      container.className = 'level-up-circle-container';
+
+      // "LEVEL UP" banner text
+      var banner = document.createElement('div');
+      banner.className = 'level-up-circle-banner';
+      banner.textContent = 'LEVEL UP';
+      container.appendChild(banner);
+
+      // Dark circle with gold ring
+      var circle = document.createElement('div');
+      circle.className = 'level-up-circle';
+
+      // Skill icon sprite inside circle
+      var iconInfo = SKILL_ICON_SPRITES[skill];
+      if (iconInfo) {
+        var icon = createSpriteEl(iconInfo.sheet, iconInfo.x, iconInfo.y, 16, 16, 32, 32);
+        if (icon) {
+          icon.className = 'level-up-circle-icon';
+          circle.appendChild(icon);
+        }
+      }
+
+      // Level number
+      var lvNum = document.createElement('div');
+      lvNum.className = 'level-up-circle-level';
+      lvNum.textContent = level;
+      circle.appendChild(lvNum);
+
+      container.appendChild(circle);
+
+      // Skill name below
+      var skillName = document.createElement('div');
+      skillName.className = 'level-up-circle-skill';
+      skillName.textContent = SKILLS[skill].name;
+      container.appendChild(skillName);
+
+      area.appendChild(container);
+      setTimeout(function () { if (container.parentNode) container.parentNode.removeChild(container); }, 2200);
     }
 
     // Screen flash
@@ -1355,7 +1389,7 @@
     p.className = 'ore-particle ' + cssClass;
     p.textContent = text;
     p.style.left = (Math.random() * 60 + 20) + '%';
-    p.style.top = '40%';
+    p.style.top = '45%';
     parentEl.appendChild(p);
     setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1200);
   }
