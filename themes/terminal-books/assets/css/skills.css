@@ -175,7 +175,11 @@
 /* ── Mining Mini-Game ─────────────────────────── */
 .mining-ore-select-wrap {
   text-align: center;
-  margin-bottom: 0.5rem;
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  z-index: 5;
 }
 
 .mining-rocks {
@@ -408,8 +412,10 @@
 /* ── Woodcutting Mini-Game ────────────────────── */
 .wc-tree-select-wrap {
   text-align: center;
-  margin-bottom: 0.5rem;
-  position: relative;
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
   z-index: 5;
 }
 
@@ -421,7 +427,10 @@
   align-items: flex-end;
   user-select: none;
   -webkit-user-select: none;
-  position: relative;
+  position: absolute;
+  bottom: 22%;
+  left: 0;
+  right: 0;
   z-index: 2;
 }
 
@@ -2365,7 +2374,7 @@
 
   .mining-rock, .mining-rock-wrap { width: 64px; min-width: 64px; height: 64px; min-height: 64px; }
 
-  .wc-trees { gap: 0.75rem; }
+  .wc-trees { gap: 0.75rem; min-height: 130px; }
 
   .wc-tree-wrap { width: 80px; min-height: 130px; }
 
@@ -2394,7 +2403,7 @@
 
   .mining-rock, .mining-rock-wrap { width: 56px; min-width: 56px; height: 56px; min-height: 56px; }
 
-  .wc-trees { gap: 0.5rem; }
+  .wc-trees { gap: 0.5rem; min-height: 110px; }
 
   .wc-tree-wrap { width: 64px; min-height: 110px; }
 
