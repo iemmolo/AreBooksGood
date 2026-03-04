@@ -208,10 +208,10 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] XP text delayed 200ms, positioned at top:55%
 - [x] Double Chop flash relative to tree element
 
-#### Step 6: Still TODO
-- [ ] Show STUMP_SPRITE when tree is chopped down (replace tree with stump, regrow after timer)
-- [ ] Add DECO_SPRITES as pixel-art props in forest clearing background
-- [ ] Improve forest clearing BG detail and polish
+#### Step 6: Visual Overhaul (Done)
+- [x] Show STUMP_SPRITE when tree is chopped down (replace tree with stump, regrow after timer)
+- [x] Add DECO_SPRITES as pixel-art props in forest clearing background (mid-ground + canopy silhouettes)
+- [x] Improve forest clearing BG detail and polish (sprite-based trees, canopy silhouettes, fireflies, wood chip particles)
 - [ ] Woodcutting-specific perks system (like mining perks)
 - [ ] Tree HP system (multi-hit like rock HP)
 - [ ] Woodcutting events (like mining events)

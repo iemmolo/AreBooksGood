@@ -2053,10 +2053,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  filter: drop-shadow(0 0 6px rgba(255,240,180,0.5)) drop-shadow(0 2px 3px rgba(0,0,0,0.3));
 }
 
 .wc-tree-sprite {
   pointer-events: none;
+}
+
+.wc-tree.stumped {
+  height: 51px;
+  align-items: flex-end;
+  pointer-events: none;
+  animation: none;
+  transform: none;
+  opacity: 1;
+}
+
+.wood-chip {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  pointer-events: none;
+  z-index: 10;
+  animation: chipFly 0.5s ease-out forwards;
+}
+
+@keyframes chipFly {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--chip-dx), var(--chip-dy)) rotate(var(--chip-rot)); opacity: 0; }
 }
 
 /* Smithing anvil: sprite container (16×16 source at 4x = 64×64) */

@@ -683,6 +683,8 @@
   var wcAnimFrame = 0;
   var wcAnimLastTs = 0;
   var wcLeaves = []; // falling leaf particles
+  var wcTreesImg = null; // preloaded trees.png Image for canvas drawImage
+  var wcFireflies = []; // firefly animation particles
 
   // Constants matching static BG coordinates
   var MINING_W = 640, MINING_H = 400;
@@ -2508,7 +2510,7 @@
   }
 
   // ── Forest Clearing Pixel Art Background ──────
-  function generateForestClearingBg() {
+  function generateForestClearingBg(treesImg) {
     var W = WC_W, H = WC_H, T = 10;
     var c = document.createElement('canvas');
     c.width = W; c.height = H;
@@ -2538,30 +2540,44 @@
       ctx.fillRect(x + 2, WC_HORIZON_Y - treeH - 6, treeW - 4, 4);
     }
 
-    // ── Pass 3: Mid-ground trees (larger, lighter green shapes) ──
-    var midTreeCol = ['#2a6a30', '#307038', '#286428', '#347a3c'];
+    // ── Pass 3: Mid-ground trees (4 scattered sprites, pushed back visually) ──
     var midTrees = [
-      { x: 20, w: 50, h: 80 }, { x: 100, w: 45, h: 70 },
-      { x: 220, w: 55, h: 85 }, { x: 350, w: 48, h: 75 },
-      { x: 460, w: 52, h: 80 }, { x: 560, w: 46, h: 72 },
-      { x: 160, w: 40, h: 65 }, { x: 500, w: 42, h: 68 }
+      { x: 40, yOff: 10, scale: 1.8, sprite: 'Deco4' },   // cherry, left
+      { x: 520, yOff: 5, scale: 1.6, sprite: 'Pine' },     // pine, right
+      { x: 140, yOff: -5, scale: 1.5, sprite: 'Deco6' },   // bush, left-mid
+      { x: 470, yOff: 15, scale: 1.7, sprite: 'Deco5' }    // apple, right-mid
     ];
-    for (i = 0; i < midTrees.length; i++) {
-      var mt = midTrees[i];
-      h = tileHash(mt.x + 200, 200);
-      ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
-      var mtTop = WC_HORIZON_Y - mt.h + 20;
-      // Trunk
-      ctx.fillStyle = '#3a2a18';
-      ctx.fillRect(mt.x + Math.floor(mt.w / 2) - 3, mtTop + mt.h - 20, 6, 20);
-      // Canopy layers (triangle-ish)
-      ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
-      ctx.fillRect(mt.x, mtTop + Math.floor(mt.h * 0.3), mt.w, Math.floor(mt.h * 0.5));
-      ctx.fillRect(mt.x + 4, mtTop + Math.floor(mt.h * 0.1), mt.w - 8, Math.floor(mt.h * 0.4));
-      ctx.fillRect(mt.x + 10, mtTop, mt.w - 20, Math.floor(mt.h * 0.3));
-      // Highlight edge
-      ctx.fillStyle = 'rgba(255,255,255,0.06)';
-      ctx.fillRect(mt.x + 10, mtTop, mt.w - 20, 2);
+    if (treesImg) {
+      ctx.imageSmoothingEnabled = false;
+      for (i = 0; i < midTrees.length; i++) {
+        var mt = midTrees[i];
+        var sp = DECO_SPRITES[mt.sprite] || TREE_SPRITES[mt.sprite];
+        if (!sp) continue;
+        var dw = Math.round(sp.w * mt.scale);
+        var dh = Math.round(sp.h * mt.scale);
+        var dx = mt.x;
+        var dy = WC_HORIZON_Y - dh + 25 + mt.yOff;
+        // Draw slightly darkened to push into background
+        ctx.globalAlpha = 0.7;
+        ctx.drawImage(treesImg, sp.x, sp.y, sp.w, sp.h, dx, dy, dw, dh);
+        ctx.globalAlpha = 1;
+      }
+      ctx.imageSmoothingEnabled = true;
+    } else {
+      // Fallback: procedural rectangle trees
+      var midTreeCol = ['#2a6a30', '#307038', '#286428', '#347a3c'];
+      for (i = 0; i < midTrees.length; i++) {
+        var mt2 = midTrees[i];
+        h = tileHash(mt2.x + 200, 200);
+        var mtW = 45, mtH = 70;
+        var mtTop = WC_HORIZON_Y - mtH + 20;
+        ctx.fillStyle = '#3a2a18';
+        ctx.fillRect(mt2.x + Math.floor(mtW / 2) - 3, mtTop + mtH - 20, 6, 20);
+        ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
+        ctx.fillRect(mt2.x, mtTop + Math.floor(mtH * 0.3), mtW, Math.floor(mtH * 0.5));
+        ctx.fillRect(mt2.x + 4, mtTop + Math.floor(mtH * 0.1), mtW - 8, Math.floor(mtH * 0.4));
+        ctx.fillRect(mt2.x + 10, mtTop, mtW - 20, Math.floor(mtH * 0.3));
+      }
     }
 
     // ── Pass 4: Grass floor base (varied greens from ground_y down) ──
@@ -2757,36 +2773,14 @@
       ctx.fillRect(dp.x - dp.r, dp.y - dp.r, dp.r * 2, dp.r * 2);
     }
 
-    // ── Pass 12: Canopy frame (dense dark-green overlay on edges) ──
-    // Top canopy (60px)
-    var canopyCol = ['#0a2a0e', '#0e3212', '#0c2e10', '#123816'];
-    for (x = 0; x < W; x += 8) {
-      h = tileHash(x + 1000, 1000);
-      var canH = 40 + ((h >>> 0) % 30);
-      ctx.fillStyle = canopyCol[((h >>> 8) % canopyCol.length)];
-      ctx.fillRect(x, 0, 8, canH);
-      // Leaf detail fringe
-      ctx.fillRect(x, canH, 6, 4 + ((h >>> 12) % 8));
-      if ((h >>> 16) % 3 === 0) {
-        ctx.fillRect(x + 2, canH + 6, 4, 4 + ((h >>> 20) % 6));
-      }
-    }
-    // Left canopy (40px)
-    for (y = 0; y < H; y += 8) {
-      h = tileHash(1100, y + 1100);
-      var canW = 25 + ((h >>> 0) % 20);
-      ctx.fillStyle = canopyCol[((h >>> 8) % canopyCol.length)];
-      ctx.fillRect(0, y, canW, 8);
-      ctx.fillRect(canW, y, 4 + ((h >>> 12) % 8), 6);
-    }
-    // Right canopy (40px)
-    for (y = 0; y < H; y += 8) {
-      h = tileHash(1200, y + 1200);
-      var canWR = 25 + ((h >>> 0) % 20);
-      ctx.fillStyle = canopyCol[((h >>> 8) % canopyCol.length)];
-      ctx.fillRect(W - canWR, y, canWR, 8);
-      ctx.fillRect(W - canWR - 4 - ((h >>> 12) % 8), y, 4 + ((h >>> 12) % 8), 6);
-    }
+    // ── Pass 11b: Clearing spotlight (warm bright glow where chopping tree sits) ──
+    var spotCx = 320, spotCy = 290;
+    grad = ctx.createRadialGradient(spotCx, spotCy, 10, spotCx, spotCy, 80);
+    grad.addColorStop(0, 'rgba(255,245,200,0.18)');
+    grad.addColorStop(0.4, 'rgba(255,235,170,0.10)');
+    grad.addColorStop(1, 'rgba(255,220,140,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(spotCx - 80, spotCy - 80, 160, 160);
 
     // ── Pass 13: Atmospheric haze (green-blue radial for depth) ──
     var cx = W / 2, cy = WC_GROUND_Y;
@@ -3082,6 +3076,7 @@
     wcAnimFrame = 0;
     wcAnimLastTs = 0;
     wcLeaves = [];
+    wcFireflies = [];
     wcAnimLoop(0);
   }
 
@@ -3093,6 +3088,7 @@
     wcAnimCanvas = null;
     wcAnimCtx = null;
     wcLeaves = [];
+    wcFireflies = [];
   }
 
   function wcAnimLoop(ts) {
@@ -3105,6 +3101,7 @@
     wcAnimCtx.clearRect(0, 0, WC_W, WC_H);
     drawFallingLeaves(wcAnimCtx, wcAnimFrame, dt);
     drawSunbeams(wcAnimCtx, wcAnimFrame, dt);
+    drawFireflies(wcAnimCtx, wcAnimFrame, dt);
   }
 
   function drawFallingLeaves(ctx, frame, dt) {
@@ -3181,6 +3178,58 @@
         ctx.fillStyle = 'rgba(255,255,220,0.4)';
         ctx.fillRect(moteX, moteY, 1, 1);
       }
+    }
+  }
+
+  function drawFireflies(ctx, frame, dt) {
+    var i, ff;
+
+    // Spawn ~1 firefly per 60 frames, max 8
+    if (frame % 60 === 0 && wcFireflies.length < 8) {
+      wcFireflies.push({
+        x: 60 + Math.random() * (WC_W - 120),
+        y: WC_GROUND_Y + 20 + Math.random() * (WC_H - WC_GROUND_Y - 60),
+        vx: (Math.random() - 0.5) * 12,
+        vy: (Math.random() - 0.5) * 8,
+        phase: Math.random() * Math.PI * 2,
+        life: 3 + Math.random() * 4, // 3-7s lifetime
+        age: 0
+      });
+    }
+
+    for (i = wcFireflies.length - 1; i >= 0; i--) {
+      ff = wcFireflies[i];
+      ff.age += dt;
+      if (ff.age >= ff.life) { wcFireflies.splice(i, 1); continue; }
+
+      // Random walk drift
+      ff.vx += (Math.random() - 0.5) * 20 * dt;
+      ff.vy += (Math.random() - 0.5) * 16 * dt;
+      ff.vx = Math.max(-15, Math.min(15, ff.vx));
+      ff.vy = Math.max(-10, Math.min(10, ff.vy));
+      ff.x += ff.vx * dt;
+      ff.y += ff.vy * dt;
+
+      // Keep in bounds (ground area)
+      ff.x = Math.max(40, Math.min(WC_W - 40, ff.x));
+      ff.y = Math.max(WC_GROUND_Y, Math.min(WC_H - 20, ff.y));
+
+      // Sinusoidal blink + fade out in last second
+      var blinkAlpha = 0.4 + Math.sin(ff.phase + ff.age * 4) * 0.35;
+      var fadeOut = ff.age > ff.life - 1 ? (ff.life - ff.age) : 1;
+      var alpha = blinkAlpha * fadeOut;
+
+      // Glow halo (5px radius)
+      var gx = Math.round(ff.x), gy = Math.round(ff.y);
+      ctx.fillStyle = 'rgba(180,220,100,' + (alpha * 0.15) + ')';
+      ctx.fillRect(gx - 3, gy - 3, 7, 7);
+      ctx.fillStyle = 'rgba(200,240,120,' + (alpha * 0.3) + ')';
+      ctx.fillRect(gx - 2, gy - 2, 5, 5);
+      // Bright core (1-2px)
+      ctx.fillStyle = 'rgba(220,255,140,' + alpha + ')';
+      ctx.fillRect(gx - 1, gy - 1, 2, 2);
+      ctx.fillStyle = 'rgba(255,255,200,' + (alpha * 0.8) + ')';
+      ctx.fillRect(gx, gy, 1, 1);
     }
   }
 
@@ -4035,8 +4084,19 @@
     var area = $('skills-game-area');
     if (!area) return;
 
+    // Lazy-load trees.png as canvas-drawable Image for sprite BG
+    if (!wcTreesImg) {
+      var img = new Image();
+      img.src = SKILL_SPRITE_PATHS['trees'];
+      img.onload = function () {
+        wcTreesImg = img;
+        wcBgDataUrl = null; // force regen with sprite image
+        renderWoodcutting();
+      };
+    }
+
     // Apply forest pixel art background (cached after first generation)
-    if (!wcBgDataUrl) wcBgDataUrl = generateForestClearingBg();
+    if (!wcBgDataUrl) wcBgDataUrl = generateForestClearingBg(wcTreesImg);
     area.style.backgroundImage = 'url(' + wcBgDataUrl + ')';
     area.style.backgroundSize = 'cover';
     area.style.backgroundPosition = 'center';
@@ -4108,6 +4168,32 @@
     tree.classList.remove('chopping');
     void tree.offsetWidth;
     tree.classList.add('chopping');
+
+    // Wood chip particles on each hit
+    var chipArea = $('skills-game-area');
+    if (chipArea && tree) {
+      var chipRect = tree.getBoundingClientRect();
+      var chipAreaRect = chipArea.getBoundingClientRect();
+      var chipCx = chipRect.left - chipAreaRect.left + chipRect.width / 2;
+      var chipCy = chipRect.top - chipAreaRect.top + chipRect.height * 0.6;
+      var chipColors = ['#6a4a2a', '#8b6914', '#c8a870', '#a0522d'];
+      for (var ci = 0; ci < 4; ci++) {
+        var chip = document.createElement('div');
+        chip.className = 'wood-chip';
+        chip.style.left = chipCx + 'px';
+        chip.style.top = chipCy + 'px';
+        chip.style.backgroundColor = chipColors[ci];
+        var dx = (Math.random() - 0.5) * 50;
+        var dy = -10 - Math.random() * 30;
+        chip.style.setProperty('--chip-dx', dx + 'px');
+        chip.style.setProperty('--chip-dy', dy + 'px');
+        chip.style.setProperty('--chip-rot', (Math.random() * 360) + 'deg');
+        chipArea.appendChild(chip);
+        (function (el) {
+          setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 500);
+        })(chip);
+      }
+    }
 
     // A3: Double chop flash (positioned near tree)
     if (isDoubleChop) {
@@ -4203,7 +4289,23 @@
       // C1: Pet cheer
       animatePetAction('pet-cheer');
 
-      var cooldown = getToolCooldown('woodcutting', 800);
+      // Show stump after falling animation completes (600ms)
+      setTimeout(function () {
+        var t = $('wc-tree');
+        if (t) {
+          t.innerHTML = '';
+          t.classList.remove('falling');
+          t.classList.add('stumped');
+          var stumpEl = createSpriteEl('trees', STUMP_SPRITE.x, STUMP_SPRITE.y, STUMP_SPRITE.w, STUMP_SPRITE.h, STUMP_SPRITE.w * 3, STUMP_SPRITE.h * 3);
+          if (stumpEl) {
+            stumpEl.className = 'skill-sprite wc-tree-sprite';
+            t.appendChild(stumpEl);
+          }
+        }
+      }, 600);
+
+      // Ensure cooldown is at least 1200ms so stump is visible ~600ms
+      var cooldown = Math.max(getToolCooldown('woodcutting', 800), 1200);
       setTimeout(function () {
         renderWoodcutting();
         renderSkillList();
