@@ -7,7 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 9;
+  var STATE_VERSION = 10;
   var STACK_CAP = 999;
 
   // ── Mining Perks (level-gated passives) ────────
@@ -86,9 +86,13 @@
 
   // ── Fish HP (multi-hit fishing) ──────────────────
   var FISH_HP = {
-    'Minnow': 1, 'Shrimp': 1, 'Perch': 2, 'Trout': 2,
-    'Bass': 3, 'Salmon': 3, 'Catfish': 3, 'Swordfish': 4,
-    'Lobster': 4, 'Shark': 5, 'Anglerfish': 5, 'Leviathan': 5
+    'Anchovy': 1, 'Goldfish': 1, 'Small Shark': 1,
+    'Koi': 2, 'Perch': 2, 'Clownfish': 2,
+    'Piranha': 2, 'Flying Fish': 3, 'Barracuda': 3,
+    'Dolphin Fish': 3, 'Betta': 3, 'Stingray': 4,
+    'Eye Fish': 4, 'Spook Boy': 4, 'Kingfish': 4,
+    'Crawfish': 5, 'Giant Crab': 5, 'Anglerfish': 5,
+    'Hammerhead': 6, 'Shark': 6
   };
 
   // ── Fishing Events (random encounters) ──────────
@@ -207,18 +211,52 @@
 
   // Fish sprites: map name → { sheet, x, y } on items_sheet.png (16px grid, row 29-30)
   var FISH_SPRITES = {
-    'Minnow':     { sheet: 'items_sheet', x: 0, y: 464 },
-    'Shrimp':     { sheet: 'items_sheet', x: 32, y: 464 },
-    'Perch':      { sheet: 'items_sheet', x: 64, y: 464 },
-    'Trout':      { sheet: 'items_sheet', x: 96, y: 464 },
-    'Bass':       { sheet: 'items_sheet', x: 128, y: 464 },
-    'Salmon':     { sheet: 'items_sheet', x: 160, y: 464 },
-    'Catfish':    { sheet: 'items_sheet', x: 208, y: 464 },
-    'Swordfish':  { sheet: 'items_sheet', x: 0, y: 480 },
-    'Lobster':    { sheet: 'items_sheet', x: 48, y: 480 },
-    'Shark':      { sheet: 'items_sheet', x: 112, y: 480 },
-    'Anglerfish': { sheet: 'items_sheet', x: 176, y: 480 },
-    'Leviathan':  { sheet: 'items_sheet', x: 240, y: 480 }
+    'Anchovy':      { sheet: 'items_sheet', x: 544, y: 464 },
+    'Goldfish':     { sheet: 'items_sheet', x: 96,  y: 464 },
+    'Small Shark':  { sheet: 'items_sheet', x: 32,  y: 464 },
+    'Koi':          { sheet: 'items_sheet', x: 48,  y: 464 },
+    'Perch':        { sheet: 'items_sheet', x: 464, y: 464 },
+    'Clownfish':    { sheet: 'items_sheet', x: 448, y: 464 },
+    'Piranha':      { sheet: 'items_sheet', x: 144, y: 464 },
+    'Flying Fish':  { sheet: 'items_sheet', x: 432, y: 464 },
+    'Barracuda':    { sheet: 'items_sheet', x: 112, y: 464 },
+    'Dolphin Fish': { sheet: 'items_sheet', x: 256, y: 464 },
+    'Betta':        { sheet: 'items_sheet', x: 288, y: 464 },
+    'Stingray':     { sheet: 'items_sheet', x: 240, y: 464 },
+    'Eye Fish':     { sheet: 'items_sheet', x: 368, y: 464 },
+    'Spook Boy':    { sheet: 'items_sheet', x: 272, y: 464 },
+    'Kingfish':     { sheet: 'items_sheet', x: 528, y: 464 },
+    'Crawfish':     { sheet: 'items_sheet', x: 336, y: 480 },
+    'Giant Crab':   { sheet: 'items_sheet', x: 320, y: 480 },
+    'Anglerfish':   { sheet: 'items_sheet', x: 0,   y: 480 },
+    'Hammerhead':   { sheet: 'items_sheet', x: 48,  y: 480 },
+    'Shark':        { sheet: 'items_sheet', x: 64,  y: 480 }
+  };
+
+  // Ambient fish sprites (unchosen fish for background/event decoration)
+  var AMBIENT_FISH = [
+    { x: 0,   y: 464 }, // Red Snapper
+    { x: 16,  y: 464 }, // Piranha (red)
+    { x: 80,  y: 464 }, // Swordfish
+    { x: 128, y: 464 }, // Mackerel
+    { x: 160, y: 464 }, // Betta (blue)
+    { x: 176, y: 464 }, // Bass
+    { x: 192, y: 464 }, // Tuna
+    { x: 304, y: 464 }, // Flounder
+    { x: 400, y: 464 }, // Shrimp
+    { x: 496, y: 464 }, // Minnow
+    { x: 16,  y: 480 }, // Pufferfish
+    { x: 128, y: 480 }  // Blue Tang
+  ];
+
+  // Equipment/decoration sprites from items_sheet row 30
+  var FISHING_EQUIP_SPRITES = {
+    bobber:  { x: 464, y: 480 },  // Bobber (red)
+    lure:    { x: 352, y: 480 },  // Fishing Lure
+    hook:    { x: 368, y: 480 },  // Fish Hook
+    shell:   { x: 560, y: 480 },  // Shell
+    octopus: { x: 32,  y: 480 },  // Octopus (for Kraken)
+    rod:     { x: 544, y: 480 }   // Fishing Rod
   };
 
   // Tree sprites: map name → { x, y, w, h } crop region on trees.png (384×100)
@@ -337,7 +375,7 @@
     { label: 'Ores', items: ['Copper Ore', 'Crimson Ore', 'Coal', 'Iron Ore', 'Gold Ore', 'Silver Ore', 'Astral Ore', 'Shadow Ore', 'Emerald Ore', 'Slate Ore', 'Mithril Ore', 'Amethyst Ore', 'Cobalt Ore', 'Molten Ore', 'Frost Ore', 'Obsidian Ore'] },
     { label: 'Gems', items: ['Peridot', 'Emerald', 'Aquamarine', 'Topaz', 'Onyx', 'Moonstone', 'Diamond', 'Opal', 'Sapphire', 'Ruby'] },
     { label: 'Logs', items: ['Pine Log', 'Oak Log', 'Birch Log', 'Maple Log', 'Walnut Log', 'Mahogany Log', 'Yew Log', 'Elder Log'] },
-    { label: 'Fish', items: ['Minnow', 'Shrimp', 'Perch', 'Trout', 'Bass', 'Salmon', 'Catfish', 'Swordfish', 'Lobster', 'Shark', 'Anglerfish', 'Leviathan'] },
+    { label: 'Fish', items: ['Anchovy', 'Goldfish', 'Small Shark', 'Koi', 'Perch', 'Clownfish', 'Piranha', 'Flying Fish', 'Barracuda', 'Dolphin Fish', 'Betta', 'Stingray', 'Eye Fish', 'Spook Boy', 'Kingfish', 'Crawfish', 'Giant Crab', 'Anglerfish', 'Hammerhead', 'Shark'] },
     { label: 'Bars', items: ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'] },
     { label: 'Equipment', items: [
       'Copper Sword', 'Copper Shield', 'Bronze Dagger', 'Bronze Helmet',
@@ -390,19 +428,27 @@
     'Mahogany Log':  { sheet: 'items_sheet', x: 352, y: 432 },
     'Yew Log':       { sheet: 'items_sheet', x: 368, y: 432 },
     'Elder Log':     { sheet: 'items_sheet', x: 384, y: 432 },
-    // Fish (row 29-30, items 1045-1078)
-    'Minnow':        { sheet: 'items_sheet', x: 0, y: 464 },
-    'Shrimp':        { sheet: 'items_sheet', x: 32, y: 464 },
-    'Perch':         { sheet: 'items_sheet', x: 64, y: 464 },
-    'Trout':         { sheet: 'items_sheet', x: 96, y: 464 },
-    'Bass':          { sheet: 'items_sheet', x: 128, y: 464 },
-    'Salmon':        { sheet: 'items_sheet', x: 160, y: 464 },
-    'Catfish':       { sheet: 'items_sheet', x: 208, y: 464 },
-    'Swordfish':     { sheet: 'items_sheet', x: 0, y: 480 },
-    'Lobster':       { sheet: 'items_sheet', x: 48, y: 480 },
-    'Shark':         { sheet: 'items_sheet', x: 112, y: 480 },
-    'Anglerfish':    { sheet: 'items_sheet', x: 176, y: 480 },
-    'Leviathan':     { sheet: 'items_sheet', x: 240, y: 480 },
+    // Fish (row 29-30, 20 fish)
+    'Anchovy':       { sheet: 'items_sheet', x: 544, y: 464 },
+    'Goldfish':      { sheet: 'items_sheet', x: 96,  y: 464 },
+    'Small Shark':   { sheet: 'items_sheet', x: 32,  y: 464 },
+    'Koi':           { sheet: 'items_sheet', x: 48,  y: 464 },
+    'Perch':         { sheet: 'items_sheet', x: 464, y: 464 },
+    'Clownfish':     { sheet: 'items_sheet', x: 448, y: 464 },
+    'Piranha':       { sheet: 'items_sheet', x: 144, y: 464 },
+    'Flying Fish':   { sheet: 'items_sheet', x: 432, y: 464 },
+    'Barracuda':     { sheet: 'items_sheet', x: 112, y: 464 },
+    'Dolphin Fish':  { sheet: 'items_sheet', x: 256, y: 464 },
+    'Betta':         { sheet: 'items_sheet', x: 288, y: 464 },
+    'Stingray':      { sheet: 'items_sheet', x: 240, y: 464 },
+    'Eye Fish':      { sheet: 'items_sheet', x: 368, y: 464 },
+    'Spook Boy':     { sheet: 'items_sheet', x: 272, y: 464 },
+    'Kingfish':      { sheet: 'items_sheet', x: 528, y: 464 },
+    'Crawfish':      { sheet: 'items_sheet', x: 336, y: 480 },
+    'Giant Crab':    { sheet: 'items_sheet', x: 320, y: 480 },
+    'Anglerfish':    { sheet: 'items_sheet', x: 0,   y: 480 },
+    'Hammerhead':    { sheet: 'items_sheet', x: 48,  y: 480 },
+    'Shark':         { sheet: 'items_sheet', x: 64,  y: 480 },
     // Bars (12 bars, row 15 on items_sheet, all y=240)
     'Copper Bar':    { sheet: 'items_sheet', x: 384, y: 240 },
     'Bronze Bar':    { sheet: 'items_sheet', x: 368, y: 240 },
@@ -593,18 +639,26 @@
     fishing: {
       name: 'Fishing', icon: '\uD83C\uDFA3',
       resources: [
-        { name: 'Minnow', level: 1, xp: 8, clickTime: 2000 },
-        { name: 'Shrimp', level: 5, xp: 12, clickTime: 1900 },
-        { name: 'Perch', level: 10, xp: 18, clickTime: 1800 },
-        { name: 'Trout', level: 20, xp: 30, clickTime: 1700 },
-        { name: 'Bass', level: 30, xp: 50, clickTime: 1600 },
-        { name: 'Salmon', level: 40, xp: 80, clickTime: 1500 },
-        { name: 'Catfish', level: 50, xp: 120, clickTime: 1400 },
-        { name: 'Swordfish', level: 60, xp: 180, clickTime: 1300 },
-        { name: 'Lobster', level: 65, xp: 220, clickTime: 1250 },
-        { name: 'Shark', level: 75, xp: 320, clickTime: 1150 },
-        { name: 'Anglerfish', level: 85, xp: 500, clickTime: 1050 },
-        { name: 'Leviathan', level: 95, xp: 800, clickTime: 1000 }
+        { name: 'Anchovy',      level: 1,  xp: 8,   clickTime: 2000 },
+        { name: 'Goldfish',     level: 5,  xp: 12,  clickTime: 1950 },
+        { name: 'Small Shark',  level: 10, xp: 18,  clickTime: 1900 },
+        { name: 'Koi',          level: 15, xp: 25,  clickTime: 1850 },
+        { name: 'Perch',        level: 20, xp: 35,  clickTime: 1800 },
+        { name: 'Clownfish',    level: 25, xp: 45,  clickTime: 1750 },
+        { name: 'Piranha',      level: 30, xp: 60,  clickTime: 1700 },
+        { name: 'Flying Fish',  level: 35, xp: 80,  clickTime: 1650 },
+        { name: 'Barracuda',    level: 40, xp: 100, clickTime: 1600 },
+        { name: 'Dolphin Fish', level: 45, xp: 125, clickTime: 1550 },
+        { name: 'Betta',        level: 50, xp: 155, clickTime: 1500 },
+        { name: 'Stingray',     level: 55, xp: 190, clickTime: 1400 },
+        { name: 'Eye Fish',     level: 60, xp: 230, clickTime: 1350 },
+        { name: 'Spook Boy',    level: 65, xp: 280, clickTime: 1300 },
+        { name: 'Kingfish',     level: 70, xp: 340, clickTime: 1250 },
+        { name: 'Crawfish',     level: 75, xp: 400, clickTime: 1200 },
+        { name: 'Giant Crab',   level: 80, xp: 480, clickTime: 1150 },
+        { name: 'Anglerfish',   level: 85, xp: 560, clickTime: 1100 },
+        { name: 'Hammerhead',   level: 90, xp: 680, clickTime: 1050 },
+        { name: 'Shark',        level: 95, xp: 800, clickTime: 1000 }
       ]
     },
     woodcutting: {
@@ -986,6 +1040,14 @@
                     kraken: (flog.events && flog.events.kraken) || 0
                   }
                 };
+              }
+              // v10: fish expansion (12→20), remove old fish from inventory
+              if (key === 'fishing' && (!saved.version || saved.version < 10)) {
+                var v10ValidFish = { 'Anchovy':1, 'Goldfish':1, 'Small Shark':1, 'Koi':1, 'Perch':1, 'Clownfish':1, 'Piranha':1, 'Flying Fish':1, 'Barracuda':1, 'Dolphin Fish':1, 'Betta':1, 'Stingray':1, 'Eye Fish':1, 'Spook Boy':1, 'Kingfish':1, 'Crawfish':1, 'Giant Crab':1, 'Anglerfish':1, 'Hammerhead':1, 'Shark':1 };
+                var v10OldFish = ['Minnow', 'Shrimp', 'Trout', 'Bass', 'Salmon', 'Catfish', 'Swordfish', 'Lobster', 'Leviathan'];
+                for (var v10i = 0; v10i < v10OldFish.length; v10i++) {
+                  if (s.inventory[v10OldFish[v10i]]) delete s.inventory[v10OldFish[v10i]];
+                }
               }
             }
           }
@@ -1872,7 +1934,7 @@
 
     // Collection log button visibility
     var logBtn = $('skills-log-btn');
-    if (logBtn) logBtn.style.display = (activeSkill === 'mining' || activeSkill === 'woodcutting') ? '' : 'none';
+    if (logBtn) logBtn.style.display = (activeSkill === 'mining' || activeSkill === 'woodcutting' || activeSkill === 'fishing') ? '' : 'none';
 
     // B5: Milestones panel
     renderMilestones();
@@ -4512,11 +4574,12 @@
         }
       }
 
-      // Bobber
+      // Bobber (sprite)
       var bobber = document.createElement('div');
       bobber.className = 'fishing-bobber-el';
       bobber.id = 'fish-bobber-' + i;
-      bobber.innerHTML = '<span class="fishing-bobber-emoji">\uD83C\uDFA3</span>';
+      var bobberSpr = createSpriteEl('items_sheet', FISHING_EQUIP_SPRITES.bobber.x, FISHING_EQUIP_SPRITES.bobber.y, 16, 16, 32, 32);
+      if (bobberSpr) { bobberSpr.className = 'skill-sprite fishing-bobber-sprite'; bobber.appendChild(bobberSpr); }
       spot.appendChild(bobber);
 
       // Line
@@ -4564,8 +4627,61 @@
     comboEl.style.display = 'none';
     area.appendChild(comboEl);
 
+    // Ambient fish swimming across the background
+    startAmbientFish();
+
     // C1: Render pet
     renderPetInGameArea();
+  }
+
+  var ambientFishTimer = null;
+  function startAmbientFish() {
+    stopAmbientFish();
+    spawnAmbientFish();
+    ambientFishTimer = setInterval(spawnAmbientFish, 5000 + Math.random() * 4000);
+  }
+  function stopAmbientFish() {
+    if (ambientFishTimer) { clearInterval(ambientFishTimer); ambientFishTimer = null; }
+  }
+  function spawnAmbientFish() {
+    var area = $('skills-game-area');
+    if (!area) return;
+    // Max 3 ambient fish at a time
+    var existing = area.querySelectorAll('.ambient-fish');
+    if (existing.length >= 3) return;
+    var af = AMBIENT_FISH[Math.floor(Math.random() * AMBIENT_FISH.length)];
+    var spr = createSpriteEl('items_sheet', af.x, af.y, 16, 16, 24, 24);
+    if (!spr) return;
+    spr.className = 'skill-sprite ambient-fish';
+    var fromLeft = Math.random() > 0.5;
+    var topPct = 30 + Math.random() * 55;
+    var dur = 6 + Math.random() * 6;
+    spr.style.position = 'absolute';
+    spr.style.top = topPct + '%';
+    spr.style.zIndex = '0';
+    spr.style.opacity = '0.35';
+    spr.style.pointerEvents = 'none';
+    if (fromLeft) {
+      spr.style.left = '-30px';
+      spr.style.transition = 'left ' + dur + 's linear, top ' + dur + 's ease-in-out';
+      spr.style.transform = 'scaleX(1)';
+    } else {
+      spr.style.right = '-30px';
+      spr.style.transition = 'right ' + dur + 's linear, top ' + dur + 's ease-in-out';
+      spr.style.transform = 'scaleX(-1)';
+    }
+    area.appendChild(spr);
+    // Trigger transition
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var drift = (Math.random() - 0.5) * 20;
+        spr.style.top = (topPct + drift) + '%';
+        if (fromLeft) spr.style.left = 'calc(100% + 30px)';
+        else spr.style.right = 'calc(100% + 30px)';
+      });
+    });
+    // Remove after animation
+    setTimeout(function () { if (spr.parentNode) spr.parentNode.removeChild(spr); }, (dur + 1) * 1000);
   }
 
   function cleanupFishingSpot(idx) {
@@ -4914,7 +5030,11 @@
     var el = createFishingEventSpot('treasure-chest', 'Treasure Chest!', 10000);
     if (!el) { cleanupFishingEvent(); return; }
 
-    el.innerHTML += '<div class="fishing-event-icon">\uD83D\uDC8E</div>';
+    var chestIcon = document.createElement('div');
+    chestIcon.className = 'fishing-event-icon';
+    var chestSpr = createSpriteEl('items_sheet', FISHING_EQUIP_SPRITES.shell.x, FISHING_EQUIP_SPRITES.shell.y, 16, 16, 48, 48);
+    if (chestSpr) { chestSpr.className = 'skill-sprite'; chestIcon.appendChild(chestSpr); }
+    el.appendChild(chestIcon);
     var chestHp = { hp: 3, maxHp: 3 };
     var hpBar = document.createElement('div');
     hpBar.className = 'fish-hp-bar';
@@ -4966,7 +5086,14 @@
     var el = createFishingEventSpot('school-of-fish', 'School of Fish!', 8000);
     if (!el) { cleanupFishingEvent(); return; }
 
-    el.innerHTML += '<div class="fishing-event-icon">\uD83D\uDC1F\uD83D\uDC1F\uD83D\uDC1F</div>';
+    var schoolIcon = document.createElement('div');
+    schoolIcon.className = 'fishing-event-icon school-fish-icons';
+    for (var si = 0; si < 3; si++) {
+      var af = AMBIENT_FISH[Math.floor(Math.random() * AMBIENT_FISH.length)];
+      var afSpr = createSpriteEl('items_sheet', af.x, af.y, 16, 16, 28, 28);
+      if (afSpr) { afSpr.className = 'skill-sprite'; afSpr.style.margin = '0 1px'; schoolIcon.appendChild(afSpr); }
+    }
+    el.appendChild(schoolIcon);
     var schoolHp = { hp: 3, maxHp: 3 };
     var hpBar = document.createElement('div');
     hpBar.className = 'fish-hp-bar';
@@ -5025,7 +5152,8 @@
       fin.className = 'shark-fin';
       fin.style.left = (15 + Math.random() * 60) + '%';
       fin.style.animationDelay = (i * 0.4) + 's';
-      fin.textContent = '\uD83E\uDD88';
+      var finSpr = createSpriteEl('items_sheet', FISH_SPRITES['Shark'].x, FISH_SPRITES['Shark'].y, 16, 16, 36, 36);
+      if (finSpr) { finSpr.className = 'skill-sprite'; fin.appendChild(finSpr); }
       fin.addEventListener('click', (function (el) {
         return function () {
           if (el.classList.contains('clicked')) return;
@@ -5060,7 +5188,11 @@
     var el = createFishingEventSpot('kraken-event', 'KRAKEN!', 12000);
     if (!el) { cleanupFishingEvent(); return; }
 
-    el.innerHTML += '<div class="fishing-event-icon">\uD83E\uDD91</div>';
+    var krakenIcon = document.createElement('div');
+    krakenIcon.className = 'fishing-event-icon';
+    var krakenSpr = createSpriteEl('items_sheet', FISHING_EQUIP_SPRITES.octopus.x, FISHING_EQUIP_SPRITES.octopus.y, 16, 16, 48, 48);
+    if (krakenSpr) { krakenSpr.className = 'skill-sprite'; krakenIcon.appendChild(krakenSpr); }
+    el.appendChild(krakenIcon);
     var krakenHp = { hp: 5, maxHp: 5 };
     var hpBar = document.createElement('div');
     hpBar.className = 'fish-hp-bar';
@@ -5123,7 +5255,17 @@
     for (var i = 0; i < resources.length; i++) {
       var count = log.fishCaught[resources[i].name] || 0;
       var tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + resources[i].name + '</td><td>' + formatNum(count) + '</td>';
+      var nameTd = document.createElement('td');
+      var fsp = FISH_SPRITES[resources[i].name];
+      if (fsp) {
+        var fIcon = createSpriteEl('items_sheet', fsp.x, fsp.y, 16, 16, 16, 16);
+        if (fIcon) { fIcon.className = 'skill-sprite'; fIcon.style.verticalAlign = 'middle'; fIcon.style.marginRight = '4px'; nameTd.appendChild(fIcon); }
+      }
+      nameTd.appendChild(document.createTextNode(resources[i].name));
+      var countTd = document.createElement('td');
+      countTd.textContent = formatNum(count);
+      tr.appendChild(nameTd);
+      tr.appendChild(countTd);
       if (count === 0) tr.style.opacity = '0.4';
       fishTable.appendChild(tr);
     }
@@ -6865,6 +7007,7 @@
     // Stop woodcutting animation overlay
     stopWcAnim();
     // Fishing cleanup
+    stopAmbientFish();
     fishingCombo = { count: 0, lastClickTime: 0 };
     fishingCooldown = false;
     for (var fi = 0; fi < fishSpotState.length; fi++) {

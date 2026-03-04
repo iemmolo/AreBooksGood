@@ -244,9 +244,18 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [x] Catch splash animation — 8 water droplets burst outward from spot on fish catch (CSS keyframe + JS spawner)
 - [x] Responsive fish sprite scaling — 40px on tablet, 32px on phone
 
-### Fishing Overhaul Polish — Round 3: Future Improvements (TODO)
-- [ ] Replace bobber emoji (🎣) with pixel art sprite or CSS element
-- [ ] Replace event emojis (🐟🐟🐟, 🦈, 🦑) with sprite-based icons
+### Fishing Overhaul Polish — Round 3: Sprite Expansion (Done)
+- [x] Expand from 12→20 fish using user-curated selection from items_sheet
+- [x] Replace bobber emoji (🎣) with pixel art sprite from items_sheet (Bobber red, 464,480)
+- [x] Replace event emojis with sprites: School(3 random ambient fish), Shark(shark sprite), Kraken(octopus sprite), Treasure(shell sprite)
+- [x] Add ambient fish swimming across background (12 unchosen fish pool, max 3 on screen)
+- [x] Add equipment sprite data (FISHING_EQUIP_SPRITES: bobber, lure, hook, shell, octopus, rod)
+- [x] Add fish sprite icons to collection log table rows
+- [x] Enable collection log button for fishing (was only mining/WC)
+- [x] State migration v10: remove old 12-fish inventory items
+- [x] Fish sprite catalog tool with editable names + checkbox picker (tools/fish-sprite-catalog.html)
+
+### Fishing Overhaul Polish — Round 4: Future Improvements (TODO)
 - [ ] Tier-colored spot borders — green for low-tier, blue mid, purple high-tier fish using TIER_COLORS
 - [ ] HP bar color transition — green→yellow→red as fish HP drops (struggle feedback)
 - [ ] Size visual feedback — scale pulse on fish particle for Large/Huge catches
@@ -256,6 +265,7 @@ Source sheets: `tools/tree-sources/` (13 PNGs)
 - [ ] Tension bar reel mechanic — click speed affects tension, too fast = line snap, too slow = escape
 - [ ] Event mechanical variety — School = click fish swimming across, Treasure = hold-to-pull strength bar
 - [ ] Spot bite indicator — more prominent visual for which spots have active bites (screen edge glow, pulsing border)
+- [ ] Use Fishing Lure sprite for bite phase indicator
 
 ### Fishing Overhaul (Done)
 - [x] FISH_HP map (12 fish, HP 1-5) — multi-hit system matching mining/WC

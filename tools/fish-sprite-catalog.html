@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fish Sprite Catalog — items_sheet.png</title>
+<title>Fish Sprite Picker — items_sheet.png</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -17,10 +17,11 @@ body {
 h1 {
   color: #4af;
   font-size: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   border-bottom: 1px solid #333;
   padding-bottom: 8px;
 }
+.subtitle { color: #666; font-size: 12px; margin-bottom: 16px; }
 h2 {
   color: #4af;
   font-size: 16px;
@@ -28,183 +29,125 @@ h2 {
   border-bottom: 1px solid #333;
 }
 
-/* Section wrapper */
-.section {
-  border: 2px solid #1565c0;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  background: #0d0d0d;
+/* Toolbar */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-bottom: 12px; padding: 8px 0; border-bottom: 1px solid #222;
 }
-.section.current { border-color: #4af; }
-.section.extras { border-color: #fa8; }
-.section.extras h2 { color: #fa8; }
-.section.row-scan { border-color: #8f8; }
-.section.row-scan h2 { color: #8f8; }
+.toolbar button {
+  background: #1a1a1a; color: #8f8; border: 1px solid #333;
+  padding: 6px 14px; font-family: inherit; font-size: 12px;
+  cursor: pointer; border-radius: 3px;
+}
+.toolbar button:hover { background: #252525; border-color: #8f8; }
+.toolbar button.export-btn { color: #fa8; }
+.toolbar button.export-btn:hover { border-color: #fa8; }
 
+/* Status bar */
+.status-bar {
+  background: #111; border: 1px solid #333; padding: 8px 14px;
+  margin-bottom: 16px; border-radius: 3px; color: #888;
+  display: flex; gap: 20px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+}
+.status-bar .val { font-weight: bold; color: #4af; }
+.status-bar .selected-count { color: #8f8; }
+.status-bar .warn { color: #f88; }
+
+/* Section */
+.section {
+  border: 2px solid #1565c0; border-radius: 6px;
+  margin-bottom: 20px; background: #0d0d0d;
+}
 .section-desc {
-  color: #666;
-  font-size: 11px;
-  padding: 4px 14px 8px;
+  color: #666; font-size: 11px; padding: 4px 14px 8px;
+}
+
+/* Row label */
+.row-label {
+  color: #888; font-size: 12px; padding: 8px 14px 4px;
+  text-transform: uppercase; letter-spacing: 1px;
 }
 
 /* Fish card grid */
 .fish-grid {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 10px;
-  gap: 10px;
+  display: flex; flex-wrap: wrap; padding: 10px; gap: 8px;
 }
 
 /* Individual fish card */
 .fish-card {
-  width: 140px;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  background: #111;
-  transition: border-color 0.2s;
+  width: 130px; border: 1px solid #333; border-radius: 4px;
+  padding: 6px; display: flex; flex-direction: column;
+  align-items: center; gap: 3px; background: #111;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
 }
 .fish-card:hover { border-color: #4af; }
+.fish-card.selected {
+  border-color: #4a4; box-shadow: 0 0 8px rgba(68, 170, 68, 0.3);
+  background: #0d1a0d;
+}
+.fish-card.selected .card-num { background: #4a4; color: #fff; }
 .fish-card .sprite-big {
-  width: 64px;
-  height: 64px;
-  image-rendering: pixelated;
-  background-repeat: no-repeat;
-  cursor: crosshair;
-}
-.fish-card .fish-name {
-  color: #4af;
-  font-weight: bold;
-  font-size: 13px;
-  text-align: center;
-}
-.fish-card .fish-meta {
-  font-size: 10px;
-  color: #666;
-  text-align: center;
-  line-height: 1.4;
+  width: 64px; height: 64px; image-rendering: pixelated;
+  background-repeat: no-repeat; cursor: crosshair;
 }
 .fish-card .fish-coord {
-  font-size: 10px;
-  color: #888;
-  font-family: monospace;
+  font-size: 9px; color: #555; font-family: monospace;
 }
-.fish-card.mismatch { border-color: #f44; background: #1a0808; }
-.fish-card.ok { border-color: #4a4; }
+.fish-card input[type="text"] {
+  width: 100%; background: #0a0a0a; border: 1px solid #333;
+  color: #ddd; font-family: inherit; font-size: 11px;
+  padding: 3px 4px; border-radius: 2px; text-align: center;
+}
+.fish-card input[type="text"]:focus { outline: none; border-color: #4af; }
+.fish-card .select-wrap {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; cursor: pointer; user-select: none;
+}
+.fish-card .select-wrap input { cursor: pointer; width: 14px; height: 14px; }
+.fish-card .select-wrap label { cursor: pointer; color: #888; }
+.fish-card.selected .select-wrap label { color: #8f8; }
 
-/* Extra items card (smaller) */
-.extra-card {
-  width: 100px;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  background: #111;
-  transition: border-color 0.2s;
-}
-.extra-card:hover { border-color: #fa8; }
-.extra-card .sprite-med {
-  width: 48px;
-  height: 48px;
-  image-rendering: pixelated;
-  background-repeat: no-repeat;
-  cursor: crosshair;
-}
-.extra-card .item-id {
-  font-size: 10px;
-  color: #555;
-}
-.extra-card .item-name {
-  font-size: 11px;
-  color: #ddd;
-  text-align: center;
+/* Card number badge */
+.card-num {
+  position: absolute; top: 3px; right: 3px;
+  background: #222; color: #666; font-size: 9px;
+  padding: 1px 4px; border-radius: 2px;
 }
 
-/* Row scan cards */
-.row-card {
-  width: 80px;
-  border: 1px solid #222;
-  border-radius: 3px;
-  padding: 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  background: #111;
-}
-.row-card .sprite-sm {
-  width: 48px;
-  height: 48px;
-  image-rendering: pixelated;
-  background-repeat: no-repeat;
-}
-.row-card .rc-id {
-  font-size: 9px;
-  color: #555;
-}
-.row-card.in-use { border-color: #4af; background: #0a1520; }
-.row-card.in-use .rc-id { color: #4af; }
+/* Equipment cards (dimmed) */
+.fish-card.equipment { opacity: 0.35; }
+.fish-card.equipment:hover { opacity: 0.7; }
 
 /* Zoom tooltip */
 .zoom-tooltip {
-  position: fixed;
-  width: 128px;
-  height: 128px;
-  image-rendering: pixelated;
-  background-repeat: no-repeat;
-  border: 2px solid #4af;
-  background-color: #0a0a0a;
-  pointer-events: none;
-  z-index: 9999;
-  display: none;
-  border-radius: 3px;
-  box-shadow: 0 0 12px rgba(68, 170, 255, 0.3);
-}
-
-/* Status bar */
-.status-bar {
-  background: #111;
-  border: 1px solid #333;
-  padding: 8px 14px;
-  margin-bottom: 16px;
-  border-radius: 3px;
-  color: #888;
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-.status-bar .val { font-weight: bold; color: #4af; }
-
-/* Row label */
-.row-label {
-  color: #888;
-  font-size: 12px;
-  padding: 8px 14px 4px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  position: fixed; width: 128px; height: 128px;
+  image-rendering: pixelated; background-repeat: no-repeat;
+  border: 2px solid #4af; background-color: #0a0a0a;
+  pointer-events: none; z-index: 9999; display: none;
+  border-radius: 3px; box-shadow: 0 0 12px rgba(68, 170, 255, 0.3);
 }
 </style>
 </head>
 <body>
 
-<h1>Fish Sprite Catalog — items_sheet.png</h1>
+<h1>Fish Sprite Picker — items_sheet.png</h1>
+<div class="subtitle">Name each sprite, tick the checkbox to select it. Pick 20 for the game. Export when done.</div>
 
-<div class="status-bar" id="status-bar">
-  <span>Current fish: <span class="val">12</span></span>
-  <span>Sheet: <span class="val">items_sheet.png (576x560, 16px tiles)</span></span>
-  <span>Fish rows: <span class="val">29-30 (y=464-495)</span></span>
+<div class="toolbar">
+  <button id="btn-export">Export Selected 20 as JSON</button>
+  <button id="btn-select-all" class="export-btn">Select All Fish</button>
+  <button id="btn-deselect-all" class="export-btn">Deselect All</button>
 </div>
 
-<div id="current-section"></div>
-<div id="row-scan-section"></div>
-<div id="extras-section"></div>
+<div class="status-bar" id="status-bar">
+  <span>Selected: <span class="val selected-count" id="sel-count">0</span> / 20</span>
+  <span id="sel-warn"></span>
+  <span>Sheet: <span class="val">items_sheet.png (576x560, 16px tiles)</span></span>
+</div>
+
+<div id="fish-section"></div>
 <div class="zoom-tooltip" id="zoom-tooltip"></div>
 
 <script>
@@ -216,293 +159,277 @@ h2 {
   var SHEET_W = 576;
   var SHEET_H = 560;
   var SHEET_PATH = '../static/images/skills/items_sheet.png';
+  var TARGET = 20;
 
-  // Current FISH_SPRITES from skills.js
-  var CURRENT_FISH = [
-    { name: 'Minnow',     level: 1,  hp: 1, xp: 8,   x: 0,   y: 464 },
-    { name: 'Shrimp',     level: 5,  hp: 1, xp: 12,  x: 32,  y: 464 },
-    { name: 'Perch',      level: 10, hp: 2, xp: 18,  x: 64,  y: 464 },
-    { name: 'Trout',      level: 20, hp: 2, xp: 30,  x: 96,  y: 464 },
-    { name: 'Bass',       level: 30, hp: 3, xp: 50,  x: 128, y: 464 },
-    { name: 'Salmon',     level: 40, hp: 3, xp: 80,  x: 160, y: 464 },
-    { name: 'Catfish',    level: 50, hp: 3, xp: 120, x: 208, y: 464 },
-    { name: 'Swordfish',  level: 60, hp: 4, xp: 180, x: 0,   y: 480 },
-    { name: 'Lobster',    level: 65, hp: 4, xp: 220, x: 48,  y: 480 },
-    { name: 'Shark',      level: 75, hp: 5, xp: 320, x: 112, y: 480 },
-    { name: 'Anglerfish', level: 85, hp: 5, xp: 500, x: 176, y: 480 },
-    { name: 'Leviathan',  level: 95, hp: 5, xp: 800, x: 240, y: 480 }
+  // All sprites from rows 29-30 with my best visual identification
+  // Row 29 (y=464): 36 fish sprites (small-medium)
+  // Row 30 (y=480): cols 0-21 = large fish/sea creatures, cols 22+ = fishing equipment
+  var ALL_FISH = [
+    // ── Row 29 (y=464): Small & Medium Fish ──
+    { col: 0,  row: 29, x: 0,   y: 464, name: 'Red Snapper',    isFish: true },
+    { col: 1,  row: 29, x: 16,  y: 464, name: 'Piranha',        isFish: true },
+    { col: 2,  row: 29, x: 32,  y: 464, name: 'Eel',            isFish: true },
+    { col: 3,  row: 29, x: 48,  y: 464, name: 'Koi',            isFish: true },
+    { col: 4,  row: 29, x: 64,  y: 464, name: 'Trout',          isFish: true },
+    { col: 5,  row: 29, x: 80,  y: 464, name: 'Swordfish',      isFish: true },
+    { col: 6,  row: 29, x: 96,  y: 464, name: 'Goldfish',       isFish: true },
+    { col: 7,  row: 29, x: 112, y: 464, name: 'Barracuda',      isFish: true },
+    { col: 8,  row: 29, x: 128, y: 464, name: 'Mackerel',       isFish: true },
+    { col: 9,  row: 29, x: 144, y: 464, name: 'Piranha (green)',isFish: true },
+    { col: 10, row: 29, x: 160, y: 464, name: 'Betta',          isFish: true },
+    { col: 11, row: 29, x: 176, y: 464, name: 'Bass',           isFish: true },
+    { col: 12, row: 29, x: 192, y: 464, name: 'Tuna',           isFish: true },
+    { col: 13, row: 29, x: 208, y: 464, name: 'Sturgeon',       isFish: true },
+    { col: 14, row: 29, x: 224, y: 464, name: 'Cod',            isFish: true },
+    { col: 15, row: 29, x: 240, y: 464, name: 'Sailfish',       isFish: true },
+    { col: 16, row: 29, x: 256, y: 464, name: 'Dolphin Fish',   isFish: true },
+    { col: 17, row: 29, x: 272, y: 464, name: 'Marlin',         isFish: true },
+    { col: 18, row: 29, x: 288, y: 464, name: 'Betta (purple)', isFish: true },
+    { col: 19, row: 29, x: 304, y: 464, name: 'Flounder',       isFish: true },
+    { col: 20, row: 29, x: 320, y: 464, name: 'Herring',        isFish: true },
+    { col: 21, row: 29, x: 336, y: 464, name: 'Catfish',        isFish: true },
+    { col: 22, row: 29, x: 352, y: 464, name: 'Lionfish',       isFish: true },
+    { col: 23, row: 29, x: 368, y: 464, name: 'Pufferfish',     isFish: true },
+    { col: 24, row: 29, x: 384, y: 464, name: 'Parrotfish',     isFish: true },
+    { col: 25, row: 29, x: 400, y: 464, name: 'Shrimp',         isFish: true },
+    { col: 26, row: 29, x: 416, y: 464, name: 'Moray Eel',      isFish: true },
+    { col: 27, row: 29, x: 432, y: 464, name: 'Flying Fish',    isFish: true },
+    { col: 28, row: 29, x: 448, y: 464, name: 'Clownfish',      isFish: true },
+    { col: 29, row: 29, x: 464, y: 464, name: 'Perch',          isFish: true },
+    { col: 30, row: 29, x: 480, y: 464, name: 'Crab',           isFish: true },
+    { col: 31, row: 29, x: 496, y: 464, name: 'Minnow',         isFish: true },
+    { col: 32, row: 29, x: 512, y: 464, name: 'Salmon',         isFish: true },
+    { col: 33, row: 29, x: 528, y: 464, name: 'Kingfish',       isFish: true },
+    { col: 34, row: 29, x: 544, y: 464, name: 'Anchovy',        isFish: true },
+    { col: 35, row: 29, x: 560, y: 464, name: 'Blowfish',       isFish: true },
+
+    // ── Row 30 (y=480): Large Fish & Sea Creatures ──
+    { col: 0,  row: 30, x: 0,   y: 480, name: 'Anglerfish',     isFish: true },
+    { col: 1,  row: 30, x: 16,  y: 480, name: 'Pufferfish (big)', isFish: true },
+    { col: 2,  row: 30, x: 32,  y: 480, name: 'Octopus',        isFish: true },
+    { col: 3,  row: 30, x: 48,  y: 480, name: 'Shark',          isFish: true },
+    { col: 4,  row: 30, x: 64,  y: 480, name: 'Hammerhead',     isFish: true },
+    { col: 5,  row: 30, x: 80,  y: 480, name: 'Scorpionfish',   isFish: true },
+    { col: 6,  row: 30, x: 96,  y: 480, name: 'Moonfish',       isFish: true },
+    { col: 7,  row: 30, x: 112, y: 480, name: 'Red Drum',       isFish: true },
+    { col: 8,  row: 30, x: 128, y: 480, name: 'Blue Tang',      isFish: true },
+    { col: 9,  row: 30, x: 144, y: 480, name: 'Carp',           isFish: true },
+    { col: 10, row: 30, x: 160, y: 480, name: 'Lobster',        isFish: true },
+    { col: 11, row: 30, x: 176, y: 480, name: 'Wahoo',          isFish: true },
+    { col: 12, row: 30, x: 192, y: 480, name: 'Starfish',       isFish: false },
+    { col: 13, row: 30, x: 208, y: 480, name: 'Shrimp (big)',   isFish: true },
+    { col: 14, row: 30, x: 224, y: 480, name: 'Nautilus',       isFish: true },
+    { col: 15, row: 30, x: 240, y: 480, name: 'Leviathan',      isFish: true },
+    { col: 16, row: 30, x: 256, y: 480, name: 'Jellyfish',      isFish: false },
+    { col: 17, row: 30, x: 272, y: 480, name: 'Sea Urchin',     isFish: false },
+    { col: 18, row: 30, x: 288, y: 480, name: 'Sea Anemone',    isFish: false },
+    { col: 19, row: 30, x: 304, y: 480, name: 'Swordfish (big)',isFish: true },
+    { col: 20, row: 30, x: 320, y: 480, name: 'Crab (big)',     isFish: true },
+    { col: 21, row: 30, x: 336, y: 480, name: 'Crawfish',       isFish: true },
+
+    // ── Row 30 (y=480): Fishing Equipment (not fish) ──
+    { col: 22, row: 30, x: 352, y: 480, name: 'Fishing Lure',   isFish: false },
+    { col: 23, row: 30, x: 368, y: 480, name: 'Fish Hook',      isFish: false },
+    { col: 24, row: 30, x: 384, y: 480, name: 'Hook (gold)',    isFish: false },
+    { col: 25, row: 30, x: 400, y: 480, name: 'Hook (silver)',  isFish: false },
+    { col: 26, row: 30, x: 416, y: 480, name: 'Hook (small)',   isFish: false },
+    { col: 27, row: 30, x: 432, y: 480, name: 'Hook (rusty)',   isFish: false },
+    { col: 28, row: 30, x: 448, y: 480, name: 'Line & Hook',    isFish: false },
+    { col: 29, row: 30, x: 464, y: 480, name: 'Bobber (red)',   isFish: false },
+    { col: 30, row: 30, x: 480, y: 480, name: 'Hook (bone)',    isFish: false },
+    { col: 31, row: 30, x: 496, y: 480, name: 'Line & Lure',    isFish: false },
+    { col: 32, row: 30, x: 512, y: 480, name: 'Ring Float',     isFish: false },
+    { col: 33, row: 30, x: 528, y: 480, name: 'Paddle',         isFish: false },
+    { col: 34, row: 30, x: 544, y: 480, name: 'Fishing Rod',    isFish: false },
+    { col: 35, row: 30, x: 560, y: 480, name: 'Shell',          isFish: false }
   ];
 
-  // Build set of used coordinates for highlighting
-  var usedCoords = {};
-  for (var f = 0; f < CURRENT_FISH.length; f++) {
-    usedCoords[CURRENT_FISH[f].x + ',' + CURRENT_FISH[f].y] = CURRENT_FISH[f].name;
+  // State
+  var selected = {}; // index -> true
+  var names = {};    // index -> custom name
+
+  // Init names from defaults
+  for (var i = 0; i < ALL_FISH.length; i++) {
+    names[i] = ALL_FISH[i].name;
   }
 
-  // Extra fishing-related items (bait, nets, rods, shells, seafood)
-  // Row 12 (y=192): shells, crabs, seafood
-  // Row 30 (y=480): more fish + shells/starfish/coral at end
-  var EXTRA_ITEMS = [
-    // Row 12: Shells & Seafood
-    { id: 433, name: 'Crab',           x: 0,   y: 192 },
-    { id: 434, name: 'Shell (pink)',    x: 16,  y: 192 },
-    { id: 435, name: 'Shell (spiral)', x: 32,  y: 192 },
-    { id: 436, name: 'Shell (conch)',  x: 48,  y: 192 },
-    { id: 437, name: 'Stingray (red)', x: 64,  y: 192 },
-    { id: 438, name: 'Stingray (orange)', x: 80, y: 192 },
-    { id: 439, name: 'Jellyfish',      x: 96,  y: 192 },
-    { id: 440, name: 'Squid',          x: 112, y: 192 },
-    { id: 441, name: 'Octopus',        x: 128, y: 192 },
-    { id: 442, name: 'Snail',          x: 144, y: 192 },
-    { id: 443, name: 'Seahorse',       x: 160, y: 192 },
-    { id: 444, name: 'Starfish',       x: 176, y: 192 },
-    { id: 445, name: 'Coral (red)',    x: 192, y: 192 },
-    { id: 446, name: 'Coral (blue)',   x: 208, y: 192 },
-    { id: 447, name: 'Seaweed',        x: 224, y: 192 },
-    { id: 448, name: 'Pearl',          x: 240, y: 192 },
-    // Row 30 extras (past the fish): shells, starfish, coral
-    { id: 1081, name: 'Shell A',       x: 0,   y: 496 },
-    { id: 1082, name: 'Shell B',       x: 16,  y: 496 },
-    { id: 1083, name: 'Shell C',       x: 32,  y: 496 },
-    { id: 1084, name: 'Starfish A',    x: 48,  y: 496 },
-    { id: 1085, name: 'Starfish B',    x: 64,  y: 496 },
-    { id: 1086, name: 'Coral A',       x: 80,  y: 496 },
-    { id: 1087, name: 'Coral B',       x: 96,  y: 496 },
-    { id: 1088, name: 'Sea Plant',     x: 112, y: 496 }
-  ];
-
-  // Preload sheet
-  var sheetImg = new Image();
-  sheetImg.src = SHEET_PATH;
-
   var zoomTip = document.getElementById('zoom-tooltip');
+  var selCount = document.getElementById('sel-count');
+  var selWarn = document.getElementById('sel-warn');
 
-  // ========= SECTION 1: Current Fish Sprites =========
-  function buildCurrentFish() {
-    var container = document.getElementById('current-section');
-    var section = document.createElement('div');
-    section.className = 'section current';
+  function countSelected() {
+    var c = 0;
+    for (var k in selected) { if (selected[k]) c++; }
+    return c;
+  }
 
-    var h2 = document.createElement('h2');
-    h2.textContent = 'Current Fish Sprites (from FISH_SPRITES in skills.js)';
-    section.appendChild(h2);
+  function updateStatus() {
+    var c = countSelected();
+    selCount.textContent = c;
+    if (c > TARGET) {
+      selWarn.textContent = '(too many! deselect ' + (c - TARGET) + ')';
+      selWarn.className = 'warn';
+    } else if (c === TARGET) {
+      selWarn.textContent = 'Perfect!';
+      selWarn.className = 'selected-count';
+    } else {
+      selWarn.textContent = '(need ' + (TARGET - c) + ' more)';
+      selWarn.className = '';
+    }
+  }
 
-    var desc = document.createElement('div');
-    desc.className = 'section-desc';
-    desc.textContent = 'Review each fish — does the sprite match the name? Check for visual issues.';
-    section.appendChild(desc);
+  function buildCatalog() {
+    var container = document.getElementById('fish-section');
+    container.innerHTML = '';
 
-    var grid = document.createElement('div');
-    grid.className = 'fish-grid';
+    // Row 29 section
+    var sec29 = document.createElement('div');
+    sec29.className = 'section';
+    var h29 = document.createElement('h2');
+    h29.textContent = 'Row 29 (y=464) — Small & Medium Fish';
+    sec29.appendChild(h29);
+    var desc29 = document.createElement('div');
+    desc29.className = 'section-desc';
+    desc29.textContent = 'Hover to zoom. Edit names in the text field. Tick checkbox to select for the final 20.';
+    sec29.appendChild(desc29);
+    var grid29 = document.createElement('div');
+    grid29.className = 'fish-grid';
 
-    for (var i = 0; i < CURRENT_FISH.length; i++) {
-      var fish = CURRENT_FISH[i];
+    // Row 30 section
+    var sec30 = document.createElement('div');
+    sec30.className = 'section';
+    var h30 = document.createElement('h2');
+    h30.textContent = 'Row 30 (y=480) — Large Fish, Sea Creatures & Equipment';
+    sec30.appendChild(h30);
+    var desc30 = document.createElement('div');
+    desc30.className = 'section-desc';
+    desc30.textContent = 'Equipment sprites (hooks, rods) are dimmed. Sea creatures (starfish, urchin, anemone) unmarked.';
+    sec30.appendChild(desc30);
+    var grid30 = document.createElement('div');
+    grid30.className = 'fish-grid';
+
+    for (var i = 0; i < ALL_FISH.length; i++) {
+      var f = ALL_FISH[i];
       var card = document.createElement('div');
       card.className = 'fish-card';
+      card.setAttribute('data-idx', i);
+      if (!f.isFish) card.classList.add('equipment');
+      if (selected[i]) card.classList.add('selected');
 
-      // 4x zoomed sprite
+      // Number badge
+      var numBadge = document.createElement('span');
+      numBadge.className = 'card-num';
+      numBadge.textContent = '#' + (f.row * COLS + f.col + 1);
+      card.appendChild(numBadge);
+
+      // Sprite (4x zoom)
       var sprite = document.createElement('div');
       sprite.className = 'sprite-big';
       sprite.style.backgroundImage = 'url(' + SHEET_PATH + ')';
       sprite.style.backgroundSize = (SHEET_W * 4) + 'px ' + (SHEET_H * 4) + 'px';
-      sprite.style.backgroundPosition = (-fish.x * 4) + 'px ' + (-fish.y * 4) + 'px';
-      sprite.setAttribute('data-x', fish.x);
-      sprite.setAttribute('data-y', fish.y);
+      sprite.style.backgroundPosition = (-f.x * 4) + 'px ' + (-f.y * 4) + 'px';
+      sprite.setAttribute('data-x', f.x);
+      sprite.setAttribute('data-y', f.y);
+      card.appendChild(sprite);
 
-      var name = document.createElement('div');
-      name.className = 'fish-name';
-      name.textContent = fish.name;
-
-      var meta = document.createElement('div');
-      meta.className = 'fish-meta';
-      meta.innerHTML = 'Lv ' + fish.level + ' | HP ' + fish.hp + ' | XP ' + fish.xp;
-
+      // Coordinates
       var coord = document.createElement('div');
       coord.className = 'fish-coord';
-      coord.textContent = 'x:' + fish.x + ' y:' + fish.y;
-
-      card.appendChild(sprite);
-      card.appendChild(name);
-      card.appendChild(meta);
+      coord.textContent = 'c' + f.col + ' (' + f.x + ',' + f.y + ')';
       card.appendChild(coord);
-      grid.appendChild(card);
+
+      // Editable name
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      inp.value = names[i];
+      inp.setAttribute('data-idx', i);
+      inp.addEventListener('input', function() {
+        var idx = parseInt(this.getAttribute('data-idx'));
+        names[idx] = this.value;
+      });
+      card.appendChild(inp);
+
+      // Select checkbox
+      var selWrap = document.createElement('label');
+      selWrap.className = 'select-wrap';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!selected[i];
+      cb.setAttribute('data-idx', i);
+      cb.addEventListener('change', function() {
+        var idx = parseInt(this.getAttribute('data-idx'));
+        selected[idx] = this.checked;
+        var card = this.closest('.fish-card');
+        card.classList.toggle('selected', this.checked);
+        updateStatus();
+      });
+      var cbLabel = document.createElement('span');
+      cbLabel.textContent = 'Use this fish';
+      selWrap.appendChild(cb);
+      selWrap.appendChild(cbLabel);
+      card.appendChild(selWrap);
+
+      if (f.row === 29) grid29.appendChild(card);
+      else grid30.appendChild(card);
     }
 
-    section.appendChild(grid);
-    container.appendChild(section);
+    sec29.appendChild(grid29);
+    sec30.appendChild(grid30);
+    container.appendChild(sec29);
+    container.appendChild(sec30);
+
+    updateStatus();
   }
 
-  // ========= SECTION 2: Full Row Scan (rows 29-30) =========
-  function buildRowScan() {
-    var container = document.getElementById('row-scan-section');
-    var section = document.createElement('div');
-    section.className = 'section row-scan';
-
-    var h2 = document.createElement('h2');
-    h2.textContent = 'Full Row Scan — Rows 29-30 (all fish sprites on sheet)';
-    section.appendChild(h2);
-
-    var desc = document.createElement('div');
-    desc.className = 'section-desc';
-    desc.textContent = 'Every 16x16 tile in fish rows. Blue border = currently used. Look for unused sprites or better alternatives.';
-    section.appendChild(desc);
-
-    // Row 29 (y=464)
-    var label29 = document.createElement('div');
-    label29.className = 'row-label';
-    label29.textContent = 'Row 29 (y=464) — Small/Medium Fish';
-    section.appendChild(label29);
-
-    var grid29 = document.createElement('div');
-    grid29.className = 'fish-grid';
-    for (var col = 0; col < COLS; col++) {
-      var x = col * TILE;
-      var y = 464;
-      var key = x + ',' + y;
-      var card = document.createElement('div');
-      card.className = 'row-card' + (usedCoords[key] ? ' in-use' : '');
-
-      var sprite = document.createElement('div');
-      sprite.className = 'sprite-sm';
-      sprite.style.backgroundImage = 'url(' + SHEET_PATH + ')';
-      sprite.style.backgroundSize = (SHEET_W * 3) + 'px ' + (SHEET_H * 3) + 'px';
-      sprite.style.backgroundPosition = (-x * 3) + 'px ' + (-y * 3) + 'px';
-      sprite.setAttribute('data-x', x);
-      sprite.setAttribute('data-y', y);
-
-      var idLabel = document.createElement('span');
-      idLabel.className = 'rc-id';
-      idLabel.textContent = '#' + (29 * COLS + col + 1) + (usedCoords[key] ? ' (' + usedCoords[key] + ')' : '');
-
-      card.appendChild(sprite);
-      card.appendChild(idLabel);
-      grid29.appendChild(card);
+  // Export selected as JSON
+  document.getElementById('btn-export').addEventListener('click', function() {
+    var result = [];
+    for (var i = 0; i < ALL_FISH.length; i++) {
+      if (!selected[i]) continue;
+      result.push({
+        name: names[i],
+        x: ALL_FISH[i].x,
+        y: ALL_FISH[i].y,
+        col: ALL_FISH[i].col,
+        row: ALL_FISH[i].row
+      });
     }
-    section.appendChild(grid29);
-
-    // Row 30 (y=480)
-    var label30 = document.createElement('div');
-    label30.className = 'row-label';
-    label30.textContent = 'Row 30 (y=480) — Large Fish & Seafood';
-    section.appendChild(label30);
-
-    var grid30 = document.createElement('div');
-    grid30.className = 'fish-grid';
-    for (var col2 = 0; col2 < COLS; col2++) {
-      var x2 = col2 * TILE;
-      var y2 = 480;
-      var key2 = x2 + ',' + y2;
-      var card2 = document.createElement('div');
-      card2.className = 'row-card' + (usedCoords[key2] ? ' in-use' : '');
-
-      var sprite2 = document.createElement('div');
-      sprite2.className = 'sprite-sm';
-      sprite2.style.backgroundImage = 'url(' + SHEET_PATH + ')';
-      sprite2.style.backgroundSize = (SHEET_W * 3) + 'px ' + (SHEET_H * 3) + 'px';
-      sprite2.style.backgroundPosition = (-x2 * 3) + 'px ' + (-y2 * 3) + 'px';
-      sprite2.setAttribute('data-x', x2);
-      sprite2.setAttribute('data-y', y2);
-
-      var idLabel2 = document.createElement('span');
-      idLabel2.className = 'rc-id';
-      idLabel2.textContent = '#' + (30 * COLS + col2 + 1) + (usedCoords[key2] ? ' (' + usedCoords[key2] + ')' : '');
-
-      card2.appendChild(sprite2);
-      card2.appendChild(idLabel2);
-      grid30.appendChild(card2);
+    var c = countSelected();
+    if (c !== TARGET) {
+      alert('You have ' + c + ' selected — need exactly ' + TARGET + '.');
+      return;
     }
-    section.appendChild(grid30);
+    var json = JSON.stringify(result, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'fish-selection.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    // Also show in console for easy copy
+    console.log('Selected fish:\n' + json);
+    alert('Exported ' + c + ' fish! Also logged to console.');
+  });
 
-    // Row 31 (y=496) — shells, starfish, coral continuation
-    var label31 = document.createElement('div');
-    label31.className = 'row-label';
-    label31.textContent = 'Row 31 (y=496) — Shells, Starfish, Coral';
-    section.appendChild(label31);
-
-    var grid31 = document.createElement('div');
-    grid31.className = 'fish-grid';
-    for (var col3 = 0; col3 < COLS; col3++) {
-      var x3 = col3 * TILE;
-      var y3 = 496;
-      var card3 = document.createElement('div');
-      card3.className = 'row-card';
-
-      var sprite3 = document.createElement('div');
-      sprite3.className = 'sprite-sm';
-      sprite3.style.backgroundImage = 'url(' + SHEET_PATH + ')';
-      sprite3.style.backgroundSize = (SHEET_W * 3) + 'px ' + (SHEET_H * 3) + 'px';
-      sprite3.style.backgroundPosition = (-x3 * 3) + 'px ' + (-y3 * 3) + 'px';
-      sprite3.setAttribute('data-x', x3);
-      sprite3.setAttribute('data-y', y3);
-
-      var idLabel3 = document.createElement('span');
-      idLabel3.className = 'rc-id';
-      idLabel3.textContent = '#' + (31 * COLS + col3 + 1);
-
-      card3.appendChild(sprite3);
-      card3.appendChild(idLabel3);
-      grid31.appendChild(card3);
+  // Select all fish (isFish=true)
+  document.getElementById('btn-select-all').addEventListener('click', function() {
+    for (var i = 0; i < ALL_FISH.length; i++) {
+      if (ALL_FISH[i].isFish) selected[i] = true;
     }
-    section.appendChild(grid31);
+    buildCatalog();
+  });
 
-    container.appendChild(section);
-  }
+  // Deselect all
+  document.getElementById('btn-deselect-all').addEventListener('click', function() {
+    selected = {};
+    buildCatalog();
+  });
 
-  // ========= SECTION 3: Extra Fishing Items =========
-  function buildExtras() {
-    var container = document.getElementById('extras-section');
-    var section = document.createElement('div');
-    section.className = 'section extras';
-
-    var h2 = document.createElement('h2');
-    h2.textContent = 'Extra Fishing Items (bait, shells, seafood, coral)';
-    section.appendChild(h2);
-
-    var desc = document.createElement('div');
-    desc.className = 'section-desc';
-    desc.textContent = 'Potential items for bait system, fishing loot, or shop items. Row 12 (seafood) + Row 31 (shells/coral).';
-    section.appendChild(desc);
-
-    var grid = document.createElement('div');
-    grid.className = 'fish-grid';
-
-    for (var i = 0; i < EXTRA_ITEMS.length; i++) {
-      var item = EXTRA_ITEMS[i];
-      var card = document.createElement('div');
-      card.className = 'extra-card';
-
-      var sprite = document.createElement('div');
-      sprite.className = 'sprite-med';
-      sprite.style.backgroundImage = 'url(' + SHEET_PATH + ')';
-      sprite.style.backgroundSize = (SHEET_W * 3) + 'px ' + (SHEET_H * 3) + 'px';
-      sprite.style.backgroundPosition = (-item.x * 3) + 'px ' + (-item.y * 3) + 'px';
-      sprite.setAttribute('data-x', item.x);
-      sprite.setAttribute('data-y', item.y);
-
-      var idLabel = document.createElement('div');
-      idLabel.className = 'item-id';
-      idLabel.textContent = '#' + item.id + ' (' + item.x + ',' + item.y + ')';
-
-      var nameLabel = document.createElement('div');
-      nameLabel.className = 'item-name';
-      nameLabel.textContent = item.name;
-
-      card.appendChild(sprite);
-      card.appendChild(idLabel);
-      card.appendChild(nameLabel);
-      grid.appendChild(card);
-    }
-
-    section.appendChild(grid);
-    container.appendChild(section);
-  }
-
-  // ========= Zoom tooltip =========
+  // Zoom tooltip
   document.addEventListener('mousemove', function(e) {
     var target = e.target;
-    if (!target.classList.contains('sprite-big') &&
-        !target.classList.contains('sprite-med') &&
-        !target.classList.contains('sprite-sm')) {
+    if (!target.classList.contains('sprite-big')) {
       zoomTip.style.display = 'none';
       return;
     }
@@ -512,7 +439,6 @@ h2 {
     zoomTip.style.backgroundImage = 'url(' + SHEET_PATH + ')';
     zoomTip.style.backgroundSize = (SHEET_W * 8) + 'px ' + (SHEET_H * 8) + 'px';
     zoomTip.style.backgroundPosition = (-x * 8) + 'px ' + (-y * 8) + 'px';
-
     var tx = e.clientX + 16;
     var ty = e.clientY - 64;
     if (tx + 132 > window.innerWidth) tx = e.clientX - 144;
@@ -521,10 +447,8 @@ h2 {
     zoomTip.style.top = ty + 'px';
   });
 
-  // Build all sections
-  buildCurrentFish();
-  buildRowScan();
-  buildExtras();
+  // Build
+  buildCatalog();
 })();
 </script>
 </body>
