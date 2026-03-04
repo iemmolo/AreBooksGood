@@ -189,6 +189,8 @@ AreBooksGood - Improvement TODO
 - [x] Visual polish: tier colors, themed backgrounds, XP bar glow
 - [ ] Economy balancing pass — target: level 99 ≈ 40-60h active
 - [x] Mobile polish — RPG grid min-height fix, chatbox z-index above farm bar, screen-flash scoped to game area, select dropdowns static on mobile
+- [x] Fix level-up resource auto-switch bug (was force-switching when user chose lower tier)
+- [x] Remove screen-flash from skills (filter:brightness layout shift)
 - [ ] Mobile polish — verify on real device: chatbox position, dropdown rendering, fish sprite sizing
 - [ ] Mobile polish — bottom sheet pet picker, stacked layout tuning, touch-friendly mini-game sizing
 
