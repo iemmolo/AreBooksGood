@@ -5053,11 +5053,12 @@
     followerSpriteSheet = img;
     followerPetId = petId;
 
-    // Calculate frame index from level
+    // Calculate frame index from level (respect frameOffset)
     var rpgPets = getRpgPetState();
     var petData = rpgPets.owned[petId];
     var level = petData ? petData.level : 1;
-    followerFrameIdx = Math.min(level - 1, (data.frames || 3) - 1);
+    var frameOffset = data.frameOffset || 0;
+    followerFrameIdx = Math.min(frameOffset + level - 1, (data.frames || 3) - 1);
 
     // Init position near player
     followerPos.x = playerPos.x;
@@ -5186,7 +5187,8 @@
     var rpgPets = getRpgPetState();
     var petData = rpgPets.owned[petId];
     var level = petData ? petData.level : 1;
-    var frameIdx = Math.min(level - 1, (data.frames || 3) - 1);
+    var frameOffset = data.frameOffset || 0;
+    var frameIdx = Math.min(frameOffset + level - 1, (data.frames || 3) - 1);
 
     stationedSpriteSheets[locationId] = { img: img, frameIdx: frameIdx };
   }
