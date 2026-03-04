@@ -76,6 +76,122 @@
   // Stationed sprite cache: locationId → { img, frameIdx }
   var stationedSpriteSheets = {};
 
+  // ── Stationed pet speech bubble (canvas-rendered) ──
+  var petSpeechBubble = { text: '', locationId: null, startTime: 0, duration: 0 };
+
+  var PET_COLLECT_SPEECH = {
+    fire: {
+      happy: ['love it here!', '*warms the cave*', 'so cozy by the fire~', 'toasty!', 'more work? bring it!'],
+      missing: ['getting lonely here...', 'you coming back soon?', 'miss our adventures', 'save me some coins?'],
+      begging: ['PLEASE take me with you!!', '*dramatically collapses*', 'i\'m WITHERING', 'my flames are dimming...', '*sets fire to the sign-out sheet*', 'you forgot about me didn\'t you']
+    },
+    aqua: {
+      happy: ['making waves!', '*splashes happily*', 'the water is perfect~', 'so peaceful here', 'swimming in XP!'],
+      missing: ['the tide is pulling me to you...', 'send help? or snacks?', 'miss the surface world', 'come visit?'],
+      begging: ['I\'M DRYING OUT HERE', '*flops dramatically*', 'mayday!! mayday!!', 'i need emotional support', 'please... the fish don\'t talk back', 'FREEDOM']
+    },
+    nature: {
+      happy: ['*purrs contentedly*', 'nice and green here~', 'found a sunny spot!', 'growing stronger!', 'this is purrfect'],
+      missing: ['*sad leaf falls*', 'the trees miss you too...', 'it\'s too quiet here', 'when are you visiting?'],
+      begging: ['i\'ve been talking to a rock', 'PLEASE i\'m going feral', 'i named all the trees. ALL of them', 'the moss is my only friend now', 'take. me. WITH YOU.']
+    },
+    tech: {
+      happy: ['systems optimal!', 'efficiency: 100%', 'processing... happy.exe', 'BEEP BOOP (that means content)'],
+      missing: ['running lonely.exe...', 'social battery: 12%', 'missing companion... you', 'idle cycles increasing'],
+      begging: ['ERROR: ABANDONMENT DETECTED', 'initiating PLEASE protocol', 'loneliness.overflow()', 'BOOP... beep? ...anyone?', 'TAKE ME WITH YOU OR I REBOOT']
+    },
+    shadow: {
+      happy: ['*lurks happily*', 'the shadows are nice here', 'darkness is comforting~', 'thriving in the dark'],
+      missing: ['even shadows get lonely...', 'the void echoes your name', 'come back to the shadows?'],
+      begging: ['THE VOID IS TOO VOID', 'i\'ve been monologuing to bats', 'PLEASE the shadows are judging me', 'even my shadow left me', 'i promise to be less spooky']
+    },
+    mystic: {
+      happy: ['*sparkles contentedly*', 'the stars are beautiful here~', 'cosmic vibes!', 'enchanted~'],
+      missing: ['the stars spell your name...', 'my aura needs company', 'the cosmos feels empty', 'stargazing alone...'],
+      begging: ['I FORESEE YOU TAKING ME WITH YOU', '*levitates aggressively*', 'the prophecy says LET ME OUT', 'the stars aligned to spell HELP', 'astral projecting to follow you anyway']
+    }
+  };
+
+  function getCollectSpeech(petId, locationId) {
+    var creature = petCatalog.creatures[petId];
+    if (!creature) return 'thanks!';
+    var type = creature.type;
+    var lines = PET_COLLECT_SPEECH[type];
+    if (!lines) return 'missed you!';
+
+    // Use collectCount from rpgPets station
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[locationId];
+    var count = (station && station.collectCount) || 0;
+
+    var mood;
+    if (count <= 2) mood = 'happy';
+    else if (count <= 5) mood = 'missing';
+    else mood = 'begging';
+
+    var pool = lines[mood];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function showPetSpeechBubble(locationId, text) {
+    petSpeechBubble.text = text;
+    petSpeechBubble.locationId = locationId;
+    petSpeechBubble.startTime = Date.now();
+    petSpeechBubble.duration = 2500 + text.length * 40;
+  }
+
+  function drawPetSpeechBubble(ctx) {
+    if (!petSpeechBubble.text || !petSpeechBubble.locationId) return;
+    var elapsed = Date.now() - petSpeechBubble.startTime;
+    if (elapsed > petSpeechBubble.duration) {
+      petSpeechBubble.text = '';
+      return;
+    }
+
+    var mapLoc = MAP_LOCATIONS[petSpeechBubble.locationId];
+    if (!mapLoc) return;
+
+    // Typewriter effect
+    var charsVisible = Math.min(Math.floor(elapsed / 35), petSpeechBubble.text.length);
+    var visibleText = petSpeechBubble.text.substring(0, charsVisible);
+    if (!visibleText) return;
+
+    // Fade out in last 400ms
+    var fadeStart = petSpeechBubble.duration - 400;
+    var alpha = elapsed > fadeStart ? 1 - (elapsed - fadeStart) / 400 : 1;
+
+    var px = mapLoc.x + 28;
+    var py = mapLoc.y + 22 - 24; // above the pet sprite
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    var tw = ctx.measureText(visibleText).width;
+    var bw = tw + 10, bh = 14;
+    var bx = px - bw / 2, by = py - bh / 2;
+
+    // Bubble background
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(bx, by, bw, bh);
+
+    // Tail
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.beginPath();
+    ctx.moveTo(px - 3, by + bh);
+    ctx.lineTo(px, by + bh + 4);
+    ctx.lineTo(px + 3, by + bh);
+    ctx.fill();
+
+    // Text
+    ctx.fillStyle = '#fff';
+    ctx.fillText(visibleText, px, py + 2);
+    ctx.restore();
+  }
+
   function getRpgCreatures() {
     if (!petCatalog || !petCatalog.creatures) return [];
     var result = [];
@@ -1491,6 +1607,7 @@
     if (enterPromptVisible && playerAtLocation) {
       drawEnterPrompt(ctx);
     }
+    drawPetSpeechBubble(ctx);
     // Redraw border on top of everything
     drawMapBorder(ctx);
 
@@ -4857,7 +4974,8 @@
     rpgPets.stations[locationId] = {
       petId: petId,
       stationedAt: now,
-      lastCollected: now
+      lastCollected: now,
+      collectCount: 0
     };
 
     saveRpgPetState(rpgPets);
@@ -5003,7 +5121,12 @@
       }
     }
 
-    // Reset collection timer
+    // Pet speech bubble (before incrementing count so mood reflects current state)
+    var speechLine = getCollectSpeech(station.petId, locationId);
+    showPetSpeechBubble(locationId, speechLine);
+
+    // Increment collect count and reset timer
+    station.collectCount = (station.collectCount || 0) + 1;
     station.lastCollected = Date.now();
     saveRpgPetState(rpgPets);
 
