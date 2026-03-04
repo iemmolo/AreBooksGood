@@ -428,10 +428,14 @@
 .wc-tree-wrap {
   position: relative;
   width: 96px;
+  min-height: 160px;
   flex-shrink: 0;
   text-align: center;
   user-select: none;
   -webkit-user-select: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .wc-tree {
@@ -2363,7 +2367,7 @@
 
   .wc-trees { gap: 0.75rem; }
 
-  .wc-tree-wrap { width: 80px; }
+  .wc-tree-wrap { width: 80px; min-height: 130px; }
 
   .wc-tree { width: 80px; height: 120px; }
 
@@ -2392,7 +2396,7 @@
 
   .wc-trees { gap: 0.5rem; }
 
-  .wc-tree-wrap { width: 64px; }
+  .wc-tree-wrap { width: 64px; min-height: 110px; }
 
   .wc-tree { width: 64px; height: 96px; }
 

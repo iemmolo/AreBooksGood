@@ -748,7 +748,7 @@
 
   // Woodcutting BG constants
   var WC_W = 640, WC_H = 400;
-  var WC_HORIZON_Y = 160, WC_GROUND_Y = 240;
+  var WC_HORIZON_Y = 160, WC_GROUND_Y = 185;
 
   // Deterministic tile hash (same as rpg.js)
   function tileHash(x, y) {
@@ -2744,45 +2744,7 @@
       }
     }
 
-    // ── Pass 3: Mid-ground trees (4 scattered sprites, pushed back visually) ──
-    var midTrees = [
-      { x: 40, yOff: 10, scale: 1.8, sprite: 'Deco4' },   // cherry, left
-      { x: 520, yOff: 5, scale: 1.6, sprite: 'Pine' },     // pine, right
-      { x: 140, yOff: -5, scale: 1.5, sprite: 'Deco6' },   // bush, left-mid
-      { x: 470, yOff: 15, scale: 1.7, sprite: 'Deco5' }    // apple, right-mid
-    ];
-    if (treesImg) {
-      ctx.imageSmoothingEnabled = false;
-      for (i = 0; i < midTrees.length; i++) {
-        var mt = midTrees[i];
-        var sp = DECO_SPRITES[mt.sprite] || TREE_SPRITES[mt.sprite];
-        if (!sp) continue;
-        var dw = Math.round(sp.w * mt.scale);
-        var dh = Math.round(sp.h * mt.scale);
-        var dx = mt.x;
-        var dy = WC_HORIZON_Y - dh + 25 + mt.yOff;
-        // Draw slightly darkened to push into background
-        ctx.globalAlpha = 0.7;
-        ctx.drawImage(treesImg, sp.x, sp.y, sp.w, sp.h, dx, dy, dw, dh);
-        ctx.globalAlpha = 1;
-      }
-      ctx.imageSmoothingEnabled = true;
-    } else {
-      // Fallback: procedural rectangle trees
-      var midTreeCol = ['#2a6a30', '#307038', '#286428', '#347a3c'];
-      for (i = 0; i < midTrees.length; i++) {
-        var mt2 = midTrees[i];
-        h = tileHash(mt2.x + 200, 200);
-        var mtW = 45, mtH = 70;
-        var mtTop = WC_HORIZON_Y - mtH + 20;
-        ctx.fillStyle = '#3a2a18';
-        ctx.fillRect(mt2.x + Math.floor(mtW / 2) - 3, mtTop + mtH - 20, 6, 20);
-        ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
-        ctx.fillRect(mt2.x, mtTop + Math.floor(mtH * 0.3), mtW, Math.floor(mtH * 0.5));
-        ctx.fillRect(mt2.x + 4, mtTop + Math.floor(mtH * 0.1), mtW - 8, Math.floor(mtH * 0.4));
-        ctx.fillRect(mt2.x + 10, mtTop, mtW - 20, Math.floor(mtH * 0.3));
-      }
-    }
+    // ── Pass 3: (moved after grass) ──
 
     // ── Pass 4: Grass floor base (varied greens from ground_y down) ──
     var grassPal = ['#3a7a30', '#408038', '#367228', '#448440', '#3c7e34', '#4a8a3e'];
@@ -2799,6 +2761,45 @@
     grad.addColorStop(1, 'rgba(58,122,48,0.6)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, WC_GROUND_Y - 10, W, 20);
+
+    // ── Pass 3b: Mid-ground trees (drawn ON TOP of grass so bases are grounded) ──
+    var midTrees = [
+      { x: 40, yOff: 10, scale: 1.8, sprite: 'Deco4' },   // cherry, left
+      { x: 520, yOff: 5, scale: 1.6, sprite: 'Pine' },     // pine, right
+      { x: 140, yOff: -5, scale: 1.5, sprite: 'Deco6' },   // bush, left-mid
+      { x: 470, yOff: 15, scale: 1.7, sprite: 'Deco5' }    // apple, right-mid
+    ];
+    if (treesImg) {
+      ctx.imageSmoothingEnabled = false;
+      for (i = 0; i < midTrees.length; i++) {
+        var mt = midTrees[i];
+        var sp = DECO_SPRITES[mt.sprite] || TREE_SPRITES[mt.sprite];
+        if (!sp) continue;
+        var dw = Math.round(sp.w * mt.scale);
+        var dh = Math.round(sp.h * mt.scale);
+        var dx = mt.x;
+        // Bottom of tree sits at WC_GROUND_Y + yOff (roots in the grass)
+        var dy = WC_GROUND_Y - dh + mt.yOff;
+        ctx.globalAlpha = 0.7;
+        ctx.drawImage(treesImg, sp.x, sp.y, sp.w, sp.h, dx, dy, dw, dh);
+        ctx.globalAlpha = 1;
+      }
+      ctx.imageSmoothingEnabled = true;
+    } else {
+      var midTreeCol = ['#2a6a30', '#307038', '#286428', '#347a3c'];
+      for (i = 0; i < midTrees.length; i++) {
+        var mt2 = midTrees[i];
+        h = tileHash(mt2.x + 200, 200);
+        var mtW = 45, mtH = 70;
+        var mtTop = WC_GROUND_Y - mtH + mt2.yOff;
+        ctx.fillStyle = '#3a2a18';
+        ctx.fillRect(mt2.x + Math.floor(mtW / 2) - 3, mtTop + mtH - 20, 6, 20);
+        ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
+        ctx.fillRect(mt2.x, mtTop + Math.floor(mtH * 0.3), mtW, Math.floor(mtH * 0.5));
+        ctx.fillRect(mt2.x + 4, mtTop + Math.floor(mtH * 0.1), mtW - 8, Math.floor(mtH * 0.4));
+        ctx.fillRect(mt2.x + 10, mtTop, mtW - 20, Math.floor(mtH * 0.3));
+      }
+    }
 
     // ── Pass 5: Grass detail (tufts + wildflowers) ──
     var tuftCol = ['#4a9a40', '#56a44c', '#3e8a36', '#60b058'];
@@ -2823,7 +2824,7 @@
 
     // ── Pass 6: Dirt clearing (brown area center) ──
     var dirtPal = ['#6a5a3a', '#72624a', '#645440', '#7a6a50', '#685838'];
-    var dirtX1 = 180, dirtX2 = 460, dirtY1 = 260, dirtY2 = 380;
+    var dirtX1 = 160, dirtX2 = 480, dirtY1 = 200, dirtY2 = 380;
     for (var dy = dirtY1; dy < dirtY2; dy += T) {
       for (var dx = dirtX1; dx < dirtX2; dx += T) {
         h = tileHash(dx + 600, dy + 600);
@@ -2842,74 +2843,17 @@
       ctx.fillRect(x, dirtY1 + edgeOff, 6, 4);
     }
 
-    // ── Pass 7: Tree stumps (sprite or fallback) ──
-    var stumpPos = [
-      { x: 200, y: 280, si: 0 }, { x: 420, y: 290, si: 1 },
-      { x: 240, y: 360, si: 2 }, { x: 400, y: 340, si: 3 }
-    ];
-    if (extrasImg) {
-      ctx.imageSmoothingEnabled = false;
-      for (i = 0; i < stumpPos.length; i++) {
-        var spos = stumpPos[i];
-        var sSp = FOREST_EXTRAS.stumps[spos.si];
-        var sSc = 1.5;
-        var sDw = Math.round(sSp.w * sSc);
-        var sDh = Math.round(sSp.h * sSc);
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(spos.x - 2, spos.y + sDh - 2, sDw + 4, 4);
-        ctx.drawImage(extrasImg, sSp.x, sSp.y, sSp.w, sSp.h, spos.x, spos.y, sDw, sDh);
-      }
-    } else {
-      for (i = 0; i < stumpPos.length; i++) {
-        var fp = stumpPos[i];
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(fp.x - 2, fp.y + 12, 24, 4);
-        ctx.fillStyle = '#4a3218';
-        ctx.fillRect(fp.x, fp.y, 20, 14);
-        ctx.fillStyle = '#c8a870';
-        ctx.fillRect(fp.x + 3, fp.y + 1, 14, 4);
-      }
-    }
+    // ── Pass 7+8: Stumps and logs removed ──
 
-    // ── Pass 8: Fallen logs (sprite or fallback) ──
-    var logPos = [
-      { x: 270, y: 320, si: 0, sc: 2.0 },
-      { x: 350, y: 355, si: 1, sc: 2.0 },
-      { x: 190, y: 345, si: 3, sc: 1.8 }
-    ];
+    // ── Pass 9: Forest props (spread evenly, no overlap) ──
     if (extrasImg) {
       ctx.imageSmoothingEnabled = false;
-      for (i = 0; i < logPos.length; i++) {
-        var lpos = logPos[i];
-        var lSp = FOREST_EXTRAS.logs[lpos.si];
-        var lDw = Math.round(lSp.w * lpos.sc);
-        var lDh = Math.round(lSp.h * lpos.sc);
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.15)';
-        ctx.fillRect(lpos.x + 2, lpos.y + lDh, lDw - 2, 3);
-        ctx.drawImage(extrasImg, lSp.x, lSp.y, lSp.w, lSp.h, lpos.x, lpos.y, lDw, lDh);
-      }
-    } else {
-      var fbLogs = [{ x: 280, y: 320, w: 45, h: 10 }, { x: 340, y: 355, w: 38, h: 9 }];
-      for (i = 0; i < fbLogs.length; i++) {
-        var lg = fbLogs[i];
-        ctx.fillStyle = '#4a3218';
-        ctx.fillRect(lg.x, lg.y, lg.w, lg.h);
-        ctx.fillStyle = '#c8a870';
-        ctx.fillRect(lg.x + lg.w - 4, lg.y + 1, 3, lg.h - 2);
-      }
-    }
-
-    // ── Pass 9: Forest props (sprite or fallback mushrooms, vines, stones, moss) ──
-    if (extrasImg) {
-      ctx.imageSmoothingEnabled = false;
-      // Sprite props scattered around clearing
+      // Props in corners and edges, away from center tree area
       var propPos = [
-        { x: 155, y: 298, si: 0, sc: 1.5 },  // Prop 1 (mushroom)
-        { x: 475, y: 323, si: 3, sc: 1.5 },  // Prop 4 (mushroom 2)
-        { x: 505, y: 285, si: 2, sc: 1.3 },  // Prop 3 (bush)
-        { x: 140, y: 368, si: 0, sc: 1.2 }   // Prop 1 again
+        { x: 35, y: 250, si: 0, sc: 0.8 },   // mushroom, far left
+        { x: 580, y: 255, si: 3, sc: 0.8 },   // mushroom 2, far right
+        { x: 105, y: 210, si: 2, sc: 0.7 },   // bush, left near horizon
+        { x: 495, y: 340, si: 0, sc: 0.7 }    // mushroom, right bottom
       ];
       for (i = 0; i < propPos.length; i++) {
         var pp = propPos[i];
@@ -2918,11 +2862,10 @@
         var pDh = Math.round(pSp.h * pp.sc);
         ctx.drawImage(extrasImg, pSp.x, pSp.y, pSp.w, pSp.h, pp.x, pp.y, pDw, pDh);
       }
-      // Vines near clearing edges
+      // Vines at far edges only
       var vinePos = [
-        { x: 170, y: 265, si: 0, sc: 1.5 },
-        { x: 450, y: 270, si: 1, sc: 1.5 },
-        { x: 480, y: 350, si: 0, sc: 1.3 }
+        { x: 25, y: 220, si: 0, sc: 0.8 },   // vine, far left
+        { x: 590, y: 225, si: 1, sc: 0.8 }    // vine, far right
       ];
       for (i = 0; i < vinePos.length; i++) {
         var vp = vinePos[i];
@@ -2943,18 +2886,7 @@
         ctx.fillRect(ms.x, ms.y, 7, 4);
       }
     }
-    // Scattered stones (always procedural — tiny details)
-    var stones = [
-      { x: 510, y: 300, w: 8, h: 5 }, { x: 150, y: 350, w: 6, h: 4 },
-      { x: 480, y: 365, w: 7, h: 4 }
-    ];
-    for (i = 0; i < stones.length; i++) {
-      var sn = stones[i];
-      ctx.fillStyle = '#606860';
-      ctx.fillRect(sn.x, sn.y, sn.w, sn.h);
-      ctx.fillStyle = '#808880';
-      ctx.fillRect(sn.x + 2, sn.y, sn.w - 4, 1);
-    }
+    // Scattered stones removed — sprite props replace them
     // Moss patches
     var mossPal2 = ['#2a6a28', '#307030', '#388038'];
     for (i = 0; i < 4; i++) {
@@ -2965,27 +2897,11 @@
       ctx.fillRect(mossX, mossY, 8 + ((h >>> 20) % 6), 3);
     }
 
-    // ── Pass 10: Axe-in-stump (axe embedded in first stump) ──
-    var axeStump = stumpPos[0];
-    // Handle
-    ctx.fillStyle = '#6a4a2a';
-    ctx.fillRect(axeStump.x + 12, axeStump.y - 10, 2, 12);
-    ctx.fillStyle = '#7a5a3a';
-    ctx.fillRect(axeStump.x + 12, axeStump.y - 10, 1, 12);
-    // Axe head
-    ctx.fillStyle = '#707880';
-    ctx.fillRect(axeStump.x + 14, axeStump.y - 8, 5, 6);
-    ctx.fillStyle = '#909898';
-    ctx.fillRect(axeStump.x + 14, axeStump.y - 7, 5, 1);
-    // Edge highlight
-    ctx.fillStyle = '#b0b8c0';
-    ctx.fillRect(axeStump.x + 18, axeStump.y - 7, 1, 4);
-
-    // ── Pass 11: Sun dapple (warm bright patches on ground) ──
+    // ── Pass 10: Sun dapple (warm bright patches on ground) ──
     var dapples = [
-      { x: 260, y: 290, r: 30 }, { x: 380, y: 310, r: 25 },
-      { x: 310, y: 350, r: 28 }, { x: 440, y: 340, r: 22 },
-      { x: 220, y: 330, r: 26 }, { x: 350, y: 370, r: 20 }
+      { x: 260, y: 230, r: 30 }, { x: 380, y: 250, r: 25 },
+      { x: 310, y: 300, r: 28 }, { x: 440, y: 290, r: 22 },
+      { x: 220, y: 280, r: 26 }, { x: 350, y: 340, r: 20 }
     ];
     for (i = 0; i < dapples.length; i++) {
       var dp = dapples[i];
@@ -2998,7 +2914,7 @@
     }
 
     // ── Pass 11b: Clearing spotlight (warm bright glow where chopping tree sits) ──
-    var spotCx = 320, spotCy = 290;
+    var spotCx = 320, spotCy = 240;
     grad = ctx.createRadialGradient(spotCx, spotCy, 10, spotCx, spotCy, 80);
     grad.addColorStop(0, 'rgba(255,245,200,0.18)');
     grad.addColorStop(0.4, 'rgba(255,235,170,0.10)');
