@@ -1213,8 +1213,13 @@
   background: color-mix(in srgb, #000 55%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-radius: 4px;
-  pointer-events: none;
+  cursor: pointer;
   animation: rpgFadeIn 0.4s ease;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rpg-stationed-game-pet:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, #000 70%, transparent);
 }
 
 .rpg-stationed-game-pet-label {
@@ -1231,6 +1236,43 @@
   text-align: center;
   white-space: nowrap;
   font-family: inherit;
+}
+
+.rpg-stationed-game-pet-actions {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  width: 100%;
+}
+.rpg-stationed-game-pet.expanded .rpg-stationed-game-pet-actions {
+  display: flex;
+}
+.rpg-stationed-game-pet-btn {
+  font-size: 0.6em;
+  font-family: inherit;
+  padding: 3px 8px;
+  border: 1px solid;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  background: color-mix(in srgb, #000 60%, transparent);
+}
+.rpg-stationed-game-pet-btn.unassign {
+  color: #e88;
+  border-color: rgba(238,136,136,0.4);
+}
+.rpg-stationed-game-pet-btn.unassign:hover {
+  background: rgba(238,136,136,0.15);
+  border-color: #e88;
+}
+.rpg-stationed-game-pet-btn.collect {
+  color: #8c8;
+  border-color: rgba(136,204,136,0.4);
+}
+.rpg-stationed-game-pet-btn.collect:hover {
+  background: rgba(136,204,136,0.15);
+  border-color: #8c8;
 }
 
 /* ── RPG Pet Store Modal ──────────────────────── */

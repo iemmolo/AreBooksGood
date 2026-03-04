@@ -5285,7 +5285,6 @@
     var area = document.getElementById('skills-game-area');
     if (!area) return;
 
-    // Container
     var container = document.createElement('div');
     container.className = 'rpg-stationed-game-pet';
 
@@ -5311,6 +5310,39 @@
       statusEl.textContent = formatDuration(elapsed) + ' working';
       container.appendChild(statusEl);
     }
+
+    // Action buttons (hidden until click)
+    var actions = document.createElement('div');
+    actions.className = 'rpg-stationed-game-pet-actions';
+
+    if (elapsed > 5 * 60 * 1000) {
+      var collectBtn = document.createElement('button');
+      collectBtn.className = 'rpg-stationed-game-pet-btn collect';
+      collectBtn.textContent = 'Collect';
+      collectBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        collectAtLocation(locationId);
+        renderStationedPetInGameArea(locationId);
+      });
+      actions.appendChild(collectBtn);
+    }
+
+    var unassignBtn = document.createElement('button');
+    unassignBtn.className = 'rpg-stationed-game-pet-btn unassign';
+    unassignBtn.textContent = 'Unassign';
+    unassignBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      unstationPet(petId);
+      renderStationedPetInGameArea(locationId);
+    });
+    actions.appendChild(unassignBtn);
+
+    container.appendChild(actions);
+
+    // Toggle expanded on click
+    container.addEventListener('click', function () {
+      container.classList.toggle('expanded');
+    });
 
     area.appendChild(container);
   }
