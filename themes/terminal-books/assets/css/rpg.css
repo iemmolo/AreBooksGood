@@ -1199,78 +1199,130 @@
   color: var(--accent);
 }
 
-/* ── Stationed Pet in Skill Game Area ────────── */
-.rpg-stationed-game-pet {
+/* ── Station Dock in Skill Game Area ─────────── */
+.rpg-station-dock {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
-  z-index: 3;
+  bottom: 10px;
+  left: 16px;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 6px 8px;
-  background: color-mix(in srgb, #000 55%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  border-radius: 4px;
   cursor: pointer;
-  animation: rpgFadeIn 0.4s ease;
-  transition: border-color 0.2s, background 0.2s;
-}
-.rpg-stationed-game-pet:hover {
-  border-color: var(--accent);
-  background: color-mix(in srgb, #000 70%, transparent);
 }
 
-.rpg-stationed-game-pet-label {
-  font-size: 0.65em;
+/* Hexagonal pad (like farm teleporter) */
+.rpg-station-dock-pad {
+  width: 48px;
+  height: 48px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  animation: rpg-dock-idle 3s ease-in-out infinite;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+.rpg-station-dock:hover .rpg-station-dock-pad {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.rpg-station-dock-pad-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.4;
+  box-shadow: 0 0 6px var(--accent);
+}
+@keyframes rpg-dock-idle {
+  0%, 100% { box-shadow: inset 0 0 6px color-mix(in srgb, var(--accent) 12%, transparent); }
+  50%      { box-shadow: inset 0 0 14px color-mix(in srgb, var(--accent) 28%, transparent); }
+}
+
+/* Empty state — "+" invite */
+.rpg-station-dock-empty {
+  font-size: 1.1em;
+  color: color-mix(in srgb, var(--accent) 50%, transparent);
+  margin-bottom: 2px;
+  pointer-events: none;
+}
+
+/* Occupied — pad glows brighter */
+.rpg-station-dock.occupied .rpg-station-dock-pad {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  animation: rpg-dock-active 1.8s ease-in-out infinite;
+}
+.rpg-station-dock.occupied .rpg-station-dock-pad-dot {
+  opacity: 0.8;
+  box-shadow: 0 0 10px var(--accent), 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+@keyframes rpg-dock-active {
+  0%, 100% { box-shadow: inset 0 0 10px color-mix(in srgb, var(--accent) 22%, transparent); }
+  50%      { box-shadow: inset 0 0 22px color-mix(in srgb, var(--accent) 45%, transparent); }
+}
+
+/* Pet sprite floating above the pad */
+.rpg-station-dock-pet {
+  margin-bottom: 4px;
+  image-rendering: pixelated;
+  animation: rpg-dock-bob 2s ease-in-out infinite;
+}
+@keyframes rpg-dock-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* Name + status below pad */
+.rpg-station-dock-label {
+  font-size: 0.6em;
   color: var(--accent);
   text-align: center;
   white-space: nowrap;
   font-family: inherit;
+  margin-top: 2px;
 }
-
-.rpg-stationed-game-pet-status {
-  font-size: 0.55em;
-  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+.rpg-station-dock-status {
+  font-size: 0.5em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
   text-align: center;
   white-space: nowrap;
   font-family: inherit;
 }
 
-.rpg-stationed-game-pet-actions {
+/* Actions panel (expanded) */
+.rpg-station-dock-actions {
   display: none;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   margin-top: 4px;
-  width: 100%;
 }
-.rpg-stationed-game-pet.expanded .rpg-stationed-game-pet-actions {
+.rpg-station-dock.expanded .rpg-station-dock-actions {
   display: flex;
 }
-.rpg-stationed-game-pet-btn {
-  font-size: 0.6em;
+.rpg-station-dock-btn {
+  font-size: 0.55em;
   font-family: inherit;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border: 1px solid;
   border-radius: 3px;
   cursor: pointer;
   text-align: center;
-  background: color-mix(in srgb, #000 60%, transparent);
+  background: color-mix(in srgb, #000 65%, transparent);
 }
-.rpg-stationed-game-pet-btn.unassign {
+.rpg-station-dock-btn.unassign {
   color: #e88;
-  border-color: rgba(238,136,136,0.4);
+  border-color: rgba(238,136,136,0.35);
 }
-.rpg-stationed-game-pet-btn.unassign:hover {
+.rpg-station-dock-btn.unassign:hover {
   background: rgba(238,136,136,0.15);
   border-color: #e88;
 }
-.rpg-stationed-game-pet-btn.collect {
+.rpg-station-dock-btn.collect {
   color: #8c8;
-  border-color: rgba(136,204,136,0.4);
+  border-color: rgba(136,204,136,0.35);
 }
-.rpg-stationed-game-pet-btn.collect:hover {
+.rpg-station-dock-btn.collect:hover {
   background: rgba(136,204,136,0.15);
   border-color: #8c8;
 }

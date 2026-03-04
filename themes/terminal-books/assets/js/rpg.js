@@ -1169,6 +1169,7 @@
     if (toggle) toggle.innerHTML = '&#9660;';
     // Render pet tab contents when switching to it
     if (tabId === 'pets') renderPetTab();
+    else pendingStationLocationId = null; // clear dock-assign mode if switching away
   }
 
   function onSideTabClick(e) {
@@ -4559,6 +4560,7 @@
   // ══════════════════════════════════════════════
 
   var activePetPopup = null; // currently open popup petId
+  var pendingStationLocationId = null; // set when empty dock clicked, cleared on assign/cancel
 
   function renderPetTab() {
     var pane = $('osrs-side-pets');
@@ -4567,6 +4569,15 @@
 
     var rpgPets = getRpgPetState();
     var ownedIds = Object.keys(rpgPets.owned);
+
+    // Station-assign mode banner
+    if (pendingStationLocationId) {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'padding:6px 8px;margin-bottom:6px;font-size:0.7em;text-align:center;background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:3px;color:var(--accent)';
+      var locName = MAP_LOCATIONS[pendingStationLocationId] ? MAP_LOCATIONS[pendingStationLocationId].name : pendingStationLocationId;
+      banner.textContent = 'Select a pet to station at ' + locName;
+      pane.appendChild(banner);
+    }
 
     if (ownedIds.length === 0) {
       var empty = document.createElement('div');
@@ -4660,6 +4671,17 @@
     if (!creature) return;
 
     var status = getPetStatus(petId);
+
+    // If dock requested a station assignment, do it immediately
+    if (pendingStationLocationId && status === 'unassigned') {
+      var locId = pendingStationLocationId;
+      pendingStationLocationId = null;
+      stationPet(petId, locId);
+      renderPetTab();
+      renderStationedPetInGameArea(locId);
+      return;
+    }
+    pendingStationLocationId = null; // clear if they picked an assigned pet
     var stats = getRpgPetStats(petId, petData.level);
 
     activePetPopup = petId;
@@ -5265,86 +5287,124 @@
   // ══════════════════════════════════════════════
 
   function renderStationedPetInGameArea(locationId) {
-    // Remove any existing stationed pet sprite
-    var existing = document.querySelector('.rpg-stationed-game-pet');
+    // Remove any existing dock
+    var existing = document.querySelector('.rpg-station-dock');
     if (existing) existing.parentNode.removeChild(existing);
 
     if (!locationId || !RPG_STATION_SKILL_MAP[locationId]) return;
 
-    var rpgPets = getRpgPetState();
-    var station = rpgPets.stations[locationId];
-    if (!station || !station.petId) return;
-
-    var petId = station.petId;
-    var petData = rpgPets.owned[petId];
-    if (!petData) return;
-
-    var creature = petCatalog ? petCatalog.creatures[petId] : null;
-    if (!creature) return;
-
     var area = document.getElementById('skills-game-area');
     if (!area) return;
 
-    var container = document.createElement('div');
-    container.className = 'rpg-stationed-game-pet';
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[locationId];
+    var hasPet = station && station.petId && rpgPets.owned[station.petId];
 
-    // Sprite
-    var sprite = renderRpgPetSprite(petId, petData.level, 56);
-    if (sprite) {
-      sprite.style.display = 'block';
-      sprite.style.margin = '0 auto';
-      container.appendChild(sprite);
-    }
+    // Dock container (always present)
+    var dock = document.createElement('div');
+    dock.className = 'rpg-station-dock' + (hasPet ? ' occupied' : '');
 
-    // Name label
-    var label = document.createElement('div');
-    label.className = 'rpg-stationed-game-pet-label';
-    label.textContent = creature.name;
-    container.appendChild(label);
+    if (hasPet) {
+      var petId = station.petId;
+      var petData = rpgPets.owned[petId];
+      var creature = petCatalog ? petCatalog.creatures[petId] : null;
 
-    // Status (time stationed)
-    var elapsed = Date.now() - (station.lastCollected || station.stationedAt);
-    if (elapsed > 5 * 60 * 1000) {
-      var statusEl = document.createElement('div');
-      statusEl.className = 'rpg-stationed-game-pet-status';
-      statusEl.textContent = formatDuration(elapsed) + ' working';
-      container.appendChild(statusEl);
-    }
+      // Pet sprite above pad
+      var sprite = renderRpgPetSprite(petId, petData.level, 48);
+      if (sprite) {
+        sprite.className = 'rpg-station-dock-pet';
+        sprite.style.imageRendering = 'pixelated';
+        dock.appendChild(sprite);
+      }
 
-    // Action buttons (hidden until click)
-    var actions = document.createElement('div');
-    actions.className = 'rpg-stationed-game-pet-actions';
+      // Hex pad
+      var pad = document.createElement('div');
+      pad.className = 'rpg-station-dock-pad';
+      var dot = document.createElement('div');
+      dot.className = 'rpg-station-dock-pad-dot';
+      pad.appendChild(dot);
+      dock.appendChild(pad);
 
-    if (elapsed > 5 * 60 * 1000) {
-      var collectBtn = document.createElement('button');
-      collectBtn.className = 'rpg-stationed-game-pet-btn collect';
-      collectBtn.textContent = 'Collect';
-      collectBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        collectAtLocation(locationId);
+      // Name
+      if (creature) {
+        var label = document.createElement('div');
+        label.className = 'rpg-station-dock-label';
+        label.textContent = creature.name;
+        dock.appendChild(label);
+      }
+
+      // Time working
+      var elapsed = Date.now() - (station.lastCollected || station.stationedAt);
+      if (elapsed > 5 * 60 * 1000) {
+        var statusEl = document.createElement('div');
+        statusEl.className = 'rpg-station-dock-status';
+        statusEl.textContent = formatDuration(elapsed) + ' working';
+        dock.appendChild(statusEl);
+      }
+
+      // Action buttons (hidden until click)
+      var actions = document.createElement('div');
+      actions.className = 'rpg-station-dock-actions';
+
+      if (elapsed > 5 * 60 * 1000) {
+        var collectBtn = document.createElement('button');
+        collectBtn.className = 'rpg-station-dock-btn collect';
+        collectBtn.textContent = 'Collect';
+        collectBtn.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          collectAtLocation(locationId);
+          renderStationedPetInGameArea(locationId);
+        });
+        actions.appendChild(collectBtn);
+      }
+
+      var unassignBtn = document.createElement('button');
+      unassignBtn.className = 'rpg-station-dock-btn unassign';
+      unassignBtn.textContent = 'Unassign';
+      unassignBtn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        unstationPet(petId);
         renderStationedPetInGameArea(locationId);
       });
-      actions.appendChild(collectBtn);
+      actions.appendChild(unassignBtn);
+      dock.appendChild(actions);
+
+      // Toggle expanded
+      dock.addEventListener('click', function () {
+        dock.classList.toggle('expanded');
+      });
+
+    } else {
+      // Empty dock — "+" invite, pulsing pad
+      var plus = document.createElement('div');
+      plus.className = 'rpg-station-dock-empty';
+      plus.textContent = '+';
+      dock.appendChild(plus);
+
+      var pad = document.createElement('div');
+      pad.className = 'rpg-station-dock-pad';
+      var dot = document.createElement('div');
+      dot.className = 'rpg-station-dock-pad-dot';
+      pad.appendChild(dot);
+      dock.appendChild(pad);
+
+      var hint = document.createElement('div');
+      hint.className = 'rpg-station-dock-label';
+      hint.textContent = 'Station';
+      dock.appendChild(hint);
+
+      // Click opens pet tab — next pet click auto-stations here
+      dock.addEventListener('click', function () {
+        pendingStationLocationId = locationId;
+        var panel = document.getElementById('osrs-side-panel');
+        var body = document.getElementById('osrs-side-panel-body');
+        if (panel) panel.style.display = '';
+        if (body) body.style.display = '';
+        switchSideTab('pets');
+      });
     }
 
-    var unassignBtn = document.createElement('button');
-    unassignBtn.className = 'rpg-stationed-game-pet-btn unassign';
-    unassignBtn.textContent = 'Unassign';
-    unassignBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      unstationPet(petId);
-      renderStationedPetInGameArea(locationId);
-    });
-    actions.appendChild(unassignBtn);
-
-    container.appendChild(actions);
-
-    // Toggle expanded on click
-    container.addEventListener('click', function () {
-      container.classList.toggle('expanded');
-    });
-
-    area.appendChild(container);
+    area.appendChild(dock);
   }
 
   // ── Keyboard Interceptor ────────────────────────
