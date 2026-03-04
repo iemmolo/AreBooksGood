@@ -411,6 +411,8 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .wc-tree {
@@ -1155,6 +1157,16 @@
   image-rendering: -moz-crisp-edges;
 }
 
+/* ── Woodcutting Animation Overlay ────────────────── */
+.wc-anim-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+}
+
 /* ── D4: Game Area Themed Backgrounds ─────────── */
 .skills-game-area[data-skill="mining"] {
   background-color: color-mix(in srgb, #5d4037 8%, transparent);
@@ -1167,6 +1179,8 @@
 }
 .skills-game-area[data-skill="woodcutting"] {
   background: color-mix(in srgb, #2e7d32 8%, transparent);
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
 }
 .skills-game-area[data-skill="smithing"] {
   background: color-mix(in srgb, #e65100 8%, transparent);

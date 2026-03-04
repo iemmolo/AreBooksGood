@@ -241,17 +241,17 @@
     'Obsidian Bar':  { sheet: 'items_sheet', x: 512, y: 240 }
   };
 
-  // Wood log drop: items_sheet.png row 27 (items 990-997)
-  var WOOD_DROP_SPRITES = [
-    { sheet: 'items_sheet', x: 272, y: 432 },  // Pine Log
-    { sheet: 'items_sheet', x: 288, y: 432 },  // Oak Log
-    { sheet: 'items_sheet', x: 304, y: 432 },  // Birch Log
-    { sheet: 'items_sheet', x: 320, y: 432 },  // Maple Log
-    { sheet: 'items_sheet', x: 336, y: 432 },  // Walnut Log
-    { sheet: 'items_sheet', x: 352, y: 432 },  // Mahogany Log
-    { sheet: 'items_sheet', x: 368, y: 432 },  // Yew Log
-    { sheet: 'items_sheet', x: 384, y: 432 }   // Elder Log
-  ];
+  // Wood log drop: items_sheet.png row 27 (items 990-997), keyed by tree name
+  var WOOD_DROP_SPRITES = {
+    'Pine':     { sheet: 'items_sheet', x: 272, y: 432 },
+    'Oak':      { sheet: 'items_sheet', x: 288, y: 432 },
+    'Birch':    { sheet: 'items_sheet', x: 304, y: 432 },
+    'Maple':    { sheet: 'items_sheet', x: 320, y: 432 },
+    'Walnut':   { sheet: 'items_sheet', x: 336, y: 432 },
+    'Mahogany': { sheet: 'items_sheet', x: 352, y: 432 },
+    'Yew':      { sheet: 'items_sheet', x: 368, y: 432 },
+    'Elder':    { sheet: 'items_sheet', x: 384, y: 432 }
+  };
 
   // Skill icons for left panel: one iconic tool per skill from tools-t1
   // Positions confirmed via dungeongear.json labels matching gear-weapons.png
@@ -662,6 +662,15 @@
   var miningDripState = { y: 50, phase: 'falling', splashFrame: 0, pauseTime: 0 };
   var miningEmbers = []; // small particles floating from torches
 
+  // Woodcutting animation overlay state
+  var wcBgDataUrl = null; // cached PNG data URL for forest background
+  var wcAnimFrameId = null;
+  var wcAnimCanvas = null;
+  var wcAnimCtx = null;
+  var wcAnimFrame = 0;
+  var wcAnimLastTs = 0;
+  var wcLeaves = []; // falling leaf particles
+
   // Constants matching static BG coordinates
   var MINING_W = 640, MINING_H = 400;
   var MINING_FLOOR_Y = 310;
@@ -678,6 +687,10 @@
   var MINING_CART_Y = MINING_FLOOR_Y + 12;
   var MINING_CART_W = 90, MINING_CART_H = 42;
   var MINING_RAIL_Y = MINING_CART_Y + MINING_CART_H + 6;
+
+  // Woodcutting BG constants
+  var WC_W = 640, WC_H = 400;
+  var WC_HORIZON_Y = 160, WC_GROUND_Y = 240;
 
   // Deterministic tile hash (same as rpg.js)
   function tileHash(x, y) {
@@ -2481,6 +2494,324 @@
     return c.toDataURL('image/png');
   }
 
+  // ── Forest Clearing Pixel Art Background ──────
+  function generateForestClearingBg() {
+    var W = WC_W, H = WC_H, T = 10;
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var ctx = c.getContext('2d');
+    var cols = Math.ceil(W / T), rows = Math.ceil(H / T);
+    var h, i, j, x, y, grad;
+
+    // ── Pass 1: Sky gradient (top 60% — light blue fading to pale green at horizon) ──
+    grad = ctx.createLinearGradient(0, 0, 0, WC_GROUND_Y);
+    grad.addColorStop(0, '#87ceeb');
+    grad.addColorStop(0.4, '#a8dce8');
+    grad.addColorStop(0.7, '#b8e8c8');
+    grad.addColorStop(1, '#c8eeb8');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, WC_GROUND_Y);
+
+    // ── Pass 2: Distant treeline (jagged dark-green silhouettes at horizon) ──
+    var distTreeCol = ['#1a4a20', '#1e5228', '#16421c', '#224e2a'];
+    for (x = 0; x < W; x += 6) {
+      h = tileHash(x, 100);
+      var treeH = 20 + ((h >>> 0) % 30);
+      var treeW = 8 + ((h >>> 8) % 8);
+      ctx.fillStyle = distTreeCol[((h >>> 16) % distTreeCol.length)];
+      ctx.fillRect(x, WC_HORIZON_Y - treeH, treeW, treeH + 10);
+      // Rounded top: smaller rects stacked upward
+      ctx.fillRect(x + 1, WC_HORIZON_Y - treeH - 4, treeW - 2, 6);
+      ctx.fillRect(x + 2, WC_HORIZON_Y - treeH - 6, treeW - 4, 4);
+    }
+
+    // ── Pass 3: Mid-ground trees (larger, lighter green shapes) ──
+    var midTreeCol = ['#2a6a30', '#307038', '#286428', '#347a3c'];
+    var midTrees = [
+      { x: 20, w: 50, h: 80 }, { x: 100, w: 45, h: 70 },
+      { x: 220, w: 55, h: 85 }, { x: 350, w: 48, h: 75 },
+      { x: 460, w: 52, h: 80 }, { x: 560, w: 46, h: 72 },
+      { x: 160, w: 40, h: 65 }, { x: 500, w: 42, h: 68 }
+    ];
+    for (i = 0; i < midTrees.length; i++) {
+      var mt = midTrees[i];
+      h = tileHash(mt.x + 200, 200);
+      ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
+      var mtTop = WC_HORIZON_Y - mt.h + 20;
+      // Trunk
+      ctx.fillStyle = '#3a2a18';
+      ctx.fillRect(mt.x + Math.floor(mt.w / 2) - 3, mtTop + mt.h - 20, 6, 20);
+      // Canopy layers (triangle-ish)
+      ctx.fillStyle = midTreeCol[((h >>> 0) % midTreeCol.length)];
+      ctx.fillRect(mt.x, mtTop + Math.floor(mt.h * 0.3), mt.w, Math.floor(mt.h * 0.5));
+      ctx.fillRect(mt.x + 4, mtTop + Math.floor(mt.h * 0.1), mt.w - 8, Math.floor(mt.h * 0.4));
+      ctx.fillRect(mt.x + 10, mtTop, mt.w - 20, Math.floor(mt.h * 0.3));
+      // Highlight edge
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(mt.x + 10, mtTop, mt.w - 20, 2);
+    }
+
+    // ── Pass 4: Grass floor base (varied greens from ground_y down) ──
+    var grassPal = ['#3a7a30', '#408038', '#367228', '#448440', '#3c7e34', '#4a8a3e'];
+    for (var ty = Math.floor(WC_GROUND_Y / T); ty < rows; ty++) {
+      for (var tx = 0; tx < cols; tx++) {
+        h = tileHash(tx + 300, ty + 300);
+        ctx.fillStyle = grassPal[((h >>> 0) % grassPal.length)];
+        ctx.fillRect(tx * T, ty * T, T, T);
+      }
+    }
+    // Smooth transition at horizon
+    grad = ctx.createLinearGradient(0, WC_GROUND_Y - 10, 0, WC_GROUND_Y + 10);
+    grad.addColorStop(0, 'rgba(58,122,48,0)');
+    grad.addColorStop(1, 'rgba(58,122,48,0.6)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, WC_GROUND_Y - 10, W, 20);
+
+    // ── Pass 5: Grass detail (tufts + wildflowers) ──
+    var tuftCol = ['#4a9a40', '#56a44c', '#3e8a36', '#60b058'];
+    for (x = 0; x < W; x += 4) {
+      h = tileHash(x + 400, 400);
+      if ((h >>> 0) % 3 !== 0) continue;
+      var tuftY = WC_GROUND_Y + ((h >>> 4) % (H - WC_GROUND_Y - 4));
+      ctx.fillStyle = tuftCol[((h >>> 8) % tuftCol.length)];
+      ctx.fillRect(x, tuftY, 2, 3 + ((h >>> 12) % 3));
+      ctx.fillRect(x + 1, tuftY - 1, 1, 2);
+    }
+    // Wildflowers (1-2px dots, ~3% density)
+    var flowerCol = ['#e8e040', '#e06080', '#f0a0c0', '#80a0f0', '#f0f0f0'];
+    for (x = 0; x < W; x += 6) {
+      for (y = WC_GROUND_Y + 5; y < H - 10; y += 8) {
+        h = tileHash(x + 500, y + 500);
+        if ((h >>> 0) % 30 !== 0) continue;
+        ctx.fillStyle = flowerCol[((h >>> 4) % flowerCol.length)];
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
+
+    // ── Pass 6: Dirt clearing (brown area center) ──
+    var dirtPal = ['#6a5a3a', '#72624a', '#645440', '#7a6a50', '#685838'];
+    var dirtX1 = 180, dirtX2 = 460, dirtY1 = 260, dirtY2 = 380;
+    for (var dy = dirtY1; dy < dirtY2; dy += T) {
+      for (var dx = dirtX1; dx < dirtX2; dx += T) {
+        h = tileHash(dx + 600, dy + 600);
+        // Rough edges: random offset at borders
+        var edgeDist = Math.min(dx - dirtX1, dirtX2 - dx, dy - dirtY1, dirtY2 - dy);
+        if (edgeDist < 20 && (h >>> 0) % 3 === 0) continue; // skip some border tiles
+        ctx.fillStyle = dirtPal[((h >>> 0) % dirtPal.length)];
+        ctx.fillRect(dx, dy, T, T);
+      }
+    }
+    // Dirt-grass transition patches
+    for (x = dirtX1; x < dirtX2; x += 6) {
+      h = tileHash(x + 700, dirtY1);
+      var edgeOff = ((h >>> 0) % 12) - 4;
+      ctx.fillStyle = grassPal[((h >>> 4) % grassPal.length)];
+      ctx.fillRect(x, dirtY1 + edgeOff, 6, 4);
+    }
+
+    // ── Pass 7: Tree stumps (3-4 at clearing edges) ──
+    var stumps = [
+      { x: 200, y: 280 }, { x: 420, y: 290 },
+      { x: 240, y: 360 }, { x: 400, y: 340 }
+    ];
+    for (i = 0; i < stumps.length; i++) {
+      var sp = stumps[i];
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(sp.x - 2, sp.y + 12, 24, 4);
+      // Bark outer
+      ctx.fillStyle = '#4a3218';
+      ctx.fillRect(sp.x, sp.y, 20, 14);
+      ctx.fillStyle = '#5a421e';
+      ctx.fillRect(sp.x + 2, sp.y + 1, 16, 12);
+      // Inner wood
+      ctx.fillStyle = '#c8a870';
+      ctx.fillRect(sp.x + 3, sp.y + 1, 14, 4);
+      // Growth rings
+      ctx.fillStyle = '#b89860';
+      ctx.fillRect(sp.x + 5, sp.y + 2, 10, 2);
+      ctx.fillStyle = '#a88850';
+      ctx.fillRect(sp.x + 7, sp.y + 2, 6, 1);
+      // Center dot
+      ctx.fillStyle = '#987840';
+      ctx.fillRect(sp.x + 9, sp.y + 2, 2, 1);
+    }
+
+    // ── Pass 8: Fallen logs (1-2 horizontal) ──
+    var logs = [
+      { x: 280, y: 320, w: 45, h: 10 },
+      { x: 340, y: 355, w: 38, h: 9 }
+    ];
+    for (i = 0; i < logs.length; i++) {
+      var lg = logs[i];
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(lg.x + 2, lg.y + lg.h, lg.w - 2, 3);
+      // Bark
+      ctx.fillStyle = '#4a3218';
+      ctx.fillRect(lg.x, lg.y, lg.w, lg.h);
+      ctx.fillStyle = '#5a4228';
+      ctx.fillRect(lg.x + 1, lg.y + 1, lg.w - 2, lg.h - 2);
+      // Bark grain lines
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      for (j = 0; j < lg.w; j += 8) {
+        ctx.fillRect(lg.x + j + 3, lg.y + 2, 1, lg.h - 4);
+      }
+      // Light reflection
+      ctx.fillStyle = '#6a5238';
+      ctx.fillRect(lg.x + 2, lg.y + 1, lg.w - 4, 2);
+      // End ring
+      ctx.fillStyle = '#c8a870';
+      ctx.fillRect(lg.x + lg.w - 4, lg.y + 1, 3, lg.h - 2);
+      ctx.fillStyle = '#a88850';
+      ctx.fillRect(lg.x + lg.w - 3, lg.y + 2, 2, lg.h - 4);
+    }
+
+    // ── Pass 9: Forest props (mushrooms, stones, moss) ──
+    // Mushrooms
+    var mushrooms = [
+      { x: 160, y: 310 }, { x: 475, y: 335 }, { x: 300, y: 375 }
+    ];
+    var mushCaps = ['#c03020', '#b82818', '#d04030'];
+    for (i = 0; i < mushrooms.length; i++) {
+      var ms = mushrooms[i];
+      h = tileHash(ms.x + 800, ms.y + 800);
+      // Stem
+      ctx.fillStyle = '#e8e0d0';
+      ctx.fillRect(ms.x + 2, ms.y + 3, 3, 5);
+      // Cap
+      ctx.fillStyle = mushCaps[i % mushCaps.length];
+      ctx.fillRect(ms.x, ms.y, 7, 4);
+      ctx.fillRect(ms.x + 1, ms.y - 1, 5, 2);
+      // Spots
+      ctx.fillStyle = '#f0f0e0';
+      ctx.fillRect(ms.x + 2, ms.y + 1, 1, 1);
+      ctx.fillRect(ms.x + 4, ms.y, 1, 1);
+    }
+    // Scattered stones
+    var stones = [
+      { x: 510, y: 300, w: 8, h: 5 }, { x: 150, y: 350, w: 6, h: 4 },
+      { x: 480, y: 365, w: 7, h: 4 }
+    ];
+    for (i = 0; i < stones.length; i++) {
+      var sn = stones[i];
+      ctx.fillStyle = '#606860';
+      ctx.fillRect(sn.x, sn.y, sn.w, sn.h);
+      ctx.fillStyle = '#707870';
+      ctx.fillRect(sn.x + 1, sn.y, sn.w - 2, sn.h - 1);
+      ctx.fillStyle = '#808880';
+      ctx.fillRect(sn.x + 2, sn.y, sn.w - 4, 1);
+    }
+    // Moss patches at edges
+    var mossPal2 = ['#2a6a28', '#307030', '#388038'];
+    for (i = 0; i < 4; i++) {
+      h = tileHash(i + 900, 900);
+      var mossX = ((h >>> 0) % (W - 40)) + 20;
+      var mossY = WC_GROUND_Y + ((h >>> 8) % 40);
+      ctx.fillStyle = mossPal2[((h >>> 16) % mossPal2.length)];
+      ctx.fillRect(mossX, mossY, 8 + ((h >>> 20) % 6), 3);
+    }
+
+    // ── Pass 10: Axe-in-stump (axe embedded in first stump) ──
+    var axeStump = stumps[0];
+    // Handle
+    ctx.fillStyle = '#6a4a2a';
+    ctx.fillRect(axeStump.x + 12, axeStump.y - 10, 2, 12);
+    ctx.fillStyle = '#7a5a3a';
+    ctx.fillRect(axeStump.x + 12, axeStump.y - 10, 1, 12);
+    // Axe head
+    ctx.fillStyle = '#707880';
+    ctx.fillRect(axeStump.x + 14, axeStump.y - 8, 5, 6);
+    ctx.fillStyle = '#909898';
+    ctx.fillRect(axeStump.x + 14, axeStump.y - 7, 5, 1);
+    // Edge highlight
+    ctx.fillStyle = '#b0b8c0';
+    ctx.fillRect(axeStump.x + 18, axeStump.y - 7, 1, 4);
+
+    // ── Pass 11: Sun dapple (warm bright patches on ground) ──
+    var dapples = [
+      { x: 260, y: 290, r: 30 }, { x: 380, y: 310, r: 25 },
+      { x: 310, y: 350, r: 28 }, { x: 440, y: 340, r: 22 },
+      { x: 220, y: 330, r: 26 }, { x: 350, y: 370, r: 20 }
+    ];
+    for (i = 0; i < dapples.length; i++) {
+      var dp = dapples[i];
+      grad = ctx.createRadialGradient(dp.x, dp.y, 2, dp.x, dp.y, dp.r);
+      grad.addColorStop(0, 'rgba(255,240,180,0.12)');
+      grad.addColorStop(0.5, 'rgba(255,220,140,0.06)');
+      grad.addColorStop(1, 'rgba(255,200,100,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(dp.x - dp.r, dp.y - dp.r, dp.r * 2, dp.r * 2);
+    }
+
+    // ── Pass 12: Canopy frame (dense dark-green overlay on edges) ──
+    // Top canopy (60px)
+    var canopyCol = ['#0a2a0e', '#0e3212', '#0c2e10', '#123816'];
+    for (x = 0; x < W; x += 8) {
+      h = tileHash(x + 1000, 1000);
+      var canH = 40 + ((h >>> 0) % 30);
+      ctx.fillStyle = canopyCol[((h >>> 8) % canopyCol.length)];
+      ctx.fillRect(x, 0, 8, canH);
+      // Leaf detail fringe
+      ctx.fillRect(x, canH, 6, 4 + ((h >>> 12) % 8));
+      if ((h >>> 16) % 3 === 0) {
+        ctx.fillRect(x + 2, canH + 6, 4, 4 + ((h >>> 20) % 6));
+      }
+    }
+    // Left canopy (40px)
+    for (y = 0; y < H; y += 8) {
+      h = tileHash(1100, y + 1100);
+      var canW = 25 + ((h >>> 0) % 20);
+      ctx.fillStyle = canopyCol[((h >>> 8) % canopyCol.length)];
+      ctx.fillRect(0, y, canW, 8);
+      ctx.fillRect(canW, y, 4 + ((h >>> 12) % 8), 6);
+    }
+    // Right canopy (40px)
+    for (y = 0; y < H; y += 8) {
+      h = tileHash(1200, y + 1200);
+      var canWR = 25 + ((h >>> 0) % 20);
+      ctx.fillStyle = canopyCol[((h >>> 8) % canopyCol.length)];
+      ctx.fillRect(W - canWR, y, canWR, 8);
+      ctx.fillRect(W - canWR - 4 - ((h >>> 12) % 8), y, 4 + ((h >>> 12) % 8), 6);
+    }
+
+    // ── Pass 13: Atmospheric haze (green-blue radial for depth) ──
+    var cx = W / 2, cy = WC_GROUND_Y;
+    grad = ctx.createRadialGradient(cx, cy, 60, cx, cy, 280);
+    grad.addColorStop(0, 'rgba(120,180,140,0.08)');
+    grad.addColorStop(1, 'rgba(80,140,100,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── Pass 14: Edge vignette (top heavier = canopy shadow) ──
+    // Top (heavy canopy shadow)
+    grad = ctx.createLinearGradient(0, 0, 0, 60);
+    grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 60);
+    // Bottom
+    grad = ctx.createLinearGradient(0, H - 30, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, H - 30, W, 30);
+    // Left
+    grad = ctx.createLinearGradient(0, 0, 40, 0);
+    grad.addColorStop(0, 'rgba(0,20,0,0.35)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 40, H);
+    // Right
+    grad = ctx.createLinearGradient(W - 40, 0, W, 0);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,20,0,0.35)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(W - 40, 0, 40, H);
+
+    return c.toDataURL('image/png');
+  }
+
   // ══════════════════════════════════════════════
   // ── MINING CAVERN ANIMATION OVERLAY ───────────
   // ══════════════════════════════════════════════
@@ -2726,6 +3057,117 @@
       ctx.fillStyle = '#505058';
       ctx.fillRect(wx + 6, wy + 2, 2, 10);
       ctx.fillRect(wx + 2, wy + 6, 10, 2);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // ── WOODCUTTING FOREST ANIMATION OVERLAY ──────
+  // ══════════════════════════════════════════════
+
+  function startWcAnim() {
+    if (wcAnimFrameId) return;
+    wcAnimFrame = 0;
+    wcAnimLastTs = 0;
+    wcLeaves = [];
+    wcAnimLoop(0);
+  }
+
+  function stopWcAnim() {
+    if (wcAnimFrameId) {
+      cancelAnimationFrame(wcAnimFrameId);
+      wcAnimFrameId = null;
+    }
+    wcAnimCanvas = null;
+    wcAnimCtx = null;
+    wcLeaves = [];
+  }
+
+  function wcAnimLoop(ts) {
+    if (!wcAnimCtx || !wcAnimCanvas) { wcAnimFrameId = null; return; }
+    wcAnimFrameId = requestAnimationFrame(wcAnimLoop);
+    var dt = wcAnimLastTs ? Math.min((ts - wcAnimLastTs) / 1000, 0.1) : 0.016;
+    wcAnimLastTs = ts;
+    wcAnimFrame++;
+
+    wcAnimCtx.clearRect(0, 0, WC_W, WC_H);
+    drawFallingLeaves(wcAnimCtx, wcAnimFrame, dt);
+    drawSunbeams(wcAnimCtx, wcAnimFrame, dt);
+  }
+
+  function drawFallingLeaves(ctx, frame, dt) {
+    var leafColors = ['#c0522e', '#d4a043', '#8b6914', '#a0522d', '#6b8e23', '#c87030', '#b8442e'];
+    var i, lf;
+
+    // Spawn ~2 leaves/sec (every ~30 frames at 60fps)
+    if (frame % 30 === 0 && wcLeaves.length < 20) {
+      wcLeaves.push({
+        x: 40 + Math.random() * (WC_W - 80),
+        y: -4,
+        vx: (Math.random() - 0.5) * 15,
+        vy: 20 + Math.random() * 30,
+        wobblePhase: Math.random() * Math.PI * 2,
+        wobbleAmp: 8 + Math.random() * 12,
+        size: 2 + Math.random() * 2,
+        color: leafColors[Math.floor(Math.random() * leafColors.length)],
+        rotation: Math.random() * Math.PI
+      });
+    }
+
+    // Update & draw leaves
+    for (i = wcLeaves.length - 1; i >= 0; i--) {
+      lf = wcLeaves[i];
+      lf.y += lf.vy * dt;
+      lf.x += lf.vx * dt + Math.sin(lf.wobblePhase + frame * 0.04) * lf.wobbleAmp * dt;
+      lf.rotation += 1.5 * dt;
+
+      // Remove when past bottom
+      if (lf.y > WC_H + 10) { wcLeaves.splice(i, 1); continue; }
+
+      // Draw as diamond shape (2-4px)
+      var s = Math.round(lf.size);
+      var lx = Math.round(lf.x);
+      var ly = Math.round(lf.y);
+      ctx.fillStyle = lf.color;
+      // Diamond: center pixel + 4 neighbors
+      ctx.fillRect(lx, ly - 1, s, 1);
+      ctx.fillRect(lx - 1, ly, s + 2, s);
+      ctx.fillRect(lx, ly + s, s, 1);
+      // Lighter highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(lx, ly, 1, 1);
+    }
+  }
+
+  function drawSunbeams(ctx, frame) {
+    // 3 static beam positions from canopy gaps
+    var beams = [
+      { x: 180, w: 18 },
+      { x: 340, w: 22 },
+      { x: 500, w: 16 }
+    ];
+    var i, bm, alpha, grad;
+
+    for (i = 0; i < beams.length; i++) {
+      bm = beams[i];
+      // Oscillating alpha
+      alpha = 0.04 + Math.sin(frame * 0.03 + i * 2.1) * 0.03;
+
+      // Vertical warm gradient stripe
+      grad = ctx.createLinearGradient(0, 0, 0, WC_H);
+      grad.addColorStop(0, 'rgba(255,240,180,' + (alpha * 1.5) + ')');
+      grad.addColorStop(0.3, 'rgba(255,230,160,' + alpha + ')');
+      grad.addColorStop(0.7, 'rgba(255,220,140,' + (alpha * 0.6) + ')');
+      grad.addColorStop(1, 'rgba(255,210,120,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(bm.x, 0, bm.w, WC_H);
+
+      // Dust motes within beam (1px bright dots)
+      if (frame % 8 === i) {
+        var moteY = 40 + ((tileHash(frame + i * 100, 5555) >>> 0) % (WC_H - 80));
+        var moteX = bm.x + 2 + ((tileHash(frame + i * 200, 6666) >>> 0) % (bm.w - 4));
+        ctx.fillStyle = 'rgba(255,255,220,0.4)';
+        ctx.fillRect(moteX, moteY, 1, 1);
+      }
     }
   }
 
@@ -3579,7 +4021,28 @@
   function renderWoodcutting() {
     var area = $('skills-game-area');
     if (!area) return;
+
+    // Apply forest pixel art background (cached after first generation)
+    if (!wcBgDataUrl) wcBgDataUrl = generateForestClearingBg();
+    area.style.backgroundImage = 'url(' + wcBgDataUrl + ')';
+    area.style.backgroundSize = 'cover';
+    area.style.backgroundPosition = 'center';
+
     area.innerHTML = '';
+
+    // Stop previous animation if re-rendering
+    stopWcAnim();
+
+    // Animation overlay canvas
+    var animCanvas = document.createElement('canvas');
+    animCanvas.width = WC_W;
+    animCanvas.height = WC_H;
+    animCanvas.className = 'wc-anim-overlay';
+    area.appendChild(animCanvas);
+    wcAnimCanvas = animCanvas;
+    wcAnimCtx = animCanvas.getContext('2d');
+    startWcAnim();
+
     var res = getHighestResource('woodcutting');
     var div = document.createElement('div');
     div.className = 'woodcutting-area';
@@ -3633,17 +4096,22 @@
     void tree.offsetWidth;
     tree.classList.add('chopping');
 
-    // A3: Double chop flash
+    // A3: Double chop flash (positioned near tree)
     if (isDoubleChop) {
-      var area = $('skills-game-area');
-      if (area) {
+      var wcArea = $('skills-game-area');
+      if (wcArea && tree) {
         var flash = document.createElement('div');
         flash.className = 'wc-double-chop';
         flash.textContent = 'Double Chop!';
-        flash.style.left = '50%';
-        flash.style.top = '30%';
+        // Position near tree center
+        var treeRect = tree.getBoundingClientRect();
+        var areaRect = wcArea.getBoundingClientRect();
+        var relLeft = treeRect.left - areaRect.left + treeRect.width / 2;
+        var relTop = treeRect.top - areaRect.top - 10;
+        flash.style.left = relLeft + 'px';
+        flash.style.top = relTop + 'px';
         flash.style.transform = 'translateX(-50%)';
-        area.appendChild(flash);
+        wcArea.appendChild(flash);
         setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 600);
       }
     }
@@ -3690,10 +4158,30 @@
 
       var gameArea2 = $('skills-game-area');
       if (gameArea2) {
-        // Phase 3: Wood log sprite particle
-        var woodDrop = WOOD_DROP_SPRITES[Math.floor(Math.random() * WOOD_DROP_SPRITES.length)];
-        spawnSpriteParticle(gameArea2, woodDrop.sheet || 'wood', woodDrop.x, woodDrop.y);
-        spawnParticle(gameArea2, '+' + xpGain + ' XP', 'xp');
+        // Correct log sprite per tree tier (bigger 40x40)
+        var woodDrop = WOOD_DROP_SPRITES[res.name] || WOOD_DROP_SPRITES['Pine'];
+        var woodEl = createSpriteEl(woodDrop.sheet || 'items_sheet', woodDrop.x, woodDrop.y, 16, 16, 40, 40);
+        if (woodEl) {
+          woodEl.className = 'ore-particle sprite-particle';
+          woodEl.style.left = (Math.random() * 20 + 40) + '%';
+          woodEl.style.top = '35%';
+          gameArea2.appendChild(woodEl);
+          setTimeout(function () { if (woodEl.parentNode) woodEl.parentNode.removeChild(woodEl); }, 1200);
+        }
+        // XP text with 200ms delay, positioned below wood sprite
+        var xpGainCopy = xpGain;
+        setTimeout(function () {
+          var ga = $('skills-game-area');
+          if (ga) {
+            var xpEl = document.createElement('div');
+            xpEl.className = 'ore-particle xp';
+            xpEl.textContent = '+' + xpGainCopy + ' XP';
+            xpEl.style.left = (Math.random() * 20 + 40) + '%';
+            xpEl.style.top = '55%';
+            ga.appendChild(xpEl);
+            setTimeout(function () { if (xpEl.parentNode) xpEl.parentNode.removeChild(xpEl); }, 1200);
+          }
+        }, 200);
       }
 
       // Common action hook
@@ -4702,6 +5190,8 @@
     cleanupEvent();
     // Stop mining animation overlay
     stopMiningAnim();
+    // Stop woodcutting animation overlay
+    stopWcAnim();
     if (fishingState.timer) clearTimeout(fishingState.timer);
     if (fishingState.biteTimeout) clearTimeout(fishingState.biteTimeout);
     if (fishingState.castTimer) clearInterval(fishingState.castTimer);
