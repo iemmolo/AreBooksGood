@@ -3049,30 +3049,28 @@
     ctx.fillRect(px - 2, by + bh + 2 + arrowPhase, 4, 2);
     ctx.fillRect(px - 1, by + bh + 4 + arrowPhase, 2, 2);
 
-    // Collect prompt below if stationed pet has uncollected rewards
+    // Small collect badge further below enter prompt
     if (hasUncollectedRewards(playerAtLocation)) {
       var rpgPets = getRpgPetState();
       var station = rpgPets.stations[playerAtLocation];
       if (station && station.petId && petCatalog.creatures[station.petId]) {
         var petName = petCatalog.creatures[station.petId].name;
         var elapsed = Date.now() - (station.lastCollected || station.stationedAt);
-        var collectText = 'Collect from ' + petName + ' \u2014 ' + formatDuration(elapsed);
-        ctx.font = 'bold 10px monospace';
+        var collectText = petName + ' — ' + formatDuration(elapsed);
+        ctx.font = '9px monospace';
         var ctw = ctx.measureText(collectText).width;
-        var cpy = by + bh + 16;
-        var cbw = ctw + 16, cbh = 18;
-        var cbx = px - cbw / 2, cby = cpy - 10;
+        var cpy = by + bh + 32;
+        var cbw = ctw + 14, cbh = 16;
+        var cbx = px - cbw / 2, cby = cpy - 9;
 
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(cbx + 2, cby + 2, cbw, cbh);
-        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(cbx, cby, cbw, cbh);
-        ctx.strokeStyle = '#66aa44';
+        ctx.strokeStyle = 'rgba(100,170,68,0.5)';
         ctx.lineWidth = 1;
         ctx.strokeRect(cbx, cby, cbw, cbh);
 
-        ctx.fillStyle = '#88cc66';
-        ctx.fillText(collectText, px, cpy + 2);
+        ctx.fillStyle = 'rgba(136,204,102,0.8)';
+        ctx.fillText(collectText, px, cpy + 1);
       }
     }
   }
@@ -3087,10 +3085,10 @@
     var cx = (e.clientX - rect.left) * scaleX;
     var cy = (e.clientY - rect.top) * scaleY;
 
-    // Check collect prompt click (below enter prompt)
+    // Check collect prompt click (well below enter prompt)
     if (enterPromptVisible && playerAtLocation && hasUncollectedRewards(playerAtLocation)) {
-      var collectY = playerPos.y - 36 + 22 + 16; // below enter prompt box
-      if (Math.abs(cx - playerPos.x) < 100 && Math.abs(cy - collectY) < 12) {
+      var collectY = playerPos.y - 36 + 22 + 32; // 32px below enter box
+      if (Math.abs(cx - playerPos.x) < 100 && Math.abs(cy - collectY) < 10) {
         collectAtLocation(playerAtLocation);
         return;
       }
