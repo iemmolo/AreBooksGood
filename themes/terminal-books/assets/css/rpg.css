@@ -568,6 +568,11 @@
 .rpg-page .skills-game-panel {
   position: relative;
   padding-bottom: 200px;
+  transition: opacity 0.3s ease;
+}
+
+.rpg-page .skills-game-panel.rpg-fade-out {
+  opacity: 0;
 }
 
 /* ── OSRS Side Panel (floating above chatbox) ── */

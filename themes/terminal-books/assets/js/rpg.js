@@ -617,6 +617,17 @@
     }
   }
 
+  // ── Fade Transition Helper ───────────────────
+  function fadeTransition(callback) {
+    var panel = document.querySelector('.rpg-page .skills-game-panel');
+    if (!panel) { callback(); return; }
+    panel.classList.add('rpg-fade-out');
+    setTimeout(function () {
+      callback();
+      panel.classList.remove('rpg-fade-out');
+    }, 300);
+  }
+
   // ── Center Panel Toggle ───────────────────────
   function showCenterContent(mode) {
     centerMode = mode;
@@ -1038,16 +1049,29 @@
 
     // Check if player was inside a skill location on last session
     var resumeLocId = meta.slots[slot].insideLocation || null;
+    var resumeLoc = null;
     if (resumeLocId && MAP_LOCATIONS[resumeLocId] && MAP_LOCATIONS[resumeLocId].skill) {
-      showCenterContent('map'); // brief map init needed for canvas
-      // (Re-)initialize skills.js first, then enter the location
+      for (var li = 0; li < LOCATIONS.length; li++) {
+        if (LOCATIONS[li].id === resumeLocId) { resumeLoc = LOCATIONS[li]; break; }
+      }
+    }
+
+    if (resumeLoc) {
+      // Go straight into skill view — no map flash, no fade
+      showCenterContent('skill');
       window.dispatchEvent(new Event('rpg-skills-init'));
       setTimeout(function () {
-        onEnterLocation(resumeLocId);
-      }, 100);
+        var skillRow = document.querySelector('.skill-row[data-skill="' + resumeLoc.skill + '"]');
+        if (skillRow) {
+          programmaticSkillClick = true;
+          skillRow.click();
+          programmaticSkillClick = false;
+        }
+        renderLocationPane(resumeLoc.id, resumeLoc.skill);
+        stopMapLoop();
+      }, 50);
     } else {
       showCenterContent('map');
-      // (Re-)initialize skills.js with the new slot's storage key
       window.dispatchEvent(new Event('rpg-skills-init'));
     }
   }
@@ -2906,9 +2930,20 @@
   var currentLocationId = null;
   var currentLocationSkill = null;
 
+  function updateLocationTab(locId) {
+    var tab = document.querySelector('[data-chat-tab="location"]');
+    if (!tab) return;
+    if (locId && MAP_LOCATIONS[locId]) {
+      tab.textContent = MAP_LOCATIONS[locId].name;
+    } else {
+      tab.textContent = 'Location';
+    }
+  }
+
   function renderLocationPane(locId, skill) {
     currentLocationId = locId;
     currentLocationSkill = skill;
+    updateLocationTab(locId);
     var header = $('rpg-loc-header');
     var statsC = $('rpg-loc-stats');
     var perksC = $('rpg-loc-perks');
@@ -2941,6 +2976,7 @@
   function clearLocationPane() {
     currentLocationId = null;
     currentLocationSkill = null;
+    updateLocationTab(null);
     var header = $('rpg-loc-header');
     var statsC = $('rpg-loc-stats');
     var perksC = $('rpg-loc-perks');
@@ -2953,19 +2989,21 @@
 
   // ── Skill Location Entry ──────────────────────
   function enterSkillLocation(loc) {
-    showCenterContent('skill');
+    fadeTransition(function () {
+      showCenterContent('skill');
 
-    // Click the matching skill row to switch skills.js to this skill
-    setTimeout(function () {
-      var skillRow = document.querySelector('.skill-row[data-skill="' + loc.skill + '"]');
-      if (skillRow) {
-        programmaticSkillClick = true;
-        skillRow.click();
-        programmaticSkillClick = false;
-      }
-      // Populate location pane after skill switch
-      renderLocationPane(loc.id, loc.skill);
-    }, 50);
+      // Click the matching skill row to switch skills.js to this skill
+      setTimeout(function () {
+        var skillRow = document.querySelector('.skill-row[data-skill="' + loc.skill + '"]');
+        if (skillRow) {
+          programmaticSkillClick = true;
+          skillRow.click();
+          programmaticSkillClick = false;
+        }
+        // Populate location pane after skill switch
+        renderLocationPane(loc.id, loc.skill);
+      }, 50);
+    });
   }
 
   function returnToMap() {
@@ -2980,13 +3018,15 @@
       saveMeta();
     }
 
-    clearLocationPane();
-    addGameMessage('You return to the world map.', 'return');
-    showCenterContent('map');
-    enterPromptVisible = !!playerAtLocation;
-    startMapLoop();
-    updateTopbar();
-    updateCharInfo();
+    fadeTransition(function () {
+      clearLocationPane();
+      addGameMessage('You return to the world map.', 'return');
+      showCenterContent('map');
+      enterPromptVisible = !!playerAtLocation;
+      startMapLoop();
+      updateTopbar();
+      updateCharInfo();
+    });
   }
 
   // ── Save & Quit ───────────────────────────────

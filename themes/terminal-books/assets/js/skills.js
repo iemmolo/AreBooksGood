@@ -404,7 +404,7 @@
     var el = createSpriteEl(sheetKey, sx, sy, sw, sh, 32, 32);
     if (!el) return;
     el.className = 'ore-particle sprite-particle';
-    el.style.left = (Math.random() * 60 + 20) + '%';
+    el.style.left = (Math.random() * 30 + 35) + '%';
     el.style.top = '45%';
     parentEl.appendChild(el);
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1200);
@@ -1388,7 +1388,7 @@
     var p = document.createElement('div');
     p.className = 'ore-particle ' + cssClass;
     p.textContent = text;
-    p.style.left = (Math.random() * 60 + 20) + '%';
+    p.style.left = (Math.random() * 30 + 35) + '%';
     p.style.top = '45%';
     parentEl.appendChild(p);
     setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 1200);
