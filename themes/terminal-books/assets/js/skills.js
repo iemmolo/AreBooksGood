@@ -1048,6 +1048,11 @@
         }
       }
     }
+
+    // Update ore dropdown on mining level-up (adds newly unlocked ores without resetting game state)
+    if (skill === 'mining' && skill === activeSkill) {
+      updateMiningOreDropdown();
+    }
   }
 
   // ── B1: Level-Up Visual Effect (OSRS Circle) ──
@@ -2116,6 +2121,23 @@
 
     // C1: Render pet
     renderPetInGameArea();
+  }
+
+  function updateMiningOreDropdown() {
+    var sel = $('mining-ore-select');
+    if (!sel) return;
+    var level = state.skills.mining.level;
+    var resources = SKILLS.mining.resources;
+    var currentVal = sel.value;
+    sel.innerHTML = '';
+    for (var si = 0; si < resources.length; si++) {
+      if (resources[si].level > level) continue;
+      var opt = document.createElement('option');
+      opt.value = si;
+      opt.textContent = resources[si].name + ' (Lv ' + resources[si].level + ')';
+      sel.appendChild(opt);
+    }
+    sel.value = currentVal;
   }
 
   var veinMinerTriggered = false;
