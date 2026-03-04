@@ -108,7 +108,8 @@
     'tools-t2': '/images/skills/tools-t2.png',
     'tools-t3': '/images/skills/tools-t3.png',
     stones: '/images/skills/stones.png',
-    items_sheet: '/images/skills/items_sheet.png'
+    items_sheet: '/images/skills/items_sheet.png',
+    forest_extras: '/images/skills/forest-extras.png'
   };
 
   var SKILL_SHEET_META = {
@@ -231,6 +232,34 @@
     'Deco4': { x: 200, y: 52, w: 32, h: 48 },  // cherry
     'Deco5': { x: 248, y: 52, w: 32, h: 48 },  // apple
     'Deco6': { x: 288, y: 67, w: 47, h: 33 }   // bush
+  };
+
+  // Forest extras sprite coords on forest-extras.png (2048×49)
+  var FOREST_EXTRAS = {
+    logs: [
+      { x: 48, y: 33, w: 32, h: 16 },
+      { x: 176, y: 32, w: 32, h: 17 },
+      { x: 256, y: 17, w: 128, h: 32 },
+      { x: 432, y: 31, w: 32, h: 18 }
+    ],
+    stumps: [
+      { x: 544, y: 15, w: 64, h: 34 },
+      { x: 672, y: 16, w: 64, h: 33 },
+      { x: 800, y: 17, w: 64, h: 32 },
+      { x: 944, y: 15, w: 32, h: 34 }
+    ],
+    vines: [
+      { x: 1071, y: 32, w: 33, h: 17 },
+      { x: 1200, y: 32, w: 31, h: 17 },
+      { x: 1328, y: 16, w: 32, h: 33 },
+      { x: 1456, y: 0, w: 32, h: 49 }
+    ],
+    props: [
+      { x: 1584, y: 18, w: 32, h: 31 },
+      { x: 1711, y: 0, w: 33, h: 49 },
+      { x: 1832, y: 17, w: 48, h: 32 },
+      { x: 1967, y: 16, w: 33, h: 33 }
+    ]
   };
 
   // Anvil sprites: map recipe → { x, y } on anvil.png (128×96, 16×16 cells, 8 cols × 6 rows)
@@ -697,6 +726,7 @@
   var wcAnimLastTs = 0;
   var wcLeaves = []; // falling leaf particles
   var wcTreesImg = null; // preloaded trees.png Image for canvas drawImage
+  var wcExtrasImg = null; // preloaded forest-extras.png Image
   var wcFireflies = []; // firefly animation particles
 
   // Constants matching static BG coordinates
@@ -2630,7 +2660,7 @@
   }
 
   // ── Forest Clearing Pixel Art Background ──────
-  function generateForestClearingBg(treesImg) {
+  function generateForestClearingBg(treesImg, extrasImg) {
     var W = WC_W, H = WC_H, T = 10;
     var c = document.createElement('canvas');
     c.width = W; c.height = H;
@@ -2647,68 +2677,71 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, WC_GROUND_Y);
 
-    // ── Pass 2: Distant treeline (3-layer tree silhouettes at horizon) ──
-    // Helper: draw a single tree silhouette using canvas paths
-    // type 0 = conifer (pointed spire), 1 = deciduous (round canopy), 2 = bush (wide & low)
-    function drawTreeSil(cx, baseY, type, tH, col) {
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      var hw;
-      if (type === 0) {
-        // Conifer: wide pointed triangle
-        hw = Math.floor(tH * 0.45);
-        ctx.moveTo(cx, baseY - tH);
-        ctx.lineTo(cx - hw * 0.35, baseY - tH * 0.7);
-        ctx.lineTo(cx - hw * 0.75, baseY - tH * 0.4);
-        ctx.lineTo(cx - hw, baseY);
-        ctx.lineTo(cx + hw, baseY);
-        ctx.lineTo(cx + hw * 0.75, baseY - tH * 0.4);
-        ctx.lineTo(cx + hw * 0.35, baseY - tH * 0.7);
-      } else if (type === 1) {
-        // Deciduous: wide round canopy
-        var r = Math.floor(tH * 0.5);
-        var canopyY = baseY - tH + r;
-        ctx.arc(cx, canopyY, r, Math.PI, 0);
-        ctx.lineTo(cx + 3, baseY);
-        ctx.lineTo(cx - 3, baseY);
-      } else {
-        // Bush: very wide low dome
-        hw = Math.floor(tH * 1.1);
-        ctx.moveTo(cx - hw, baseY);
-        ctx.quadraticCurveTo(cx - hw, baseY - tH * 1.2, cx, baseY - tH);
-        ctx.quadraticCurveTo(cx + hw, baseY - tH * 1.2, cx + hw, baseY);
-      }
-      ctx.closePath();
-      ctx.fill();
+    // ── Pass 2: Distant treeline (sprite silhouettes at horizon) ──
+    // Reusable temp canvas for tinting sprites to solid color silhouettes
+    var silTmp = document.createElement('canvas');
+    var silTmpCtx = silTmp.getContext('2d');
+    function drawSpriteSil(img, sp, dx, dy, scale, tintColor) {
+      silTmp.width = sp.w; silTmp.height = sp.h;
+      silTmpCtx.clearRect(0, 0, sp.w, sp.h);
+      silTmpCtx.globalCompositeOperation = 'source-over';
+      silTmpCtx.drawImage(img, sp.x, sp.y, sp.w, sp.h, 0, 0, sp.w, sp.h);
+      silTmpCtx.globalCompositeOperation = 'source-in';
+      silTmpCtx.fillStyle = tintColor;
+      silTmpCtx.fillRect(0, 0, sp.w, sp.h);
+      var dw = Math.round(sp.w * scale);
+      var dh = Math.round(sp.h * scale);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(silTmp, 0, 0, sp.w, sp.h, Math.floor(dx - dw / 2), Math.floor(dy - dh), dw, dh);
     }
 
-    // Base band: solid dark green strip behind all trees to guarantee no sky peeks through
+    // Solid dark base band behind treeline — guarantees no sky peeks through
     ctx.fillStyle = '#0d3012';
-    ctx.fillRect(0, WC_HORIZON_Y - 8, W, 28);
+    ctx.fillRect(0, WC_HORIZON_Y - 10, W, 30);
 
-    // Layer 1 — Far (darkest, tallest, tight spacing)
-    var farCol = ['#0d3012', '#102a14', '#0a2810', '#0e3414'];
-    for (x = -20; x < W + 20; x += 14 + ((tileHash(x, 101) >>> 0) % 10)) {
-      h = tileHash(x, 102);
-      var farH = 45 + ((h >>> 0) % 30);
-      var farType = ((h >>> 8) % 3 === 0) ? 1 : 0;
-      drawTreeSil(x, WC_HORIZON_Y + 8, farType, farH, farCol[(h >>> 12) % farCol.length]);
-    }
-    // Layer 2 — Mid (medium dark, tight overlap)
-    var midTreeCol = ['#1a4a20', '#1e5228', '#16421c', '#1c4e24'];
-    for (x = -10; x < W + 10; x += 12 + ((tileHash(x, 103) >>> 0) % 9)) {
-      h = tileHash(x + 7, 104);
-      var midH = 28 + ((h >>> 0) % 24);
-      var midType = ((h >>> 8) % 5 < 2) ? 1 : (((h >>> 10) % 3 === 0) ? 2 : 0);
-      drawTreeSil(x, WC_HORIZON_Y + 10, midType, midH, midTreeCol[(h >>> 12) % midTreeCol.length]);
-    }
-    // Layer 3 — Near undergrowth (lighter, dense short bushes and small conifers)
-    var nearCol = ['#224e2a', '#286432', '#1e5228', '#2a5a30'];
-    for (x = -6; x < W + 6; x += 8 + ((tileHash(x, 105) >>> 0) % 6)) {
-      h = tileHash(x + 13, 106);
-      var nearH = 12 + ((h >>> 0) % 14);
-      var nearType = ((h >>> 8) % 3 === 0) ? 0 : 2;
-      drawTreeSil(x, WC_HORIZON_Y + 12, nearType, nearH, nearCol[(h >>> 12) % nearCol.length]);
+    if (treesImg) {
+      // All tree sprites to pick from for variety
+      var tlSprites = [
+        TREE_SPRITES['Pine'], TREE_SPRITES['Oak'], TREE_SPRITES['Birch'],
+        TREE_SPRITES['Maple'], TREE_SPRITES['Walnut'], TREE_SPRITES['Mahogany'],
+        TREE_SPRITES['Yew'], TREE_SPRITES['Elder']
+      ];
+      var tlBushes = [DECO_SPRITES['Deco6'], DECO_SPRITES['Deco4'], DECO_SPRITES['Deco5']];
+
+      // Layer 1 — Far (darkest, tightly packed)
+      var farTint = ['#0a2810', '#0d3012', '#082208', '#0e3414'];
+      for (x = -30; x < W + 30; x += 16 + ((tileHash(x, 101) >>> 0) % 8)) {
+        h = tileHash(x, 102);
+        var sp = tlSprites[(h >>> 0) % tlSprites.length];
+        var sc = 1.1 + ((h >>> 8) % 4) * 0.15;
+        drawSpriteSil(treesImg, sp, x, WC_HORIZON_Y + 8, sc, farTint[(h >>> 16) % farTint.length]);
+      }
+      // Layer 2 — Mid (medium dark, overlapping)
+      var midTint = ['#16421c', '#1a4a20', '#1e5228', '#1c4e24'];
+      for (x = -20; x < W + 20; x += 14 + ((tileHash(x, 103) >>> 0) % 7)) {
+        h = tileHash(x + 7, 104);
+        var sp2 = tlSprites[(h >>> 0) % tlSprites.length];
+        var sc2 = 1.3 + ((h >>> 8) % 4) * 0.15;
+        drawSpriteSil(treesImg, sp2, x, WC_HORIZON_Y + 10, sc2, midTint[(h >>> 16) % midTint.length]);
+      }
+      // Layer 3 — Near undergrowth (bushes + small trees)
+      var nearTint = ['#224e2a', '#286432', '#1e5228', '#2a5a30'];
+      for (x = -10; x < W + 10; x += 12 + ((tileHash(x, 105) >>> 0) % 6)) {
+        h = tileHash(x + 13, 106);
+        var sp3 = tlBushes[(h >>> 0) % tlBushes.length];
+        var sc3 = 1.0 + ((h >>> 8) % 4) * 0.15;
+        drawSpriteSil(treesImg, sp3, x, WC_HORIZON_Y + 14, sc3, nearTint[(h >>> 16) % nearTint.length]);
+      }
+    } else {
+      // Fallback: procedural shapes before sprites load
+      var procCol = ['#0d3012', '#1a4a20', '#16421c', '#224e2a'];
+      for (x = 0; x < W; x += 6) {
+        h = tileHash(x, 100);
+        var treeH = 20 + ((h >>> 0) % 30);
+        var treeW = 8 + ((h >>> 8) % 8);
+        ctx.fillStyle = procCol[((h >>> 16) % procCol.length)];
+        ctx.fillRect(x, WC_HORIZON_Y - treeH, treeW, treeH + 10);
+      }
     }
 
     // ── Pass 3: Mid-ground trees (4 scattered sprites, pushed back visually) ──
@@ -2809,86 +2842,108 @@
       ctx.fillRect(x, dirtY1 + edgeOff, 6, 4);
     }
 
-    // ── Pass 7: Tree stumps (3-4 at clearing edges) ──
-    var stumps = [
-      { x: 200, y: 280 }, { x: 420, y: 290 },
-      { x: 240, y: 360 }, { x: 400, y: 340 }
+    // ── Pass 7: Tree stumps (sprite or fallback) ──
+    var stumpPos = [
+      { x: 200, y: 280, si: 0 }, { x: 420, y: 290, si: 1 },
+      { x: 240, y: 360, si: 2 }, { x: 400, y: 340, si: 3 }
     ];
-    for (i = 0; i < stumps.length; i++) {
-      var sp = stumps[i];
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.fillRect(sp.x - 2, sp.y + 12, 24, 4);
-      // Bark outer
-      ctx.fillStyle = '#4a3218';
-      ctx.fillRect(sp.x, sp.y, 20, 14);
-      ctx.fillStyle = '#5a421e';
-      ctx.fillRect(sp.x + 2, sp.y + 1, 16, 12);
-      // Inner wood
-      ctx.fillStyle = '#c8a870';
-      ctx.fillRect(sp.x + 3, sp.y + 1, 14, 4);
-      // Growth rings
-      ctx.fillStyle = '#b89860';
-      ctx.fillRect(sp.x + 5, sp.y + 2, 10, 2);
-      ctx.fillStyle = '#a88850';
-      ctx.fillRect(sp.x + 7, sp.y + 2, 6, 1);
-      // Center dot
-      ctx.fillStyle = '#987840';
-      ctx.fillRect(sp.x + 9, sp.y + 2, 2, 1);
-    }
-
-    // ── Pass 8: Fallen logs (1-2 horizontal) ──
-    var logs = [
-      { x: 280, y: 320, w: 45, h: 10 },
-      { x: 340, y: 355, w: 38, h: 9 }
-    ];
-    for (i = 0; i < logs.length; i++) {
-      var lg = logs[i];
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
-      ctx.fillRect(lg.x + 2, lg.y + lg.h, lg.w - 2, 3);
-      // Bark
-      ctx.fillStyle = '#4a3218';
-      ctx.fillRect(lg.x, lg.y, lg.w, lg.h);
-      ctx.fillStyle = '#5a4228';
-      ctx.fillRect(lg.x + 1, lg.y + 1, lg.w - 2, lg.h - 2);
-      // Bark grain lines
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
-      for (j = 0; j < lg.w; j += 8) {
-        ctx.fillRect(lg.x + j + 3, lg.y + 2, 1, lg.h - 4);
+    if (extrasImg) {
+      ctx.imageSmoothingEnabled = false;
+      for (i = 0; i < stumpPos.length; i++) {
+        var spos = stumpPos[i];
+        var sSp = FOREST_EXTRAS.stumps[spos.si];
+        var sSc = 1.5;
+        var sDw = Math.round(sSp.w * sSc);
+        var sDh = Math.round(sSp.h * sSc);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(spos.x - 2, spos.y + sDh - 2, sDw + 4, 4);
+        ctx.drawImage(extrasImg, sSp.x, sSp.y, sSp.w, sSp.h, spos.x, spos.y, sDw, sDh);
       }
-      // Light reflection
-      ctx.fillStyle = '#6a5238';
-      ctx.fillRect(lg.x + 2, lg.y + 1, lg.w - 4, 2);
-      // End ring
-      ctx.fillStyle = '#c8a870';
-      ctx.fillRect(lg.x + lg.w - 4, lg.y + 1, 3, lg.h - 2);
-      ctx.fillStyle = '#a88850';
-      ctx.fillRect(lg.x + lg.w - 3, lg.y + 2, 2, lg.h - 4);
+    } else {
+      for (i = 0; i < stumpPos.length; i++) {
+        var fp = stumpPos[i];
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(fp.x - 2, fp.y + 12, 24, 4);
+        ctx.fillStyle = '#4a3218';
+        ctx.fillRect(fp.x, fp.y, 20, 14);
+        ctx.fillStyle = '#c8a870';
+        ctx.fillRect(fp.x + 3, fp.y + 1, 14, 4);
+      }
     }
 
-    // ── Pass 9: Forest props (mushrooms, stones, moss) ──
-    // Mushrooms
-    var mushrooms = [
-      { x: 160, y: 310 }, { x: 475, y: 335 }, { x: 300, y: 375 }
+    // ── Pass 8: Fallen logs (sprite or fallback) ──
+    var logPos = [
+      { x: 270, y: 320, si: 0, sc: 2.0 },
+      { x: 350, y: 355, si: 1, sc: 2.0 },
+      { x: 190, y: 345, si: 3, sc: 1.8 }
     ];
-    var mushCaps = ['#c03020', '#b82818', '#d04030'];
-    for (i = 0; i < mushrooms.length; i++) {
-      var ms = mushrooms[i];
-      h = tileHash(ms.x + 800, ms.y + 800);
-      // Stem
-      ctx.fillStyle = '#e8e0d0';
-      ctx.fillRect(ms.x + 2, ms.y + 3, 3, 5);
-      // Cap
-      ctx.fillStyle = mushCaps[i % mushCaps.length];
-      ctx.fillRect(ms.x, ms.y, 7, 4);
-      ctx.fillRect(ms.x + 1, ms.y - 1, 5, 2);
-      // Spots
-      ctx.fillStyle = '#f0f0e0';
-      ctx.fillRect(ms.x + 2, ms.y + 1, 1, 1);
-      ctx.fillRect(ms.x + 4, ms.y, 1, 1);
+    if (extrasImg) {
+      ctx.imageSmoothingEnabled = false;
+      for (i = 0; i < logPos.length; i++) {
+        var lpos = logPos[i];
+        var lSp = FOREST_EXTRAS.logs[lpos.si];
+        var lDw = Math.round(lSp.w * lpos.sc);
+        var lDh = Math.round(lSp.h * lpos.sc);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(lpos.x + 2, lpos.y + lDh, lDw - 2, 3);
+        ctx.drawImage(extrasImg, lSp.x, lSp.y, lSp.w, lSp.h, lpos.x, lpos.y, lDw, lDh);
+      }
+    } else {
+      var fbLogs = [{ x: 280, y: 320, w: 45, h: 10 }, { x: 340, y: 355, w: 38, h: 9 }];
+      for (i = 0; i < fbLogs.length; i++) {
+        var lg = fbLogs[i];
+        ctx.fillStyle = '#4a3218';
+        ctx.fillRect(lg.x, lg.y, lg.w, lg.h);
+        ctx.fillStyle = '#c8a870';
+        ctx.fillRect(lg.x + lg.w - 4, lg.y + 1, 3, lg.h - 2);
+      }
     }
-    // Scattered stones
+
+    // ── Pass 9: Forest props (sprite or fallback mushrooms, vines, stones, moss) ──
+    if (extrasImg) {
+      ctx.imageSmoothingEnabled = false;
+      // Sprite props scattered around clearing
+      var propPos = [
+        { x: 155, y: 298, si: 0, sc: 1.5 },  // Prop 1 (mushroom)
+        { x: 475, y: 323, si: 3, sc: 1.5 },  // Prop 4 (mushroom 2)
+        { x: 505, y: 285, si: 2, sc: 1.3 },  // Prop 3 (bush)
+        { x: 140, y: 368, si: 0, sc: 1.2 }   // Prop 1 again
+      ];
+      for (i = 0; i < propPos.length; i++) {
+        var pp = propPos[i];
+        var pSp = FOREST_EXTRAS.props[pp.si];
+        var pDw = Math.round(pSp.w * pp.sc);
+        var pDh = Math.round(pSp.h * pp.sc);
+        ctx.drawImage(extrasImg, pSp.x, pSp.y, pSp.w, pSp.h, pp.x, pp.y, pDw, pDh);
+      }
+      // Vines near clearing edges
+      var vinePos = [
+        { x: 170, y: 265, si: 0, sc: 1.5 },
+        { x: 450, y: 270, si: 1, sc: 1.5 },
+        { x: 480, y: 350, si: 0, sc: 1.3 }
+      ];
+      for (i = 0; i < vinePos.length; i++) {
+        var vp = vinePos[i];
+        var vSp = FOREST_EXTRAS.vines[vp.si];
+        var vDw = Math.round(vSp.w * vp.sc);
+        var vDh = Math.round(vSp.h * vp.sc);
+        ctx.drawImage(extrasImg, vSp.x, vSp.y, vSp.w, vSp.h, vp.x, vp.y, vDw, vDh);
+      }
+    } else {
+      // Fallback procedural mushrooms
+      var mushCaps = ['#c03020', '#b82818', '#d04030'];
+      var mushPos = [{ x: 160, y: 310 }, { x: 475, y: 335 }, { x: 300, y: 375 }];
+      for (i = 0; i < mushPos.length; i++) {
+        var ms = mushPos[i];
+        ctx.fillStyle = '#e8e0d0';
+        ctx.fillRect(ms.x + 2, ms.y + 3, 3, 5);
+        ctx.fillStyle = mushCaps[i];
+        ctx.fillRect(ms.x, ms.y, 7, 4);
+      }
+    }
+    // Scattered stones (always procedural — tiny details)
     var stones = [
       { x: 510, y: 300, w: 8, h: 5 }, { x: 150, y: 350, w: 6, h: 4 },
       { x: 480, y: 365, w: 7, h: 4 }
@@ -2897,12 +2952,10 @@
       var sn = stones[i];
       ctx.fillStyle = '#606860';
       ctx.fillRect(sn.x, sn.y, sn.w, sn.h);
-      ctx.fillStyle = '#707870';
-      ctx.fillRect(sn.x + 1, sn.y, sn.w - 2, sn.h - 1);
       ctx.fillStyle = '#808880';
       ctx.fillRect(sn.x + 2, sn.y, sn.w - 4, 1);
     }
-    // Moss patches at edges
+    // Moss patches
     var mossPal2 = ['#2a6a28', '#307030', '#388038'];
     for (i = 0; i < 4; i++) {
       h = tileHash(i + 900, 900);
@@ -2913,7 +2966,7 @@
     }
 
     // ── Pass 10: Axe-in-stump (axe embedded in first stump) ──
-    var axeStump = stumps[0];
+    var axeStump = stumpPos[0];
     // Handle
     ctx.fillStyle = '#6a4a2a';
     ctx.fillRect(axeStump.x + 12, axeStump.y - 10, 2, 12);
@@ -4274,9 +4327,19 @@
         renderWoodcutting();
       };
     }
+    // Lazy-load forest-extras.png for logs/stumps/vines
+    if (!wcExtrasImg) {
+      var eImg = new Image();
+      eImg.src = SKILL_SPRITE_PATHS['forest_extras'];
+      eImg.onload = function () {
+        wcExtrasImg = eImg;
+        wcBgDataUrl = null;
+        renderWoodcutting();
+      };
+    }
 
     // Apply forest pixel art background (cached after first generation)
-    if (!wcBgDataUrl) wcBgDataUrl = generateForestClearingBg(wcTreesImg);
+    if (!wcBgDataUrl) wcBgDataUrl = generateForestClearingBg(wcTreesImg, wcExtrasImg);
     area.style.backgroundImage = 'url(' + wcBgDataUrl + ')';
     area.style.backgroundSize = 'cover';
     area.style.backgroundPosition = 'center';

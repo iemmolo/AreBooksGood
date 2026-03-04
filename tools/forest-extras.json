@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "logs": [
+    {
+      "name": "Log 1",
+      "source": "Tree Trunks/Stumps",
+      "sourcePath": "tree-sources/trunks.png",
+      "crop": {
+        "x": 0,
+        "y": 16,
+        "w": 32,
+        "h": 16
+      }
+    },
+    {
+      "name": "Log 2",
+      "source": "Tree Trunks/Stumps",
+      "sourcePath": "tree-sources/trunks.png",
+      "crop": {
+        "x": 32,
+        "y": 15,
+        "w": 32,
+        "h": 17
+      }
+    },
+    {
+      "name": "Log 3",
+      "source": "Big Old Tree (logs/stumps)",
+      "sourcePath": "tree-sources/bigoldtree.png",
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 32
+      }
+    },
+    {
+      "name": "Log 4",
+      "source": "Tree Trunks/Stumps",
+      "sourcePath": "tree-sources/trunks.png",
+      "crop": {
+        "x": 64,
+        "y": -1,
+        "w": 32,
+        "h": 18
+      }
+    }
+  ],
+  "stumps": [
+    {
+      "name": "Stump 1",
+      "source": "Big Old Tree (logs/stumps)",
+      "sourcePath": "tree-sources/bigoldtree.png",
+      "crop": {
+        "x": 48,
+        "y": 31,
+        "w": 64,
+        "h": 34
+      }
+    },
+    {
+      "name": "Stump 2",
+      "source": "Big Old Tree (logs/stumps)",
+      "sourcePath": "tree-sources/bigoldtree.png",
+      "crop": {
+        "x": 48,
+        "y": 63,
+        "w": 64,
+        "h": 33
+      }
+    },
+    {
+      "name": "Stump 3",
+      "source": "Big Old Tree (logs/stumps)",
+      "sourcePath": "tree-sources/bigoldtree.png",
+      "crop": {
+        "x": 48,
+        "y": 96,
+        "w": 64,
+        "h": 32
+      }
+    },
+    {
+      "name": "Stump 4",
+      "source": "Deep Forest Tree",
+      "sourcePath": "tree-sources/deepforest.png",
+      "crop": {
+        "x": 32,
+        "y": 159,
+        "w": 32,
+        "h": 34
+      }
+    }
+  ],
+  "vines": [
+    {
+      "name": "Vine 1",
+      "source": "Root/Vines",
+      "sourcePath": "tree-sources/root.png",
+      "crop": {
+        "x": 0,
+        "y": 31,
+        "w": 33,
+        "h": 17
+      }
+    },
+    {
+      "name": "Vine 2",
+      "source": "Root/Vines",
+      "sourcePath": "tree-sources/root.png",
+      "crop": {
+        "x": 0,
+        "y": 79,
+        "w": 31,
+        "h": 17
+      }
+    },
+    {
+      "name": "Vine 3",
+      "source": "Root/Vines",
+      "sourcePath": "tree-sources/root.png",
+      "crop": {
+        "x": 32,
+        "y": 111,
+        "w": 32,
+        "h": 33
+      }
+    },
+    {
+      "name": "Vine 4",
+      "source": "Root/Vines",
+      "sourcePath": "tree-sources/root.png",
+      "crop": {
+        "x": 64,
+        "y": 143,
+        "w": 32,
+        "h": 49
+      }
+    }
+  ],
+  "props": [
+    {
+      "name": "Prop 1",
+      "source": "Mushroom Tree",
+      "sourcePath": "tree-sources/mushroom.png",
+      "crop": {
+        "x": 0,
+        "y": 64,
+        "w": 32,
+        "h": 31
+      }
+    },
+    {
+      "name": "Prop 2",
+      "source": "Pine Tree",
+      "sourcePath": "tree-sources/pine.png",
+      "crop": {
+        "x": 159,
+        "y": -1,
+        "w": 33,
+        "h": 49
+      }
+    },
+    {
+      "name": "Prop 3",
+      "source": "Bushes",
+      "sourcePath": "tree-sources/bushes.png",
+      "crop": {
+        "x": 96,
+        "y": 0,
+        "w": 48,
+        "h": 32
+      }
+    },
+    {
+      "name": "Prop 4",
+      "source": "Mushroom Tree",
+      "sourcePath": "tree-sources/mushroom.png",
+      "crop": {
+        "x": 0,
+        "y": 207,
+        "w": 33,
+        "h": 33
+      }
+    }
+  ]
+}
