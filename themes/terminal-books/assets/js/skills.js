@@ -7,7 +7,7 @@
   var MAX_LEVEL = 99;
   var IDLE_CAP_MS = 8 * 60 * 60 * 1000; // 8 hours
   var ACTIVE_AUTO_INTERVAL = 15000; // 15s auto-train when page open
-  var STATE_VERSION = 11;
+  var STATE_VERSION = 12;
   var STACK_CAP = 999;
 
   // ── Mining Perks (level-gated passives) ────────
@@ -385,14 +385,9 @@
     { label: 'Fish', items: ['Anchovy', 'Goldfish', 'Small Shark', 'Koi', 'Perch', 'Clownfish', 'Piranha', 'Flying Fish', 'Barracuda', 'Dolphin Fish', 'Betta', 'Stingray', 'Eye Fish', 'Spook Boy', 'Kingfish', 'Crawfish', 'Giant Crab', 'Anglerfish', 'Hammerhead', 'Shark'] },
     { label: 'Bars', items: ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'] },
     { label: 'Equipment', items: [
-      'Copper Sword', 'Copper Shield', 'Bronze Dagger', 'Bronze Helmet',
-      'Astral Sword', 'Astral Axe', 'Astral Chestplate',
-      'Gold Sword', 'Gold Shield',
-      'Silver Spear', 'Silver Chestplate',
-      'Emerald Staff', 'Emerald Chestplate', 'Emerald Crown',
-      'Amethyst Dagger', 'Amethyst Bow', 'Amethyst Helmet',
-      'Cobalt Sword', 'Cobalt Chestplate', 'Cobalt Spear',
-      'Frost Sword', 'Frost Axe', 'Frost Chestplate'
+      'Copper Sword', 'Bronze Sword', 'Gold Sword', 'Astral Sword',
+      'Silver Sword', 'Emerald Sword', 'Mithril Sword', 'Amethyst Sword',
+      'Cobalt Sword', 'Molten Sword', 'Frost Sword', 'Obsidian Trident'
     ] }
   ];
 
@@ -469,30 +464,19 @@
     'Molten Bar':    { sheet: 'items_sheet', x: 352, y: 240 },
     'Frost Bar':     { sheet: 'items_sheet', x: 464, y: 240 },
     'Obsidian Bar':  { sheet: 'items_sheet', x: 512, y: 240 },
-    // Equipment (Phase 6C forging output)
-    'Copper Sword':        { sheet: 'items_sheet', x: 0, y: 0 },
-    'Copper Shield':       { sheet: 'items_sheet', x: 0, y: 80 },
-    'Bronze Dagger':       { sheet: 'items_sheet', x: 32, y: 0 },
-    'Bronze Helmet':       { sheet: 'items_sheet', x: 128, y: 80 },
+    // Equipment (v12: one sword per tier)
+    'Copper Sword':        { sheet: 'items_sheet', x: 0,   y: 0 },
+    'Bronze Sword':        { sheet: 'items_sheet', x: 96,  y: 0 },
+    'Gold Sword':          { sheet: 'items_sheet', x: 64,  y: 0 },
     'Astral Sword':        { sheet: 'items_sheet', x: 288, y: 0 },
-    'Astral Axe':          { sheet: 'items_sheet', x: 384, y: 0 },
-    'Astral Chestplate':   { sheet: 'items_sheet', x: 0, y: 96 },
-    'Gold Sword':          { sheet: 'items_sheet', x: 64, y: 16 },
-    'Gold Shield':         { sheet: 'items_sheet', x: 256, y: 80 },
-    'Silver Spear':        { sheet: 'items_sheet', x: 352, y: 80 },
-    'Silver Chestplate':   { sheet: 'items_sheet', x: 288, y: 96 },
-    'Emerald Staff':       { sheet: 'items_sheet', x: 0, y: 32 },
-    'Emerald Chestplate':  { sheet: 'items_sheet', x: 416, y: 96 },
-    'Emerald Crown':       { sheet: 'items_sheet', x: 0, y: 128 },
-    'Amethyst Dagger':     { sheet: 'items_sheet', x: 448, y: 0 },
-    'Amethyst Bow':        { sheet: 'items_sheet', x: 0, y: 64 },
-    'Amethyst Helmet':     { sheet: 'items_sheet', x: 416, y: 80 },
-    'Cobalt Sword':        { sheet: 'items_sheet', x: 144, y: 0 },
-    'Cobalt Chestplate':   { sheet: 'items_sheet', x: 80, y: 96 },
-    'Cobalt Spear':        { sheet: 'items_sheet', x: 192, y: 80 },
-    'Frost Sword':         { sheet: 'items_sheet', x: 272, y: 0 },
-    'Frost Axe':           { sheet: 'items_sheet', x: 560, y: 16 },
-    'Frost Chestplate':    { sheet: 'items_sheet', x: 560, y: 96 }
+    'Silver Sword':        { sheet: 'items_sheet', x: 48,  y: 0 },
+    'Emerald Sword':       { sheet: 'items_sheet', x: 208, y: 0 },
+    'Mithril Sword':       { sheet: 'items_sheet', x: 240, y: 0 },
+    'Amethyst Sword':      { sheet: 'items_sheet', x: 160, y: 0 },
+    'Cobalt Sword':        { sheet: 'items_sheet', x: 224, y: 0 },
+    'Molten Sword':        { sheet: 'items_sheet', x: 256, y: 0 },
+    'Frost Sword':         { sheet: 'items_sheet', x: 80,  y: 0 },
+    'Obsidian Trident':    { sheet: 'items_sheet', x: 512, y: 64 }
   };
 
   // ── Gathering → Inventory Name Maps ──────────
@@ -733,40 +717,20 @@
   };
   var SMELTING_ORDER = ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'];
 
-  // ── Forging Recipes (Phase 6C) ─────────────────
+  // ── Forging Recipes (v12: one per tier) ────────
   var FORGING_RECIPES = [
-    // Copper Tier
-    { name: 'Copper Sword',        level: 1,  xp: 15,   inputs: [{ item: 'Copper Bar', qty: 3 }],                                  sprite: { x: 0, y: 0 } },
-    { name: 'Copper Shield',       level: 1,  xp: 12,   inputs: [{ item: 'Copper Bar', qty: 2 }],                                  sprite: { x: 0, y: 80 } },
-    // Bronze Tier
-    { name: 'Bronze Dagger',       level: 8,  xp: 22,   inputs: [{ item: 'Bronze Bar', qty: 2 }],                                  sprite: { x: 32, y: 0 } },
-    { name: 'Bronze Helmet',       level: 8,  xp: 25,   inputs: [{ item: 'Bronze Bar', qty: 3 }],                                  sprite: { x: 128, y: 80 } },
-    // Astral Tier
-    { name: 'Astral Sword',        level: 28, xp: 40,  inputs: [{ item: 'Astral Bar', qty: 3 }],                                  sprite: { x: 288, y: 0 } },
-    { name: 'Astral Axe',          level: 28, xp: 45,  inputs: [{ item: 'Astral Bar', qty: 4 }],                                  sprite: { x: 384, y: 0 } },
-    { name: 'Astral Chestplate',   level: 30, xp: 55,  inputs: [{ item: 'Astral Bar', qty: 5 }],                                  sprite: { x: 0, y: 96 } },
-    // Gold Tier
-    { name: 'Gold Sword',          level: 28, xp: 70,  inputs: [{ item: 'Gold Bar', qty: 3 }, { item: 'Topaz', qty: 1 }],         sprite: { x: 64, y: 16 } },
-    { name: 'Gold Shield',         level: 28, xp: 65,  inputs: [{ item: 'Gold Bar', qty: 3 }],                                    sprite: { x: 256, y: 80 } },
-    // Silver Tier
-    { name: 'Silver Spear',        level: 38, xp: 110,  inputs: [{ item: 'Silver Bar', qty: 4 }, { item: 'Sapphire', qty: 1 }],    sprite: { x: 352, y: 80 } },
-    { name: 'Silver Chestplate',   level: 38, xp: 120,  inputs: [{ item: 'Silver Bar', qty: 5 }],                                  sprite: { x: 288, y: 96 } },
-    // Emerald Tier
-    { name: 'Emerald Staff',       level: 48, xp: 170,  inputs: [{ item: 'Emerald Bar', qty: 4 }, { item: 'Emerald', qty: 1 }],    sprite: { x: 0, y: 32 } },
-    { name: 'Emerald Chestplate',  level: 50, xp: 180,  inputs: [{ item: 'Emerald Bar', qty: 5 }],                                 sprite: { x: 416, y: 96 } },
-    { name: 'Emerald Crown',       level: 50, xp: 160,  inputs: [{ item: 'Emerald Bar', qty: 3 }, { item: 'Moonstone', qty: 1 }],  sprite: { x: 0, y: 128 } },
-    // Amethyst Tier
-    { name: 'Amethyst Dagger',     level: 62, xp: 260,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Ruby', qty: 1 }],      sprite: { x: 448, y: 0 } },
-    { name: 'Amethyst Bow',        level: 62, xp: 270,  inputs: [{ item: 'Amethyst Bar', qty: 5 }],                                sprite: { x: 0, y: 64 } },
-    { name: 'Amethyst Helmet',     level: 65, xp: 250,  inputs: [{ item: 'Amethyst Bar', qty: 4 }, { item: 'Onyx', qty: 1 }],      sprite: { x: 416, y: 80 } },
-    // Cobalt Tier
-    { name: 'Cobalt Sword',        level: 78, xp: 430, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Aquamarine', qty: 1 }],  sprite: { x: 144, y: 0 } },
-    { name: 'Cobalt Chestplate',   level: 78, xp: 450, inputs: [{ item: 'Cobalt Bar', qty: 6 }],                                  sprite: { x: 80, y: 96 } },
-    { name: 'Cobalt Spear',        level: 80, xp: 460, inputs: [{ item: 'Cobalt Bar', qty: 5 }, { item: 'Diamond', qty: 1 }],     sprite: { x: 192, y: 80 } },
-    // Frost Tier
-    { name: 'Frost Sword',         level: 88, xp: 700, inputs: [{ item: 'Frost Bar', qty: 5 }, { item: 'Diamond', qty: 2 }],      sprite: { x: 272, y: 0 } },
-    { name: 'Frost Axe',           level: 88, xp: 720, inputs: [{ item: 'Frost Bar', qty: 6 }, { item: 'Opal', qty: 1 }],         sprite: { x: 560, y: 16 } },
-    { name: 'Frost Chestplate',    level: 90, xp: 800, inputs: [{ item: 'Frost Bar', qty: 7 }, { item: 'Ruby', qty: 2 }],         sprite: { x: 560, y: 96 } }
+    { name: 'Copper Sword',     level: 1,  xp: 15,  inputs: [{ item: 'Copper Bar',   qty: 3 }], sprite: { x: 0,   y: 0 } },
+    { name: 'Bronze Sword',     level: 8,  xp: 25,  inputs: [{ item: 'Bronze Bar',   qty: 3 }], sprite: { x: 96,  y: 0 } },
+    { name: 'Gold Sword',       level: 18, xp: 50,  inputs: [{ item: 'Gold Bar',     qty: 3 }], sprite: { x: 64,  y: 0 } },
+    { name: 'Astral Sword',     level: 25, xp: 80,  inputs: [{ item: 'Astral Bar',   qty: 3 }], sprite: { x: 288, y: 0 } },
+    { name: 'Silver Sword',     level: 32, xp: 120, inputs: [{ item: 'Silver Bar',   qty: 4 }], sprite: { x: 48,  y: 0 } },
+    { name: 'Emerald Sword',    level: 42, xp: 180, inputs: [{ item: 'Emerald Bar',  qty: 4 }], sprite: { x: 208, y: 0 } },
+    { name: 'Mithril Sword',    level: 52, xp: 260, inputs: [{ item: 'Mithril Bar',  qty: 4 }], sprite: { x: 240, y: 0 } },
+    { name: 'Amethyst Sword',   level: 62, xp: 360, inputs: [{ item: 'Amethyst Bar', qty: 5 }], sprite: { x: 160, y: 0 } },
+    { name: 'Cobalt Sword',     level: 72, xp: 480, inputs: [{ item: 'Cobalt Bar',   qty: 5 }], sprite: { x: 224, y: 0 } },
+    { name: 'Molten Sword',     level: 80, xp: 620, inputs: [{ item: 'Molten Bar',   qty: 5 }], sprite: { x: 256, y: 0 } },
+    { name: 'Frost Sword',      level: 88, xp: 780, inputs: [{ item: 'Frost Bar',    qty: 6 }], sprite: { x: 80,  y: 0 } },
+    { name: 'Obsidian Trident', level: 94, xp: 950, inputs: [{ item: 'Obsidian Bar', qty: 6 }], sprite: { x: 512, y: 64 } }
   ];
 
   // ── State ─────────────────────────────────────
@@ -1093,6 +1057,13 @@
                     inferno: (slog.events && slog.events.inferno) || 0
                   }
                 };
+              }
+              // v12: forging overhaul — one sword per tier, remove old equipment from inventory
+              if (!saved.version || saved.version < 12) {
+                var v12Old = ['Copper Shield','Bronze Dagger','Bronze Helmet','Astral Axe','Astral Chestplate','Gold Shield','Silver Spear','Silver Chestplate','Emerald Staff','Emerald Chestplate','Emerald Crown','Amethyst Dagger','Amethyst Bow','Amethyst Helmet','Cobalt Chestplate','Cobalt Spear','Frost Axe','Frost Chestplate'];
+                for (var v12i = 0; v12i < v12Old.length; v12i++) {
+                  if (s.inventory[v12Old[v12i]]) delete s.inventory[v12Old[v12i]];
+                }
               }
               // v10: fish expansion (12→20), remove old fish from inventory
               if (key === 'fishing' && (!saved.version || saved.version < 10)) {
@@ -6640,12 +6611,17 @@
       renderForgingGame(area);
     }
 
-    // Combo counter
+    // Combo counter — positioned absolutely inside furnace/anvil container
     var comboEl = document.createElement('div');
     comboEl.className = 'smithing-combo';
     comboEl.id = 'smithing-combo';
     comboEl.style.display = 'none';
-    area.appendChild(comboEl);
+    var furnaceOrAnvil = $('smelt-furnace') || $('forge-anvil');
+    if (furnaceOrAnvil) {
+      furnaceOrAnvil.appendChild(comboEl);
+    } else {
+      area.appendChild(comboEl);
+    }
 
     // C1: Render pet
     renderPetInGameArea();

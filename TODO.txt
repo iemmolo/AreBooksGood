@@ -255,10 +255,13 @@ AreBooksGood - Improvement TODO
 
 ### Phase 6C: Smithing → Smelting + Forging (Done)
 - [x] Smelting: temperature gauge mini-game, 9 bar recipes, consumes ores → bars
-- [x] Forging: 5-hit timing bar, 23 equipment recipes, consumes bars/gems → equipment
+- [x] Forging: 5-hit timing bar, 12 equipment recipes (one per tier), consumes bars → equipment
 - [x] Tab toggle UI, material requirements display, idle smelting
-- [x] Equipment category in inventory (23 items across 9 tiers)
+- [x] Equipment category in inventory (12 items across 12 tiers: Copper→Obsidian)
 - [x] Bug fixes: atomic consume, stack cap guards, stuck state recovery, zone sync, click guards
+- [x] Forge-themed UI: warm color palette, smoky glass panels, metal tabs, bellows button, fire glow accents
+- [x] v12 migration: replaced 23-item multi-type system with 12-item one-per-tier swords + Obsidian Trident
+- [x] Interactive sprite catalog tool (tools/smithing-catalog.html) for assigning equipment sprites to tiers
 
 ### Phase 6D.5: Mining & Smithing Rebalance (Done)
 - [x] 16 mining ores, 12 smelting bars, alloy recipes, sprite fixes, Iron→Astral rename, v7 migration

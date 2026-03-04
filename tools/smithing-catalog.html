@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smithing Sprite Catalog</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #1a1410;
+  color: #d4c4a0;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  padding: 20px;
+  min-height: 100vh;
+}
+h1 { color: #ffa040; font-size: 22px; border-bottom: 2px solid #ffa040; padding-bottom: 8px; margin-bottom: 16px; }
+h2 { color: #ff8030; font-size: 17px; margin: 28px 0 10px; border-bottom: 1px solid #553320; padding-bottom: 6px; }
+h3 { color: #cdb98a; font-size: 14px; margin: 18px 0 8px; }
+p { margin: 6px 0; line-height: 1.5; }
+.note { color: #887; font-size: 11px; font-style: italic; margin-bottom: 12px; }
+
+/* Toolbar */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; align-items: center; }
+.toolbar button {
+  background: linear-gradient(to bottom, #5a3a20, #3a2210);
+  border: 1px solid #8b5e3c; color: #d4a050; padding: 6px 14px;
+  font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 3px;
+}
+.toolbar button:hover { background: linear-gradient(to bottom, #6a4a28, #4a3018); color: #ffa040; }
+.toolbar .count { color: #887; font-size: 11px; }
+
+/* Bar cards */
+.bar-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.bar-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: #221a12; border: 1px solid #443322;
+  border-radius: 6px; min-width: 260px; flex: 1; max-width: 340px;
+}
+.bar-card .spr { flex-shrink: 0; }
+.bar-name { font-weight: bold; color: #ffa040; font-size: 13px; }
+.bar-level { font-size: 11px; color: #998; }
+.bar-recipe { font-size: 10px; color: #776; margin-top: 2px; }
+.bar-color { width: 12px; height: 12px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 4px; border: 1px solid #555; }
+
+/* Tier sections */
+.tier-section { margin: 12px 0; padding: 10px 14px; background: #1e1810; border-left: 3px solid #ffa040; min-height: 50px; }
+.tier-section h4 { color: #ffa040; margin-bottom: 6px; font-size: 13px; }
+.tier-section .empty { color: #664; font-style: italic; font-size: 11px; }
+.tier-items { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Sprite grid */
+.sprite-grid { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+.sprite-item {
+  width: 88px; text-align: center; padding: 4px 2px;
+  border: 2px solid #332a20; border-radius: 4px; background: #1e1810;
+  cursor: pointer; position: relative; transition: all 0.15s;
+}
+.sprite-item:hover { border-color: #ffa040; background: #2a2015; transform: scale(1.05); z-index: 10; }
+.sprite-item.assigned { background: #1a2218; }
+.sprite-item.selected { border-color: #ffa040; box-shadow: 0 0 10px rgba(255,160,64,0.4); background: #2a2015; }
+.spr {
+  display: inline-block;
+  background-image: url(../static/images/skills/items_sheet.png);
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.spr-4x { width: 64px; height: 64px; background-size: 2304px 2240px; }
+.spr-3x { width: 48px; height: 48px; background-size: 1728px 1680px; }
+.spr-2x { width: 32px; height: 32px; background-size: 1152px 1120px; }
+.item-name { font-size: 9px; color: #aa9; line-height: 1.2; word-break: break-word; display: block; margin-top: 2px; }
+.item-pos { font-size: 8px; color: #554; display: block; }
+.item-num { font-size: 8px; color: #664; display: block; }
+.tier-badge {
+  display: inline-block; font-size: 7px; padding: 1px 4px; border-radius: 2px;
+  color: #fff; font-weight: bold; margin-top: 2px;
+}
+
+/* Edit panel (fixed sidebar) */
+#edit-panel {
+  position: fixed; top: 0; right: -380px; width: 360px; height: 100vh;
+  background: #221a12; border-left: 2px solid #8b5e3c; z-index: 300;
+  padding: 16px; overflow-y: auto; transition: right 0.25s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+}
+#edit-panel.open { right: 0; }
+#edit-panel h3 { color: #ffa040; margin-bottom: 12px; font-size: 16px; }
+#edit-panel .preview { text-align: center; margin: 12px 0; }
+#edit-panel .spr-8x {
+  width: 128px; height: 128px; background-size: 4608px 4480px; display: inline-block;
+  background-image: url(../static/images/skills/items_sheet.png); background-repeat: no-repeat;
+  image-rendering: pixelated; image-rendering: crisp-edges;
+}
+#edit-panel label { display: block; color: #a08060; font-size: 11px; margin: 10px 0 4px; }
+#edit-panel input[type="text"] {
+  width: 100%; padding: 6px 8px; background: #1a1410; border: 1px solid #5a3a20;
+  color: #d4c4a0; font-family: inherit; font-size: 13px; border-radius: 3px;
+}
+#edit-panel input[type="text"]:focus { border-color: #ffa040; outline: none; }
+#edit-panel select {
+  width: 100%; padding: 6px 8px; background: #1a1410; border: 1px solid #5a3a20;
+  color: #d4a050; font-family: inherit; font-size: 13px; border-radius: 3px;
+}
+#edit-panel select:focus { border-color: #ffa040; outline: none; }
+.edit-actions { display: flex; gap: 8px; margin-top: 16px; }
+.edit-actions button {
+  flex: 1; padding: 8px; font-family: inherit; font-size: 12px; cursor: pointer;
+  border-radius: 3px; border: 1px solid;
+}
+.btn-save { background: #2a4a20; border-color: #4a4; color: #6d6; }
+.btn-save:hover { background: #3a5a2a; }
+.btn-unassign { background: #4a2020; border-color: #944; color: #c66; }
+.btn-unassign:hover { background: #5a2a2a; }
+.btn-close { background: #332a1a; border-color: #5a3a20; color: #a08060; }
+.btn-close:hover { background: #443322; }
+.edit-pos { color: #665; font-size: 10px; margin-top: 8px; text-align: center; }
+.edit-auto { color: #665; font-size: 10px; margin-top: 2px; }
+
+/* Nav */
+.nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.nav a { color: #ffa040; text-decoration: none; padding: 4px 10px; border: 1px solid #553320; border-radius: 3px; font-size: 12px; }
+.nav a:hover { background: #332a1a; }
+
+/* Export modal */
+#export-modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7); z-index: 400; justify-content: center; align-items: center;
+}
+#export-modal.open { display: flex; }
+#export-modal .modal-body {
+  background: #221a12; border: 2px solid #8b5e3c; border-radius: 8px;
+  padding: 20px; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto;
+}
+#export-modal h3 { color: #ffa040; margin-bottom: 10px; }
+#export-modal textarea {
+  width: 100%; height: 400px; background: #1a1410; border: 1px solid #5a3a20;
+  color: #d4c4a0; font-family: 'Courier New', monospace; font-size: 11px;
+  padding: 10px; resize: vertical; border-radius: 3px;
+}
+#export-modal button { margin-top: 10px; }
+
+/* Overlay to close panel on outside click */
+#overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 250; }
+#overlay.open { display: block; }
+</style>
+</head>
+<body>
+
+<h1>Smithing Sprite Catalog</h1>
+<p>Click any sprite to assign it to a bar tier and rename it. Changes save to localStorage.</p>
+
+<div class="toolbar">
+  <button onclick="exportCode()">Export Code</button>
+  <button onclick="exportJSON()">Export JSON</button>
+  <button onclick="importJSON()">Import JSON</button>
+  <button onclick="resetAll()">Reset to Defaults</button>
+  <span class="count" id="assign-count"></span>
+</div>
+
+<div class="nav">
+  <a href="#bars">Bars (12)</a>
+  <a href="#current">Assigned by Tier</a>
+  <a href="#swords">Swords/Daggers/Axes</a>
+  <a href="#staves">Staves/Wands</a>
+  <a href="#bows">Bows/Ranged</a>
+  <a href="#shields">Shields/Spears/Helmets</a>
+  <a href="#chest">Chest Armor</a>
+  <a href="#legs">Legs/Boots/Gloves</a>
+  <a href="#crowns">Crowns/Headgear</a>
+</div>
+
+<div id="overlay" onclick="closePanel()"></div>
+<div id="edit-panel">
+  <h3>Edit Sprite</h3>
+  <div class="preview"><div class="spr-8x" id="edit-spr"></div></div>
+  <div class="edit-pos" id="edit-pos"></div>
+  <div class="edit-auto" id="edit-auto"></div>
+  <label>Name</label>
+  <input type="text" id="edit-name" placeholder="Item name...">
+  <label>Bar Tier</label>
+  <select id="edit-tier">
+    <option value="">(Unassigned)</option>
+  </select>
+  <div class="edit-actions">
+    <button class="btn-save" onclick="saveEdit()">Save</button>
+    <button class="btn-unassign" onclick="unassignEdit()">Unassign</button>
+    <button class="btn-close" onclick="closePanel()">Cancel</button>
+  </div>
+</div>
+
+<div id="export-modal">
+  <div class="modal-body">
+    <h3 id="export-title">Export</h3>
+    <textarea id="export-text" readonly></textarea>
+    <button class="btn-save" onclick="copyExport()" style="border:1px solid #4a4; padding:8px 16px; cursor:pointer; background:#2a4a20; color:#6d6; font-family:inherit; border-radius:3px;">Copy to Clipboard</button>
+    <button class="btn-close" onclick="closeExport()" style="border:1px solid #5a3a20; padding:8px 16px; cursor:pointer; background:#332a1a; color:#a08060; font-family:inherit; border-radius:3px; margin-left:8px;">Close</button>
+  </div>
+</div>
+
+<div id="app"></div>
+
+<script>
+const CELL = 16, SCALE4 = 4, SCALE3 = 3, SCALE2 = 2, COLS = 36;
+const STORAGE_KEY = 'smithing-catalog-assignments';
+
+// ── 12 Bars ──
+const BARS = [
+  { name: 'Copper Bar',   tier: 'Copper',   level: 1,  x: 384, y: 240, recipe: '2x Copper Ore',              color: '#b87333' },
+  { name: 'Bronze Bar',   tier: 'Bronze',   level: 8,  x: 368, y: 240, recipe: '1x Copper + 2x Crimson Ore', color: '#cd7f32' },
+  { name: 'Gold Bar',     tier: 'Gold',     level: 18, x: 416, y: 240, recipe: '3x Gold Ore',                 color: '#ffd700' },
+  { name: 'Astral Bar',   tier: 'Astral',   level: 25, x: 336, y: 240, recipe: '2x Astral + 1x Iron Ore',    color: '#7b68ee' },
+  { name: 'Silver Bar',   tier: 'Silver',   level: 32, x: 400, y: 240, recipe: '3x Silver + 1x Coal',        color: '#c0c0c0' },
+  { name: 'Emerald Bar',  tier: 'Emerald',  level: 42, x: 448, y: 240, recipe: '4x Emerald + 2x Coal',       color: '#50c878' },
+  { name: 'Mithril Bar',  tier: 'Mithril',  level: 52, x: 432, y: 240, recipe: '3x Mithril + 2x Shadow Ore', color: '#2a9d8f' },
+  { name: 'Amethyst Bar', tier: 'Amethyst', level: 62, x: 496, y: 240, recipe: '4x Amethyst + 2x Coal',      color: '#9966cc' },
+  { name: 'Cobalt Bar',   tier: 'Cobalt',   level: 72, x: 480, y: 240, recipe: '5x Cobalt + 2x Slate Ore',   color: '#0047ab' },
+  { name: 'Molten Bar',   tier: 'Molten',   level: 80, x: 352, y: 240, recipe: '4x Molten + 3x Coal',        color: '#ff4500' },
+  { name: 'Frost Bar',    tier: 'Frost',    level: 88, x: 464, y: 240, recipe: '5x Frost + 3x Coal',         color: '#87ceeb' },
+  { name: 'Obsidian Bar', tier: 'Obsidian', level: 94, x: 512, y: 240, recipe: '5x Obsidian + 5x Coal',      color: '#333340' },
+];
+
+const TIER_COLORS = {};
+BARS.forEach(b => { TIER_COLORS[b.tier] = b.color; });
+
+// ── Default assignments (from current FORGING_RECIPES) ──
+const DEFAULTS = {
+  '0,0':    { name: 'Copper Sword',        tier: 'Copper' },
+  '0,80':   { name: 'Copper Shield',       tier: 'Copper' },
+  '32,0':   { name: 'Bronze Dagger',       tier: 'Bronze' },
+  '128,80': { name: 'Bronze Helmet',       tier: 'Bronze' },
+  '288,0':  { name: 'Astral Sword',        tier: 'Astral' },
+  '384,0':  { name: 'Astral Axe',          tier: 'Astral' },
+  '0,96':   { name: 'Astral Chestplate',   tier: 'Astral' },
+  '64,16':  { name: 'Gold Sword',          tier: 'Gold' },
+  '256,80': { name: 'Gold Shield',         tier: 'Gold' },
+  '352,80': { name: 'Silver Spear',        tier: 'Silver' },
+  '288,96': { name: 'Silver Chestplate',   tier: 'Silver' },
+  '0,32':   { name: 'Emerald Staff',       tier: 'Emerald' },
+  '416,96': { name: 'Emerald Chestplate',  tier: 'Emerald' },
+  '0,128':  { name: 'Emerald Crown',       tier: 'Emerald' },
+  '448,0':  { name: 'Amethyst Dagger',     tier: 'Amethyst' },
+  '0,64':   { name: 'Amethyst Bow',        tier: 'Amethyst' },
+  '416,80': { name: 'Amethyst Helmet',     tier: 'Amethyst' },
+  '144,0':  { name: 'Cobalt Sword',        tier: 'Cobalt' },
+  '80,96':  { name: 'Cobalt Chestplate',   tier: 'Cobalt' },
+  '192,80': { name: 'Cobalt Spear',        tier: 'Cobalt' },
+  '272,0':  { name: 'Frost Sword',         tier: 'Frost' },
+  '560,16': { name: 'Frost Axe',           tier: 'Frost' },
+  '560,96': { name: 'Frost Chestplate',    tier: 'Frost' },
+};
+
+// ── State: assignments map  key="x,y" → { name, tier } ──
+let assignments = {};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { assignments = JSON.parse(raw); return; }
+  } catch(e) {}
+  assignments = JSON.parse(JSON.stringify(DEFAULTS));
+  saveState();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments));
+}
+
+// ── Auto-naming ──
+const MAT = [
+  'Copper','Crimson','Bronze','Iron','Gold','Shadow',
+  'Sapphire','Emerald','Elm','Cobalt','Silver','Amethyst',
+  'Ruby','Molten','Amber','Topaz','Jade','Frost',
+  'Astral','Flame','Obsidian','Mithril','Rose','Crystal',
+  'Opal','Bone','Ancient','Storm','Lunar','Solar',
+  'Void','Runic','Spectral','Feral','Mystic','Celestial'
+];
+
+const EQUIP_ROWS = [
+  { id:'swords', title:'Swords, Daggers & Axes (Row 0-1)', typeMap:[
+    {row:0, ranges:[{s:0,e:23,t:'Sword'},{s:24,e:27,t:'Axe'},{s:28,e:35,t:'Dagger'}]},
+    {row:1, ranges:[{s:0,e:23,t:'Greatsword'},{s:24,e:35,t:'Battleaxe'}]}
+  ]},
+  { id:'staves', title:'Staves & Wands (Row 2-3)', typeMap:[
+    {row:2, ranges:[{s:0,e:35,t:'Staff'}]},
+    {row:3, ranges:[{s:0,e:35,t:'Wand'}]}
+  ]},
+  { id:'bows', title:'Bows & Ranged (Row 4)', typeMap:[
+    {row:4, ranges:[{s:0,e:23,t:'Bow'},{s:24,e:35,t:'Crossbow'}]}
+  ]},
+  { id:'shields', title:'Shields, Spears & Helmets (Row 5)', typeMap:[
+    {row:5, ranges:[{s:0,e:11,t:'Shield'},{s:12,e:23,t:'Spear'},{s:24,e:35,t:'Helmet'}]}
+  ]},
+  { id:'chest', title:'Chest Armor (Row 6)', typeMap:[
+    {row:6, ranges:[{s:0,e:35,t:'Chestplate'}]}
+  ]},
+  { id:'legs', title:'Legs, Boots & Gloves (Row 7)', typeMap:[
+    {row:7, ranges:[{s:0,e:11,t:'Leggings'},{s:12,e:23,t:'Boots'},{s:24,e:35,t:'Gauntlets'}]}
+  ]},
+  { id:'crowns', title:'Crowns & Headgear (Row 8)', typeMap:[
+    {row:8, ranges:[{s:0,e:17,t:'Crown'},{s:18,e:35,t:'Hat'}]}
+  ]}
+];
+
+function getAutoName(col, row, typeMap) {
+  const mat = MAT[col] || 'Item';
+  let type = 'Item';
+  for (const rm of typeMap) {
+    if (rm.row === row) {
+      for (const r of rm.ranges) {
+        if (col >= r.s && col <= r.e) { type = r.t; break; }
+      }
+      break;
+    }
+  }
+  return mat + ' ' + type;
+}
+
+function getDisplayName(x, y, autoName) {
+  const key = x + ',' + y;
+  if (assignments[key]) return assignments[key].name;
+  return autoName;
+}
+
+function getTier(x, y) {
+  const key = x + ',' + y;
+  return assignments[key] ? assignments[key].tier : '';
+}
+
+function sprStyle(x, y, scale) {
+  return 'background-position:-' + (x*scale) + 'px -' + (y*scale) + 'px;';
+}
+
+// ── Edit panel state ──
+let editKey = null; // "x,y"
+let editAutoName = '';
+
+function openEdit(x, y, autoName) {
+  editKey = x + ',' + y;
+  editAutoName = autoName;
+  const a = assignments[editKey];
+
+  document.getElementById('edit-spr').style.backgroundPosition = '-'+(x*8)+'px -'+(y*8)+'px';
+  document.getElementById('edit-pos').textContent = 'x: '+x+', y: '+y+' (col '+(x/16)+', row '+(y/16)+')';
+  document.getElementById('edit-auto').textContent = 'Auto-name: ' + autoName;
+  document.getElementById('edit-name').value = a ? a.name : autoName;
+  document.getElementById('edit-tier').value = a ? a.tier : '';
+
+  document.getElementById('edit-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('edit-name').focus();
+}
+
+function closePanel() {
+  document.getElementById('edit-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  // deselect in grid
+  document.querySelectorAll('.sprite-item.selected').forEach(el => el.classList.remove('selected'));
+  editKey = null;
+}
+
+function saveEdit() {
+  if (!editKey) return;
+  const name = document.getElementById('edit-name').value.trim();
+  const tier = document.getElementById('edit-tier').value;
+  if (!name) return;
+
+  if (tier) {
+    assignments[editKey] = { name, tier };
+  } else {
+    // Save name only as custom rename even without tier
+    assignments[editKey] = { name, tier: '' };
+  }
+  saveState();
+  closePanel();
+  render();
+}
+
+function unassignEdit() {
+  if (!editKey) return;
+  delete assignments[editKey];
+  saveState();
+  closePanel();
+  render();
+}
+
+// ── Export ──
+function exportCode() {
+  // Group by tier
+  const byTier = {};
+  BARS.forEach(b => { byTier[b.tier] = []; });
+  for (const [key, val] of Object.entries(assignments)) {
+    if (val.tier && byTier[val.tier]) {
+      const [x,y] = key.split(',').map(Number);
+      byTier[val.tier].push({ name: val.name, x, y });
+    }
+  }
+
+  let code = '// ── FORGING_RECIPES (generated by smithing-catalog) ──\n';
+  code += 'var FORGING_RECIPES = [\n';
+  BARS.forEach(b => {
+    const items = byTier[b.tier];
+    if (!items.length) return;
+    code += '  // ' + b.tier + ' Tier (Lv ' + b.level + ')\n';
+    items.forEach(it => {
+      code += "  { name: '" + it.name + "', level: " + b.level +
+        ", xp: 0, inputs: [{ item: '" + b.name + "', qty: 3 }], sprite: { x: " +
+        it.x + ", y: " + it.y + " } },\n";
+    });
+  });
+  code += '];\n\n';
+
+  code += '// ── ITEM_ICON_MAP additions ──\n';
+  for (const [key, val] of Object.entries(assignments)) {
+    if (!val.tier) continue;
+    const [x,y] = key.split(',').map(Number);
+    code += "'" + val.name + "': { sheet: 'items_sheet', x: " + x + ", y: " + y + " },\n";
+  }
+
+  code += "\n// ── ITEM_CATEGORIES Equipment list ──\n";
+  code += "'Equipment': [\n";
+  BARS.forEach(b => {
+    const items = byTier[b.tier];
+    items.forEach(it => {
+      code += "  '" + it.name + "',\n";
+    });
+  });
+  code += "]\n";
+
+  document.getElementById('export-title').textContent = 'Export Code (JS)';
+  document.getElementById('export-text').value = code;
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function exportJSON() {
+  const data = JSON.stringify(assignments, null, 2);
+  document.getElementById('export-title').textContent = 'Export JSON (for backup/sharing)';
+  document.getElementById('export-text').value = data;
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function importJSON() {
+  const input = prompt('Paste JSON data:');
+  if (!input) return;
+  try {
+    const data = JSON.parse(input);
+    if (typeof data !== 'object') throw new Error('Not an object');
+    assignments = data;
+    saveState();
+    render();
+    alert('Imported ' + Object.keys(data).length + ' assignments.');
+  } catch(e) {
+    alert('Invalid JSON: ' + e.message);
+  }
+}
+
+function copyExport() {
+  const ta = document.getElementById('export-text');
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(() => {
+    alert('Copied to clipboard!');
+  });
+}
+
+function closeExport() {
+  document.getElementById('export-modal').classList.remove('open');
+}
+
+function resetAll() {
+  if (!confirm('Reset all assignments to defaults? This will lose all your changes.')) return;
+  assignments = JSON.parse(JSON.stringify(DEFAULTS));
+  saveState();
+  render();
+}
+
+// ── Populate tier dropdown ──
+function initTierDropdown() {
+  const sel = document.getElementById('edit-tier');
+  BARS.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.tier;
+    opt.textContent = 'T' + (BARS.indexOf(b)+1) + ': ' + b.tier + ' (Lv ' + b.level + ')';
+    opt.style.color = b.color;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Render everything ──
+function render() {
+  const app = document.getElementById('app');
+  let html = '';
+
+  // Count
+  const assignedCount = Object.values(assignments).filter(a => a.tier).length;
+  document.getElementById('assign-count').textContent = assignedCount + ' items assigned across ' +
+    new Set(Object.values(assignments).filter(a=>a.tier).map(a=>a.tier)).size + ' tiers';
+
+  // 1. BARS
+  html += '<h2 id="bars">Smelting Bars (12 tiers)</h2>';
+  html += '<div class="bar-grid">';
+  BARS.forEach((b, i) => {
+    const count = Object.values(assignments).filter(a => a.tier === b.tier).length;
+    html += '<div class="bar-card">';
+    html += '<div class="spr spr-4x" style="' + sprStyle(b.x, b.y, 4) + '"></div>';
+    html += '<div>';
+    html += '<div class="bar-name"><span class="bar-color" style="background:'+b.color+'"></span>T'+(i+1)+': '+b.name+'</div>';
+    html += '<div class="bar-level">Level '+b.level+'</div>';
+    html += '<div class="bar-recipe">'+b.recipe+'</div>';
+    html += '<div class="bar-recipe" style="color:'+(count?'#6a6':'#944')+'">'+
+      (count ? count+' items assigned' : 'NO EQUIPMENT')+'</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // 2. ASSIGNED BY TIER
+  html += '<h2 id="current">Assigned Equipment by Tier</h2>';
+  html += '<p class="note">Click any item to edit name or reassign. Click sprites in the browse sections below to assign new ones.</p>';
+  BARS.forEach((b, i) => {
+    const items = [];
+    for (const [key, val] of Object.entries(assignments)) {
+      if (val.tier === b.tier) {
+        const [x,y] = key.split(',').map(Number);
+        items.push({ key, x, y, name: val.name });
+      }
+    }
+    html += '<div class="tier-section" style="border-left-color:'+b.color+'">';
+    html += '<h4 style="color:'+b.color+'">T'+(i+1)+': '+b.tier+' Tier (Lv '+b.level+')</h4>';
+    if (!items.length) {
+      html += '<div class="empty">No equipment — click sprites below to assign</div>';
+    } else {
+      html += '<div class="tier-items">';
+      items.forEach(it => {
+        html += '<div class="sprite-item assigned" style="width:90px;border-color:'+b.color+'" '+
+          'onclick="openEdit('+it.x+','+it.y+',\''+it.name.replace(/'/g,"\\'")+'\')">';
+        html += '<div class="spr spr-3x" style="'+sprStyle(it.x,it.y,3)+'"></div>';
+        html += '<span class="item-name" style="color:'+b.color+'">'+it.name+'</span>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  // 3. EQUIPMENT BROWSE
+  EQUIP_ROWS.forEach(section => {
+    html += '<h2 id="'+section.id+'">'+section.title+'</h2>';
+
+    section.typeMap.forEach(rm => {
+      const rowY = rm.row * CELL;
+      rm.ranges.forEach(range => {
+        html += '<h3>'+range.t+'s (Row '+rm.row+', Cols '+range.s+'-'+range.e+')</h3>';
+        html += '<div class="sprite-grid">';
+        for (let c = range.s; c <= range.e; c++) {
+          const px = c * CELL, py = rowY;
+          const key = px+','+py;
+          const autoName = getAutoName(c, rm.row, section.typeMap);
+          const displayName = getDisplayName(px, py, autoName);
+          const tier = getTier(px, py);
+          const tierColor = tier ? TIER_COLORS[tier] : null;
+          const isAssigned = !!assignments[key] && !!assignments[key].tier;
+          const itemNum = rm.row * COLS + c + 1;
+
+          html += '<div class="sprite-item'+(isAssigned?' assigned':'')+'" '+
+            'style="'+(tierColor?'border-color:'+tierColor:'')+ '" '+
+            'onclick="openEdit('+px+','+py+',\''+autoName.replace(/'/g,"\\'")+'\')" '+
+            'data-key="'+key+'">';
+          html += '<div class="spr spr-4x" style="'+sprStyle(px,py,4)+'"></div>';
+          html += '<span class="item-name"'+(tierColor?' style="color:'+tierColor+'"':'')+'>'+displayName+'</span>';
+          if (tier) {
+            html += '<span class="tier-badge" style="background:'+tierColor+'">'+tier+'</span>';
+          }
+          html += '<span class="item-pos">('+px+', '+py+')</span>';
+          html += '<span class="item-num">#'+itemNum+'</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+    });
+  });
+
+  app.innerHTML = html;
+}
+
+// ── Keyboard shortcut ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('export-modal').classList.contains('open')) {
+      closeExport();
+    } else {
+      closePanel();
+    }
+  }
+  if (e.key === 'Enter' && editKey && document.getElementById('edit-panel').classList.contains('open')) {
+    saveEdit();
+  }
+});
+
+// ── Init ──
+loadState();
+initTierDropdown();
+render();
+</script>
+</body>
+</html>
