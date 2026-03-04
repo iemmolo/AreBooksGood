@@ -1881,139 +1881,632 @@
 
   // ── Mining Cavern Pixel Art Background ────────
   function generateMiningCavernBg() {
-    var W = 320, H = 200, T = 8; // canvas size, tile size
+    var W = 640, H = 400, T = 10;
     var c = document.createElement('canvas');
     c.width = W; c.height = H;
     var ctx = c.getContext('2d');
-
-    // 1. Stone wall tiles (8×8 grid with hash variation)
-    var wallColors = ['#383838', '#404040', '#484848', '#505050'];
     var cols = Math.ceil(W / T), rows = Math.ceil(H / T);
+    var h, i, j, x, y, px, py, grad;
+
+    // ── Pass 1: Far back wall (varied stone tiles + grain + center blocks) ──
+    var farWall = ['#24242a', '#2c2c34', '#20202a', '#34343c', '#28283a', '#303038'];
     for (var ty = 0; ty < rows; ty++) {
       for (var tx = 0; tx < cols; tx++) {
-        var h = tileHash(tx, ty);
-        ctx.fillStyle = wallColors[((h >>> 0) % wallColors.length)];
+        h = tileHash(tx, ty);
+        ctx.fillStyle = farWall[((h >>> 0) % farWall.length)];
         ctx.fillRect(tx * T, ty * T, T, T);
+        // Sparse grain (15% of tiles, larger 6x6 patches)
+        var h2 = tileHash(tx * 7 + 77, ty * 13 + 33);
+        if ((h2 >>> 0) % 7 === 0) {
+          ctx.fillStyle = ((h2 >>> 4) & 1) ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+          ctx.fillRect(tx * T + ((h2 >>> 8) % 4), ty * T + ((h2 >>> 12) % 4), 6, 6);
+        }
+      }
+    }
+    // Stone block texture in center cavity (x 140-500, y 60-310)
+    var blkW = 16, blkH = 10;
+    var blkPal = ['#28282e', '#2e2e36', '#262630', '#323238'];
+    for (var bry = 0; bry < Math.ceil(250 / blkH); bry++) {
+      var bRowOff = (bry % 2) * Math.floor(blkW / 2);
+      for (var brx = 0; brx < Math.ceil(360 / blkW) + 1; brx++) {
+        var bbx = 140 + brx * blkW + bRowOff;
+        var bby = 60 + bry * blkH;
+        if (bbx + blkW < 140 || bbx > 500 || bby > 310) continue;
+        h = tileHash(bbx + 1111, bby + 1111);
+        ctx.fillStyle = blkPal[((h >>> 0) % blkPal.length)];
+        ctx.fillRect(bbx, bby, blkW - 1, blkH - 1);
+        // Top highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.fillRect(bbx, bby, blkW - 1, 1);
+        // Bottom shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(bbx, bby + blkH - 2, blkW - 1, 1);
+      }
+      // Mortar row
+      ctx.fillStyle = '#1e1e24';
+      ctx.fillRect(140, 60 + bry * blkH + blkH - 1, 360, 1);
+    }
+    // Fewer, bolder cracks (5, 2px tall, 30px+ long)
+    for (i = 0; i < 5; i++) {
+      h = tileHash(i + 7777, 7777);
+      var crackY = 80 + ((h >>> 0) % 220);
+      var crackX = 140 + ((h >>> 8) % 300);
+      var crackLen = 30 + ((h >>> 16) % 40);
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.fillRect(crackX, crackY, crackLen, 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(crackX, crackY + 2, crackLen, 1);
+    }
+
+    // ── Pass 2: Near stone walls (left/right 22%) — staggered brick ──
+    var wallW = 140;
+    var brickGrays = ['#484850', '#505058', '#585860', '#4a4a54'];
+    var brickH = 6, brickW = 12;
+    var wallZones = [{ x0: 0, x1: wallW }, { x0: W - wallW, x1: W }];
+    for (i = 0; i < wallZones.length; i++) {
+      var zone = wallZones[i];
+      var brickRows = Math.ceil(H / brickH);
+      var brickCols = Math.ceil((zone.x1 - zone.x0) / brickW) + 1;
+      for (var br = 0; br < brickRows; br++) {
+        var stOff = (br % 2) * Math.floor(brickW / 2);
+        for (var bc = -1; bc < brickCols; bc++) {
+          var bx = zone.x0 + bc * brickW + stOff;
+          var by = br * brickH;
+          if (bx + brickW < zone.x0 || bx > zone.x1) continue;
+          h = tileHash(bx + 2000, by + 2000);
+          ctx.fillStyle = brickGrays[((h >>> 0) % brickGrays.length)];
+          ctx.fillRect(bx, by, brickW - 1, brickH - 1);
+          // Mortar lines (1px gaps are implicit from -1 sizing)
+          // Specular highlight on top edge
+          ctx.fillStyle = 'rgba(255,255,255,0.08)';
+          ctx.fillRect(bx, by, brickW - 1, 1);
+          // Dark bottom edge
+          ctx.fillStyle = 'rgba(0,0,0,0.10)';
+          ctx.fillRect(bx, by + brickH - 2, brickW - 1, 1);
+        }
+      }
+      // Mortar fill in gaps
+      ctx.fillStyle = '#2a2a30';
+      for (var mr = 0; mr < brickRows; mr++) {
+        ctx.fillRect(zone.x0, mr * brickH + brickH - 1, zone.x1 - zone.x0, 1);
       }
     }
 
-    // 2. Checkerboard dither
-    ctx.fillStyle = 'rgba(0,0,0,0.04)';
-    for (var dy = 0; dy < rows; dy++) {
-      for (var dx = 0; dx < cols; dx++) {
-        if ((dx + dy) % 2 === 0) ctx.fillRect(dx * T, dy * T, T, T);
+    // ── Pass 3: Wall clumping (hash-based darker/lighter patches) ──
+    for (var ty = 0; ty < rows; ty++) {
+      for (var tx = 0; tx < cols; tx++) {
+        h = tileHash(tx + 500, ty + 500);
+        if ((h >>> 0) % 4 !== 0) continue;
+        var bright = ((h >>> 4) & 1) === 0;
+        ctx.fillStyle = bright ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+        px = tx * T + ((h >>> 8) % 4);
+        py = ty * T + ((h >>> 12) % 4);
+        ctx.fillRect(px, py, 6, 6);
       }
     }
 
-    // 3. Ceiling darkening (top 40px)
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.fillRect(0, 0, W, 40);
+    // ── Pass 4: Ceiling gradient + stalactites ──
+    grad = ctx.createLinearGradient(0, 0, 0, 100);
+    grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+    grad.addColorStop(0.6, 'rgba(0,0,0,0.2)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 100);
 
-    // 4. Stalactites from ceiling
     var stalactites = [
-      { x: 30, w: 6, h: 22 }, { x: 80, w: 4, h: 18 },
-      { x: 140, w: 5, h: 25 }, { x: 195, w: 6, h: 20 },
-      { x: 245, w: 4, h: 16 }, { x: 290, w: 5, h: 23 }
+      { x: 50, w: 10, h: 45 }, { x: 120, w: 8, h: 35 },
+      { x: 200, w: 12, h: 55 }, { x: 310, w: 10, h: 40 },
+      { x: 380, w: 8, h: 50 }, { x: 460, w: 12, h: 42 },
+      { x: 540, w: 10, h: 38 }, { x: 590, w: 8, h: 48 },
+      { x: 160, w: 6, h: 28 }, { x: 430, w: 6, h: 32 }
     ];
-    for (var si = 0; si < stalactites.length; si++) {
-      var st = stalactites[si];
-      // Taper from base width to 1px
+    for (i = 0; i < stalactites.length; i++) {
+      var st = stalactites[i];
       for (var sy = 0; sy < st.h; sy++) {
-        var sw = Math.max(1, Math.round(st.w * (1 - sy / st.h)));
-        ctx.fillStyle = sy < st.h / 2 ? '#303030' : '#484848';
-        ctx.fillRect(st.x - Math.floor(sw / 2), sy, sw, 1);
+        var frac = sy / st.h;
+        var sw = Math.max(1, Math.round(st.w * (1 - frac)));
+        var sx = st.x - Math.floor(sw / 2);
+        // 3-shade: shadow left, body center, highlight right
+        if (sw >= 3) {
+          ctx.fillStyle = '#222228';
+          ctx.fillRect(sx, sy, 1, 1);
+          ctx.fillStyle = frac < 0.4 ? '#303038' : '#404048';
+          ctx.fillRect(sx + 1, sy, sw - 2, 1);
+          ctx.fillStyle = '#585860';
+          ctx.fillRect(sx + sw - 1, sy, 1, 1);
+        } else {
+          ctx.fillStyle = frac < 0.5 ? '#303038' : '#404048';
+          ctx.fillRect(sx, sy, sw, 1);
+        }
       }
+      // Drip specular at tip (enlarged bead)
+      ctx.fillStyle = '#7090b0';
+      ctx.fillRect(st.x - 1, st.h - 1, 2, 3);
+      ctx.fillStyle = 'rgba(120,160,200,0.5)';
+      ctx.fillRect(st.x, st.h, 1, 2);
+      ctx.fillStyle = 'rgba(180,210,240,0.3)';
+      ctx.fillRect(st.x, st.h - 1, 1, 1);
     }
 
-    // 5. Rocky floor (uneven base + small mounds)
-    var floorColors = ['#484848', '#505050', '#585858', '#606060'];
-    var floorY = H - 24;
-    for (var fx = 0; fx < cols; fx++) {
-      var fh = tileHash(fx, 999);
-      var bump = ((fh >>> 0) % 5); // 0-4 px variation
-      var fy = floorY - bump;
-      ctx.fillStyle = floorColors[((fh >>> 0) % floorColors.length)];
-      ctx.fillRect(fx * T, fy, T, H - fy);
+    // ── Pass 5: Stone flagstone floor (replaces scatter noise) ──
+    var floorY = 310;
+    var floorH = H - floorY;
+
+    // Solid floor base fill
+    ctx.fillStyle = '#38342e';
+    ctx.fillRect(0, floorY, W, floorH);
+
+    // Uneven top edge
+    var floorCols = Math.ceil(W / T);
+    for (var fx = 0; fx < floorCols; fx++) {
+      h = tileHash(fx, 888);
+      var bump = ((h >>> 0) % 10);
+      var edgeY = floorY - bump;
+      ctx.fillStyle = '#38342e';
+      ctx.fillRect(fx * T, edgeY, T, bump + 2);
+      ctx.fillStyle = '#5a564e';
+      ctx.fillRect(fx * T, edgeY, T, 1);
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(fx * T, edgeY, T, 1);
     }
-    // Small rock mounds
-    var mounds = [
-      { x: 20, y: H - 18, w: 14, h: 6 }, { x: 90, y: H - 16, w: 10, h: 4 },
-      { x: 170, y: H - 20, w: 16, h: 7 }, { x: 260, y: H - 17, w: 12, h: 5 }
+
+    // Flagstone grid: 20x14px stones, staggered rows, 1px mortar
+    var fsW = 20, fsH = 14;
+    var fsPal = ['#342e28', '#3c3830', '#403a32', '#38342e', '#443e36', '#4a4438'];
+    var mortarC = '#2a2620';
+    var fsRows = Math.ceil(floorH / fsH);
+    var fsCols = Math.ceil(W / fsW) + 1;
+    for (var fsr = 0; fsr < fsRows; fsr++) {
+      var fsOff = (fsr % 2) * 10; // stagger offset
+      for (var fsc = -1; fsc < fsCols; fsc++) {
+        var fsx = fsc * fsW + fsOff;
+        var fsy = floorY + fsr * fsH;
+        if (fsy > H) continue;
+        h = tileHash(fsc + 200, fsr + 900);
+        ctx.fillStyle = fsPal[((h >>> 0) % fsPal.length)];
+        ctx.fillRect(fsx, fsy, fsW - 1, fsH - 1);
+        // Top highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.fillRect(fsx, fsy, fsW - 1, 1);
+        // Bottom shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(fsx, fsy + fsH - 2, fsW - 1, 1);
+      }
+      // Mortar row
+      ctx.fillStyle = mortarC;
+      ctx.fillRect(0, floorY + fsr * fsH + fsH - 1, W, 1);
+    }
+
+    // 2 floor cracks (2px tall, 15px+ long)
+    for (i = 0; i < 2; i++) {
+      h = tileHash(i + 3500, 3500);
+      var ckX = ((h >>> 0) % (W - 60)) + 30;
+      var ckY = floorY + 8 + ((h >>> 8) % (floorH - 16));
+      var ckLen = 15 + ((h >>> 16) % 30);
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.fillRect(ckX, ckY, ckLen, 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(ckX, ckY + 2, ckLen, 1);
+    }
+
+    // 3 moss patches (bigger: 10-14px each)
+    var mossPal = ['#2a5a28', '#306830', '#387038', '#2e6228'];
+    for (i = 0; i < 3; i++) {
+      h = tileHash(i + 4000, 4000);
+      var mossX = ((h >>> 0) & 1) ? ((h >>> 4) % 120) : (W - 120 + ((h >>> 4) % 120));
+      var mossY = floorY - 2 + ((h >>> 8) % 8);
+      var mossW = 10 + ((h >>> 12) % 5);
+      ctx.fillStyle = mossPal[((h >>> 16) % mossPal.length)];
+      ctx.fillRect(mossX, mossY, mossW, 4);
+      ctx.fillStyle = mossPal[((h >>> 18) % mossPal.length)];
+      ctx.fillRect(mossX + 2, mossY + 1, mossW - 4, 3);
+    }
+
+    // 2 boulders spread across floor (one per side)
+    var boulders = [
+      { x: 30, y: floorY + 30, w: 36, h: 24 },
+      { x: 580, y: floorY + 45, w: 32, h: 22 }
     ];
-    for (var mi = 0; mi < mounds.length; mi++) {
-      var m = mounds[mi];
-      ctx.fillStyle = '#585858';
-      ctx.fillRect(m.x, m.y, m.w, m.h);
-      ctx.fillStyle = '#606060';
-      ctx.fillRect(m.x + 2, m.y + 1, m.w - 4, m.h - 2);
+    for (i = 0; i < boulders.length; i++) {
+      var b = boulders[i];
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(b.x + 4, b.y + b.h - 2, b.w - 4, 8);
+      // Outer base (darkest) — rounded via clipping corners
+      ctx.fillStyle = '#3a3838';
+      ctx.fillRect(b.x + 2, b.y + 4, b.w - 4, b.h - 4);
+      ctx.fillRect(b.x + 4, b.y + 2, b.w - 8, b.h - 2);
+      // Mid layer
+      ctx.fillStyle = '#4a4848';
+      ctx.fillRect(b.x + 4, b.y + 4, b.w - 8, b.h - 8);
+      // Upper face
+      ctx.fillStyle = '#5a5858';
+      ctx.fillRect(b.x + 6, b.y + 4, b.w - 12, b.h - 10);
+      // Top highlight band
+      ctx.fillStyle = '#6a6868';
+      ctx.fillRect(b.x + 8, b.y + 4, b.w - 16, 4);
+      // Specular spot
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(b.x + 10, b.y + 5, 4, 2);
+      ctx.fillStyle = '#989898';
+      ctx.fillRect(b.x + 11, b.y + 5, 2, 1);
+      // Fissure lines
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(b.x + Math.floor(b.w * 0.3), b.y + 6, 1, b.h - 10);
+      ctx.fillRect(b.x + Math.floor(b.w * 0.6), b.y + 4, 1, b.h - 8);
     }
 
-    // 6. Wood support beams (2 vertical + 1 crossbeam)
-    var beamX1 = 60, beamX2 = 250, beamW = 8, crossY = 30;
+    // 3 stalagmites at wall-floor edge
+    var stalagmites = [
+      { x: 165, h: 24, w: 12 },
+      { x: 450, h: 22, w: 12 },
+      { x: 70, h: 26, w: 14 }
+    ];
+    for (i = 0; i < stalagmites.length; i++) {
+      var sg = stalagmites[i];
+      var sgBase = floorY + 2;
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(sg.x - Math.floor(sg.w / 2) + 2, sgBase, sg.w - 2, 4);
+      for (var sgy = 0; sgy < sg.h; sgy++) {
+        var sgFrac = sgy / sg.h;
+        var sgw = Math.max(1, Math.round(sg.w * (1 - sgFrac)));
+        var sgx = sg.x - Math.floor(sgw / 2);
+        // 4-shade body
+        if (sgFrac < 0.2) ctx.fillStyle = '#605850';
+        else if (sgFrac < 0.5) ctx.fillStyle = '#585050';
+        else if (sgFrac < 0.8) ctx.fillStyle = '#484040';
+        else ctx.fillStyle = '#383030';
+        ctx.fillRect(sgx, sgBase - sgy, sgw, 1);
+        // Right highlight edge
+        if (sgw >= 3) {
+          ctx.fillStyle = 'rgba(255,255,255,0.08)';
+          ctx.fillRect(sgx + sgw - 1, sgBase - sgy, 1, 1);
+        }
+      }
+      // Specular near tip
+      ctx.fillStyle = '#787870';
+      ctx.fillRect(sg.x, sgBase - sg.h + 1, 1, 3);
+      ctx.fillStyle = '#909088';
+      ctx.fillRect(sg.x, sgBase - sg.h + 1, 1, 1);
+    }
+
+    // ── Pass 6: Timber support structure ──
+    var beamX1 = 125, beamX2 = 500, beamW = 14, crossY = 60;
+    var beamH = H - crossY - 40;
+    // Left vertical beam
+    ctx.fillStyle = '#4a2a10';
+    ctx.fillRect(beamX1, crossY, beamW, beamH);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(beamX1 + 2, crossY, beamW - 4, beamH);
     ctx.fillStyle = '#6b4e2b';
-    ctx.fillRect(beamX1, crossY, beamW, H - crossY - 20); // left vertical
-    ctx.fillRect(beamX2, crossY, beamW, H - crossY - 20); // right vertical
-    ctx.fillRect(beamX1, crossY, beamX2 - beamX1 + beamW, 6); // crossbeam
-    // Beam highlights
+    ctx.fillRect(beamX1 + 4, crossY, beamW - 8, beamH);
+    // Highlight stripe
     ctx.fillStyle = '#8b6e3b';
-    ctx.fillRect(beamX1 + 2, crossY, 2, H - crossY - 20);
-    ctx.fillRect(beamX2 + 2, crossY, 2, H - crossY - 20);
-    ctx.fillRect(beamX1, crossY + 1, beamX2 - beamX1 + beamW, 2);
+    ctx.fillRect(beamX1 + 5, crossY, 2, beamH);
+    // Dark grain lines
+    for (j = 0; j < beamH; j += 12) {
+      h = tileHash(beamX1, j + 5000);
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.fillRect(beamX1 + 3, crossY + j + ((h >>> 0) % 4), beamW - 6, 1);
+    }
 
-    // 7. Torches + warm glow on each beam
+    // Right vertical beam
+    ctx.fillStyle = '#4a2a10';
+    ctx.fillRect(beamX2, crossY, beamW, beamH);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(beamX2 + 2, crossY, beamW - 4, beamH);
+    ctx.fillStyle = '#6b4e2b';
+    ctx.fillRect(beamX2 + 4, crossY, beamW - 8, beamH);
+    ctx.fillStyle = '#8b6e3b';
+    ctx.fillRect(beamX2 + 5, crossY, 2, beamH);
+    for (j = 0; j < beamH; j += 12) {
+      h = tileHash(beamX2, j + 5000);
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.fillRect(beamX2 + 3, crossY + j + ((h >>> 0) % 4), beamW - 6, 1);
+    }
+
+    // Crossbeam
+    var crossW = beamX2 - beamX1 + beamW;
+    ctx.fillStyle = '#4a2a10';
+    ctx.fillRect(beamX1, crossY, crossW, 10);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(beamX1, crossY + 2, crossW, 6);
+    ctx.fillStyle = '#6b4e2b';
+    ctx.fillRect(beamX1, crossY + 3, crossW, 4);
+    // Crossbeam highlight
+    ctx.fillStyle = '#8b6e3b';
+    ctx.fillRect(beamX1, crossY + 3, crossW, 2);
+    // Dark grain on crossbeam
+    for (j = beamX1; j < beamX1 + crossW; j += 16) {
+      h = tileHash(j + 6000, crossY);
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(j + ((h >>> 0) % 6), crossY + 4, 1, 4);
+    }
+
+    // Iron brackets at joints
+    var brackets = [
+      { x: beamX1 - 2, y: crossY - 2 },
+      { x: beamX1 - 2, y: crossY + 8 },
+      { x: beamX2 - 2, y: crossY - 2 },
+      { x: beamX2 - 2, y: crossY + 8 }
+    ];
+    for (i = 0; i < brackets.length; i++) {
+      var br2 = brackets[i];
+      ctx.fillStyle = '#3a3a3a';
+      ctx.fillRect(br2.x, br2.y, beamW + 4, 4);
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(br2.x + 1, br2.y + 1, beamW + 2, 2);
+      // Bolt
+      ctx.fillStyle = '#606060';
+      ctx.fillRect(br2.x + 3, br2.y + 1, 2, 2);
+      ctx.fillStyle = '#787878';
+      ctx.fillRect(br2.x + 3, br2.y + 1, 1, 1);
+    }
+
+    // ── Pass 8: Torches with enhanced glow ──
     var torchPositions = [
-      { x: beamX1 + beamW + 1, y: crossY + 20 },
-      { x: beamX2 - 5, y: crossY + 20 }
+      { x: beamX1 + beamW + 3, y: crossY + 50 },
+      { x: beamX2 - 8, y: crossY + 50 },
+      { x: 60, y: 150 },
+      { x: W - 68, y: 150 }
     ];
-    for (var ti = 0; ti < torchPositions.length; ti++) {
-      var tp = torchPositions[ti];
-      // Torch stick
-      ctx.fillStyle = '#6b4e2b';
-      ctx.fillRect(tp.x + 1, tp.y, 2, 8);
-      // Flame
+    for (i = 0; i < torchPositions.length; i++) {
+      var tp = torchPositions[i];
+      // Ambient warm rect wash (rpg.js smithy pattern)
+      ctx.save();
+      ctx.globalAlpha = 0.08;
       ctx.fillStyle = '#ff8030';
-      ctx.fillRect(tp.x, tp.y - 3, 4, 3);
+      ctx.fillRect(tp.x - 40, tp.y - 50, 90, 100);
+      ctx.restore();
+      // Soot mark above flame
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.fillRect(tp.x + 2, tp.y - 14, 3, 8);
+      ctx.fillStyle = 'rgba(0,0,0,0.06)';
+      ctx.fillRect(tp.x + 1, tp.y - 18, 5, 6);
+      // Iron bracket
+      ctx.fillStyle = '#3a3a3a';
+      ctx.fillRect(tp.x + 1, tp.y + 6, 5, 3);
+      ctx.fillStyle = '#505050';
+      ctx.fillRect(tp.x + 2, tp.y + 7, 3, 1);
+      // Wooden handle
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(tp.x + 2, tp.y, 3, 10);
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(tp.x + 3, tp.y, 1, 10);
+      // 4-layer flame
+      ctx.fillStyle = '#cc3010';
+      ctx.fillRect(tp.x + 1, tp.y - 6, 5, 6);
+      ctx.fillStyle = '#ff6020';
+      ctx.fillRect(tp.x + 1, tp.y - 5, 5, 4);
+      ctx.fillStyle = '#ff8030';
+      ctx.fillRect(tp.x + 2, tp.y - 4, 3, 3);
       ctx.fillStyle = '#ffd060';
-      ctx.fillRect(tp.x + 1, tp.y - 2, 2, 2);
-      // Warm glow (radial via concentric rects)
-      ctx.fillStyle = 'rgba(255,160,48,0.15)';
-      ctx.fillRect(tp.x - 14, tp.y - 18, 32, 32);
-      ctx.fillStyle = 'rgba(255,160,48,0.06)';
-      ctx.fillRect(tp.x - 28, tp.y - 32, 60, 60);
-      ctx.fillStyle = 'rgba(255,160,48,0.03)';
-      ctx.fillRect(tp.x - 40, tp.y - 44, 84, 84);
+      ctx.fillRect(tp.x + 3, tp.y - 3, 1, 2);
+      // Radial warm glow (radius 60→80, peak 0.18→0.22)
+      grad = ctx.createRadialGradient(tp.x + 3, tp.y - 2, 2, tp.x + 3, tp.y - 2, 80);
+      grad.addColorStop(0, 'rgba(255,160,48,0.22)');
+      grad.addColorStop(0.4, 'rgba(255,120,30,0.10)');
+      grad.addColorStop(1, 'rgba(255,80,20,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(tp.x - 80, tp.y - 84, 166, 166);
     }
 
-    // 8. Ore vein glints on walls (avoid center rock area)
-    var glints = [
-      { x: 12, y: 55, color: '#b87333' },  // copper
-      { x: 18, y: 80, color: '#b87333' },
-      { x: 5, y: 110, color: '#c0c0c0' },  // silver
-      { x: 295, y: 60, color: '#ffd700' },  // gold
-      { x: 305, y: 95, color: '#ffd700' },
-      { x: 300, y: 130, color: '#50c878' }, // emerald
-      { x: 15, y: 140, color: '#50c878' },
-      { x: 8, y: 45, color: '#c0c0c0' },
-      { x: 310, y: 50, color: '#b87333' },
-      { x: 25, y: 160, color: '#ffd700' }
-    ];
-    for (var gi = 0; gi < glints.length; gi++) {
-      var g = glints[gi];
-      ctx.fillStyle = g.color;
-      ctx.fillRect(g.x, g.y, 2, 1);
-      ctx.fillRect(g.x + 1, g.y + 1, 1, 1);
-    }
+    // ── Pass 9: Mine cart on full-width tracks ──
+    var cartX = 260, cartY = floorY + 12;
+    var cw = 90, ch = 42;
+    var railY = cartY + ch + 6;
 
-    // 9. Edge vignette (heavier at top for cave ceiling feel)
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.fillRect(0, 0, W, 12);
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(0, 12, W, 12);
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    ctx.fillRect(0, 0, 12, H);   // left edge
-    ctx.fillRect(W - 12, 0, 12, H); // right edge
+    // Full-width rail ties
+    ctx.fillStyle = '#4a3a20';
+    for (j = 0; j < Math.ceil(W / 18); j++) {
+      ctx.fillRect(j * 18, railY + 2, 10, 4);
+      ctx.fillStyle = '#5a4a30';
+      ctx.fillRect(j * 18 + 1, railY + 3, 8, 2);
+      ctx.fillStyle = '#4a3a20';
+    }
+    // Full-width iron rails (2 parallel)
+    ctx.fillStyle = '#404048';
+    ctx.fillRect(0, railY, W, 3);
+    ctx.fillRect(0, railY + 8, W, 3);
+    ctx.fillStyle = '#707078';
+    ctx.fillRect(0, railY, W, 1);
+    ctx.fillRect(0, railY + 8, W, 1);
+    ctx.fillStyle = '#30303a';
+    ctx.fillRect(0, railY + 2, W, 1);
+    ctx.fillRect(0, railY + 10, W, 1);
+
+    // Cart body (taller)
+    ctx.fillStyle = '#3a3430';
+    ctx.fillRect(cartX, cartY + 4, cw, ch);
+    ctx.fillStyle = '#4a4438';
+    ctx.fillRect(cartX + 3, cartY + 2, cw - 6, ch - 2);
+    ctx.fillStyle = '#5a4a30';
+    ctx.fillRect(cartX + 5, cartY + 4, cw - 10, ch - 6);
+    ctx.fillStyle = '#6b5a3a';
+    ctx.fillRect(cartX + 7, cartY + 6, cw - 14, ch - 10);
+    // Iron rim around top
+    ctx.fillStyle = '#505058';
+    ctx.fillRect(cartX, cartY + 2, cw, 3);
+    ctx.fillStyle = '#606870';
+    ctx.fillRect(cartX + 1, cartY + 2, cw - 2, 1);
+    // Side rivets
+    ctx.fillStyle = '#606068';
+    for (j = 0; j < 4; j++) {
+      ctx.fillRect(cartX + 10 + j * 22, cartY + 8, 2, 2);
+      ctx.fillStyle = '#787880';
+      ctx.fillRect(cartX + 10 + j * 22, cartY + 8, 1, 1);
+      ctx.fillStyle = '#606068';
+    }
+    // Wood plank lines inside
     ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ctx.fillRect(0, H - 12, W, 12); // bottom edge
+    ctx.fillRect(cartX + 7, cartY + 16, cw - 14, 1);
+    ctx.fillRect(cartX + 7, cartY + 28, cw - 14, 1);
+
+    // Round wheels via "+" overlap (14px diameter)
+    for (j = 0; j < 2; j++) {
+      var wx = cartX + 12 + j * 58;
+      var wy = cartY + ch - 2;
+      // Axle
+      ctx.fillStyle = '#3a3a42';
+      ctx.fillRect(wx + 1, wy + 5, 12, 2);
+      // Tire
+      ctx.fillStyle = '#383840';
+      ctx.fillRect(wx + 3, wy, 8, 14);
+      ctx.fillRect(wx, wy + 3, 14, 8);
+      // Ring
+      ctx.fillStyle = '#484850';
+      ctx.fillRect(wx + 4, wy + 1, 6, 12);
+      ctx.fillRect(wx + 1, wy + 4, 12, 6);
+      // Inner
+      ctx.fillStyle = '#585860';
+      ctx.fillRect(wx + 5, wy + 2, 4, 10);
+      ctx.fillRect(wx + 2, wy + 5, 10, 4);
+      // Hub
+      ctx.fillStyle = '#686870';
+      ctx.fillRect(wx + 5, wy + 5, 4, 4);
+      ctx.fillStyle = '#808088';
+      ctx.fillRect(wx + 6, wy + 6, 2, 2);
+      // Spokes
+      ctx.fillStyle = '#505058';
+      ctx.fillRect(wx + 6, wy + 2, 2, 10);
+      ctx.fillRect(wx + 2, wy + 6, 10, 2);
+    }
+
+    // ── Pass 10: Props (barrel) ──
+    // Barrel (right wall — sits on floor bottom)
+    var brlx = 540, brly = H - 28 - 8;
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(brlx + 3, brly + 28, 22, 5);
+    // Body (larger)
+    ctx.fillStyle = '#3a1a08';
+    ctx.fillRect(brlx, brly, 26, 28);
+    ctx.fillStyle = '#4a2a10';
+    ctx.fillRect(brlx + 2, brly + 1, 22, 26);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(brlx + 4, brly + 2, 18, 24);
+    ctx.fillStyle = '#6b4e2b';
+    ctx.fillRect(brlx + 6, brly + 3, 14, 22);
+    // Barrel bands (iron)
+    ctx.fillStyle = '#3a3a3a';
+    ctx.fillRect(brlx + 1, brly + 5, 24, 3);
+    ctx.fillRect(brlx + 1, brly + 20, 24, 3);
+    ctx.fillStyle = '#505058';
+    ctx.fillRect(brlx + 2, brly + 5, 22, 1);
+    ctx.fillRect(brlx + 2, brly + 20, 22, 1);
+    // Highlight stripe (light catching the curve)
+    ctx.fillStyle = '#8b6e3b';
+    ctx.fillRect(brlx + 10, brly + 3, 3, 22);
+    ctx.fillStyle = '#a08848';
+    ctx.fillRect(brlx + 11, brly + 4, 1, 20);
+    // Plank lines
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fillRect(brlx + 7, brly + 3, 1, 22);
+    ctx.fillRect(brlx + 16, brly + 3, 1, 22);
+
+    // ── Pass 11: Water drip + puddle (doubled, elliptical) ──
+    var pudX = 340, pudY = H - 16;
+    // Wet stone darkening around puddle
+    ctx.fillStyle = 'rgba(20,30,50,0.12)';
+    ctx.fillRect(pudX - 6, pudY - 2, 40, 16);
+    // Puddle body (28x10px, corner-clipped for ellipse)
+    ctx.fillStyle = '#222e40';
+    ctx.fillRect(pudX + 2, pudY, 24, 10); // core rect
+    ctx.fillRect(pudX, pudY + 2, 28, 6);  // wider middle
+    // Mid blue layer
+    ctx.fillStyle = '#2a3a50';
+    ctx.fillRect(pudX + 3, pudY + 1, 22, 8);
+    ctx.fillRect(pudX + 1, pudY + 3, 26, 4);
+    // Lighter inner
+    ctx.fillStyle = '#3a4a60';
+    ctx.fillRect(pudX + 4, pudY + 2, 20, 6);
+    // Bright surface
+    ctx.fillStyle = '#4a5a70';
+    ctx.fillRect(pudX + 6, pudY + 3, 16, 4);
+    // Reflection streak (8x2px)
+    ctx.fillStyle = '#8ab0d0';
+    ctx.fillRect(pudX + 8, pudY + 4, 8, 2);
+    // Specular spot
+    ctx.fillStyle = '#b0d0e8';
+    ctx.fillRect(pudX + 10, pudY + 4, 3, 1);
+    // Vertical drip streak (2px wide)
+    ctx.fillStyle = 'rgba(60,80,120,0.15)';
+    ctx.fillRect(pudX + 13, 50, 2, pudY - 48);
+    // Bright bead at bottom of drip (3x4px)
+    ctx.fillStyle = 'rgba(80,120,170,0.3)';
+    ctx.fillRect(pudX + 12, pudY - 6, 3, 4);
+    ctx.fillStyle = 'rgba(120,160,210,0.4)';
+    ctx.fillRect(pudX + 13, pudY - 5, 1, 2);
+
+    // ── Pass 12: Hanging lantern overhead glow (enhanced) ──
+    var hlx = (beamX1 + beamX2 + beamW) / 2;
+    var hly = crossY + 14;
+    // Ambient warm rect wash
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#ff8030';
+    ctx.fillRect(hlx - 60, hly - 40, 120, 100);
+    ctx.restore();
+    // Chain
+    ctx.fillStyle = '#3a3a3a';
+    ctx.fillRect(hlx, crossY + 8, 2, 8);
+    // Soot mark above chain
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    ctx.fillRect(hlx - 1, crossY + 2, 4, 8);
+    // Lantern body
+    ctx.fillStyle = '#4a2a10';
+    ctx.fillRect(hlx - 4, hly, 10, 12);
+    ctx.fillStyle = '#5a3a1a';
+    ctx.fillRect(hlx - 3, hly + 1, 8, 10);
+    // Warm glass
+    ctx.fillStyle = '#c09030';
+    ctx.fillRect(hlx - 2, hly + 2, 6, 8);
+    ctx.fillStyle = '#e0b040';
+    ctx.fillRect(hlx - 1, hly + 3, 4, 6);
+    ctx.fillStyle = '#f0d060';
+    ctx.fillRect(hlx, hly + 4, 2, 4);
+    // Soft overhead radial glow — illuminates center play area
+    grad = ctx.createRadialGradient(hlx, hly + 5, 4, hlx, hly + 5, 120);
+    grad.addColorStop(0, 'rgba(240,180,60,0.15)');
+    grad.addColorStop(0.5, 'rgba(240,160,40,0.06)');
+    grad.addColorStop(1, 'rgba(240,140,20,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(hlx - 120, hly - 115, 240, 240);
+
+    // ── Pass 13: Center depth overlay ──
+    var cx = W / 2, cy = H / 2 - 20;
+    grad = ctx.createRadialGradient(cx, cy, 60, cx, cy, 220);
+    grad.addColorStop(0, 'rgba(0,0,0,0.12)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── Pass 14: Edge vignette (proper gradients, heavier on top) ──
+    // Top (heavier — cave ceiling)
+    grad = ctx.createLinearGradient(0, 0, 0, 40);
+    grad.addColorStop(0, 'rgba(0,0,0,0.45)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 40);
+    // Bottom
+    grad = ctx.createLinearGradient(0, H - 30, 0, H);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, H - 30, W, 30);
+    // Left
+    grad = ctx.createLinearGradient(0, 0, 30, 0);
+    grad.addColorStop(0, 'rgba(0,0,0,0.3)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 30, H);
+    // Right
+    grad = ctx.createLinearGradient(W - 30, 0, W, 0);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(W - 30, 0, 30, H);
 
     return c.toDataURL('image/png');
   }
