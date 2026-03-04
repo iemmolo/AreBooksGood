@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-02T00:06:37+00:00",
+  "fetched_at": "2026-03-04T12:38:53+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -49,6 +49,21 @@
       "status": "active"
     },
     {
+      "id": 398851,
+      "name": "Music Makers Just for Minis (Bibra Lake Location)",
+      "description": "Music Makers Just for Minis is an engaging craft and music play-based experience for children aged 2- to 5- years old. \n\nIf you know Curate, you know we just adore crafting and music. But do you know what is even better? ...",
+      "venue": "Bibra Lake Community Centre, Bibra Lake, Western Australia",
+      "address": "",
+      "category": "Education",
+      "datetime_start": "2026-03-05 13:10:00",
+      "datetime_end": "2026-06-18 13:50:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "Family Friendly",
+      "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
+      "status": "active"
+    },
+    {
       "id": 398589,
       "name": "Melville Ability Dance Class",
       "description": "The Ability dance class at the Melville leisurefit is on Fridays from 10.30am-11.30am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
@@ -61,6 +76,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 398903,
+      "name": "Romeo Walker (Ben Witt) & Heathcote Blue",
+      "description": "Melville Summer Music is bringing FREE live shows to your doorstep until the end of March. \n \nJoin us at Kadidjiny Park for a soulful evening with Romeo Walker (Ben Witt), delivering smooth, genre\u2011defying sounds led by ...",
+      "venue": "Kadidjiny Park, Perth CBD, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-03-07 16:30:00",
+      "datetime_end": "2026-03-07 19:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/7-march-romeo-walker-ben-witt-heathcote-blue/perth",
       "status": "active"
     },
     {
