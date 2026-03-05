@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-04T12:38:53+00:00",
+  "fetched_at": "2026-03-05T00:07:25+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -136,6 +136,36 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/forever-18-mini-fest-live-music-fundraiser/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 397553,
+      "name": "Mountainfilm on Tour 2026",
+      "description": "Screening this March, Mountainfilm on Tour Presented by Osprey brings the inspiring spirit of Telluride&rsquo;s legendary festival to cinemas across Australia. Showcasing a powerful selection of documentaries on ...",
+      "venue": "Luna on SX, Fremantle, Western Australia",
+      "address": "",
+      "category": "Film",
+      "datetime_start": "2026-03-19 18:30:00",
+      "datetime_end": "2026-03-19 20:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/mountainfilm-on-tour-2026-fremantle/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 398376,
+      "name": "Perth Caravan & Camping Show",
+      "description": "Everything you need to explore WA! \n \nWhether you&rsquo;re looking to upgrade your current setup or just starting out, WA&rsquo;s biggest caravan and camping showcase has everything you could possibly need for your next ...",
+      "venue": "Claremont Showground, Claremont, Western Australia",
+      "address": "",
+      "category": "Expos",
+      "datetime_start": "2026-03-19 09:00:00",
+      "datetime_end": "2026-03-22 16:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/perth-caravan-camping-show/perth/claremont",
       "status": "active"
     }
   ],
