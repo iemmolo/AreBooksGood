@@ -329,6 +329,89 @@
   // Character pixel art — 16x16, 4 directions, 2 walk frames + 1 idle
   // Colors: 0=skin, 1=hair, 2=tunic, 3=belt, 4=pants, 5=boots, 6=eye, 7=sword, 8=hilt, 9=skinHi, A=tunicShadow
   var CHAR_COLORS = ['#f0c090','#5a3010','#2d8c3c','#8b5e2b','#6b4226','#2a1a0a','#1a1a2e','#a0a0a0','#c0a060','#e0d0b0','#1d6a28'];
+
+  // ── Equipment System ───────────────────────────
+  var EQUIP_SLOTS = ['weapon', 'helm', 'chest', 'legs', 'boots', 'gloves'];
+  var EQUIP_SLOT_LABELS = { weapon: 'Weapon', helm: 'Helm', chest: 'Chest', legs: 'Legs', boots: 'Boots', gloves: 'Gloves' };
+
+  // Per-tier color overrides by slot → color indices
+  // Slot → index map: weapon[7,8], chest[2,10], legs[4], boots[5], helm[1], gloves[3]
+  var TIER_COLORS = {
+    copper:   { weapon: { 7:'#b87333', 8:'#8b4513' }, chest: { 2:'#cd853f', 10:'#a0522d' }, legs: { 4:'#8b6914' }, boots: { 5:'#654321' }, helm: { 1:'#b87333' }, gloves: { 3:'#a0522d' } },
+    bronze:   { weapon: { 7:'#cd7f32', 8:'#8b4513' }, chest: { 2:'#d2a060', 10:'#b8860b' }, legs: { 4:'#9a7048' }, boots: { 5:'#6b4423' }, helm: { 1:'#cd7f32' }, gloves: { 3:'#b8860b' } },
+    gold:     { weapon: { 7:'#ffd700', 8:'#daa520' }, chest: { 2:'#ffe680', 10:'#daa520' }, legs: { 4:'#e6c300' }, boots: { 5:'#b8860b' }, helm: { 1:'#ffd700' }, gloves: { 3:'#daa520' } },
+    astral:   { weapon: { 7:'#9090d0', 8:'#6060a0' }, chest: { 2:'#b0b0e0', 10:'#7070b0' }, legs: { 4:'#8080c0' }, boots: { 5:'#5050a0' }, helm: { 1:'#9090d0' }, gloves: { 3:'#7070b0' } },
+    silver:   { weapon: { 7:'#c0c0c0', 8:'#808080' }, chest: { 2:'#d8d8d8', 10:'#a0a0a0' }, legs: { 4:'#b0b0b0' }, boots: { 5:'#707070' }, helm: { 1:'#c0c0c0' }, gloves: { 3:'#a0a0a0' } },
+    emerald:  { weapon: { 7:'#50c878', 8:'#2e8b57' }, chest: { 2:'#66cdaa', 10:'#3cb371' }, legs: { 4:'#48b070' }, boots: { 5:'#2d6840' }, helm: { 1:'#50c878' }, gloves: { 3:'#3cb371' } },
+    mithril:  { weapon: { 7:'#7ba4c9', 8:'#4682b4' }, chest: { 2:'#a0c8e8', 10:'#5f8fad' }, legs: { 4:'#6898c0' }, boots: { 5:'#3a6080' }, helm: { 1:'#7ba4c9' }, gloves: { 3:'#5f8fad' } },
+    amethyst: { weapon: { 7:'#9966cc', 8:'#7b2d8e' }, chest: { 2:'#b88dd8', 10:'#8a50b0' }, legs: { 4:'#9060c0' }, boots: { 5:'#5c3080' }, helm: { 1:'#9966cc' }, gloves: { 3:'#8a50b0' } },
+    cobalt:   { weapon: { 7:'#0047ab', 8:'#003380' }, chest: { 2:'#4080d0', 10:'#2060b0' }, legs: { 4:'#3070c0' }, boots: { 5:'#1a4080' }, helm: { 1:'#0047ab' }, gloves: { 3:'#2060b0' } },
+    molten:   { weapon: { 7:'#ff4500', 8:'#cc3300' }, chest: { 2:'#ff6b40', 10:'#e03500' }, legs: { 4:'#e05020' }, boots: { 5:'#a02800' }, helm: { 1:'#ff4500' }, gloves: { 3:'#e03500' } },
+    frost:    { weapon: { 7:'#87ceeb', 8:'#4aa8d0' }, chest: { 2:'#b0e0ff', 10:'#70b8e0' }, legs: { 4:'#80c8e0' }, boots: { 5:'#4090b0' }, helm: { 1:'#87ceeb' }, gloves: { 3:'#70b8e0' } },
+    obsidian: { weapon: { 7:'#2a0040', 8:'#1a0028' }, chest: { 2:'#3a1050', 10:'#280038' }, legs: { 4:'#301040' }, boots: { 5:'#180028' }, helm: { 1:'#2a0040' }, gloves: { 3:'#280038' } }
+  };
+
+  var equippedColorsCache = null;
+  var equippedColorsDirty = true;
+
+  function getEquipment() {
+    if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return null;
+    var slot = meta.slots[activeSlot];
+    if (!slot.equipment) {
+      slot.equipment = { weapon: null, helm: null, chest: null, legs: null, boots: null, gloves: null };
+    }
+    return slot.equipment;
+  }
+
+  function setEquipment(equip) {
+    if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return;
+    meta.slots[activeSlot].equipment = equip;
+    equippedColorsDirty = true;
+    saveMeta();
+  }
+
+  function getEquippedColors() {
+    if (!equippedColorsDirty && equippedColorsCache) return equippedColorsCache;
+    var colors = CHAR_COLORS.slice();
+    var equip = getEquipment();
+    if (!equip) { equippedColorsCache = colors; equippedColorsDirty = false; return colors; }
+    var api = window.__RPG_SKILLS_API;
+    if (!api) { equippedColorsCache = colors; equippedColorsDirty = false; return colors; }
+    for (var s = 0; s < EQUIP_SLOTS.length; s++) {
+      var slotName = EQUIP_SLOTS[s];
+      var itemName = equip[slotName];
+      if (!itemName) continue;
+      var data = api.getEquipmentData(itemName);
+      if (!data) continue;
+      var tierPalette = TIER_COLORS[data.tier];
+      if (!tierPalette || !tierPalette[slotName]) continue;
+      var slotColors = tierPalette[slotName];
+      for (var idx in slotColors) {
+        if (slotColors.hasOwnProperty(idx)) colors[parseInt(idx)] = slotColors[idx];
+      }
+    }
+    equippedColorsCache = colors;
+    equippedColorsDirty = false;
+    return colors;
+  }
+
+  function getEquipStats() {
+    var totals = { atk: 0, def: 0 };
+    var equip = getEquipment();
+    if (!equip) return totals;
+    var api = window.__RPG_SKILLS_API;
+    if (!api) return totals;
+    for (var s = 0; s < EQUIP_SLOTS.length; s++) {
+      var itemName = equip[EQUIP_SLOTS[s]];
+      if (!itemName) continue;
+      var data = api.getEquipmentData(itemName);
+      if (!data) continue;
+      totals.atk += data.atk;
+      totals.def += data.def;
+    }
+    return totals;
+  }
+
   var CHAR_FRAMES = {
     down: [
       // idle — bigger head (3px tall), sword at right hip
@@ -1106,7 +1189,8 @@
       name: name,
       created: now,
       lastPlayed: now,
-      rpgPets: getDefaultRpgPets()
+      rpgPets: getDefaultRpgPets(),
+      equipment: { weapon: null, helm: null, chest: null, legs: null, boots: null, gloves: null }
     };
     meta.currentSlot = createTargetSlot;
     saveMeta();
@@ -1286,6 +1370,8 @@
     // Render pet tab contents when switching to it
     if (tabId === 'pets') renderPetTab();
     else pendingStationLocationId = null; // clear dock-assign mode if switching away
+    // Refresh equipment preview when switching to skills tab
+    if (tabId === 'skills') renderEquipPanel();
   }
 
   function onSideTabClick(e) {
@@ -1426,6 +1512,104 @@
     var totalEl = $('rpg-char-total');
     if (nameEl) nameEl.textContent = slot.name;
     if (totalEl) totalEl.textContent = 'Total Lv: ' + getTotalLevel(activeSlot);
+    renderEquipPanel();
+  }
+
+  // ── Equipment Panel ─────────────────────────
+  function renderEquipPanel() {
+    // Draw preview canvas
+    var canvas = $('rpg-char-preview-canvas');
+    if (canvas) {
+      var ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 48, 48);
+      var frame = (CHAR_FRAMES.down && CHAR_FRAMES.down[0]) ? CHAR_FRAMES.down[0] : null;
+      if (frame) {
+        var colors = getEquippedColors();
+        var s = 3; // 16px * 3 = 48px
+        for (var i = 0; i < frame.length; i++) {
+          var px = frame[i];
+          var ci = parseInt(px[2], 16);
+          ctx.fillStyle = colors[ci];
+          ctx.fillRect(px[0] * s, px[1] * s, s, s);
+        }
+      }
+    }
+
+    // Update stats
+    var statsEl = $('rpg-equip-stats');
+    if (statsEl) {
+      var stats = getEquipStats();
+      statsEl.textContent = 'ATK: ' + stats.atk + ' \u00B7 DEF: ' + stats.def;
+    }
+
+    // Render slot grid
+    var grid = $('rpg-equip-grid');
+    if (!grid) return;
+    var equip = getEquipment();
+    var api = window.__RPG_SKILLS_API;
+    var slots = grid.querySelectorAll('.rpg-equip-slot');
+    for (var i = 0; i < slots.length; i++) {
+      var slotEl = slots[i];
+      var slotName = slotEl.getAttribute('data-slot');
+      var itemName = equip ? equip[slotName] : null;
+      slotEl.innerHTML = '';
+      slotEl.classList.remove('rpg-equip-filled');
+
+      if (itemName && api) {
+        slotEl.classList.add('rpg-equip-filled');
+        var iconData = api.getItemIcon(itemName);
+        if (iconData) {
+          var sprite = api.createSpriteEl(iconData.sheet, iconData.x, iconData.y, 16, 16, 28, 28);
+          if (sprite) slotEl.appendChild(sprite);
+        }
+        slotEl.title = itemName + ' (click to unequip)';
+      } else {
+        var label = document.createElement('span');
+        label.className = 'rpg-equip-empty-label';
+        label.textContent = EQUIP_SLOT_LABELS[slotName] || slotName;
+        slotEl.appendChild(label);
+        slotEl.title = EQUIP_SLOT_LABELS[slotName] || slotName;
+      }
+    }
+  }
+
+  function onEquipSlotClick(e) {
+    var slotEl = e.target.closest('.rpg-equip-slot');
+    if (!slotEl) return;
+    var slotName = slotEl.getAttribute('data-slot');
+    var equip = getEquipment();
+    if (!equip || !equip[slotName]) return;
+
+    // Unequip: return item to inventory
+    var itemName = equip[slotName];
+    var api = window.__RPG_SKILLS_API;
+    if (api) api.unequipItem(itemName);
+    equip[slotName] = null;
+    setEquipment(equip);
+    renderEquipPanel();
+  }
+
+  function onEquipRequest(e) {
+    var itemName = e.detail && e.detail.item;
+    if (!itemName) return;
+    var api = window.__RPG_SKILLS_API;
+    if (!api) return;
+    var data = api.getEquipmentData(itemName);
+    if (!data) return;
+
+    var equip = getEquipment();
+    if (!equip) return;
+
+    // If slot already occupied, return old item to inventory first
+    if (equip[data.slot]) {
+      api.unequipItem(equip[data.slot]);
+    }
+
+    // Remove new item from inventory and equip it
+    if (!api.equipItem(itemName)) return;
+    equip[data.slot] = itemName;
+    setEquipment(equip);
+    renderEquipPanel();
   }
 
   // ── Canvas World Map ─────────────────────────
@@ -3124,10 +3308,11 @@
     ctx.ellipse(Math.round(playerPos.x), Math.round(playerPos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    var colors = getEquippedColors();
     for (var i = 0; i < frame.length; i++) {
       var px = frame[i];
       var ci = parseInt(px[2], 16);
-      ctx.fillStyle = CHAR_COLORS[ci];
+      ctx.fillStyle = colors[ci];
       ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
     }
   }
@@ -4336,10 +4521,11 @@
     ctx.ellipse(Math.round(townPlayerPos.x), Math.round(townPlayerPos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    var colors = getEquippedColors();
     for (var i = 0; i < frame.length; i++) {
       var px = frame[i];
       var ci = parseInt(px[2], 16);
-      ctx.fillStyle = CHAR_COLORS[ci];
+      ctx.fillStyle = colors[ci];
       ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
     }
   }
@@ -5620,6 +5806,11 @@
     if (sidePanelToggle) sidePanelToggle.addEventListener('click', toggleSidePanel);
     var sideIcons = document.querySelector('.osrs-side-panel-icons');
     if (sideIcons) sideIcons.addEventListener('click', onSideTabClick);
+
+    // Equipment: click slots to unequip, listen for equip requests from inventory
+    var equipGrid = $('rpg-equip-grid');
+    if (equipGrid) equipGrid.addEventListener('click', onEquipSlotClick);
+    window.addEventListener('rpg-equip-request', onEquipRequest);
 
     // Enter key submits character creation
     $('rpg-name-input').addEventListener('keydown', function (e) {

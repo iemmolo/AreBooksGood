@@ -553,6 +553,64 @@
   color: color-mix(in srgb, var(--foreground) 60%, transparent);
 }
 
+/* ── Equipment Panel ─────────────────────────── */
+.rpg-char-preview {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 6px;
+}
+
+#rpg-char-preview-canvas {
+  image-rendering: pixelated;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.rpg-equip-stats {
+  text-align: center;
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  margin-bottom: 6px;
+}
+
+.rpg-equip-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+
+.rpg-equip-slot {
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.rpg-equip-slot:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.rpg-equip-slot.rpg-equip-filled {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.rpg-equip-empty-label {
+  font-size: 0.5em;
+  color: color-mix(in srgb, var(--foreground) 25%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+
 /* ── OSRS Panel: Layout Overrides ───────────── */
 /* Hide original left/right panels; center panel goes full-width */
 .rpg-page .skills-grid {

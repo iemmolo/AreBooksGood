@@ -387,7 +387,15 @@
     { label: 'Equipment', items: [
       'Copper Sword', 'Bronze Sword', 'Gold Sword', 'Astral Sword',
       'Silver Sword', 'Emerald Sword', 'Mithril Sword', 'Amethyst Sword',
-      'Cobalt Sword', 'Molten Sword', 'Frost Sword', 'Obsidian Trident'
+      'Cobalt Sword', 'Molten Sword', 'Frost Sword', 'Obsidian Trident',
+      'Gold Chestplate', 'Astral Chestplate', 'Silver Chestplate', 'Emerald Chestplate',
+      'Mithril Chestplate', 'Amethyst Chestplate', 'Cobalt Chestplate', 'Molten Chestplate',
+      'Frost Chestplate', 'Obsidian Chestplate',
+      'Silver Platelegs', 'Emerald Platelegs', 'Mithril Platelegs', 'Amethyst Platelegs',
+      'Cobalt Platelegs', 'Molten Platelegs', 'Frost Platelegs', 'Obsidian Platelegs',
+      'Mithril Helm', 'Amethyst Helm', 'Cobalt Helm', 'Molten Helm', 'Frost Helm', 'Obsidian Helm',
+      'Cobalt Boots', 'Molten Boots', 'Frost Boots', 'Obsidian Boots',
+      'Molten Gauntlets', 'Frost Gauntlets', 'Obsidian Gauntlets'
     ] }
   ];
 
@@ -464,7 +472,7 @@
     'Molten Bar':    { sheet: 'items_sheet', x: 352, y: 240 },
     'Frost Bar':     { sheet: 'items_sheet', x: 464, y: 240 },
     'Obsidian Bar':  { sheet: 'items_sheet', x: 512, y: 240 },
-    // Equipment (v12: one sword per tier)
+    // Equipment — Swords
     'Copper Sword':        { sheet: 'items_sheet', x: 0,   y: 0 },
     'Bronze Sword':        { sheet: 'items_sheet', x: 96,  y: 0 },
     'Gold Sword':          { sheet: 'items_sheet', x: 64,  y: 0 },
@@ -476,7 +484,43 @@
     'Cobalt Sword':        { sheet: 'items_sheet', x: 224, y: 0 },
     'Molten Sword':        { sheet: 'items_sheet', x: 256, y: 0 },
     'Frost Sword':         { sheet: 'items_sheet', x: 80,  y: 0 },
-    'Obsidian Trident':    { sheet: 'items_sheet', x: 512, y: 64 }
+    'Obsidian Trident':    { sheet: 'items_sheet', x: 512, y: 64 },
+    // Equipment — Chestplates (Row 6)
+    'Gold Chestplate':     { sheet: 'items_sheet', x: 64,  y: 96 },
+    'Astral Chestplate':   { sheet: 'items_sheet', x: 80,  y: 96 },
+    'Silver Chestplate':   { sheet: 'items_sheet', x: 48,  y: 96 },
+    'Emerald Chestplate':  { sheet: 'items_sheet', x: 128, y: 96 },
+    'Mithril Chestplate':  { sheet: 'items_sheet', x: 144, y: 96 },
+    'Amethyst Chestplate': { sheet: 'items_sheet', x: 160, y: 96 },
+    'Cobalt Chestplate':   { sheet: 'items_sheet', x: 176, y: 96 },
+    'Molten Chestplate':   { sheet: 'items_sheet', x: 192, y: 96 },
+    'Frost Chestplate':    { sheet: 'items_sheet', x: 208, y: 96 },
+    'Obsidian Chestplate': { sheet: 'items_sheet', x: 224, y: 96 },
+    // Equipment — Platelegs (Row 7)
+    'Silver Platelegs':   { sheet: 'items_sheet', x: 0,   y: 112 },
+    'Emerald Platelegs':  { sheet: 'items_sheet', x: 16,  y: 112 },
+    'Mithril Platelegs':  { sheet: 'items_sheet', x: 32,  y: 112 },
+    'Amethyst Platelegs': { sheet: 'items_sheet', x: 48,  y: 112 },
+    'Cobalt Platelegs':   { sheet: 'items_sheet', x: 64,  y: 112 },
+    'Molten Platelegs':   { sheet: 'items_sheet', x: 80,  y: 112 },
+    'Frost Platelegs':    { sheet: 'items_sheet', x: 96,  y: 112 },
+    'Obsidian Platelegs': { sheet: 'items_sheet', x: 112, y: 112 },
+    // Equipment — Helms (Row 8)
+    'Mithril Helm':  { sheet: 'items_sheet', x: 0,  y: 128 },
+    'Amethyst Helm': { sheet: 'items_sheet', x: 16, y: 128 },
+    'Cobalt Helm':   { sheet: 'items_sheet', x: 32, y: 128 },
+    'Molten Helm':   { sheet: 'items_sheet', x: 48, y: 128 },
+    'Frost Helm':    { sheet: 'items_sheet', x: 64, y: 128 },
+    'Obsidian Helm': { sheet: 'items_sheet', x: 80, y: 128 },
+    // Equipment — Boots (Row 7, cols 12+)
+    'Cobalt Boots':   { sheet: 'items_sheet', x: 192, y: 112 },
+    'Molten Boots':   { sheet: 'items_sheet', x: 208, y: 112 },
+    'Frost Boots':    { sheet: 'items_sheet', x: 224, y: 112 },
+    'Obsidian Boots': { sheet: 'items_sheet', x: 240, y: 112 },
+    // Equipment — Gauntlets (Row 7, cols 24+)
+    'Molten Gauntlets':   { sheet: 'items_sheet', x: 384, y: 112 },
+    'Frost Gauntlets':    { sheet: 'items_sheet', x: 400, y: 112 },
+    'Obsidian Gauntlets': { sheet: 'items_sheet', x: 416, y: 112 }
   };
 
   // ── Gathering → Inventory Name Maps ──────────
@@ -842,8 +886,62 @@
   };
   var SMELTING_ORDER = ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'];
 
-  // ── Forging Recipes (v12: one per tier) ────────
+  // ── Equipment Data (slot, tier, stats) ──────────
+  var EQUIPMENT_DATA = {
+    // Swords (weapon)
+    'Copper Sword':     { slot: 'weapon', tier: 'copper',   atk: 2,  def: 0 },
+    'Bronze Sword':     { slot: 'weapon', tier: 'bronze',   atk: 4,  def: 0 },
+    'Gold Sword':       { slot: 'weapon', tier: 'gold',     atk: 7,  def: 0 },
+    'Astral Sword':     { slot: 'weapon', tier: 'astral',   atk: 10, def: 0 },
+    'Silver Sword':     { slot: 'weapon', tier: 'silver',   atk: 14, def: 0 },
+    'Emerald Sword':    { slot: 'weapon', tier: 'emerald',  atk: 18, def: 0 },
+    'Mithril Sword':    { slot: 'weapon', tier: 'mithril',  atk: 23, def: 0 },
+    'Amethyst Sword':   { slot: 'weapon', tier: 'amethyst', atk: 29, def: 0 },
+    'Cobalt Sword':     { slot: 'weapon', tier: 'cobalt',   atk: 36, def: 0 },
+    'Molten Sword':     { slot: 'weapon', tier: 'molten',   atk: 44, def: 0 },
+    'Frost Sword':      { slot: 'weapon', tier: 'frost',    atk: 53, def: 0 },
+    'Obsidian Trident': { slot: 'weapon', tier: 'obsidian', atk: 63, def: 0 },
+    // Chestplates (chest) — unlocks at Gold tier
+    'Gold Chestplate':     { slot: 'chest', tier: 'gold',     atk: 0, def: 5 },
+    'Astral Chestplate':   { slot: 'chest', tier: 'astral',   atk: 0, def: 8 },
+    'Silver Chestplate':   { slot: 'chest', tier: 'silver',   atk: 0, def: 11 },
+    'Emerald Chestplate':  { slot: 'chest', tier: 'emerald',  atk: 0, def: 15 },
+    'Mithril Chestplate':  { slot: 'chest', tier: 'mithril',  atk: 0, def: 19 },
+    'Amethyst Chestplate': { slot: 'chest', tier: 'amethyst', atk: 0, def: 24 },
+    'Cobalt Chestplate':   { slot: 'chest', tier: 'cobalt',   atk: 0, def: 30 },
+    'Molten Chestplate':   { slot: 'chest', tier: 'molten',   atk: 0, def: 37 },
+    'Frost Chestplate':    { slot: 'chest', tier: 'frost',    atk: 0, def: 45 },
+    'Obsidian Chestplate': { slot: 'chest', tier: 'obsidian', atk: 0, def: 54 },
+    // Platelegs (legs) — unlocks at Silver tier
+    'Silver Platelegs':   { slot: 'legs', tier: 'silver',   atk: 0, def: 8 },
+    'Emerald Platelegs':  { slot: 'legs', tier: 'emerald',  atk: 0, def: 11 },
+    'Mithril Platelegs':  { slot: 'legs', tier: 'mithril',  atk: 0, def: 14 },
+    'Amethyst Platelegs': { slot: 'legs', tier: 'amethyst', atk: 0, def: 18 },
+    'Cobalt Platelegs':   { slot: 'legs', tier: 'cobalt',   atk: 0, def: 22 },
+    'Molten Platelegs':   { slot: 'legs', tier: 'molten',   atk: 0, def: 27 },
+    'Frost Platelegs':    { slot: 'legs', tier: 'frost',    atk: 0, def: 33 },
+    'Obsidian Platelegs': { slot: 'legs', tier: 'obsidian', atk: 0, def: 40 },
+    // Helms (helm) — unlocks at Mithril tier
+    'Mithril Helm':  { slot: 'helm', tier: 'mithril',  atk: 0, def: 8 },
+    'Amethyst Helm': { slot: 'helm', tier: 'amethyst', atk: 0, def: 11 },
+    'Cobalt Helm':   { slot: 'helm', tier: 'cobalt',   atk: 0, def: 14 },
+    'Molten Helm':   { slot: 'helm', tier: 'molten',   atk: 0, def: 18 },
+    'Frost Helm':    { slot: 'helm', tier: 'frost',    atk: 0, def: 22 },
+    'Obsidian Helm': { slot: 'helm', tier: 'obsidian', atk: 0, def: 27 },
+    // Boots (boots) — unlocks at Cobalt tier
+    'Cobalt Boots':   { slot: 'boots', tier: 'cobalt',   atk: 0, def: 10 },
+    'Molten Boots':   { slot: 'boots', tier: 'molten',   atk: 0, def: 14 },
+    'Frost Boots':    { slot: 'boots', tier: 'frost',    atk: 0, def: 18 },
+    'Obsidian Boots': { slot: 'boots', tier: 'obsidian', atk: 0, def: 23 },
+    // Gauntlets (gloves) — unlocks at Molten tier
+    'Molten Gauntlets':   { slot: 'gloves', tier: 'molten',   atk: 3, def: 8 },
+    'Frost Gauntlets':    { slot: 'gloves', tier: 'frost',    atk: 4, def: 11 },
+    'Obsidian Gauntlets': { slot: 'gloves', tier: 'obsidian', atk: 5, def: 14 }
+  };
+
+  // ── Forging Recipes (43 items: swords + armor) ──
   var FORGING_RECIPES = [
+    // ─ Swords ─
     { name: 'Copper Sword',     level: 1,  xp: 15,  inputs: [{ item: 'Copper Bar',   qty: 3 }], sprite: { x: 0,   y: 0 } },
     { name: 'Bronze Sword',     level: 8,  xp: 25,  inputs: [{ item: 'Bronze Bar',   qty: 3 }], sprite: { x: 96,  y: 0 } },
     { name: 'Gold Sword',       level: 18, xp: 50,  inputs: [{ item: 'Gold Bar',     qty: 3 }], sprite: { x: 64,  y: 0 } },
@@ -855,7 +953,43 @@
     { name: 'Cobalt Sword',     level: 72, xp: 480, inputs: [{ item: 'Cobalt Bar',   qty: 5 }], sprite: { x: 224, y: 0 } },
     { name: 'Molten Sword',     level: 80, xp: 620, inputs: [{ item: 'Molten Bar',   qty: 5 }], sprite: { x: 256, y: 0 } },
     { name: 'Frost Sword',      level: 88, xp: 780, inputs: [{ item: 'Frost Bar',    qty: 6 }], sprite: { x: 80,  y: 0 } },
-    { name: 'Obsidian Trident', level: 94, xp: 950, inputs: [{ item: 'Obsidian Bar', qty: 6 }], sprite: { x: 512, y: 64 } }
+    { name: 'Obsidian Trident', level: 94, xp: 950, inputs: [{ item: 'Obsidian Bar', qty: 6 }], sprite: { x: 512, y: 64 } },
+    // ─ Chestplates ─
+    { name: 'Gold Chestplate',     level: 20, xp: 60,   inputs: [{ item: 'Gold Bar',     qty: 5 }], sprite: { x: 64,  y: 96 } },
+    { name: 'Astral Chestplate',   level: 27, xp: 95,   inputs: [{ item: 'Astral Bar',   qty: 5 }], sprite: { x: 80,  y: 96 } },
+    { name: 'Silver Chestplate',   level: 34, xp: 145,  inputs: [{ item: 'Silver Bar',   qty: 6 }], sprite: { x: 48,  y: 96 } },
+    { name: 'Emerald Chestplate',  level: 44, xp: 215,  inputs: [{ item: 'Emerald Bar',  qty: 6 }], sprite: { x: 128, y: 96 } },
+    { name: 'Mithril Chestplate',  level: 54, xp: 310,  inputs: [{ item: 'Mithril Bar',  qty: 6 }], sprite: { x: 144, y: 96 } },
+    { name: 'Amethyst Chestplate', level: 64, xp: 430,  inputs: [{ item: 'Amethyst Bar', qty: 7 }], sprite: { x: 160, y: 96 } },
+    { name: 'Cobalt Chestplate',   level: 74, xp: 575,  inputs: [{ item: 'Cobalt Bar',   qty: 7 }], sprite: { x: 176, y: 96 } },
+    { name: 'Molten Chestplate',   level: 82, xp: 745,  inputs: [{ item: 'Molten Bar',   qty: 7 }], sprite: { x: 192, y: 96 } },
+    { name: 'Frost Chestplate',    level: 90, xp: 935,  inputs: [{ item: 'Frost Bar',    qty: 8 }], sprite: { x: 208, y: 96 } },
+    { name: 'Obsidian Chestplate', level: 96, xp: 1140, inputs: [{ item: 'Obsidian Bar', qty: 8 }], sprite: { x: 224, y: 96 } },
+    // ─ Platelegs ─
+    { name: 'Silver Platelegs',   level: 35, xp: 110,  inputs: [{ item: 'Silver Bar',   qty: 5 }], sprite: { x: 0,   y: 112 } },
+    { name: 'Emerald Platelegs',  level: 45, xp: 165,  inputs: [{ item: 'Emerald Bar',  qty: 5 }], sprite: { x: 16,  y: 112 } },
+    { name: 'Mithril Platelegs',  level: 55, xp: 235,  inputs: [{ item: 'Mithril Bar',  qty: 5 }], sprite: { x: 32,  y: 112 } },
+    { name: 'Amethyst Platelegs', level: 65, xp: 325,  inputs: [{ item: 'Amethyst Bar', qty: 6 }], sprite: { x: 48,  y: 112 } },
+    { name: 'Cobalt Platelegs',   level: 75, xp: 430,  inputs: [{ item: 'Cobalt Bar',   qty: 6 }], sprite: { x: 64,  y: 112 } },
+    { name: 'Molten Platelegs',   level: 83, xp: 560,  inputs: [{ item: 'Molten Bar',   qty: 6 }], sprite: { x: 80,  y: 112 } },
+    { name: 'Frost Platelegs',    level: 91, xp: 700,  inputs: [{ item: 'Frost Bar',    qty: 7 }], sprite: { x: 96,  y: 112 } },
+    { name: 'Obsidian Platelegs', level: 97, xp: 855,  inputs: [{ item: 'Obsidian Bar', qty: 7 }], sprite: { x: 112, y: 112 } },
+    // ─ Helms ─
+    { name: 'Mithril Helm',  level: 56, xp: 185,  inputs: [{ item: 'Mithril Bar',  qty: 4 }], sprite: { x: 0,  y: 128 } },
+    { name: 'Amethyst Helm', level: 66, xp: 255,  inputs: [{ item: 'Amethyst Bar', qty: 5 }], sprite: { x: 16, y: 128 } },
+    { name: 'Cobalt Helm',   level: 76, xp: 340,  inputs: [{ item: 'Cobalt Bar',   qty: 5 }], sprite: { x: 32, y: 128 } },
+    { name: 'Molten Helm',   level: 84, xp: 440,  inputs: [{ item: 'Molten Bar',   qty: 5 }], sprite: { x: 48, y: 128 } },
+    { name: 'Frost Helm',    level: 92, xp: 550,  inputs: [{ item: 'Frost Bar',    qty: 6 }], sprite: { x: 64, y: 128 } },
+    { name: 'Obsidian Helm', level: 98, xp: 680,  inputs: [{ item: 'Obsidian Bar', qty: 6 }], sprite: { x: 80, y: 128 } },
+    // ─ Boots ─
+    { name: 'Cobalt Boots',   level: 77, xp: 290,  inputs: [{ item: 'Cobalt Bar',   qty: 4 }], sprite: { x: 192, y: 112 } },
+    { name: 'Molten Boots',   level: 85, xp: 375,  inputs: [{ item: 'Molten Bar',   qty: 4 }], sprite: { x: 208, y: 112 } },
+    { name: 'Frost Boots',    level: 93, xp: 470,  inputs: [{ item: 'Frost Bar',    qty: 5 }], sprite: { x: 224, y: 112 } },
+    { name: 'Obsidian Boots', level: 98, xp: 580,  inputs: [{ item: 'Obsidian Bar', qty: 5 }], sprite: { x: 240, y: 112 } },
+    // ─ Gauntlets ─
+    { name: 'Molten Gauntlets',   level: 86, xp: 310,  inputs: [{ item: 'Molten Bar',   qty: 4 }], sprite: { x: 384, y: 112 } },
+    { name: 'Frost Gauntlets',    level: 94, xp: 390,  inputs: [{ item: 'Frost Bar',    qty: 5 }], sprite: { x: 400, y: 112 } },
+    { name: 'Obsidian Gauntlets', level: 99, xp: 480,  inputs: [{ item: 'Obsidian Bar', qty: 5 }], sprite: { x: 416, y: 112 } }
   ];
 
   // ── State ─────────────────────────────────────
@@ -2192,6 +2326,17 @@
         cell._tooltipText = itemKey + ' \u00d7 ' + qty;
         cell.addEventListener('mouseenter', showInvTooltip);
         cell.addEventListener('mouseleave', hideInvTooltip);
+
+        // Equipment items are clickable to equip (in RPG mode)
+        if (EQUIPMENT_DATA[itemKey] && window.__RPG_STORAGE_KEY) {
+          cell.style.cursor = 'pointer';
+          cell.title = 'Click to equip ' + itemKey;
+          cell._equipItem = itemKey;
+          cell.addEventListener('click', function () {
+            var item = this._equipItem;
+            window.dispatchEvent(new CustomEvent('rpg-equip-request', { detail: { item: item } }));
+          });
+        }
 
         var sprite = createSpriteEl(iconData.sheet, iconData.x, iconData.y, 16, 16, 24, 24);
         if (sprite) cell.appendChild(sprite);
@@ -8556,6 +8701,37 @@
         empty.textContent = 'No items yet. Start skilling!';
         container.appendChild(empty);
       }
+    },
+
+    getEquipmentData: function (itemName) {
+      return EQUIPMENT_DATA[itemName] || null;
+    },
+
+    getItemIcon: function (itemName) {
+      return ITEM_ICON_MAP[itemName] || null;
+    },
+
+    createSpriteEl: function (sheetKey, sx, sy, sw, sh, dw, dh) {
+      return createSpriteEl(sheetKey, sx, sy, sw, sh, dw, dh);
+    },
+
+    equipItem: function (itemName) {
+      if (!state || !state.inventory) return false;
+      var data = EQUIPMENT_DATA[itemName];
+      if (!data) return false;
+      if (!state.inventory[itemName] || state.inventory[itemName] < 1) return false;
+      removeItem(itemName, 1);
+      renderInventoryPanel();
+      saveState();
+      return true;
+    },
+
+    unequipItem: function (itemName) {
+      if (!state) return false;
+      addItem(itemName, 1);
+      renderInventoryPanel();
+      saveState();
+      return true;
     }
   };
   window.addEventListener('rpg-skills-init', reinit);
