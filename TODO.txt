@@ -374,8 +374,8 @@ AreBooksGood - Improvement TODO
 - [x] **1C: New Player Tutorial Popup** — on first openSlot() (isFirstLogin flag), show multi-step overlay: map navigation, chatbox tabs, side panel. Save meta.slots[N].tutorialSeen = true
 
 ### RPG Phase 2: World Building & Onboarding (Done)
-- [x] **2A: Kingdom Identity** — add KINGDOM_NAME = 'Thornquill' constant, update game subtitle/welcome/flavor text
-- [x] **2B: First-Time NPC Intro** — "The Gatekeeper" walks onto world map, delivers snarky welcome in chatbox + speech bubble ("Oh God, not another one. Welcome to Thornquill..."), walks away, triggers first quest. Only fires once (meta.slots[N].introSeen)
+- [x] **2A: Kingdom Identity** — add KINGDOM_NAME = 'JackTown' constant, update game subtitle/welcome/flavor text
+- [x] **2B: First-Time NPC Intro** — "The Gatekeeper" walks onto world map, delivers snarky welcome in chatbox + speech bubble ("Oh God, not another one. Welcome to JackTown..."), walks away, triggers first quest. Only fires once (meta.slots[N].introSeen)
 - [x] **2C: Unread Message Badges** — dot/badge on chatbox tab buttons when new messages arrive on inactive tab (Game tab, Quest tab)
 
 ### RPG Phase 3: Quest System (Foundation Done)
@@ -391,10 +391,13 @@ AreBooksGood - Improvement TODO
 - [x] Add quest.js to baseof.html load order: rpg.js → quest.js → skills.js
 
 ### RPG Phase 4: Pet Store & Gacha Polish
-- [ ] **4A: Egg Opening Animation** — multi-step canvas: egg lands → wobbles (3x) → crack lines → splits open → light burst → pet sprite fades in → rarity banner ("LEGENDARY!") → stats reveal
-- [ ] **4B: Better Pet Interface** — larger sprite previews, type badge + stat summary, sort/filter by type/tier/level, equipped gear indicator
-- [ ] **4C: Duplicate Handling** — "Already owned!" badge, merge XP bar fill animation, inline evolution animation
-- [ ] **4D: Free Starter Pulls** — first 4 pulls free (tied to "Claim Your Swag Bag" quest), guaranteed 1 rare from 4 free pulls (3 commons + 1 rare)
+- [x] **4A: Single Mystery Egg** — replaced 3 egg tiers with 1 egg (500 GP), rarity roll (80% Common, 18% Rare, 2% Legendary), rarity banner on result
+- [x] **4B: Free Starter Pulls** — first 4 pulls free (no dupes guaranteed), tied to "Claim Your Swag Bag" quest
+- [x] **4C: Per-Slot Wallet** — each save slot has isolated GP (starts 500), decoupled from global site wallet
+- [x] **4D: Dupe Rewards** — duplicates award Evo XP towards pet evolution (25/50/100 by tier)
+- [ ] **4E: Egg Opening Animation** — multi-step canvas: egg lands → wobbles (3x) → crack lines → splits open → light burst → pet sprite fades in → rarity banner ("LEGENDARY!") → stats reveal
+- [ ] **4F: Better Pet Interface** — larger sprite previews, type badge + stat summary, sort/filter by type/tier/level, equipped gear indicator
+- [ ] **4G: Dupe Polish** — "Already owned!" badge, Evo XP bar fill animation, inline evolution animation
 
 ### RPG Phase 5: Combat Rework — Turn-Based Tactical (replaces auto-battle)
 New file: rpg-combat.js. Old battle.js stays as legacy standalone at /games/battle/.
@@ -422,7 +425,7 @@ New file: rpg-combat.js. Old battle.js stays as legacy standalone at /games/batt
 
 ### RPG Phase 7: Economy & Integration
 - [ ] **Renown System** — reputation currency from quests. Ranks: Stranger → Citizen → Honored → Renowned → Legend. Unlocks higher quest tiers, exclusive shop items
-- [ ] **Per-Slot Economy Isolation** — override window.Wallet on RPG load to read rpg-slot-N-wallet. Restore global on Save & Quit
+- [x] **Per-Slot Economy Isolation** — override window.Wallet on RPG load to read rpg-slot-N-wallet. Restore global on Save & Quit
 - [ ] **Resource Chain** — Mining → Smithing → Equipment → Combat → Gear Drops → Sell → GP → Buy Consumables. Fishing → (Future: Cooking) → Combat consumables
 - [ ] **Progression Gating** — Dungeon Gate: total level 25+ or intro questline. Higher quests: renown thresholds. Evolution stones: specific dungeon drops. World map expansion: quest gates
 

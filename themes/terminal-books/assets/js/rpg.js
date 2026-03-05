@@ -1557,7 +1557,7 @@
         n.phase = 'speak';
         n.frame = 0;
         n.speechTimer = 0;
-        n.speechText = "Oh God, not another one. Welcome to " + KINGDOM_NAME + ", if this is your first time please make your way to the pet store for your complimentary pet. Or don't, I'm indifferent.";
+        n.speechText = "Oh God, not another one. Welcome to " + KINGDOM_NAME + ", if this is your first time please make your way to the pet store for your complimentary pets. Or don't, I'm indifferent.";
         n.speechChars = 0;
         addGameMessage('[The Gatekeeper] ' + n.speechText, 'system');
         return;
@@ -4980,10 +4980,12 @@
 
     // Single egg card with rarity roll
     var EGG_COST = 500;
+    var FREE_PULLS = 4;
     var eggsEl = document.getElementById('rpg-petstore-eggs');
     if (eggsEl && petCatalog) {
       eggsEl.innerHTML = '';
-      var isFree = (rpgPets.totalHatched === 0);
+      var freeLeft = Math.max(0, FREE_PULLS - (rpgPets.totalHatched || 0));
+      var isFree = freeLeft > 0;
 
       var card = document.createElement('div');
       card.className = 'rpg-egg-card';
@@ -5002,7 +5004,7 @@
 
       var cost = document.createElement('div');
       cost.className = 'rpg-egg-cost';
-      cost.textContent = isFree ? 'FREE' : EGG_COST + ' GP';
+      cost.textContent = isFree ? 'FREE (' + freeLeft + ' left)' : EGG_COST + ' GP';
       card.appendChild(cost);
 
       // Rarity rates display
@@ -5120,11 +5122,14 @@
     return 'common';
   }
 
+  var FREE_PULLS = 4;
+
   function rpgHatchEgg() {
     if (!petCatalog) return;
 
     var rpgPets = getRpgPetState();
-    var isFree = (rpgPets.totalHatched === 0);
+    var freeLeft = Math.max(0, FREE_PULLS - (rpgPets.totalHatched || 0));
+    var isFree = freeLeft > 0;
 
     // Check currency
     if (!isFree) {
@@ -5134,29 +5139,36 @@
     // Roll rarity tier, then pick creature from that pool
     var tier = rollRarity();
     var pool = getRpgCreaturesByTier(tier);
-    if (pool.length === 0) pool = getRpgCreaturesByTier('common'); // fallback
+    if (pool.length === 0) pool = getRpgCreaturesByTier('common');
 
-    // Pity system — force a new creature after N consecutive dupes
-    var forceNew = (rpgPets.pity.overall || 0) >= PITY_THRESHOLD;
+    // Free pulls: always guarantee a new creature (no dupes)
+    // Paid pulls: pity system forces new after N consecutive dupes
+    var forceNew = isFree || (rpgPets.pity.overall || 0) >= PITY_THRESHOLD;
 
     var rolled;
     if (forceNew) {
-      // Pick from any unowned creature across all tiers
-      var allCreatures = getRpgCreatures();
+      // Pick from unowned creatures (prefer the rolled tier, fallback to any)
       var unowned = [];
-      for (var i = 0; i < allCreatures.length; i++) {
-        if (!rpgPets.owned[allCreatures[i]]) unowned.push(allCreatures[i]);
+      for (var i = 0; i < pool.length; i++) {
+        if (!rpgPets.owned[pool[i]]) unowned.push(pool[i]);
+      }
+      if (unowned.length === 0) {
+        // No unowned in this tier — try any unowned creature
+        var allCreatures = getRpgCreatures();
+        for (var j = 0; j < allCreatures.length; j++) {
+          if (!rpgPets.owned[allCreatures[j]]) unowned.push(allCreatures[j]);
+        }
       }
       rolled = unowned.length > 0
         ? unowned[Math.floor(Math.random() * unowned.length)]
         : pool[Math.floor(Math.random() * pool.length)];
-      // Look up which tier the rolled creature belongs to
+      // Look up actual tier of the rolled creature
       if (petCatalog.creatures[rolled]) tier = petCatalog.creatures[rolled].tier;
     } else {
       rolled = pool[Math.floor(Math.random() * pool.length)];
     }
 
-    // Deduct currency (skip if free first egg)
+    // Deduct currency (skip if free)
     if (!isFree) {
       window.Wallet.deduct(EGG_COST);
     }
@@ -5165,6 +5177,7 @@
     var mergeXP = MERGE_XP[tier] || 25;
 
     if (isDuplicate) {
+      // Dupe: award Evo XP towards next evolution
       rpgPets.owned[rolled].xp = (rpgPets.owned[rolled].xp || 0) + mergeXP;
       var needed = rpgPetXpForLevel(rpgPets.owned[rolled].level);
       if (rpgPets.owned[rolled].xp >= needed) {
@@ -5219,14 +5232,19 @@
 
       var tagEl = document.createElement('div');
       tagEl.className = 'rpg-petstore-result-tag';
-      tagEl.textContent = isDuplicate ? 'Duplicate! (+' + mergeXP + ' XP)' : 'New creature!';
-      tagEl.style.color = isDuplicate ? 'color-mix(in srgb, var(--foreground) 60%, transparent)' : 'var(--accent)';
+      if (isDuplicate) {
+        tagEl.textContent = 'Duplicate! (+' + mergeXP + ' Evo XP)';
+        tagEl.style.color = 'color-mix(in srgb, var(--foreground) 60%, transparent)';
+      } else {
+        tagEl.textContent = 'New creature!';
+        tagEl.style.color = 'var(--accent)';
+      }
       resultEl.appendChild(tagEl);
     }
 
     var creatureName = petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled;
     addGameMessage(isDuplicate
-      ? 'The egg hatches... another ' + creatureName + '. (+' + mergeXP + ' merge XP)'
+      ? 'The egg hatches... another ' + creatureName + '. (+' + mergeXP + ' Evo XP)'
       : 'The egg hatches! A ' + creatureName + ' emerges! (' + (tierLabels[tier] || tier) + ')',
       tier === 'legendary' ? 'reward' : 'system');
 

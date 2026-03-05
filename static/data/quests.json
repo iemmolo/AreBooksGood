@@ -2,17 +2,17 @@
   "intro-001": {
     "id": "intro-001",
     "name": "Claim Your Swag Bag",
-    "description": "Head to the Pet Store and claim your free starter pet.",
+    "description": "Head to the Pet Store and hatch your 4 free starter pets.",
     "category": "main",
     "difficulty": "easy",
     "requirements": { "quests": [] },
     "objectives": [
-      { "type": "hatch_pets", "count": 1, "description": "Hatch a free pet at the Pet Store" }
+      { "type": "hatch_pets", "count": 4, "description": "Hatch 4 free pets at the Pet Store" }
     ],
     "rewards": { "gp": 300, "xp": { "mining": 100 }, "renown": 10 },
     "dialogue": {
-      "start": "The Pet Store's got a free egg for newcomers. Go hatch yourself a companion.",
-      "progress": "The Pet Store is inside the town. Free egg waiting for you.",
+      "start": "The Pet Store's got 4 free eggs for newcomers. Go hatch yourself a team.",
+      "progress": "Still only {current}/{total} pets? The store's right there.",
       "complete": "Not bad. Enjoy a hit of dopamine? Head to the Guard Barracks and check the notice board for more."
     },
     "chain": "intro-002",
