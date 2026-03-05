@@ -257,7 +257,7 @@ AreBooksGood - Improvement TODO
 - [x] Smelting: temperature gauge mini-game, 9 bar recipes, consumes ores → bars
 - [x] Forging: 5-hit timing bar, 12 equipment recipes (one per tier), consumes bars → equipment
 - [x] Tab toggle UI, material requirements display, idle smelting
-- [x] Equipment category in inventory (12 items across 12 tiers: Copper→Obsidian)
+- [x] Equipment category in inventory (43 items: swords + chestplates + platelegs + helms + boots + gauntlets across 12 tiers)
 - [x] Bug fixes: atomic consume, stack cap guards, stuck state recovery, zone sync, click guards
 - [x] Forge-themed UI: warm color palette, smoky glass panels, metal tabs, bellows button, fire glow accents
 - [x] v12 migration: replaced 23-item multi-type system with 12-item one-per-tier swords + Obsidian Trident
@@ -388,9 +388,9 @@ Goal: Every standalone game on the site becomes accessible as an RPG activity at
 - [ ] Quest system (NPCs in Tavern give objectives + rewards)
 - [ ] Shop system in Town Hub (buy/sell, ties into Silk Road economy)
 - [ ] New skills as RPG locations: Cooking, Crafting, Magic/Alchemy
-- [ ] Equipment stat system (forged gear provides combat bonuses)
+- [x] Equipment stat system (forged gear provides combat bonuses) — 43 items, 6 slots, 12 tiers, color palette swaps
 - [ ] Per-slot pet companions (pets scoped to save slot)
-- [ ] LPC runtime layer compositing (equipment visually changes character sprite)
+- [x] LPC runtime layer compositing (equipment visually changes character sprite) — implemented via color palette swaps
 - [ ] Achievement/milestone tracker across all skills
 - [ ] Per-slot economy isolation (casino coins, JB, materials all scoped to save slot)
 
