@@ -362,37 +362,82 @@ AreBooksGood - Improvement TODO
 - [x] Escape key: close modal → exit town → return to map
 - [x] Mobile responsive modal (stacked egg cards, scrollable)
 
-### Phase 5b: Town Hub Hotspot Implementations (Future)
-- [ ] **Tavern**: Quest system (NPCs give objectives + rewards)
-- [ ] **General Store**: Buy/sell items, ties into Silk Road economy
-- [ ] **Bank**: Deposit/withdraw coins and JB, interest system
-- [ ] **Casino**: Poker, Blackjack, Casino Wars, Slots (coins/JB feed into RPG wallet)
-- [ ] **Arcade**: Flappy Bird, Doodle Jump (high scores per RPG save slot)
-- [ ] **Chapel**: Prayer skill integration
-- [ ] **Dungeon Gate**: Battle/dungeon system as RPG activity
-- [ ] **Library**: Lore, bestiary, achievement tracker
-- [ ] **Guard Barracks**: Combat training, Slayer tasks
+### RPG Phase 0: Bug Fixes — Sprite Preloading (Done)
+- [x] Add <link rel="preload" as="image"> in head.html for critical sprite sheets (items_sheet.png, rocks.png, fish.png, trees.png) — conditional on rpg-game/skills type
+- [x] Add JS Image() preloading in skills.js init() — iterate SKILL_SPRITE_PATHS, wait for all onload before rendering
+- [x] Preload pet sprite sheets in rpg.js after petcatalog.json loads
+- [ ] Verify: all sprites visible immediately on first visit (incognito mode test)
 
-### Phase 6: Game Integration — All Site Games as RPG Activities
-Goal: Every standalone game on the site becomes accessible as an RPG activity at a map location.
+### RPG Phase 1: UX Polish (Done)
+- [x] **1A: Chatbox Restyling** — warm background to match world map earth tones (#c4a06a, #8b6b3a), parchment texture via CSS gradient, OSRS-like gold accent tabs, message type color badges
+- [x] **1B: Auto-Open Location Tab** — after enterSkillLocation() calls renderLocationPane(), add switchChatTab('location'). One line fix.
+- [x] **1C: New Player Tutorial Popup** — on first openSlot() (isFirstLogin flag), show multi-step overlay: map navigation, chatbox tabs, side panel. Save meta.slots[N].tutorialSeen = true
 
-- [ ] **Tower Defense Outpost** (new map location): TD game launches from RPG
-  - Materials/JB earned carry back to RPG slot
-- [ ] **Farm** (new map location): Farm system accessible from RPG map
-  - JB wallet, crops, farmhouse tied to RPG save slot
+### RPG Phase 2: World Building & Onboarding (Done)
+- [x] **2A: Kingdom Identity** — add KINGDOM_NAME = 'Thornquill' constant, update game subtitle/welcome/flavor text
+- [x] **2B: First-Time NPC Intro** — "The Gatekeeper" walks onto world map, delivers snarky welcome in chatbox + speech bubble ("Oh God, not another one. Welcome to Thornquill..."), walks away, triggers first quest. Only fires once (meta.slots[N].introSeen)
+- [x] **2C: Unread Message Badges** — dot/badge on chatbox tab buttons when new messages arrive on inactive tab (Game tab, Quest tab)
+
+### RPG Phase 3: Quest System (Foundation Done)
+- [x] **3A: Quest Data** — create static/data/quests.json with quest schema (id, name, description, category, difficulty, requirements, objectives, rewards, dialogue, chain, autoStart)
+- [x] **3B: Quest Engine** — create assets/js/quest.js: QuestSystem.init(), startQuest(), updateObjective(), completeQuest(). Exposed via window.QuestSystem
+- [x] **3C: Quest State** — per-slot storage rpg-slot-N-quests: active quests, completed list, renown currency, quest board
+- [x] **3D: Objective Types** — hatch_pets, visit_location, gather_resource, reach_level, craft_item (clear_dungeon/deliver_item/kill_enemies prepared but untested)
+- [x] **3E: Integration Hooks** — skills.js emits quest events (ore mined, fish caught, level up, item crafted). rpg.js emits (pet hatched, location visited)
+- [x] **3F: Quest UI** — Quest Tab in chatbox (active quests + progress bars), "New Quest!" toast notifications, quest complete rewards in game log
+- [x] **3G: First Quest Chain** — intro-001 through intro-006 (Swag Bag → Guard → Mine → Fish → Timber → Hammer Time) + 2 side quests + 1 skill quest
+- [ ] **3H: Quest Board** (in Tavern) — 3 fetch + 2 combat quests, daily refresh, difficulty badges, reward previews
+- [ ] **Quest Types**: Easy (convoluted fetch quests, good GP), Medium (fight low-level monsters, good XP), Hard (fight bosses, good items), Ultra Nightmare (hardest bosses, best gear + renown)
+- [x] Add quest.js to baseof.html load order: rpg.js → quest.js → skills.js
+
+### RPG Phase 4: Pet Store & Gacha Polish
+- [ ] **4A: Egg Opening Animation** — multi-step canvas: egg lands → wobbles (3x) → crack lines → splits open → light burst → pet sprite fades in → rarity banner ("LEGENDARY!") → stats reveal
+- [ ] **4B: Better Pet Interface** — larger sprite previews, type badge + stat summary, sort/filter by type/tier/level, equipped gear indicator
+- [ ] **4C: Duplicate Handling** — "Already owned!" badge, merge XP bar fill animation, inline evolution animation
+- [ ] **4D: Free Starter Pulls** — first 4 pulls free (tied to "Claim Your Swag Bag" quest), guaranteed 1 rare from 4 free pulls (3 commons + 1 rare)
+
+### RPG Phase 5: Combat Rework — Turn-Based Tactical (replaces auto-battle)
+New file: rpg-combat.js. Old battle.js stays as legacy standalone at /games/battle/.
+
+- [ ] **5.1: Core Turn Engine** — turn order by SPD (base + gear + buffs), priority moves go first, per-round: build order → each fighter acts → resolve status effects. Toggle per pet: manual or AI (aggressive/defensive/support)
+- [ ] **5.2: Move/Ability System** — expand existing MOVES from battle.js. New effects: taunt, shield, regen, cleanse, bleed, stun, reflect, atkDown/defDown. Move schema: id, name, type, power, category (physical/special/status), cooldown, effect, aoe, selfTarget
+- [ ] **5.3: Spec Path System (Tech Tree)** — 3 paths: DPS (Mage/Assassin/Melee/Ranged), Tank (Guardian/Juggernaut), Support (Healer/Buffer). Spec available at pet level 5, moves unlock at milestones (5/15/30/50/75). Respec: 500 GP first, doubles each time
+- [ ] **5.4: Evolution & Level Cap Rework** — Common: base 30 → evolve → 50. Rare: 25 → 50 → 75. Legendary: 50 → 75 → 99. Evolution needs level cap + type-matched stone (Fire Stone, Aqua Crystal, etc.) + GP. Stones from: dungeon drops, quest rewards, crafting
+- [ ] **5.5: Legendary Star System** — post-99 prestige: 5 stars max, each needs massive XP + Star Fragment (hardest dungeons). Per star: +5% all stats + bonus passive. Star 5 = "Awakened" form with aura VFX
+- [ ] **5.6: Battle UI** — canvas-based in center panel. Turn order portrait strip, enemy/ally teams with HP bars + status icons, 4 move buttons (name, type color, power, cooldown), Switch/Items/Run buttons. Floating damage numbers, type effectiveness popups
+- [ ] **5.7: Dungeon Integration** — Dungeon Gate in town opens dungeon select. Team building (pick 3 pets, assign moves). Turn-based waves. Between waves: partial heal, rearrange. Clear → rewards (gear + quest progress + renown)
+- [ ] Create: assets/js/rpg-combat.js, static/data/rpg-moves.json, static/data/spec-trees.json
+- [ ] Update: petcatalog.json (maxLevel values, evolution data), baseof.html (load rpg-combat.js)
+
+### RPG Phase 6: Town Hub Hotspot Implementations (priority order)
+- [ ] **General Store** — buy/sell items, consumables, evolution stones. Shop inventory grid. Sell at fixed prices, buy potions/bait/dynamite. Prices in GP and JB
+- [ ] **Tavern** — quest board UI (daily refresh), quest turn-ins, NPC bartender dialogue. Depends on Phase 3
+- [ ] **Dungeon Gate** — RPG combat dungeon select. Depends on Phase 5
+- [ ] **Bank** — deposit/withdraw GP/JB, 1%/day interest (capped), item storage (doesn't count toward inventory cap)
+- [ ] **Library** — bestiary (enemy grid with stats/sprites), achievement tracker, lore entries, collection completion %
+- [ ] **Guard Barracks** — combat training dummy (practice moves), slayer task assignments (future), type chart reference
+- [ ] **Casino** — bridge to existing casino games (poker/blackjack/slots). Bridge RPG wallet ↔ casino wallet
+- [ ] **Arcade** — launch Flappy Bird / Doodle Jump from RPG. High scores per save slot, GP/renown milestones
+- [ ] **Chapel** — prayer skill location (blocked until Skills Phase 10)
+
+### RPG Phase 7: Economy & Integration
+- [ ] **Renown System** — reputation currency from quests. Ranks: Stranger → Citizen → Honored → Renowned → Legend. Unlocks higher quest tiers, exclusive shop items
+- [ ] **Per-Slot Economy Isolation** — override window.Wallet on RPG load to read rpg-slot-N-wallet. Restore global on Save & Quit
+- [ ] **Resource Chain** — Mining → Smithing → Equipment → Combat → Gear Drops → Sell → GP → Buy Consumables. Fishing → (Future: Cooking) → Combat consumables
+- [ ] **Progression Gating** — Dungeon Gate: total level 25+ or intro questline. Higher quests: renown thresholds. Evolution stones: specific dungeon drops. World map expansion: quest gates
+
+### RPG Phase 8: Game Integration — Site Games as RPG Activities
+- [ ] **Tower Defense Outpost** (new map location): TD game launches from RPG, materials/JB carry back to slot
+- [ ] **Farm** (new map location): Farm system accessible from RPG map, JB/crops/farmhouse tied to save slot
 - [ ] **Chess Parlor** (new map location): Chess puzzles from RPG
-- [ ] Expand world map grid to accommodate new locations (3×2 → larger grid)
-- [ ] Location unlock progression (some locations gated by total level or quest)
+- [ ] Expand world map grid to accommodate new locations
+- [ ] Location unlock progression (gated by total level or quest)
 
-### Phase 6+ (Future)
-- [ ] Quest system (NPCs in Tavern give objectives + rewards)
-- [ ] Shop system in Town Hub (buy/sell, ties into Silk Road economy)
-- [ ] New skills as RPG locations: Cooking, Crafting, Magic/Alchemy
-- [x] Equipment stat system (forged gear provides combat bonuses) — 43 items, 6 slots, 12 tiers, color palette swaps
-- [ ] Per-slot pet companions (pets scoped to save slot)
-- [x] LPC runtime layer compositing (equipment visually changes character sprite) — implemented via color palette swaps
-- [ ] Achievement/milestone tracker across all skills
-- [ ] Per-slot economy isolation (casino coins, JB, materials all scoped to save slot)
+### RPG Completed Work
+- [x] Equipment stat system — 43 items, 6 slots, 12 tiers, color palette swaps
+- [x] LPC runtime layer compositing — implemented via color palette swaps
+- [x] Per-slot pet companions (37 creatures, gacha, follower, stationed)
+- [x] Pet speech bubbles on world map collection
 
 ## Low Priority / Nice-to-Have
 

@@ -158,6 +158,15 @@
   {{- end -}}
 {{- end }}
 
+{{/* Preload critical sprite sheets for RPG and Skills pages */}}
+{{ if or (eq .Type "rpg-game") (eq .Type "skills") -}}
+  <link rel="preload" as="image" href="/images/skills/items_sheet.png">
+  <link rel="preload" as="image" href="/images/skills/rocks.png">
+  <link rel="preload" as="image" href="/images/skills/fish.png">
+  <link rel="preload" as="image" href="/images/skills/trees.png">
+  <link rel="preload" as="image" href="/images/skills/tools-t1.png">
+{{- end }}
+
 {{/* Open Graph */}}
 <meta property="og:title" content="{{ .Title }}">
 <meta property="og:description" content="{{ with .Params.summary }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">

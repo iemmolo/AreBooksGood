@@ -1359,6 +1359,29 @@
     state.inventory[key] = cur + added;
     saveState();
     renderInventoryPanel();
+
+    // Quest integration: broadcast item addition
+    if (added > 0 && window.QuestSystem) {
+      var cat = null;
+      // Detect category — check fish first (avoids Barracuda matching 'Bar')
+      for (var ci = 0; ci < ITEM_CATEGORIES.length; ci++) {
+        if (ITEM_CATEGORIES[ci].items.indexOf(key) !== -1) {
+          var lbl = ITEM_CATEGORIES[ci].label;
+          if (lbl === 'Ores') cat = 'ore';
+          else if (lbl === 'Logs') cat = 'log';
+          else if (lbl === 'Fish') cat = 'fish';
+          else if (lbl === 'Bars') cat = 'bar';
+          break;
+        }
+      }
+      if (cat) {
+        window.QuestSystem.updateObjective('gather_resource', { item: key, category: cat, count: added });
+      }
+      if (cat === 'bar') {
+        window.QuestSystem.updateObjective('craft_item', { item: key, category: 'bar', count: added });
+      }
+    }
+
     return added;
   }
 
@@ -1558,6 +1581,11 @@
           showPerkUnlockToast(skillPerks[pi]);
         }
       }
+    }
+
+    // Quest integration: level up
+    if (window.QuestSystem) {
+      window.QuestSystem.updateObjective('reach_level', { skill: skill, level: newLevel });
     }
 
     // B4: Mastery check
@@ -8732,6 +8760,18 @@
       renderInventoryPanel();
       saveState();
       return true;
+    },
+
+    addXp: function (skill, amount) {
+      if (!state || !state.skills[skill]) return;
+      amount = parseInt(amount, 10);
+      if (!amount || amount <= 0) return;
+      addXp(skill, amount);
+    },
+
+    getLevel: function (skill) {
+      if (!state || !state.skills[skill]) return 0;
+      return state.skills[skill].level;
     }
   };
   window.addEventListener('rpg-skills-init', reinit);
@@ -8742,6 +8782,27 @@
     state = loadState();
 
     loadRemoteData(function () {
+      // Preload critical sprite sheets before rendering
+      var criticalSheets = ['items_sheet', 'rocks', 'trees', 'fish', 'tools-t1'];
+      var sheetsLoaded = 0;
+      var sheetsTotal = criticalSheets.length;
+      function onSheetReady() {
+        sheetsLoaded++;
+        if (sheetsLoaded >= sheetsTotal) renderAfterPreload();
+      }
+      for (var si = 0; si < criticalSheets.length; si++) {
+        var path = SKILL_SPRITE_PATHS[criticalSheets[si]];
+        if (path) {
+          var img = new Image();
+          img.onload = onSheetReady;
+          img.onerror = onSheetReady;
+          img.src = path;
+        } else {
+          onSheetReady();
+        }
+      }
+
+      function renderAfterPreload() {
       // Calculate idle rewards first
       var idleResult = calculateIdleRewards();
 
@@ -8825,6 +8886,7 @@
         }
       }
       saveState();
+      } // end renderAfterPreload
     });
   }
 

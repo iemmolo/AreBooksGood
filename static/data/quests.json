@@ -1,0 +1,173 @@
+{
+  "intro-001": {
+    "id": "intro-001",
+    "name": "Claim Your Swag Bag",
+    "description": "Head to the Pet Store and claim your free starter pet.",
+    "category": "main",
+    "difficulty": "easy",
+    "requirements": { "quests": [] },
+    "objectives": [
+      { "type": "hatch_pets", "count": 1, "description": "Hatch a free pet at the Pet Store" }
+    ],
+    "rewards": { "gp": 300, "xp": { "mining": 100 }, "renown": 10 },
+    "dialogue": {
+      "start": "The Pet Store's got a free egg for newcomers. Go hatch yourself a companion.",
+      "progress": "The Pet Store is inside the town. Free egg waiting for you.",
+      "complete": "Not bad. Enjoy a hit of dopamine? Head to the Guard Barracks and check the notice board for more."
+    },
+    "chain": "intro-002",
+    "autoStart": false
+  },
+  "intro-002": {
+    "id": "intro-002",
+    "name": "The Guard's Request",
+    "description": "Visit the Guard Barracks in town.",
+    "category": "main",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-001"] },
+    "objectives": [
+      { "type": "visit_location", "target": "barracks", "count": 1, "description": "Visit the Guard Barracks" }
+    ],
+    "rewards": { "gp": 200, "renown": 5 },
+    "dialogue": {
+      "start": "The guards might have something for you. Head to the barracks.",
+      "progress": "The barracks is inside the town. Look for the big stone building.",
+      "complete": "Good, you found the place. The captain says to check back when you're stronger."
+    },
+    "chain": "intro-003",
+    "autoStart": true
+  },
+  "intro-003": {
+    "id": "intro-003",
+    "name": "Rock Bottom",
+    "description": "Mine 10 ores at the Mining Camp.",
+    "category": "main",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-002"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "ore", "count": 10, "description": "Mine 10 ores" }
+    ],
+    "rewards": { "gp": 300, "xp": { "mining": 200 }, "renown": 10 },
+    "dialogue": {
+      "start": "Every adventurer needs resources. Head to the Mining Camp and dig up 10 ores.",
+      "progress": "{current}/{total} ores mined. Keep swinging.",
+      "complete": "You've got dirt under your fingernails. I respect that."
+    },
+    "chain": "intro-004",
+    "autoStart": true
+  },
+  "intro-004": {
+    "id": "intro-004",
+    "name": "Something's Fishy",
+    "description": "Catch 10 fish at the Fishing Dock.",
+    "category": "main",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "fish", "count": 10, "description": "Catch 10 fish" }
+    ],
+    "rewards": { "gp": 300, "xp": { "fishing": 200 }, "renown": 10 },
+    "dialogue": {
+      "start": "The dock master needs help. Go catch 10 fish — any kind will do.",
+      "progress": "{current}/{total} fish caught. The gulls are jealous.",
+      "complete": "Not bad for a landlubber. Here's your reward."
+    },
+    "chain": "intro-005",
+    "autoStart": true
+  },
+  "intro-005": {
+    "id": "intro-005",
+    "name": "Timber!",
+    "description": "Chop 10 logs at the Lumber Forest.",
+    "category": "main",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-004"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "log", "count": 10, "description": "Chop 10 logs" }
+    ],
+    "rewards": { "gp": 300, "xp": { "woodcutting": 200 }, "renown": 10 },
+    "dialogue": {
+      "start": "The carpenter is screaming about a wood shortage. Cut down 10 logs.",
+      "progress": "{current}/{total} logs chopped. Swing harder.",
+      "complete": "The carpenter can stop screaming now. Well done."
+    },
+    "chain": "intro-006",
+    "autoStart": true
+  },
+  "intro-006": {
+    "id": "intro-006",
+    "name": "Hammer Time",
+    "description": "Smelt 5 bars at the Smithy.",
+    "category": "main",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-005"] },
+    "objectives": [
+      { "type": "craft_item", "resource": "bar", "count": 5, "description": "Smelt 5 bars" }
+    ],
+    "rewards": { "gp": 500, "xp": { "smithing": 300 }, "renown": 15 },
+    "dialogue": {
+      "start": "Time to put those ores to use. Head to the Smithy and smelt 5 bars.",
+      "progress": "{current}/{total} bars smelted. The forge awaits.",
+      "complete": "A smith in the making. JackTown needs more like you."
+    },
+    "chain": null,
+    "autoStart": true
+  },
+  "fetch-001": {
+    "id": "fetch-001",
+    "name": "The Blacksmith's Hamster",
+    "description": "The blacksmith needs 10 copper ore... for his pet hamster's cage. Don't ask.",
+    "category": "side",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "Copper Ore", "count": 10, "description": "Gather 10 Copper Ore" }
+    ],
+    "rewards": { "gp": 200, "renown": 5 },
+    "dialogue": {
+      "start": "Look, my hamster is very particular about his living arrangements. Just get me the ore.",
+      "progress": "{current}/{total} copper ore. My hamster is getting impatient.",
+      "complete": "Perfect. Mr. Whiskers will be thrilled. Here, take this."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "fetch-002": {
+    "id": "fetch-002",
+    "name": "Questionable Fish Stew",
+    "description": "The tavern cook needs 15 fish for a stew. The health inspector would not approve.",
+    "category": "side",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-004"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "fish", "count": 15, "description": "Catch 15 fish" }
+    ],
+    "rewards": { "gp": 350, "renown": 8 },
+    "dialogue": {
+      "start": "The tavern needs fish for tonight's stew. Any fish. ALL the fish. Don't ask about the recipe.",
+      "progress": "{current}/{total} fish. The pot is simmering ominously.",
+      "complete": "Brilliant. The stew is... well, it's something. Here's your coin."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "skill-001": {
+    "id": "skill-001",
+    "name": "Apprentice Miner",
+    "description": "Reach level 10 in Mining to prove your worth.",
+    "category": "skill",
+    "difficulty": "medium",
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "reach_level", "skill": "mining", "count": 10, "description": "Reach Mining level 10" }
+    ],
+    "rewards": { "gp": 1000, "xp": { "mining": 500 }, "renown": 20 },
+    "dialogue": {
+      "start": "The mining guild only accepts level 10 miners. Time to put in the work.",
+      "progress": "Current level: {current}. Target: {total}. Keep at it.",
+      "complete": "Level 10! The guild recognizes your skill. Welcome, apprentice."
+    },
+    "chain": null,
+    "autoStart": false
+  }
+}

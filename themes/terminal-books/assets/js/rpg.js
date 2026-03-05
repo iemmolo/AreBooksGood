@@ -7,6 +7,7 @@
   var SKILLS_SUFFIX = '-skills';
   var MAX_SLOTS = 3;
 
+  var KINGDOM_NAME = 'JackTown';
   var SKILL_KEYS = ['mining', 'fishing', 'woodcutting', 'smithing', 'combat'];
   var LOCATIONS = [
     { id: 'town', name: 'Town Hub', desc: 'Home, shop, and tavern', skill: null },
@@ -30,7 +31,7 @@
 
   // ── Location Flavor Text ─────────────────────
   var LOCATION_FLAVOR = {
-    town:   'The townsfolk go about their business. A merchant beckons from his stall.',
+    town:   'The townsfolk of ' + KINGDOM_NAME + ' go about their business. A merchant beckons from his stall.',
     mine:   'The clang of pickaxes echoes through the cavern. Ore veins glisten in the torchlight.',
     dock:   'Gulls cry overhead. The salt air carries the promise of a good catch.',
     forest: 'Sunlight filters through the canopy. Ancient oaks creak in the breeze.',
@@ -212,12 +213,72 @@
     return result;
   }
 
+  // ── Per-Slot Wallet ──────────────────────────
+  var RPG_WALLET_STARTING_COINS = 500;
+  var originalWallet = null; // stash the global Wallet during RPG sessions
+
+  function getDefaultRpgWallet() {
+    return { coins: RPG_WALLET_STARTING_COINS, totalEarned: 0, totalSpent: 0 };
+  }
+
+  function getRpgWallet() {
+    if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return getDefaultRpgWallet();
+    var s = meta.slots[activeSlot];
+    if (!s.wallet) s.wallet = getDefaultRpgWallet();
+    return s.wallet;
+  }
+
+  function saveRpgWallet() {
+    if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return;
+    saveMeta();
+  }
+
+  function installRpgWallet() {
+    originalWallet = window.Wallet;
+    var w = getRpgWallet();
+    window.Wallet = {
+      getBalance: function () { return getRpgWallet().coins; },
+      add: function (n) {
+        if (n <= 0) return 0;
+        var w = getRpgWallet();
+        w.coins += n;
+        w.totalEarned += n;
+        saveRpgWallet();
+        return n;
+      },
+      deduct: function (n) {
+        if (n <= 0) return 0;
+        var w = getRpgWallet();
+        var actual = Math.min(n, w.coins);
+        w.coins -= actual;
+        w.totalSpent += actual;
+        saveRpgWallet();
+        return actual;
+      },
+      isBroke: function () { return getRpgWallet().coins <= 0; },
+      onChange: function () {},
+      beg: function () { return null; },
+      getStats: function () {
+        var w = getRpgWallet();
+        return { coins: w.coins, totalEarned: w.totalEarned, totalSpent: w.totalSpent };
+      }
+    };
+  }
+
+  function uninstallRpgWallet() {
+    if (originalWallet) {
+      window.Wallet = originalWallet;
+      originalWallet = null;
+    }
+  }
+
+  // ── Per-Slot Pets ──────────────────────────────
   function getDefaultRpgPets() {
     return {
       follower: null,
       stations: {},
       owned: {},
-      pity: { common: 0, rare: 0, legendary: 0 },
+      pity: { overall: 0 },
       totalHatched: 0
     };
   }
@@ -983,6 +1044,22 @@
     currentScreen = id;
   }
 
+  // ── Unread Badge Helper ──────────────────────
+  function markTabUnread(tabId) {
+    var btn = document.querySelector('[data-chat-tab="' + tabId + '"]');
+    if (btn && !btn.classList.contains('active')) {
+      btn.classList.add('has-unread');
+    }
+  }
+
+  function clearTabUnread(tabId) {
+    var btn = document.querySelector('[data-chat-tab="' + tabId + '"]');
+    if (btn) btn.classList.remove('has-unread');
+  }
+
+  // Expose for quest.js
+  window.__RPG_MARK_TAB_UNREAD = markTabUnread;
+
   // ── Game Message Log ─────────────────────────
   function addGameMessage(text, type) {
     var pane = $('osrs-chat-game');
@@ -1003,6 +1080,9 @@
     // Auto-switch to Game tab when on the map or in town
     if (centerMode === 'map' || insideTown) {
       switchChatTab('game');
+    } else {
+      // Mark game tab as unread if not currently active
+      markTabUnread('game');
     }
   }
 
@@ -1189,6 +1269,7 @@
       name: name,
       created: now,
       lastPlayed: now,
+      wallet: getDefaultRpgWallet(),
       rpgPets: getDefaultRpgPets(),
       equipment: { weapon: null, helm: null, chest: null, legs: null, boots: null, gloves: null }
     };
@@ -1320,6 +1401,8 @@
     for (var i = 0; i < panes.length; i++) {
       panes[i].style.display = (panes[i].id === 'osrs-chat-' + tabId) ? '' : 'none';
     }
+    // Clear unread badge on the active tab
+    clearTabUnread(tabId);
     // Auto-expand if collapsed
     chatbox.classList.remove('collapsed');
     var toggle = $('osrs-chatbox-toggle');
@@ -1391,6 +1474,225 @@
     }
   }
 
+  // ── Tutorial ─────────────────────────────────
+  var TUTORIAL_STEPS = [
+    '<strong>Welcome to JackTown!</strong><br><br>Click the world map to walk between locations. Click a location marker to enter it.',
+    '<strong>Chatbox &amp; Tabs</strong><br><br>The bottom bar shows game events. Switch tabs for <strong>Quest</strong> progress and <strong>Location</strong> details.',
+    '<strong>Side Panel</strong><br><br>Open the icons on the right to manage <strong>Skills</strong>, <strong>Inventory</strong>, <strong>Pets</strong>, and <strong>Milestones</strong>.'
+  ];
+
+  function showTutorial() {
+    var overlay = $('rpg-tutorial-overlay');
+    if (!overlay) return;
+    var stepEl = $('rpg-tutorial-step');
+    var dotsEl = $('rpg-tutorial-dots');
+    var nextBtn = $('rpg-tutorial-next');
+    var currentStep = 0;
+
+    function render() {
+      stepEl.innerHTML = TUTORIAL_STEPS[currentStep];
+      var dots = '';
+      for (var i = 0; i < TUTORIAL_STEPS.length; i++) {
+        dots += '<span class="rpg-tutorial-dot' + (i === currentStep ? ' active' : '') + '"></span>';
+      }
+      dotsEl.innerHTML = dots;
+      nextBtn.textContent = currentStep === TUTORIAL_STEPS.length - 1 ? "Let's go!" : 'Next';
+    }
+
+    overlay.style.display = '';
+    render();
+
+    nextBtn.onclick = function () {
+      currentStep++;
+      if (currentStep >= TUTORIAL_STEPS.length) {
+        overlay.style.display = 'none';
+        nextBtn.onclick = null;
+        // Mark tutorial as seen
+        if (activeSlot >= 0 && meta.slots[activeSlot]) {
+          meta.slots[activeSlot].tutorialSeen = true;
+          saveMeta();
+        }
+        // Trigger NPC intro after tutorial completes (not on a timer)
+        if (activeSlot >= 0 && meta.slots[activeSlot] && !meta.slots[activeSlot].introSeen && centerMode === 'map') {
+          setTimeout(startNpcIntro, 500);
+        }
+      } else {
+        render();
+      }
+    };
+  }
+
+  // ── NPC Intro ("The Gatekeeper") ─────────────
+  var NPC_COLORS = ['#f0c090','#6a4a2a','#8b0000','#5c3a1a','#3a2a1a','#1a0a00','#1a1a2e','#a0a0a0','#c0a060','#e0d0b0','#6a0000'];
+  var npcIntro = null; // { active, phase, pos, dir, frame, timer, speechTimer, done }
+
+  function startNpcIntro() {
+    var townLoc = MAP_LOCATIONS.town;
+    npcIntro = {
+      active: true,
+      phase: 'walk-in',  // walk-in → speak → walk-out → done
+      pos: { x: townLoc.x + 120, y: townLoc.y + 50 },
+      target: { x: townLoc.x + 50, y: townLoc.y + 50 },
+      dir: 'left',
+      frame: 0,
+      animTimer: 0,
+      speechTimer: 0,
+      speechText: '',
+      speechChars: 0,
+      done: false
+    };
+  }
+
+  function updateNpcIntro(dt) {
+    if (!npcIntro || !npcIntro.active) return;
+    var n = npcIntro;
+
+    if (n.phase === 'walk-in') {
+      var dx = n.target.x - n.pos.x;
+      var dy = n.target.y - n.pos.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 3) {
+        n.pos.x = n.target.x;
+        n.pos.y = n.target.y;
+        n.phase = 'speak';
+        n.frame = 0;
+        n.speechTimer = 0;
+        n.speechText = "Oh God, not another one. Welcome to " + KINGDOM_NAME + ", if this is your first time please make your way to the pet store for your complimentary pet. Or don't, I'm indifferent.";
+        n.speechChars = 0;
+        addGameMessage('[The Gatekeeper] ' + n.speechText, 'system');
+        return;
+      }
+      var step = 80 * dt;
+      if (step > dist) step = dist;
+      n.pos.x += (dx / dist) * step;
+      n.pos.y += (dy / dist) * step;
+      n.dir = dx > 0 ? 'right' : 'left';
+      n.animTimer += dt;
+      if (n.animTimer > 0.2) { n.animTimer = 0; n.frame = n.frame === 1 ? 2 : 1; }
+
+    } else if (n.phase === 'speak') {
+      n.speechTimer += dt;
+      n.speechChars = Math.min(Math.floor(n.speechTimer * 30), n.speechText.length);
+      // Wait for text + 2s pause
+      if (n.speechTimer > n.speechText.length / 30 + 5) {
+        n.phase = 'walk-out';
+        n.target = { x: MAP_LOCATIONS.town.x + 130, y: MAP_LOCATIONS.town.y + 50 };
+        n.speechText = '';
+        n.frame = 0;
+      }
+
+    } else if (n.phase === 'walk-out') {
+      var dx = n.target.x - n.pos.x;
+      var dy = n.target.y - n.pos.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 3) {
+        n.active = false;
+        npcIntro = null;
+        // Start the first quest — only mark introSeen if quest system is ready
+        if (window.QuestSystem && window.QuestSystem.canStart('intro-001')) {
+          if (activeSlot >= 0 && meta.slots[activeSlot]) {
+            meta.slots[activeSlot].introSeen = true;
+            saveMeta();
+          }
+          setTimeout(function () {
+            if (window.QuestSystem) window.QuestSystem.startQuest('intro-001');
+          }, 500);
+        } else if (!window.QuestSystem) {
+          // QuestSystem not loaded — mark seen anyway to avoid infinite replays
+          if (activeSlot >= 0 && meta.slots[activeSlot]) {
+            meta.slots[activeSlot].introSeen = true;
+            saveMeta();
+          }
+        }
+        // else: QuestSystem loaded but quest already started/completed — don't re-mark
+        return;
+      }
+      var step = 100 * dt;
+      if (step > dist) step = dist;
+      n.pos.x += (dx / dist) * step;
+      n.pos.y += (dy / dist) * step;
+      n.dir = dx > 0 ? 'right' : 'left';
+      n.animTimer += dt;
+      if (n.animTimer > 0.2) { n.animTimer = 0; n.frame = n.frame === 1 ? 2 : 1; }
+    }
+  }
+
+  function drawNpcIntro(ctx) {
+    if (!npcIntro || !npcIntro.active) return;
+    var n = npcIntro;
+    var frames = CHAR_FRAMES[n.dir];
+    if (!frames) return;
+    var frame = frames[n.frame] || frames[0];
+    var s = CHAR_SCALE;
+    var ox = Math.round(n.pos.x) - 8 * s;
+    var oy = Math.round(n.pos.y) - 12 * s;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(Math.round(n.pos.x), Math.round(n.pos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (var i = 0; i < frame.length; i++) {
+      var px = frame[i];
+      var ci = parseInt(px[2], 16);
+      ctx.fillStyle = NPC_COLORS[ci];
+      ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
+    }
+
+    // Speech bubble
+    if (n.phase === 'speak' && n.speechText) {
+      var visible = n.speechText.substring(0, n.speechChars);
+      if (visible.length > 0) {
+        // Word-wrap into lines of ~30 chars
+        var words = visible.split(' ');
+        var lines = [];
+        var line = '';
+        for (var w = 0; w < words.length; w++) {
+          var test = line ? line + ' ' + words[w] : words[w];
+          if (test.length > 30 && line) {
+            lines.push(line);
+            line = words[w];
+          } else {
+            line = test;
+          }
+        }
+        if (line) lines.push(line);
+
+        var fontSize = 10;
+        var lineHeight = 13;
+        ctx.font = fontSize + 'px monospace';
+        ctx.textAlign = 'center';
+        var maxW = 0;
+        for (var li = 0; li < lines.length; li++) {
+          var lw = ctx.measureText(lines[li]).width;
+          if (lw > maxW) maxW = lw;
+        }
+        var bw = maxW + 16, bh = lines.length * lineHeight + 10;
+        var bx = n.pos.x - bw / 2, by = n.pos.y - 30 * s - bh;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.9)';
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeStyle = '#c0a040';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, by, bw, bh);
+
+        // Tail
+        ctx.fillStyle = 'rgba(0,0,0,0.9)';
+        ctx.beginPath();
+        ctx.moveTo(n.pos.x - 4, by + bh);
+        ctx.lineTo(n.pos.x, by + bh + 6);
+        ctx.lineTo(n.pos.x + 4, by + bh);
+        ctx.fill();
+
+        ctx.fillStyle = '#e0d0a0';
+        for (var li = 0; li < lines.length; li++) {
+          ctx.fillText(lines[li], n.pos.x, by + 13 + li * lineHeight);
+        }
+      }
+    }
+  }
+
   // ── Game Entry ────────────────────────────────
   function enterGame(slot) {
     activeSlot = slot;
@@ -1402,6 +1704,9 @@
 
     // Set up RPG storage key for skills.js
     window.__RPG_STORAGE_KEY = slotStorageKey(slot);
+
+    // Install per-slot wallet (overrides global Wallet)
+    installRpgWallet();
 
     // Hide the skills-topbar (we use our own topbar)
     var skillsTopbar = document.querySelector('.skills-topbar');
@@ -1432,11 +1737,11 @@
     // Welcome message as first log entry
     var pName = meta.slots[slot].name;
     if (isFirstLogin) {
-      addGameMessage('Welcome, ' + pName + '. This is your first time here \u2014 Jack greets you.', 'system');
+      addGameMessage('Welcome to ' + KINGDOM_NAME + ', ' + pName + '. Your adventure begins.', 'system');
     } else if (Date.now() - prevLastPlayed < 300000) {
-      addGameMessage('Welcome back, ' + pName + '.', 'system');
+      addGameMessage('Welcome back to ' + KINGDOM_NAME + ', ' + pName + '.', 'system');
     } else {
-      addGameMessage('Welcome back, ' + pName + '. You last logged in ' + timeAgo(prevLastPlayed) + '.', 'system');
+      addGameMessage('Welcome back to ' + KINGDOM_NAME + ', ' + pName + '. You last logged in ' + timeAgo(prevLastPlayed) + '.', 'system');
     }
 
     // Preload pet sprites from per-slot state
@@ -1451,6 +1756,11 @@
 
     // Show game screen
     showScreen('rpg-game-screen');
+
+    // Init quest system
+    if (window.QuestSystem) {
+      window.QuestSystem.init(slot);
+    }
 
     // Render world map in center
     renderWorldMap();
@@ -1488,6 +1798,16 @@
     } else {
       showCenterContent('map');
       window.dispatchEvent(new Event('rpg-skills-init'));
+    }
+
+    // Show tutorial for first-time players (NPC intro triggers after tutorial completes)
+    if (isFirstLogin && !meta.slots[slot].tutorialSeen) {
+      setTimeout(showTutorial, 600);
+    } else if (isFirstLogin && !meta.slots[slot].introSeen) {
+      // Tutorial already seen (e.g. page refresh after tutorial) — start NPC intro directly
+      setTimeout(function () {
+        if (centerMode === 'map') startNpcIntro();
+      }, 800);
     }
   }
 
@@ -1679,6 +1999,7 @@
     smokeFrame++;
     updatePlayer(dt);
     updateFollowerPosition(dt);
+    updateNpcIntro(dt);
     drawMap();
 
     mapAnimId = requestAnimationFrame(mapLoop);
@@ -1787,8 +2108,9 @@
     drawStationedPets(ctx);
     drawFollower(ctx);
     drawPlayer(ctx);
+    drawNpcIntro(ctx);
     drawLocationLabels(ctx);
-    if (enterPromptVisible && playerAtLocation) {
+    if (enterPromptVisible && playerAtLocation && !npcIntro) {
       drawEnterPrompt(ctx);
     }
     drawPetSpeechBubble(ctx);
@@ -3562,6 +3884,7 @@
         }
         // Populate location pane after skill switch
         renderLocationPane(loc.id, loc.skill);
+        switchChatTab('location');
         // Inject stationed pet sprite into game area after skills.js renders
         setTimeout(function () { renderStationedPetInGameArea(loc.id); }, 100);
       }, 50);
@@ -3611,9 +3934,17 @@
     meta.currentSlot = -1;
     saveMeta();
 
+    // Restore global wallet
+    uninstallRpgWallet();
+
     // Clean up skills if active
     if (typeof window.__RPG_SKILLS_CLEANUP === 'function') {
       window.__RPG_SKILLS_CLEANUP();
+    }
+
+    // Clean up quest system
+    if (window.QuestSystem) {
+      window.QuestSystem.cleanup();
     }
 
     // Hide chatbox + side panel
@@ -3876,6 +4207,11 @@
   function onEnterTownHotspot(locId) {
     var loc = TOWN_LOCATIONS[locId];
     if (!loc) return;
+
+    // Quest hook: location visited
+    if (window.QuestSystem) {
+      window.QuestSystem.updateObjective('visit_location', { location: locId });
+    }
 
     if (loc.type === 'decorative') {
       // Fountain — just flavor text
@@ -4639,85 +4975,80 @@
     var balEl = document.getElementById('rpg-petstore-balance');
     if (balEl) {
       var coins = window.Wallet ? window.Wallet.getBalance() : 0;
-      var jb = window.JackBucks ? window.JackBucks.getBalance() : 0;
-      balEl.textContent = coins + ' Coins | ' + jb + ' JB';
+      balEl.textContent = coins + ' GP';
     }
 
-    // Egg cards
+    // Single egg card with rarity roll
+    var EGG_COST = 500;
     var eggsEl = document.getElementById('rpg-petstore-eggs');
-    if (eggsEl && petCatalog && petCatalog.eggs) {
+    if (eggsEl && petCatalog) {
       eggsEl.innerHTML = '';
-      var tiers = [
-        { key: 'common',    label: 'Common Egg',    color: '#88aa66' },
-        { key: 'rare',      label: 'Rare Egg',      color: '#6688cc' }
-      ];
-      for (var ti = 0; ti < tiers.length; ti++) {
-        var t = tiers[ti];
-        var eggDef = petCatalog.eggs[t.key];
-        if (!eggDef) continue;
-        var card = document.createElement('div');
-        card.className = 'rpg-egg-card';
-        card.style.borderColor = t.color;
+      var isFree = (rpgPets.totalHatched === 0);
 
-        var eggIcon = document.createElement('div');
-        eggIcon.className = 'rpg-egg-icon';
-        eggIcon.style.background = t.color;
-        eggIcon.textContent = t.key === 'legendary' ? '\u2728' : t.key === 'rare' ? '\u2b50' : '\ud83e\udd5a';
-        card.appendChild(eggIcon);
+      var card = document.createElement('div');
+      card.className = 'rpg-egg-card';
+      card.style.borderColor = '#c0a040';
 
-        var label = document.createElement('div');
-        label.className = 'rpg-egg-label';
-        label.textContent = t.label;
-        card.appendChild(label);
+      var eggIcon = document.createElement('div');
+      eggIcon.className = 'rpg-egg-icon';
+      eggIcon.style.background = 'linear-gradient(135deg, #88aa66, #6688cc, #cc9933)';
+      eggIcon.textContent = '\ud83e\udd5a';
+      card.appendChild(eggIcon);
 
-        var cost = document.createElement('div');
-        cost.className = 'rpg-egg-cost';
-        cost.textContent = eggDef.cost + (eggDef.currency === 'jb' ? ' JB' : ' Coins');
-        card.appendChild(cost);
+      var label = document.createElement('div');
+      label.className = 'rpg-egg-label';
+      label.textContent = 'Mystery Egg';
+      card.appendChild(label);
 
-        // Pool from RPG creatures only (excludes cat/dragon/golem)
-        var pool = getRpgCreaturesByTier(t.key);
-        var ownedCount = 0;
-        for (var pi = 0; pi < pool.length; pi++) {
-          if (rpgPets.owned[pool[pi]]) ownedCount++;
-        }
-        var poolInfo = document.createElement('div');
-        poolInfo.className = 'rpg-egg-pool';
-        poolInfo.textContent = ownedCount + '/' + pool.length + ' owned';
-        card.appendChild(poolInfo);
+      var cost = document.createElement('div');
+      cost.className = 'rpg-egg-cost';
+      cost.textContent = isFree ? 'FREE' : EGG_COST + ' GP';
+      card.appendChild(cost);
 
-        // Pity counter from per-slot state
-        var pityCount = rpgPets.pity[t.key] || 0;
-        var pityThreshold = t.key === 'legendary' ? 5 : t.key === 'rare' ? 8 : 6;
-        if (pityCount > 0 && ownedCount < pool.length) {
-          var pityEl = document.createElement('div');
-          pityEl.className = 'rpg-egg-pity';
-          if (pityCount >= pityThreshold - 1) {
-            pityEl.textContent = 'Next: guaranteed new!';
-            pityEl.style.color = 'var(--accent)';
-          } else {
-            pityEl.textContent = 'Pity: ' + pityCount + '/' + pityThreshold;
-          }
-          card.appendChild(pityEl);
-        }
+      // Rarity rates display
+      var rates = document.createElement('div');
+      rates.className = 'rpg-egg-pool';
+      rates.textContent = '80% Common \u00b7 18% Rare \u00b7 2% Legendary';
+      card.appendChild(rates);
 
-        var canAfford = eggDef.currency === 'jb'
-          ? (window.JackBucks && window.JackBucks.getBalance() >= eggDef.cost)
-          : (window.Wallet && window.Wallet.getBalance() >= eggDef.cost);
-        var hatchBtn = document.createElement('button');
-        hatchBtn.className = 'rpg-btn rpg-btn-small rpg-btn-primary';
-        hatchBtn.textContent = 'Hatch';
-        hatchBtn.disabled = !canAfford;
-        if (!canAfford) hatchBtn.classList.add('rpg-btn-disabled');
-        hatchBtn.setAttribute('data-tier', t.key);
-        hatchBtn.addEventListener('click', function () {
-          var tier = this.getAttribute('data-tier');
-          rpgHatchEgg(tier);
-        });
-        card.appendChild(hatchBtn);
-
-        eggsEl.appendChild(card);
+      // Total owned
+      var allCreatures = getRpgCreatures();
+      var totalOwned = 0;
+      for (var pi = 0; pi < allCreatures.length; pi++) {
+        if (rpgPets.owned[allCreatures[pi]]) totalOwned++;
       }
+      var poolInfo = document.createElement('div');
+      poolInfo.className = 'rpg-egg-pool';
+      poolInfo.textContent = totalOwned + '/' + allCreatures.length + ' creatures owned';
+      card.appendChild(poolInfo);
+
+      // Pity counter (use overall pity, not per-tier)
+      var pityCount = rpgPets.pity.overall || 0;
+      var pityThreshold = 8;
+      if (pityCount > 0 && totalOwned < allCreatures.length) {
+        var pityEl = document.createElement('div');
+        pityEl.className = 'rpg-egg-pity';
+        if (pityCount >= pityThreshold - 1) {
+          pityEl.textContent = 'Next: guaranteed new!';
+          pityEl.style.color = 'var(--accent)';
+        } else {
+          pityEl.textContent = 'Pity: ' + pityCount + '/' + pityThreshold;
+        }
+        card.appendChild(pityEl);
+      }
+
+      var canAfford = isFree || (window.Wallet && window.Wallet.getBalance() >= EGG_COST);
+      var hatchBtn = document.createElement('button');
+      hatchBtn.className = 'rpg-btn rpg-btn-small rpg-btn-primary';
+      hatchBtn.textContent = isFree ? 'Hatch (FREE!)' : 'Hatch';
+      hatchBtn.disabled = !canAfford;
+      if (!canAfford) hatchBtn.classList.add('rpg-btn-disabled');
+      hatchBtn.addEventListener('click', function () {
+        rpgHatchEgg();
+      });
+      card.appendChild(hatchBtn);
+
+      eggsEl.appendChild(card);
     }
 
     // Collection grid
@@ -4769,56 +5100,72 @@
     }
   }
 
-  function rpgHatchEgg(tier) {
-    if (!petCatalog) return;
-    var eggDef = petCatalog.eggs[tier];
-    if (!eggDef) return;
+  // Rarity weights: 80% common, 18% rare, 2% legendary
+  var EGG_COST = 500;
+  var RARITY_WEIGHTS = [
+    { tier: 'common',    weight: 80 },
+    { tier: 'rare',      weight: 18 },
+    { tier: 'legendary', weight: 2 }
+  ];
+  var MERGE_XP = { common: 25, rare: 50, legendary: 100 };
+  var PITY_THRESHOLD = 8; // guaranteed new creature after 8 consecutive dupes
 
-    // Check currency
-    if (eggDef.currency === 'jb') {
-      if (!window.JackBucks || window.JackBucks.getBalance() < eggDef.cost) return;
-    } else {
-      if (!window.Wallet || window.Wallet.getBalance() < eggDef.cost) return;
+  function rollRarity() {
+    var roll = Math.random() * 100;
+    var cumulative = 0;
+    for (var i = 0; i < RARITY_WEIGHTS.length; i++) {
+      cumulative += RARITY_WEIGHTS[i].weight;
+      if (roll < cumulative) return RARITY_WEIGHTS[i].tier;
     }
+    return 'common';
+  }
 
-    // Use RPG creature pool (excludes cat/dragon/golem)
-    var pool = getRpgCreaturesByTier(tier);
-    if (pool.length === 0) return;
+  function rpgHatchEgg() {
+    if (!petCatalog) return;
 
     var rpgPets = getRpgPetState();
+    var isFree = (rpgPets.totalHatched === 0);
 
-    // Pity system from per-slot state
-    var pityThreshold = tier === 'legendary' ? 5 : tier === 'rare' ? 8 : 6;
-    var forceNew = (rpgPets.pity[tier] || 0) >= pityThreshold;
+    // Check currency
+    if (!isFree) {
+      if (!window.Wallet || window.Wallet.getBalance() < EGG_COST) return;
+    }
 
-    // Roll creature
+    // Roll rarity tier, then pick creature from that pool
+    var tier = rollRarity();
+    var pool = getRpgCreaturesByTier(tier);
+    if (pool.length === 0) pool = getRpgCreaturesByTier('common'); // fallback
+
+    // Pity system — force a new creature after N consecutive dupes
+    var forceNew = (rpgPets.pity.overall || 0) >= PITY_THRESHOLD;
+
     var rolled;
     if (forceNew) {
+      // Pick from any unowned creature across all tiers
+      var allCreatures = getRpgCreatures();
       var unowned = [];
-      for (var i = 0; i < pool.length; i++) {
-        if (!rpgPets.owned[pool[i]]) unowned.push(pool[i]);
+      for (var i = 0; i < allCreatures.length; i++) {
+        if (!rpgPets.owned[allCreatures[i]]) unowned.push(allCreatures[i]);
       }
       rolled = unowned.length > 0
         ? unowned[Math.floor(Math.random() * unowned.length)]
         : pool[Math.floor(Math.random() * pool.length)];
+      // Look up which tier the rolled creature belongs to
+      if (petCatalog.creatures[rolled]) tier = petCatalog.creatures[rolled].tier;
     } else {
       rolled = pool[Math.floor(Math.random() * pool.length)];
     }
 
-    // Deduct currency
-    if (eggDef.currency === 'jb') {
-      window.JackBucks.deduct(eggDef.cost);
-    } else {
-      window.Wallet.deduct(eggDef.cost);
+    // Deduct currency (skip if free first egg)
+    if (!isFree) {
+      window.Wallet.deduct(EGG_COST);
     }
 
     var isDuplicate = !!rpgPets.owned[rolled];
-    var mergeXP = eggDef.dupMergeXP || 0;
+    var mergeXP = MERGE_XP[tier] || 25;
 
     if (isDuplicate) {
-      // Duplicate: add XP to existing pet
       rpgPets.owned[rolled].xp = (rpgPets.owned[rolled].xp || 0) + mergeXP;
-      // Check level up
       var needed = rpgPetXpForLevel(rpgPets.owned[rolled].level);
       if (rpgPets.owned[rolled].xp >= needed) {
         var maxLv = petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].maxLevel : 3;
@@ -4827,20 +5174,36 @@
           rpgPets.owned[rolled].xp -= needed;
         }
       }
-      rpgPets.pity[tier] = (rpgPets.pity[tier] || 0) + 1;
+      rpgPets.pity.overall = (rpgPets.pity.overall || 0) + 1;
     } else {
       rpgPets.owned[rolled] = { level: 1, xp: 0, skin: RPG_PET_DEFAULT_SKIN };
-      rpgPets.pity[tier] = 0;
+      rpgPets.pity.overall = 0;
     }
 
     rpgPets.totalHatched = (rpgPets.totalHatched || 0) + 1;
     saveRpgPetState(rpgPets);
+
+    // Quest hook: pet hatched
+    if (window.QuestSystem) {
+      window.QuestSystem.updateObjective('hatch_pets', { count: 1 });
+    }
+
+    // Tier display info
+    var tierColors = { common: '#88aa66', rare: '#6688cc', legendary: '#cc9933' };
+    var tierLabels = { common: 'Common', rare: 'Rare!', legendary: 'LEGENDARY!' };
 
     // Show result
     var resultEl = document.getElementById('rpg-petstore-result');
     if (resultEl) {
       resultEl.style.display = 'block';
       resultEl.innerHTML = '';
+
+      // Rarity banner
+      var rarityEl = document.createElement('div');
+      rarityEl.className = 'rpg-petstore-result-rarity';
+      rarityEl.textContent = tierLabels[tier] || tier;
+      rarityEl.style.color = tierColors[tier] || '#88aa66';
+      resultEl.appendChild(rarityEl);
 
       var creature = petCatalog.creatures[rolled];
       var preview = renderRpgPetSprite(rolled, rpgPets.owned[rolled].level, 64);
@@ -4861,10 +5224,11 @@
       resultEl.appendChild(tagEl);
     }
 
+    var creatureName = petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled;
     addGameMessage(isDuplicate
-      ? 'The egg hatches... another ' + (petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled) + '. (+' + mergeXP + ' merge XP)'
-      : 'The egg hatches! A ' + (petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled) + ' emerges!',
-      'system');
+      ? 'The egg hatches... another ' + creatureName + '. (+' + mergeXP + ' merge XP)'
+      : 'The egg hatches! A ' + creatureName + ' emerges! (' + (tierLabels[tier] || tier) + ')',
+      tier === 'legendary' ? 'reward' : 'system');
 
     // Re-render modal + pet tab
     renderPetStoreContents();
@@ -5767,6 +6131,20 @@
       xhr2.send();
       if (xhr2.status === 200) petCatalog = JSON.parse(xhr2.responseText);
     } catch (e) {}
+
+    // Preload pet sprite sheets (fire-and-forget so they're cached for world map)
+    if (petCatalog && petCatalog.creatures) {
+      var preloadedSheets = {};
+      for (var pid in petCatalog.creatures) {
+        if (!petCatalog.creatures.hasOwnProperty(pid)) continue;
+        var sheet = '/images/pets/' + pid + '-alt.png';
+        if (!preloadedSheets[sheet]) {
+          preloadedSheets[sheet] = true;
+          var pImg = new Image();
+          pImg.src = sheet;
+        }
+      }
+    }
 
     // Set RPG mode flag so skills.js knows not to auto-init
     window.__RPG_STORAGE_KEY = '__rpg_pending__';

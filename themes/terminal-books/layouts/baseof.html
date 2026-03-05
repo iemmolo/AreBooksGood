@@ -126,6 +126,10 @@
       {{- $rpg := . | minify | fingerprint -}}
       <script src="{{ $rpg.RelPermalink }}"></script>
     {{- end -}}
+    {{- with resources.Get "js/quest.js" -}}
+      {{- $quest := . | minify | fingerprint -}}
+      <script src="{{ $quest.RelPermalink }}"></script>
+    {{- end -}}
     {{- with resources.Get "js/skills.js" -}}
       {{- $skills := . | minify | fingerprint -}}
       <script src="{{ $skills.RelPermalink }}"></script>

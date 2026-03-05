@@ -10,7 +10,7 @@
   "eggs": {
     "common":    { "currency": "coins", "cost": 300,  "pool": "2evo",    "dupMergeXP": 25, "poolSize": 10 },
     "rare":      { "currency": "coins", "cost": 1500, "pool": "3evo",    "dupMergeXP": 50, "poolSize": 22 },
-    "legendary": { "currency": "jb",    "cost": 50,   "pool": "uniques", "dupRefund": 150, "dupMergeXP": 100, "poolSize": 8 }
+    "legendary": { "currency": "coins", "cost": 5000, "pool": "uniques", "dupRefund": 150, "dupMergeXP": 100, "poolSize": 8 }
   },
   "evolution": {
     "2": { "xpRequired": 100, "gamesRequired": 50,  "coinCost": 500 },

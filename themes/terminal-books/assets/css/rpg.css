@@ -46,6 +46,7 @@
 
 /* ── Screens ─────────────────────────────────── */
 .rpg-screen {
+  position: relative;
   animation: rpgFadeIn 0.2s ease;
 }
 
@@ -293,69 +294,89 @@
   left: 0;
   right: 0;
   z-index: 100;
-  background: var(--background);
-  border-top: 2px solid color-mix(in srgb, var(--foreground) 35%, transparent);
-  box-shadow: 0 -4px 12px color-mix(in srgb, #000 30%, transparent);
+  background:
+    linear-gradient(180deg, #3a2e1e 0%, #2e2316 50%, #261e12 100%);
+  border-top: 2px solid #6b5230;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(192,160,64,0.15);
   font-size: 0.85em;
 }
 
 .osrs-chatbox-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  gap: 4px;
+  padding: 4px 10px;
+  background: linear-gradient(180deg, #3e3020 0%, #342818 100%);
+  border-bottom: 1px solid #5a4428;
 }
 
 .osrs-chatbox-tabs {
   display: flex;
-  gap: 2px;
+  gap: 3px;
 }
 
 .osrs-chatbox-tab {
-  background: transparent;
-  border: none;
+  background: linear-gradient(180deg, #4a3a24 0%, #3a2c18 100%);
+  border: 1px solid #5a4428;
   border-bottom: 2px solid transparent;
-  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-radius: 3px 3px 0 0;
+  color: #9a8a6a;
   font-family: inherit;
   font-size: 0.8em;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 2px 8px 4px;
+  padding: 3px 10px 4px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  position: relative;
 }
 
 .osrs-chatbox-tab:hover {
-  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  color: #c0a040;
+  background: linear-gradient(180deg, #554430 0%, #453620 100%);
 }
 
 .osrs-chatbox-tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
+  color: #c0a040;
+  background: linear-gradient(180deg, #554430 0%, #3a2e1e 100%);
+  border-color: #c0a040;
+  border-bottom-color: #3a2e1e;
+}
+
+.osrs-chatbox-tab.has-unread::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  background: #e8c040;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #e8c040;
 }
 
 .rpg-map-return-btn {
   margin-left: auto;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-  color: var(--accent);
+  background: linear-gradient(180deg, #4a3a24 0%, #3a2c18 100%);
+  border: 1px solid #6b5230;
+  color: #c0a040;
   font-family: inherit;
   font-size: 0.8em;
   padding: 2px 10px;
   cursor: pointer;
+  border-radius: 3px;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .rpg-map-return-btn:hover {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  border-color: var(--accent);
+  background: linear-gradient(180deg, #554430 0%, #453620 100%);
+  border-color: #c0a040;
 }
 
 .osrs-chatbox-toggle {
   background: transparent;
   border: none;
-  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  color: #9a8a6a;
   font-size: 0.8em;
   cursor: pointer;
   padding: 2px 6px;
@@ -363,12 +384,21 @@
   flex-shrink: 0;
 }
 
-.osrs-chatbox-toggle:hover { color: var(--foreground); }
+.osrs-chatbox-toggle:hover { color: #c0a040; }
 
 .osrs-chatbox-body {
   height: 160px;
   overflow-y: auto;
   padding: 8px 12px;
+  background:
+    linear-gradient(180deg, rgba(58,46,30,0.6) 0%, rgba(38,30,18,0.8) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(192,160,64,0.03) 3px,
+      rgba(192,160,64,0.03) 4px
+    );
 }
 
 .osrs-chat-pane {
@@ -380,32 +410,45 @@
   padding: 2px 0;
   font-size: 0.85em;
   line-height: 1.4;
+  color: #c4b090;
 }
 
 .osrs-game-msg--system {
-  color: color-mix(in srgb, var(--accent) 70%, var(--foreground));
+  color: #c0a040;
   font-style: italic;
 }
 
 .osrs-game-msg--travel {
-  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  color: #8a7a5a;
 }
 
 .osrs-game-msg--arrival {
-  color: var(--accent);
+  color: #e0c860;
 }
 
 .osrs-game-msg--enter {
-  color: var(--foreground);
+  color: #d0c0a0;
 }
 
 .osrs-game-msg--return {
-  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  color: #8a7a5a;
   font-style: italic;
 }
 
+.osrs-game-msg--quest {
+  color: #60c060;
+}
+
+.osrs-game-msg--combat {
+  color: #e06040;
+}
+
+.osrs-game-msg--reward {
+  color: #f0d060;
+}
+
 .osrs-chatbox-empty {
-  color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  color: #7a6a4a;
   font-size: 0.85em;
   font-style: italic;
   padding: 4px 0;
@@ -418,6 +461,7 @@
 
 .osrs-chatbox.collapsed .osrs-chatbox-header {
   border-bottom: none;
+  border-top-color: #5a4428;
 }
 
 /* Override skills.css log styles inside the chatbox */
@@ -1513,6 +1557,14 @@
   display: block;
 }
 
+.rpg-petstore-result-rarity {
+  font-size: 0.85em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
 .rpg-petstore-result-name {
   font-size: 1.1em;
   color: var(--accent);
@@ -1613,4 +1665,183 @@
   .rpg-location-icon { margin-bottom: 2px; }
   .rpg-location-desc { display: none; }
 
+}
+
+/* ── Tutorial Overlay ──────────────────────────── */
+.rpg-tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpg-tutorial-box {
+  background: linear-gradient(180deg, #3e3020 0%, #2a1e12 100%);
+  border: 2px solid #c0a040;
+  border-radius: 6px;
+  padding: 24px 28px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(192,160,64,0.2);
+}
+
+.rpg-tutorial-step {
+  color: #d0c0a0;
+  font-size: 0.95em;
+  line-height: 1.6;
+  min-height: 60px;
+}
+
+.rpg-tutorial-step strong {
+  color: #c0a040;
+}
+
+.rpg-tutorial-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+.rpg-tutorial-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.rpg-tutorial-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5a4428;
+  transition: background 0.2s;
+}
+
+.rpg-tutorial-dot.active {
+  background: #c0a040;
+}
+
+.rpg-tutorial-btn {
+  background: linear-gradient(180deg, #5a4830 0%, #4a3a24 100%) !important;
+  border: 1px solid #c0a040 !important;
+  color: #c0a040 !important;
+  padding: 4px 18px !important;
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.rpg-tutorial-btn:hover {
+  background: linear-gradient(180deg, #6a5838 0%, #5a4830 100%) !important;
+}
+
+/* ── Quest UI ──────────────────────────────────── */
+.quest-entry {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(192,160,64,0.15);
+}
+
+.quest-entry:last-child { border-bottom: none; }
+
+.quest-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.quest-name {
+  color: #c0a040;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.quest-badge {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(192,160,64,0.15);
+  color: #9a8a6a;
+}
+
+.quest-badge--easy { color: #60c060; background: rgba(96,192,96,0.15); }
+.quest-badge--medium { color: #e0c040; background: rgba(224,192,64,0.15); }
+.quest-badge--hard { color: #e06040; background: rgba(224,96,64,0.15); }
+
+.quest-objective {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  font-size: 0.85em;
+}
+
+.quest-objective-text {
+  color: #c4b090;
+  flex: 1;
+  min-width: 0;
+}
+
+.quest-progress-bar {
+  width: 60px;
+  height: 6px;
+  background: rgba(90,68,40,0.6);
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.quest-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c0a040, #e0c060);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.quest-progress-text {
+  color: #9a8a6a;
+  font-size: 0.8em;
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.quest-completed-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0 4px;
+  font-size: 0.8em;
+  color: #7a6a4a;
+}
+
+.quest-renown {
+  color: #c0a040;
+}
+
+/* Quest Toast Notification */
+.quest-toast {
+  position: absolute;
+  top: 60px;
+  right: -300px;
+  background: linear-gradient(180deg, #3e3020 0%, #2a1e12 100%);
+  border: 2px solid #c0a040;
+  border-radius: 6px;
+  padding: 10px 18px;
+  color: #e0c060;
+  font-weight: bold;
+  font-size: 0.9em;
+  z-index: 300;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  transition: right 0.4s ease;
+  white-space: nowrap;
+}
+
+.quest-toast--visible {
+  right: 12px;
 }
