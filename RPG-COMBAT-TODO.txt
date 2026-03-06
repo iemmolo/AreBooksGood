@@ -1,0 +1,91 @@
+RPG Combat System Overhaul — Task Tracking
+===========================================
+
+## Phase 0: Persist Plan
+- [x] Create RPG-COMBAT-TODO.txt (this file)
+- [x] Update TODO.txt with combat plan summary
+- [x] Update memory/rpg-roadmap.md
+- [x] Create memory/rpg-combat.md
+- [x] Update memory/MEMORY.md
+
+## Phase 1: Minimal Playable Combat (DONE)
+- [x] Create rpg-combat.js (core loop: turn order, damage, status, waves, victory/defeat)
+- [x] Create rpg-combat.css (move buttons, combat overlay, results)
+- [x] Add combat canvas + DOM buttons to rpg-skills-panel.html
+- [x] Add showCenterContent('combat') to rpg.js
+- [x] Wire Dungeon Gate hotspot → dungeon select modal
+- [x] Build team builder (pick 1-3 pets, see stats, equipped moves)
+- [x] Create rpg-moves.json (~30 starter moves)
+- [x] Create rpg-dungeons.json (4 starter dungeons)
+- [x] Canvas rendering: party positions, HP bars, status icons, floating damage, turn order
+- [x] Manual turn: click move → click target
+- [x] Basic AI for auto turns
+- [x] Wave transitions with between-wave healing
+- [x] Results overlay: pet XP, GP, combat skill XP
+- [x] Quest hooks: kill_enemies, clear_dungeon
+- [x] Update baseof.html load order (rpg.js → quest.js → rpg-combat.js → skills.js)
+- [x] Auto-assign 4 moves per pet based on type/tier
+- [x] Fix: combat stuck when last enemy dies mid-round (checkBattleEnd between every turn)
+- [x] Fix: pet store modal invisible (rpg-combat.css overrode .rpg-modal-overlay display)
+- [x] Fix: mobile side panel covered by chatbox (raised bottom from 145px to 200px)
+
+## Phase 2: Move Equipment + Training Arena
+- [ ] Expand rpg-moves.json to ~80 moves
+- [ ] Move learning on level-up + toast notifications
+- [ ] Expand pet detail popup: move list with equip/unequip
+- [ ] Per-pet Auto/Manual toggle in battle UI
+- [ ] AI stances (aggressive/defensive/balanced)
+- [ ] Cooldown system for powerful moves
+- [ ] Training Arena → 1v1 arena mode
+- [ ] Remove old combat click-mini-game from skills.js
+
+## Phase 3: Evolution + Level Cap System
+- [ ] Update petcatalog.json maxLevel (common:50, rare:75, legendary:99)
+- [ ] Evolution stone inventory in rpgPets state
+- [ ] Evolution UI in pet detail popup
+- [ ] New stat formula (diminishing growth: 8%/4%/2% tiers)
+- [ ] New XP curve (polynomial)
+- [ ] State migration (_combatVersion)
+- [ ] Evolution animation
+- [ ] Stone drops from dungeon rewards
+
+## Phase 4: Spec Paths
+- [ ] Create rpg-spec-trees.json (3 paths, 6 sub-specs)
+- [ ] Spec choice modal at level 5
+- [ ] Sub-spec choice modal at level 30
+- [ ] Spec stat bonuses in combat calc
+- [ ] Spec-gated moves in equip UI
+- [ ] Respec option (doubling GP cost)
+- [ ] Spec badge in pet detail + team builder
+
+## Phase 5: Battle Polish + Variable Sizes
+- [ ] Variable party size canvas layout (1v1 through 4v4)
+- [ ] Boss encounters with larger sprites
+- [ ] VFX layer (reuse battle_vfx.png)
+- [ ] Attack slide animations
+- [ ] Screen shake on crits
+- [ ] Type effectiveness popups
+- [ ] 2x speed toggle
+- [ ] Expand to 12+ dungeons
+
+## Phase 6: Difficulty + Legendary Stars
+- [ ] Difficulty system (Normal/Hard/Brutal with stat multipliers)
+- [ ] Per-difficulty progress tracking
+- [ ] Legendary Star System (post-99, 5 stars, Star Fragments)
+- [ ] First-clear rewards
+- [ ] Dungeon card badges
+
+## Key Design Decisions
+- Hybrid combat: manual + auto toggle per pet
+- Level caps: Common 30→50, Rare 25→50→75, Legendary 50→75→99
+- 4 equipped moves from 8-12 learned pool
+- Full spec trees: DPS(Assassin/Berserker), Tank(Juggernaut/Paladin), Support(Healer/Buffer)
+- Variable party size: 1-4 per side
+- Move management in pet detail popup (side panel)
+- Training Arena → 1v1 arena battles (replaces click mini-game)
+- Dungeon Gate → dungeon select modal → team builder → battle
+- New file: rpg-combat.js, rpg-combat.css
+- Data files: rpg-moves.json, rpg-dungeons.json, rpg-spec-trees.json
+- Storage: rpg-slot-N-combat (per-slot, isolated)
+- Stat formula: diminishing growth (8% Lv1-30, 4% Lv31-60, 2% Lv61-99)
+- Legacy battle.js UNTOUCHED

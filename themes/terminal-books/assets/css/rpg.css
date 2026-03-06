@@ -688,6 +688,12 @@
   border: 2px solid color-mix(in srgb, var(--foreground) 35%, transparent);
   box-shadow: 0 2px 12px color-mix(in srgb, #000 40%, transparent);
   font-size: 0.85em;
+  /* Allow canvas clicks to pass through panel background */
+  pointer-events: none;
+}
+.osrs-side-panel-header,
+.osrs-side-panel .osrs-side-pane {
+  pointer-events: auto;
 }
 
 .osrs-side-panel-header {
@@ -1083,7 +1089,7 @@
     position: fixed;
     width: 200px;
     right: 4px;
-    bottom: 145px;
+    bottom: 200px; /* clear chatbox: 56px bottom + 100px body + ~36px header + 8px gap */
     z-index: 100;
   }
 

@@ -400,24 +400,18 @@ AreBooksGood - Improvement TODO
 - [x] **4G: Dupe Polish** — Evo XP bar fill animation, level-up flash + sprite swap, "Duplicate!" badge
 - [x] **4H: Bug Fixes & Polish** — fixed duplicate constants, timeout cleanup on close, immediate balance/button update, egg fade-out, unowned tier hints, max-level dupe badge, collection counter
 
-### RPG Phase 5: Combat Rework — Turn-Based Tactical (replaces auto-battle)
-New file: rpg-combat.js. Old battle.js stays as legacy standalone at /games/battle/.
-**Note:** Pet stats/types/moves/level system needs holistic redesign before combat work begins.
-
-- [ ] **5.1: Core Turn Engine** — turn order by SPD (base + gear + buffs), priority moves go first, per-round: build order → each fighter acts → resolve status effects. Toggle per pet: manual or AI (aggressive/defensive/support)
-- [ ] **5.2: Move/Ability System** — expand existing MOVES from battle.js. New effects: taunt, shield, regen, cleanse, bleed, stun, reflect, atkDown/defDown. Move schema: id, name, type, power, category (physical/special/status), cooldown, effect, aoe, selfTarget
-- [ ] **5.3: Spec Path System (Tech Tree)** — 3 paths: DPS (Mage/Assassin/Melee/Ranged), Tank (Guardian/Juggernaut), Support (Healer/Buffer). Spec available at pet level 5, moves unlock at milestones (5/15/30/50/75). Respec: 500 GP first, doubles each time
-- [ ] **5.4: Evolution & Level Cap Rework** — Common: base 30 → evolve → 50. Rare: 25 → 50 → 75. Legendary: 50 → 75 → 99. Evolution needs level cap + type-matched stone (Fire Stone, Aqua Crystal, etc.) + GP. Stones from: dungeon drops, quest rewards, crafting
-- [ ] **5.5: Legendary Star System** — post-99 prestige: 5 stars max, each needs massive XP + Star Fragment (hardest dungeons). Per star: +5% all stats + bonus passive. Star 5 = "Awakened" form with aura VFX
-- [ ] **5.6: Battle UI** — canvas-based in center panel. Turn order portrait strip, enemy/ally teams with HP bars + status icons, 4 move buttons (name, type color, power, cooldown), Switch/Items/Run buttons. Floating damage numbers, type effectiveness popups
-- [ ] **5.7: Dungeon Integration** — Dungeon Gate in town opens dungeon select. Team building (pick 3 pets, assign moves). Turn-based waves. Between waves: partial heal, rearrange. Clear → rewards (gear + quest progress + renown)
-- [ ] Create: assets/js/rpg-combat.js, static/data/rpg-moves.json, static/data/spec-trees.json
-- [ ] Update: petcatalog.json (maxLevel values, evolution data), baseof.html (load rpg-combat.js)
+### RPG Phase 5: Combat Rework — Turn-Based Tactical (IN PROGRESS)
+Full plan and detailed task tracking in `RPG-COMBAT-TODO.txt`.
+Quick reference for data structures/formulas in `memory/rpg-combat.md`.
+Key files: rpg-combat.js, rpg-combat.css, rpg-moves.json, rpg-dungeons.json, rpg-spec-trees.json.
+Legacy battle.js UNTOUCHED.
+- [x] **Phase 1: Minimal Playable Combat** — turn engine, canvas rendering, move buttons, AI, wave transitions, dungeon select modal, team builder, quest hooks, 30 moves, 4 dungeons
+- [x] **Bug Fixes** — combat stuck when last enemy dies mid-round (checkBattleEnd between turns), pet store modal invisible (CSS conflict), mobile side panel covered by chatbox (bottom spacing)
 
 ### RPG Phase 6: Town Hub Hotspot Implementations (priority order)
 - [ ] **General Store** — buy/sell items, consumables, evolution stones. Shop inventory grid. Sell at fixed prices, buy potions/bait/dynamite. Prices in GP and JB
 - [ ] **Tavern** — quest board UI (daily refresh), quest turn-ins, NPC bartender dialogue. Depends on Phase 3
-- [ ] **Dungeon Gate** — RPG combat dungeon select. Depends on Phase 5
+- [x] **Dungeon Gate** — RPG combat dungeon select. Depends on Phase 5
 - [ ] **Bank** — deposit/withdraw GP/JB, 1%/day interest (capped), item storage (doesn't count toward inventory cap)
 - [ ] **Library** — bestiary (enemy grid with stats/sprites), achievement tracker, lore entries, collection completion %
 - [ ] **Guard Barracks** — combat training dummy (practice moves), slayer task assignments (future), type chart reference

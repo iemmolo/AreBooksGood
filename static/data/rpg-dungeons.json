@@ -1,0 +1,66 @@
+[
+  {
+    "id": "rpg-1",
+    "name": "Verdant Caves",
+    "desc": "A damp cavern overrun with slimes and fungi.",
+    "typeLock": null,
+    "requiredTotalLevel": 10,
+    "stars": 1,
+    "partySize": 3,
+    "waves": [
+      ["slime-green", "slime-green"],
+      ["slime-green", "myconid-green", "sprout-blue"],
+      ["myconid-green", "myconid-green", "slime-green"]
+    ],
+    "rewards": { "gpBase": 200, "petXpBase": 50, "stoneChance": 0.05, "stoneType": "nature" }
+  },
+  {
+    "id": "rpg-2",
+    "name": "Ember Depths",
+    "desc": "A volcanic tunnel scorched by fire creatures.",
+    "typeLock": null,
+    "requiredTotalLevel": 30,
+    "stars": 2,
+    "partySize": 3,
+    "waves": [
+      ["slime-pink", "slime-pink"],
+      ["slime-pink", "goblin-spear", "goblin-spear"],
+      ["goblin-archer", "goblin-spear", "slime-pink"],
+      ["myconid-red", "goblin-archer", "goblin-archer"]
+    ],
+    "rewards": { "gpBase": 400, "petXpBase": 80, "stoneChance": 0.08, "stoneType": "fire" }
+  },
+  {
+    "id": "rpg-3",
+    "name": "Sunken Grotto",
+    "desc": "An underwater cave guarded by aquatic beasts.",
+    "typeLock": null,
+    "requiredTotalLevel": 60,
+    "stars": 3,
+    "partySize": 3,
+    "waves": [
+      ["slime-blue", "slime-light-blue", "slime-blue"],
+      ["slime-blue", "sprout-blue", "sprout-blue"],
+      ["myconid-green", "slime-light-blue", "sprout-blue", "slime-blue"],
+      ["slime-blue-big"]
+    ],
+    "rewards": { "gpBase": 600, "petXpBase": 120, "stoneChance": 0.10, "stoneType": "aqua" }
+  },
+  {
+    "id": "rpg-4",
+    "name": "Shadow Crypt",
+    "desc": "A cursed crypt filled with dark entities.",
+    "typeLock": null,
+    "requiredTotalLevel": 100,
+    "stars": 4,
+    "partySize": 3,
+    "waves": [
+      ["slime-black", "slime-purple", "slime-black"],
+      ["goblin-archer", "slime-black", "goblin-archer", "slime-purple"],
+      ["myconid-purple", "goblin-bomb", "slime-purple", "slime-black"],
+      ["spike", "goblin-bomb", "slime-black"],
+      ["slime-black-big"]
+    ],
+    "rewards": { "gpBase": 900, "petXpBase": 180, "stoneChance": 0.12, "stoneType": "shadow" }
+  }
+]

@@ -1,0 +1,326 @@
+/* ══════════════════════════════════════════════════
+   RPG COMBAT SYSTEM STYLES
+   ══════════════════════════════════════════════════ */
+
+/* ── Combat Canvas Container ─────────────────────── */
+.rpg-combat-container {
+  position: relative;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.rpg-combat-canvas {
+  width: 100%;
+  aspect-ratio: 700 / 320;
+  border: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 4px;
+  background: #1a1a2e;
+  image-rendering: pixelated;
+  cursor: crosshair;
+}
+
+/* ── Move Buttons ─────────────────────────────────── */
+.rpg-combat-moves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 6px 0;
+  min-height: 52px;
+}
+
+.rpg-combat-move-btn {
+  padding: 6px 8px;
+  font-size: 0.78em;
+  font-family: monospace;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--background) 85%, var(--foreground));
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+
+.rpg-combat-move-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 20%, var(--background));
+  border-color: var(--accent);
+}
+
+.rpg-combat-move-btn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 35%, var(--background));
+}
+
+.rpg-combat-move-btn.on-cooldown {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Type-colored left border */
+.rpg-combat-move-btn[data-type="fire"]    { border-left: 3px solid #ff6600; }
+.rpg-combat-move-btn[data-type="aqua"]    { border-left: 3px solid #4488cc; }
+.rpg-combat-move-btn[data-type="nature"]  { border-left: 3px solid #44aa44; }
+.rpg-combat-move-btn[data-type="tech"]    { border-left: 3px solid #ccaa22; }
+.rpg-combat-move-btn[data-type="shadow"]  { border-left: 3px solid #8844cc; }
+.rpg-combat-move-btn[data-type="mystic"]  { border-left: 3px solid #cc44aa; }
+.rpg-combat-move-btn[data-type="neutral"] { border-left: 3px solid #888; }
+
+/* ── Action Bar ───────────────────────────────────── */
+.rpg-combat-actions {
+  display: flex;
+  gap: 6px;
+  padding: 4px 0;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.rpg-combat-action-btn {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 0.72em;
+  font-family: monospace;
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--background) 90%, var(--foreground));
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.rpg-combat-action-btn:hover {
+  background: color-mix(in srgb, var(--accent) 15%, var(--background));
+}
+
+.rpg-combat-action-btn.active {
+  background: color-mix(in srgb, var(--accent) 25%, var(--background));
+  border-color: var(--accent);
+}
+
+/* ── Results Overlay ──────────────────────────────── */
+.rpg-combat-results {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 100;
+  border-radius: 4px;
+}
+
+.rpg-combat-results-inner {
+  background: color-mix(in srgb, var(--background) 95%, var(--foreground));
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  padding: 20px 28px;
+  text-align: center;
+  max-width: 320px;
+}
+
+.rpg-combat-results-title {
+  font-size: 1.4em;
+  margin: 0 0 12px;
+  color: var(--accent);
+}
+
+.rpg-combat-results-stats {
+  font-size: 0.85em;
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.rpg-combat-gp { color: #ffd700; font-weight: bold; }
+.rpg-combat-xp { color: #44cc88; font-weight: bold; }
+.rpg-combat-stone { color: #cc88ff; font-weight: bold; margin-top: 8px; }
+
+.rpg-combat-continue-btn {
+  margin-top: 8px;
+}
+
+/* ── Dungeon Select Modal ─────────────────────────── */
+/* Modal overlay base is in rpg.css (display:flex).
+   Dungeon/team modals set display inline. No override here. */
+
+.rpg-modal {
+  background: color-mix(in srgb, var(--background) 97%, var(--foreground));
+  border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 8px;
+  max-width: 520px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.rpg-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.rpg-modal-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: var(--accent);
+}
+
+.rpg-modal-close {
+  background: none;
+  border: none;
+  color: var(--foreground);
+  font-size: 1.3em;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.rpg-modal-close:hover {
+  color: var(--accent);
+}
+
+/* ── Dungeon Grid ─────────────────────────────────── */
+.rpg-dungeon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px;
+}
+
+.rpg-dungeon-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.rpg-dungeon-card:hover:not(.locked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.rpg-dungeon-card.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rpg-dungeon-name {
+  font-weight: bold;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.rpg-dungeon-stars {
+  margin-bottom: 4px;
+}
+
+.rpg-star {
+  color: #ffd700;
+  font-size: 0.85em;
+}
+
+.rpg-dungeon-desc {
+  font-size: 0.75em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  margin-bottom: 6px;
+}
+
+.rpg-dungeon-info {
+  font-size: 0.72em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.rpg-dungeon-lock {
+  font-size: 0.72em;
+  color: #cc4444;
+  margin-top: 4px;
+}
+
+/* ── Team Builder ─────────────────────────────────── */
+.rpg-team-info {
+  padding: 8px 16px;
+  font-size: 0.82em;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.rpg-team-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  padding: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.rpg-team-pet {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 4px;
+  padding: 8px 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.rpg-team-pet:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.rpg-team-pet.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.rpg-team-pet-name {
+  font-size: 0.78em;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.rpg-team-pet-type {
+  font-size: 0.68em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  margin-bottom: 4px;
+}
+
+.rpg-team-pet-stats {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.rpg-team-pet-check {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  color: var(--accent);
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.rpg-team-actions {
+  padding: 12px 16px;
+  text-align: center;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+/* ── Run Button ───────────────────────────────────── */
+.rpg-combat-run-btn {
+  color: #cc4444;
+}
+
+/* ── Mobile ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .rpg-dungeon-grid {
+    grid-template-columns: 1fr;
+  }
+  .rpg-team-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rpg-combat-moves {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "scratch": {
+    "id": "scratch", "name": "Scratch", "type": "neutral", "power": 30,
+    "category": "physical", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "A basic scratch attack."
+  },
+  "tackle": {
+    "id": "tackle", "name": "Tackle", "type": "neutral", "power": 35,
+    "category": "physical", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "A full-body charge."
+  },
+  "quickStrike": {
+    "id": "quickStrike", "name": "Quick Strike", "type": "neutral", "power": 25,
+    "category": "physical", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": true,
+    "specRequired": null, "learnLevel": 5, "learnTypes": null,
+    "desc": "A fast strike that always goes first."
+  },
+  "dodge": {
+    "id": "dodge", "name": "Dodge", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 3, "effect": "dodge", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 3, "learnTypes": null,
+    "desc": "Evade the next incoming attack."
+  },
+  "rest": {
+    "id": "rest", "name": "Rest", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "regen", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 8, "learnTypes": null,
+    "desc": "Recover HP over 3 turns."
+  },
+  "guard": {
+    "id": "guard", "name": "Guard", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 3, "effect": "defUp", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 6, "learnTypes": null,
+    "desc": "Raise DEF for 3 turns."
+  },
+  "rallyCry": {
+    "id": "rallyCry", "name": "Rally Cry", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "atkUp", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "support", "learnLevel": 10, "learnTypes": null,
+    "desc": "Boost ATK of all allies for 3 turns."
+  },
+  "lastStand": {
+    "id": "lastStand", "name": "Last Stand", "type": "neutral", "power": 80,
+    "category": "physical", "cooldown": 5, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": "dps", "learnLevel": 15, "learnTypes": null,
+    "desc": "Powerful blow. Stronger when HP is low."
+  },
+
+  "ember": {
+    "id": "ember", "name": "Ember", "type": "fire", "power": 40,
+    "category": "special", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": ["fire"],
+    "desc": "A small fireball."
+  },
+  "fireBlast": {
+    "id": "fireBlast", "name": "Fire Blast", "type": "fire", "power": 65,
+    "category": "special", "cooldown": 2, "effect": "burn", "effectChance": 30,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 10, "learnTypes": ["fire"],
+    "desc": "A powerful blast of fire. May burn."
+  },
+  "heatWave": {
+    "id": "heatWave", "name": "Heat Wave", "type": "fire", "power": 50,
+    "category": "special", "cooldown": 3, "effect": "burn", "effectChance": 20,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 18, "learnTypes": ["fire"],
+    "desc": "A wave of heat hits all enemies."
+  },
+  "infernoSlash": {
+    "id": "infernoSlash", "name": "Inferno Slash", "type": "fire", "power": 75,
+    "category": "physical", "cooldown": 3, "effect": "burn", "effectChance": 40,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 25, "learnTypes": ["fire"],
+    "desc": "A blazing sword slash. Often burns."
+  },
+
+  "waterGun": {
+    "id": "waterGun", "name": "Water Gun", "type": "aqua", "power": 40,
+    "category": "special", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": ["aqua"],
+    "desc": "A focused jet of water."
+  },
+  "tidalCrash": {
+    "id": "tidalCrash", "name": "Tidal Crash", "type": "aqua", "power": 60,
+    "category": "physical", "cooldown": 2, "effect": "slow", "effectChance": 25,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 10, "learnTypes": ["aqua"],
+    "desc": "A crashing wave attack. May slow."
+  },
+  "aquaShield": {
+    "id": "aquaShield", "name": "Aqua Shield", "type": "aqua", "power": 0,
+    "category": "status", "cooldown": 3, "effect": "shield", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 15, "learnTypes": ["aqua"],
+    "desc": "A water barrier absorbs damage."
+  },
+  "tsunami": {
+    "id": "tsunami", "name": "Tsunami", "type": "aqua", "power": 55,
+    "category": "special", "cooldown": 3, "effect": "slow", "effectChance": 30,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 22, "learnTypes": ["aqua"],
+    "desc": "A massive wave hits all foes."
+  },
+
+  "vineWhip": {
+    "id": "vineWhip", "name": "Vine Whip", "type": "nature", "power": 40,
+    "category": "physical", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": ["nature"],
+    "desc": "Strike with thorny vines."
+  },
+  "sporeBurst": {
+    "id": "sporeBurst", "name": "Spore Burst", "type": "nature", "power": 45,
+    "category": "special", "cooldown": 2, "effect": "poison", "effectChance": 40,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 8, "learnTypes": ["nature"],
+    "desc": "Releases toxic spores. Often poisons."
+  },
+  "natureCure": {
+    "id": "natureCure", "name": "Nature Cure", "type": "nature", "power": 0,
+    "category": "status", "cooldown": 3, "effect": "regen", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 12, "learnTypes": ["nature"],
+    "desc": "Heal with the power of nature."
+  },
+  "thornStorm": {
+    "id": "thornStorm", "name": "Thorn Storm", "type": "nature", "power": 55,
+    "category": "physical", "cooldown": 3, "effect": "bleed", "effectChance": 25,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 20, "learnTypes": ["nature"],
+    "desc": "Thorns rain on all foes."
+  },
+
+  "sparkShock": {
+    "id": "sparkShock", "name": "Spark Shock", "type": "tech", "power": 40,
+    "category": "special", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": ["tech"],
+    "desc": "An electric jolt."
+  },
+  "overload": {
+    "id": "overload", "name": "Overload", "type": "tech", "power": 60,
+    "category": "special", "cooldown": 2, "effect": "stun", "effectChance": 20,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 10, "learnTypes": ["tech"],
+    "desc": "An energy surge. May stun."
+  },
+  "nanoPatch": {
+    "id": "nanoPatch", "name": "Nano Patch", "type": "tech", "power": 0,
+    "category": "status", "cooldown": 3, "effect": "regen", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 14, "learnTypes": ["tech"],
+    "desc": "Deploy nanobots to repair over time."
+  },
+  "voltCannon": {
+    "id": "voltCannon", "name": "Volt Cannon", "type": "tech", "power": 70,
+    "category": "special", "cooldown": 3, "effect": "stun", "effectChance": 30,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 22, "learnTypes": ["tech"],
+    "desc": "A devastating energy blast."
+  },
+
+  "shadowBite": {
+    "id": "shadowBite", "name": "Shadow Bite", "type": "shadow", "power": 40,
+    "category": "physical", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": ["shadow"],
+    "desc": "A bite from the shadows."
+  },
+  "cursedTouch": {
+    "id": "cursedTouch", "name": "Cursed Touch", "type": "shadow", "power": 50,
+    "category": "special", "cooldown": 2, "effect": "curse", "effectChance": 35,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 10, "learnTypes": ["shadow"],
+    "desc": "A dark touch. May curse."
+  },
+  "nightSlash": {
+    "id": "nightSlash", "name": "Night Slash", "type": "shadow", "power": 65,
+    "category": "physical", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "critBonus": 25,
+    "specRequired": null, "learnLevel": 15, "learnTypes": ["shadow"],
+    "desc": "A swift slash in darkness. High crit rate."
+  },
+  "voidPulse": {
+    "id": "voidPulse", "name": "Void Pulse", "type": "shadow", "power": 55,
+    "category": "special", "cooldown": 3, "effect": "defDown", "effectChance": 30,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 20, "learnTypes": ["shadow"],
+    "desc": "Dark energy hits all foes. May lower DEF."
+  },
+
+  "mysticBolt": {
+    "id": "mysticBolt", "name": "Mystic Bolt", "type": "mystic", "power": 40,
+    "category": "special", "cooldown": 0, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": ["mystic"],
+    "desc": "A bolt of arcane energy."
+  },
+  "mindBlast": {
+    "id": "mindBlast", "name": "Mind Blast", "type": "mystic", "power": 55,
+    "category": "special", "cooldown": 2, "effect": "atkDown", "effectChance": 30,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 10, "learnTypes": ["mystic"],
+    "desc": "A psychic attack. May lower ATK."
+  },
+  "arcaneBarrier": {
+    "id": "arcaneBarrier", "name": "Arcane Barrier", "type": "mystic", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "reflect", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 15, "learnTypes": ["mystic"],
+    "desc": "Reflect the next attack back."
+  },
+  "starfall": {
+    "id": "starfall", "name": "Starfall", "type": "mystic", "power": 60,
+    "category": "special", "cooldown": 3, "effect": null, "effectChance": 0,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 20, "learnTypes": ["mystic"],
+    "desc": "Stars rain down on all foes."
+  }
+}

@@ -156,6 +156,10 @@
     {{- $rpg := . | minify | fingerprint -}}
     <link rel="stylesheet" href="{{ $rpg.RelPermalink }}">
   {{- end -}}
+  {{- with resources.Get "css/rpg-combat.css" -}}
+    {{- $rpgCombat := . | minify | fingerprint -}}
+    <link rel="stylesheet" href="{{ $rpgCombat.RelPermalink }}">
+  {{- end -}}
 {{- end }}
 
 {{/* Preload critical sprite sheets for RPG and Skills pages */}}

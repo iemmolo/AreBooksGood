@@ -876,7 +876,7 @@
     fountain:  { x: 530,  y: 330, name: 'Fountain',        type: 'decorative',  desc: 'A tranquil fountain.' },
     arcade:    { x: 860,  y: 330, name: 'Arcade',          type: 'placeholder', desc: 'Play mini-games.' },
     chapel:    { x: 120,  y: 520, name: 'Chapel',          type: 'placeholder', desc: 'A place of prayer.' },
-    dungeon:   { x: 290,  y: 520, name: 'Dungeon Gate',    type: 'placeholder', desc: 'Descend into darkness.' },
+    dungeon:   { x: 290,  y: 520, name: 'Dungeon Gate',    type: 'dungeon',     desc: 'Descend into darkness.' },
     library:   { x: 480,  y: 520, name: 'Library',         type: 'placeholder', desc: 'Knowledge is power.' },
     barracks:  { x: 670,  y: 520, name: 'Guard Barracks',  type: 'placeholder', desc: 'The town guard rests here.' },
     petstore:  { x: 870,  y: 520, name: 'Pet Store',       type: 'petstore',    desc: 'Hatch new companions!' }
@@ -1105,6 +1105,7 @@
     var gameArea = $('skills-game-area');
     var gameLog = $('skills-game-log');
     var skillTopbar = $('rpg-skill-topbar');
+    var combatContainer = $('rpg-combat-container');
 
     if (mode === 'skill') {
       if (mapContainer) mapContainer.style.display = 'none';
@@ -1112,12 +1113,22 @@
       if (gameArea) gameArea.style.display = '';
       if (gameLog) gameLog.style.display = '';
       if (skillTopbar) skillTopbar.style.display = '';
+      if (combatContainer) combatContainer.style.display = 'none';
+    } else if (mode === 'combat') {
+      if (mapContainer) mapContainer.style.display = 'none';
+      if (gameHeader) gameHeader.style.display = 'none';
+      if (gameArea) gameArea.style.display = 'none';
+      if (gameLog) gameLog.style.display = 'none';
+      if (skillTopbar) skillTopbar.style.display = 'none';
+      if (combatContainer) combatContainer.style.display = '';
     } else {
+      // map mode
       if (mapContainer) mapContainer.style.display = 'block';
       if (gameHeader) gameHeader.style.display = 'none';
       if (gameArea) gameArea.style.display = 'none';
       if (gameLog) gameLog.style.display = 'none';
       if (skillTopbar) skillTopbar.style.display = 'none';
+      if (combatContainer) combatContainer.style.display = 'none';
     }
   }
 
@@ -1705,6 +1716,9 @@
     // Set up RPG storage key for skills.js
     window.__RPG_STORAGE_KEY = slotStorageKey(slot);
 
+    // Set combat storage key for rpg-combat.js
+    setCombatStorageKey();
+
     // Install per-slot wallet (overrides global Wallet)
     installRpgWallet();
 
@@ -1808,6 +1822,16 @@
       setTimeout(function () {
         if (centerMode === 'map') startNpcIntro();
       }, 800);
+    } else if (!meta.slots[slot].introSeen) {
+      // Fallback: NPC intro was missed (e.g. page refresh during cutscene).
+      // Start the quest directly so the player isn't stuck without guidance.
+      meta.slots[slot].introSeen = true;
+      saveMeta();
+      setTimeout(function () {
+        if (window.QuestSystem && window.QuestSystem.canStart && window.QuestSystem.canStart('intro-001')) {
+          window.QuestSystem.startQuest('intro-001');
+        }
+      }, 1000);
     }
   }
 
@@ -3732,8 +3756,8 @@
       }
     }
 
-    // Check enter prompt click
-    if (enterPromptVisible && playerAtLocation) {
+    // Check enter prompt click (blocked during NPC intro)
+    if (enterPromptVisible && playerAtLocation && !npcIntro) {
       var loc = MAP_LOCATIONS[playerAtLocation];
       var promptY = playerPos.y - 36;
       if (Math.abs(cx - playerPos.x) < 80 && Math.abs(cy - promptY) < 16) {
@@ -3758,6 +3782,8 @@
 
     if (closest) {
       if (playerAtLocation === closest) {
+        // Block entry during NPC intro (Gatekeeper must finish speaking first)
+        if (npcIntro) return;
         // Already here — enter it
         onEnterLocation(closest);
       } else {
@@ -4220,6 +4246,10 @@
     }
     if (loc.type === 'petstore') {
       openPetStoreModal();
+      return;
+    }
+    if (locId === 'dungeon') {
+      openDungeonGate();
       return;
     }
     // placeholder
@@ -4891,6 +4921,102 @@
   }
 
   // ══════════════════════════════════════════════
+  // ══  DUNGEON GATE / COMBAT INTEGRATION       ══
+  // ══════════════════════════════════════════════
+
+  function openDungeonGate() {
+    var rpgPets = getRpgPetState();
+    var ownedIds = Object.keys(rpgPets.owned);
+    if (ownedIds.length === 0) {
+      addGameMessage('You need at least one pet to enter the dungeon! Visit the Pet Store first.', 'system');
+      return;
+    }
+    // Calculate total skill level for dungeon requirements
+    var totalLevel = 5; // default
+    if (window.__RPG_SKILLS_API && window.__RPG_SKILLS_API.getLevel) {
+      totalLevel = 0;
+      var skillKeys = ['mining', 'fishing', 'woodcutting', 'smithing', 'combat'];
+      for (var i = 0; i < skillKeys.length; i++) {
+        totalLevel += window.__RPG_SKILLS_API.getLevel(skillKeys[i]);
+      }
+    }
+    if (window.RpgCombat) {
+      window.RpgCombat.showDungeonSelect(rpgPets, totalLevel);
+    } else {
+      addGameMessage('Combat system not loaded.', 'system');
+    }
+  }
+
+  // Called by rpg-combat.js team builder when player clicks "Enter Dungeon"
+  window.__RPG_START_COMBAT = function (config) {
+    // Init combat canvas
+    var canvasEl = $('rpg-combat-canvas');
+    var containerEl = $('rpg-combat-container');
+    if (!canvasEl || !containerEl) return;
+
+    if (window.RpgCombat) {
+      window.RpgCombat.init(canvasEl, containerEl);
+      window.RpgCombat.onComplete = function (result) {
+        // Return to town hub map
+        showCenterContent('map');
+        if (result.victory) {
+          addGameMessage('Dungeon cleared! Earned ' + result.gp + ' GP and ' + result.petXp + ' pet XP.', 'reward');
+        } else {
+          addGameMessage('Your team was defeated. ' + result.wavesCleared + ' waves cleared.', 'combat');
+        }
+      };
+      showCenterContent('combat');
+      // Setup auto/run buttons
+      setupCombatActionButtons();
+      window.RpgCombat.startBattle(config);
+    }
+  };
+
+  function setupCombatActionButtons() {
+    var autoBtn = $('rpg-combat-auto');
+    var runBtn = $('rpg-combat-run');
+    var actionsBar = $('rpg-combat-actions');
+    if (actionsBar) actionsBar.style.display = '';
+
+    if (autoBtn) {
+      // Remove old listeners by cloning
+      var newAutoBtn = autoBtn.cloneNode(true);
+      autoBtn.parentNode.replaceChild(newAutoBtn, autoBtn);
+      newAutoBtn.addEventListener('click', function () {
+        if (window.RpgCombat && window.RpgCombat.isActive()) {
+          newAutoBtn.classList.toggle('active');
+          var isAuto = newAutoBtn.classList.contains('active');
+          window.RpgCombat.toggleAuto(isAuto);
+        }
+      });
+    }
+
+    if (runBtn) {
+      var newRunBtn = runBtn.cloneNode(true);
+      runBtn.parentNode.replaceChild(newRunBtn, runBtn);
+      newRunBtn.addEventListener('click', function () {
+        if (window.RpgCombat && window.RpgCombat.isActive()) {
+          window.RpgCombat.cleanup();
+          showCenterContent('map');
+          addGameMessage('You fled the dungeon!', 'system');
+        }
+      });
+    }
+  }
+
+  // Expose rpg.js APIs for rpg-combat.js to use
+  window.__RPG_GET_PET_STATE = function () { return getRpgPetState(); };
+  window.__RPG_SAVE_PET_STATE = function (state) { saveRpgPetState(state); };
+  window.__RPG_ADD_GAME_MESSAGE = function (text, type) { addGameMessage(text, type); };
+
+  // Set combat storage key when slot is opened
+  function setCombatStorageKey() {
+    if (activeSlot >= 0) {
+      window.__RPG_COMBAT_SLOT_KEY = SLOT_PREFIX + activeSlot + '-combat';
+    }
+  }
+
+  // ══════════════════════════════════════════════
   // ══  PET STORE MODAL                         ══
   // ══════════════════════════════════════════════
 
@@ -4958,6 +5084,7 @@
     });
 
     document.body.appendChild(overlay);
+    overlay.style.display = 'flex';
     renderPetStoreContents();
   }
 
