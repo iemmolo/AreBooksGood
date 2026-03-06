@@ -9290,6 +9290,7 @@
       renderSkillList();
       renderRightPanel();
       updateGameHeader();
+      updateAutoModeBtn();
       renderMining();
 
       // Phase 3: Replace emoji skill icons with sprites
