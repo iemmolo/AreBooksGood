@@ -5008,6 +5008,15 @@
   window.__RPG_GET_PET_STATE = function () { return getRpgPetState(); };
   window.__RPG_SAVE_PET_STATE = function (state) { saveRpgPetState(state); };
   window.__RPG_ADD_GAME_MESSAGE = function (text, type) { addGameMessage(text, type); };
+  // Check if a pet is stationed at the current skill location (for auto mode)
+  window.__RPG_HAS_STATIONED_PET = function (skill) {
+    if (!currentLocationId) return false;
+    var rpgPets = getRpgPetState();
+    var station = rpgPets.stations[currentLocationId];
+    var locSkill = RPG_STATION_SKILL_MAP[currentLocationId];
+    if (locSkill !== skill) return false;
+    return !!(station && station.petId && rpgPets.owned[station.petId]);
+  };
 
   // Set combat storage key when slot is opened
   function setCombatStorageKey() {

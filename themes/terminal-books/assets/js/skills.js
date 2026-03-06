@@ -8496,7 +8496,12 @@
   function canAutoMode() {
     if (!state || !activeSkill) return false;
     if (activeSkill === 'combat') return false; // combat has its own auto
-    return !!state.skills[activeSkill].assignedPet;
+    // Check skills.js assignedPet OR RPG stationed pet
+    if (state.skills[activeSkill].assignedPet) return true;
+    if (typeof window.__RPG_HAS_STATIONED_PET === 'function') {
+      return window.__RPG_HAS_STATIONED_PET(activeSkill);
+    }
+    return false;
   }
 
   function toggleAutoMode() {
@@ -8549,7 +8554,7 @@
   function autoMineTick() {
     if (miningEventActive) return;
     // Find a non-depleted rock
-    var rocks = document.querySelectorAll('.mine-rock:not(.depleted)');
+    var rocks = document.querySelectorAll('.mining-rock:not(.depleted)');
     if (!rocks.length) return;
     var rock = rocks[Math.floor(Math.random() * rocks.length)];
     var idx = parseInt(rock.getAttribute('data-idx'));
