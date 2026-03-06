@@ -143,6 +143,32 @@
   font-family: monospace;
   font-size: 0.75rem;
   color: color-mix(in srgb, var(--foreground) 60%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skills-auto-mode-btn {
+  font-family: monospace;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--background) 80%, var(--foreground));
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.skills-auto-mode-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.skills-auto-mode-btn.auto-mode-active {
+  background: color-mix(in srgb, var(--accent) 25%, var(--background));
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .skills-game-area {

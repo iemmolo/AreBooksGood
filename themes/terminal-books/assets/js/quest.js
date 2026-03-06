@@ -202,7 +202,7 @@
       }
     }
 
-    showQuestToast('Quest Complete: ' + def.name);
+    showQuestCompleteBanner(def.name, rewardText);
     addQuestMessage('Quest complete! ' + def.name + ' — Rewards: ' + rewardText.join(', '), 'reward');
     if (def.dialogue.complete) {
       addQuestMessage(def.dialogue.complete, 'quest');
@@ -296,6 +296,48 @@
           if (toast.parentNode) toast.parentNode.removeChild(toast);
         }, 400);
       }, 3000);
+    }
+  }
+
+  function showQuestCompleteBanner(questName, rewardTexts) {
+    var existing = document.querySelector('.quest-complete-banner');
+    if (existing) existing.parentNode.removeChild(existing);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'quest-complete-banner';
+
+    var inner = document.createElement('div');
+    inner.className = 'quest-complete-banner-inner';
+
+    var title = document.createElement('div');
+    title.className = 'quest-complete-banner-title';
+    title.textContent = 'QUEST COMPLETE';
+    inner.appendChild(title);
+
+    var name = document.createElement('div');
+    name.className = 'quest-complete-banner-name';
+    name.textContent = questName;
+    inner.appendChild(name);
+
+    if (rewardTexts && rewardTexts.length > 0) {
+      var rewards = document.createElement('div');
+      rewards.className = 'quest-complete-banner-rewards';
+      rewards.textContent = rewardTexts.join('  ·  ');
+      inner.appendChild(rewards);
+    }
+
+    overlay.appendChild(inner);
+
+    var gameScreen = document.getElementById('rpg-game-screen');
+    if (gameScreen) {
+      gameScreen.appendChild(overlay);
+      setTimeout(function () { overlay.classList.add('quest-complete-banner--visible'); }, 50);
+      setTimeout(function () {
+        overlay.classList.add('quest-complete-banner--fade');
+        setTimeout(function () {
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 600);
+      }, 4000);
     }
   }
 

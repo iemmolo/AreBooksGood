@@ -1109,6 +1109,12 @@
   var starShowerActive = false;
   var starShowerTimer = null;
 
+  // ── Auto Mode (pet plays mini-game) ──────────
+  var autoModeActive = false;
+  var autoModeTimer = null;
+  var AUTO_MODE_XP_MULT = 0.6;     // 60% of manual XP rate
+  var AUTO_MODE_INTERVAL = 2000;    // click every 2s (vs manual ~0.4-0.8s)
+
   // ── Load / Save ───────────────────────────────
   function defaultState() {
     var s = { skills: {}, version: STATE_VERSION, mastered: {}, activePlayTime: 0, inventory: {} };
@@ -1997,6 +2003,9 @@
     while (log.children.length > 20) {
       log.removeChild(log.lastChild);
     }
+    // Auto-scroll chatbox body in RPG mode so latest messages stay visible
+    var chatBody = document.getElementById('osrs-chatbox-body');
+    if (chatBody) chatBody.scrollTop = chatBody.scrollHeight;
   }
 
   function spawnParticle(parentEl, text, cssClass) {
@@ -4209,6 +4218,8 @@
       selectedMiningOre = highestIdx;
       renderMining();
       updateGameHeader();
+      // Defensive: re-render pet after a tick in case level-up effects cleared it
+      setTimeout(function () { renderPetInGameArea(); }, 300);
     } else {
       sel.value = oldVal;
     }
@@ -6195,6 +6206,7 @@
       selectedWcTree = highestIdx;
       renderWoodcutting();
       updateGameHeader();
+      setTimeout(function () { renderPetInGameArea(); }, 300);
     } else {
       sel.value = oldVal;
     }
@@ -8157,6 +8169,7 @@
     if (area) area.setAttribute('data-skill', key);
 
     updateGameHeader();
+    updateAutoModeBtn();
     renderSkillList();
     renderRightPanel();
     var renderer = SKILL_RENDERERS[key];
@@ -8170,6 +8183,7 @@
   }
 
   function cleanupActiveGame() {
+    stopAutoMode();
     miningCooldown = false;
     miningCombo = { count: 0, lastClickTime: 0 };
     // Clear all rock respawn intervals
@@ -8320,9 +8334,11 @@
     renderRightPanel();
     renderPetInGameArea(); // C1: Update pet in game area
     addLog('Assigned ' + (catalog.creatures[petId] ? catalog.creatures[petId].name : petId) + ' to ' + SKILLS[activeSkill].name);
+    updateAutoModeBtn();
   }
 
   function unassignPet() {
+    stopAutoMode();
     state.skills[activeSkill].assignedPet = null;
     state.skills[activeSkill].collectCount = 0;
     saveState();
@@ -8331,6 +8347,7 @@
     var existing = document.querySelector('.skills-game-pet');
     if (existing) existing.parentNode.removeChild(existing);
     addLog('Pet unassigned from ' + SKILLS[activeSkill].name);
+    updateAutoModeBtn();
   }
 
   // ══════════════════════════════════════════════
@@ -8473,6 +8490,463 @@
     $('skills-idle-report').style.display = '';
   }
 
+  // ══════════════════════════════════════════════
+  // ── AUTO MODE (Pet plays mini-game) ──────────
+  // ══════════════════════════════════════════════
+  function canAutoMode() {
+    if (!state || !activeSkill) return false;
+    if (activeSkill === 'combat') return false; // combat has its own auto
+    return !!state.skills[activeSkill].assignedPet;
+  }
+
+  function toggleAutoMode() {
+    if (autoModeActive) {
+      stopAutoMode();
+    } else {
+      startAutoMode();
+    }
+    updateAutoModeBtn();
+  }
+
+  function startAutoMode() {
+    if (!canAutoMode()) return;
+    if (autoModeActive) return;
+    autoModeActive = true;
+    addLog('Auto Mode: ON — your pet is training for you!');
+    autoModeTick(); // first tick immediately
+    autoModeTimer = setInterval(autoModeTick, AUTO_MODE_INTERVAL);
+    updateAutoModeBtn();
+  }
+
+  function stopAutoMode() {
+    autoModeActive = false;
+    if (autoModeTimer) { clearInterval(autoModeTimer); autoModeTimer = null; }
+    updateAutoModeBtn();
+  }
+
+  function updateAutoModeBtn() {
+    var btn = $('skills-auto-mode-btn');
+    if (!btn) return;
+    if (canAutoMode()) {
+      btn.style.display = '';
+      btn.textContent = autoModeActive ? 'Auto: ON' : 'Auto: OFF';
+      btn.classList.toggle('auto-mode-active', autoModeActive);
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  function autoModeTick() {
+    if (!autoModeActive || !state || !activeSkill) return;
+    if (document.hidden) return; // no auto when tab hidden
+    var skill = activeSkill;
+    if (skill === 'mining') autoMineTick();
+    else if (skill === 'fishing') autoFishTick();
+    else if (skill === 'woodcutting') autoChopTick();
+    else if (skill === 'smithing') autoSmithTick();
+  }
+
+  function autoMineTick() {
+    if (miningEventActive) return;
+    // Find a non-depleted rock
+    var rocks = document.querySelectorAll('.mine-rock:not(.depleted)');
+    if (!rocks.length) return;
+    var rock = rocks[Math.floor(Math.random() * rocks.length)];
+    var idx = parseInt(rock.getAttribute('data-idx'));
+    var rs = rockState[idx];
+    if (!rs || rs.hp <= 0) return;
+    var res = getSelectedMiningResource();
+    var level = state.skills.mining.level;
+    var log = getMiningLog();
+
+    // Simulate a hit (no combo bonus in auto mode)
+    var critChance = Math.min(0.01 + level * 0.002, 0.20);
+    var isCrit = Math.random() < critChance;
+
+    if (isCrit) {
+      rs.hp = 0;
+      rock.classList.add('cracking');
+      var area = $('skills-game-area');
+      if (area) spawnParticle(area, 'CRIT!', 'crit');
+      log.criticalHits++;
+    } else {
+      rs.hp = Math.max(rs.hp - 1, 0);
+      rock.classList.add(rs.hp > 0 ? 'hit' : 'cracking');
+    }
+    log.totalClicks++;
+    updateRockHpBar(idx);
+    animatePetAction('pet-bounce');
+
+    setTimeout(function () {
+      rock.classList.remove('shaking', 'hit', 'cracking');
+      var area2 = $('skills-game-area');
+      var xpMult = getXpMult() * AUTO_MODE_XP_MULT; // reduced XP for auto
+
+      if (rs.hp > 0) {
+        var partialXp = Math.max(1, Math.floor(res.xp * xpMult / rs.maxHp));
+        if (area2) spawnParticle(area2, '+' + partialXp + ' XP', 'xp');
+        addXp('mining', partialXp);
+        renderSkillList();
+        renderRightPanel();
+        return;
+      }
+
+      // Rock depleted
+      log.oresMined[res.name] = (log.oresMined[res.name] || 0) + 1;
+      var xpGain = Math.floor(res.xp * xpMult);
+      if (hasPerk('prospector', 'mining')) xpGain = Math.floor(xpGain * 1.25);
+      if (hasPerk('mastery', 'mining')) xpGain *= 2;
+      if (xpGain > 0) addXp('mining', xpGain);
+      if (area2) spawnParticle(area2, '+' + xpGain + ' XP', 'xp');
+
+      // Material
+      var matCount = 1;
+      if (hasPerk('doubleStrike', 'mining') && Math.random() < 0.10) matCount = 2;
+      addItem(res.name, matCount);
+      if (window.QuestSystem) window.QuestSystem.updateObjective('gather_resource', { item: res.name, category: 'ore', count: matCount });
+
+      // Deplete and respawn
+      rock.classList.add('depleted');
+      var respawnTime = hasPerk('oreSense', 'mining') ? 2000 : 3000;
+      var respawnI = setInterval(function () {
+        rock.classList.remove('depleted');
+        rs.hp = rs.maxHp;
+        updateRockHpBar(idx);
+        clearInterval(respawnI);
+        var ri = rockRespawnIntervals.indexOf(respawnI);
+        if (ri !== -1) rockRespawnIntervals.splice(ri, 1);
+      }, respawnTime);
+      rockRespawnIntervals.push(respawnI);
+
+      state.skills.mining.totalActions++;
+      renderSkillList();
+      renderRightPanel();
+      renderInventoryPanel();
+    }, 300);
+  }
+
+  function autoChopTick() {
+    if (wcEventActive) return;
+    var trees = document.querySelectorAll('.wc-tree:not(.depleted):not(.falling)');
+    if (!trees.length) return;
+    var tree = trees[Math.floor(Math.random() * trees.length)];
+    var idx = parseInt(tree.getAttribute('data-idx'));
+    var ts = treeState[idx];
+    if (!ts || ts.hp <= 0) return;
+    var res = getSelectedWcResource();
+    var level = state.skills.woodcutting.level;
+    var log = getWcLog();
+
+    var critChance = Math.min(0.01 + level * 0.002, 0.20);
+    var isCrit = Math.random() < critChance;
+    var chopDamage = hasPerk('powerChop', 'woodcutting') ? 2 : 1;
+
+    if (isCrit) {
+      ts.hp = 0;
+      tree.classList.add('cracking');
+      var area = $('skills-game-area');
+      if (area) spawnParticle(area, 'CRIT!', 'crit');
+      log.criticalHits++;
+    } else {
+      ts.hp = Math.max(ts.hp - chopDamage, 0);
+      tree.classList.add(ts.hp > 0 ? 'hit' : 'cracking');
+    }
+    log.totalClicks++;
+    updateTreeHpBar(idx);
+    animatePetAction('pet-bounce');
+
+    setTimeout(function () {
+      tree.classList.remove('shaking', 'hit', 'cracking');
+      var area2 = $('skills-game-area');
+      var xpMult = getXpMult() * AUTO_MODE_XP_MULT;
+
+      if (ts.hp > 0) {
+        var partialXp = Math.max(1, Math.floor(res.xp * xpMult / ts.maxHp));
+        if (area2) spawnParticle(area2, '+' + partialXp + ' XP', 'xp');
+        addXp('woodcutting', partialXp);
+        renderSkillList();
+        renderRightPanel();
+        return;
+      }
+
+      // Tree depleted
+      log.treesChopped[res.name] = (log.treesChopped[res.name] || 0) + 1;
+      var xpGain = Math.floor(res.xp * xpMult);
+      if (hasPerk('forester', 'woodcutting')) xpGain = Math.floor(xpGain * 1.25);
+      if (hasPerk('wcMastery', 'woodcutting')) xpGain *= 2;
+      if (xpGain > 0) addXp('woodcutting', xpGain);
+      if (area2) spawnParticle(area2, '+' + xpGain + ' XP', 'xp');
+
+      var logName = LOG_NAMES[res.name] || res.name + ' Log';
+      var matCount = 1;
+      if (hasPerk('doubleLog', 'woodcutting') && Math.random() < 0.10) matCount = 2;
+      addItem(logName, matCount);
+      if (window.QuestSystem) window.QuestSystem.updateObjective('gather_resource', { item: logName, category: 'log', count: matCount });
+
+      tree.classList.add('depleted');
+      var respawnTime = 3000;
+      var respawnI = setInterval(function () {
+        tree.classList.remove('depleted');
+        ts.hp = ts.maxHp;
+        updateTreeHpBar(idx);
+        clearInterval(respawnI);
+        var ri = treeRespawnIntervals.indexOf(respawnI);
+        if (ri !== -1) treeRespawnIntervals.splice(ri, 1);
+      }, respawnTime);
+      treeRespawnIntervals.push(respawnI);
+
+      state.skills.woodcutting.totalActions++;
+      renderSkillList();
+      renderRightPanel();
+      renderInventoryPanel();
+    }, 300);
+  }
+
+  function autoFishTick() {
+    if (fishingEventActive) return;
+    // Find a spot to interact with
+    for (var i = 0; i < fishSpotState.length; i++) {
+      var fs = fishSpotState[i];
+      if (!fs) continue;
+      // Priority: reel a biting fish first
+      if (fs.phase === 'bite' || fs.phase === 'reeling') {
+        autoFishReel(i);
+        return;
+      }
+    }
+    // Otherwise, cast on an idle spot
+    for (var j = 0; j < fishSpotState.length; j++) {
+      var fs2 = fishSpotState[j];
+      if (!fs2) continue;
+      if (fs2.phase === 'idle') {
+        autoFishCast(j);
+        return;
+      }
+    }
+  }
+
+  function autoFishCast(idx) {
+    var spot = document.querySelector('.fishing-spot[data-idx="' + idx + '"]');
+    if (!spot || spot.classList.contains('depleted')) return;
+    var fs = fishSpotState[idx];
+    if (fs.phase !== 'idle') return;
+    var res = getSelectedFishResource();
+    var level = state.skills.fishing.level;
+
+    fs.phase = 'waiting';
+    spot.classList.add('waiting');
+    var fishSpr = $('fish-sprite-' + idx);
+    if (fishSpr) fishSpr.style.opacity = '0.3';
+    var bobber = $('fish-bobber-' + idx);
+    var line = $('fish-line-' + idx);
+    if (bobber) bobber.classList.add('visible');
+    if (line) line.classList.add('cast');
+
+    var baseWait = res.clickTime || 2000;
+    var waitTime = baseWait * (1 - level / MAX_LEVEL * 0.5);
+    if (hasPerk('patience', 'fishing')) waitTime *= 0.75;
+    waitTime = Math.max(waitTime, 500);
+
+    fs.biteTimer = setTimeout(function () {
+      fs.phase = 'bite';
+      spot.classList.remove('waiting');
+      spot.classList.add('bite');
+      var bobber2 = $('fish-bobber-' + idx);
+      var exclaim2 = $('fish-exclaim-' + idx);
+      if (bobber2) bobber2.classList.add('bite-anim');
+      if (exclaim2) exclaim2.classList.add('visible');
+
+      fs.missTimer = setTimeout(function () {
+        if (fs.phase === 'bite' || fs.phase === 'reeling') {
+          cleanupFishingSpot(idx);
+        }
+      }, 2000);
+    }, waitTime);
+  }
+
+  function autoFishReel(idx) {
+    var spot = document.querySelector('.fishing-spot[data-idx="' + idx + '"]');
+    if (!spot) return;
+    var fs = fishSpotState[idx];
+    if (fs.phase !== 'bite' && fs.phase !== 'reeling') return;
+    var res = getSelectedFishResource();
+    var level = state.skills.fishing.level;
+    var log = getFishingLog();
+
+    fishingCooldown = true;
+    fs.phase = 'reeling';
+    spot.classList.remove('bite');
+    spot.classList.add('reeling');
+    log.totalClicks++;
+
+    if (fs.missTimer) { clearTimeout(fs.missTimer); fs.missTimer = null; }
+
+    // Auto hit — no combo in auto mode
+    fs.hp = Math.max(fs.hp - 1, 0);
+    animatePetAction('pet-bounce');
+    updateFishHpBar(idx);
+
+    setTimeout(function () {
+      fishingCooldown = false;
+      if (fs.hp > 0) {
+        var partialXp = Math.max(1, Math.floor(res.xp * getXpMult() * AUTO_MODE_XP_MULT / fs.maxHp));
+        var area = $('skills-game-area');
+        if (area) spawnParticle(area, '+' + partialXp + ' XP', 'xp');
+        addXp('fishing', partialXp);
+        renderSkillList();
+        renderRightPanel();
+        return;
+      }
+
+      // Fish caught
+      log.fishCaught[res.name] = (log.fishCaught[res.name] || 0) + 1;
+      var xpMult = getXpMult() * AUTO_MODE_XP_MULT;
+      var xpGain = Math.floor(res.xp * xpMult);
+      if (hasPerk('deepCast', 'fishing')) xpGain = Math.floor(xpGain * 1.25);
+      if (hasPerk('fishMastery', 'fishing')) xpGain *= 2;
+      if (xpGain > 0) addXp('fishing', xpGain);
+      var area2 = $('skills-game-area');
+      if (area2) spawnParticle(area2, '+' + xpGain + ' XP', 'xp');
+
+      var matCount = 1;
+      if (hasPerk('doubleCatch', 'fishing') && Math.random() < 0.10) matCount = 2;
+      addItem(res.name, matCount);
+      if (window.QuestSystem) window.QuestSystem.updateObjective('gather_resource', { item: res.name, category: 'fish', count: matCount });
+
+      state.skills.fishing.totalActions++;
+
+      // Deplete and respawn
+      cleanupFishingSpot(idx);
+      spot.classList.add('depleted');
+      var respawnI = setInterval(function () {
+        spot.classList.remove('depleted');
+        var newMaxHp = FISH_HP[res.name] || 1;
+        fishSpotState[idx] = { phase: 'idle', hp: newMaxHp, maxHp: newMaxHp, biteTimer: null, missTimer: null };
+        updateFishHpBar(idx);
+        clearInterval(respawnI);
+        var ri = fishSpotRespawnIntervals.indexOf(respawnI);
+        if (ri !== -1) fishSpotRespawnIntervals.splice(ri, 1);
+      }, 3000);
+      fishSpotRespawnIntervals.push(respawnI);
+
+      renderSkillList();
+      renderRightPanel();
+      renderInventoryPanel();
+    }, 300);
+  }
+
+  function autoSmithTick() {
+    if (smithingEventActive) return;
+    if (smithingState.mode === 'smelting') {
+      autoSmeltTick();
+    } else {
+      autoForgeTick();
+    }
+  }
+
+  function autoSmeltTick() {
+    if (smithingState.phase !== 'active') return;
+    var barName = getSelectedSmeltBar();
+    if (!canSmelt(barName) || getItemCount(barName) >= STACK_CAP) return;
+
+    // Simulate: hold → release in green zone (but not always perfect)
+    var idx = SMELTING_ORDER.indexOf(barName);
+    var zoneHeight = Math.max(10, 35 - (idx * 3.5));
+    if (hasPerk('steadyHand', 'smithing')) zoneHeight *= 1.10;
+    var zoneBottom = Math.floor(50 - zoneHeight / 2);
+    var zoneTop = zoneBottom + zoneHeight;
+
+    // Auto aims for zone center ± some randomness (70% success, no perfect)
+    var success = Math.random() < 0.70;
+    if (!success) {
+      // Miss — just log it, reset
+      addLog('Auto smelt: missed!');
+      return;
+    }
+
+    // Consume ores and produce bar
+    consumeSmeltingOres(barName);
+    addItem(barName, 1);
+    var slog = getSmithingLog();
+    slog.totalSmelts++;
+    slog.barsSmelted[barName] = (slog.barsSmelted[barName] || 0) + 1;
+    slog.totalClicks++;
+
+    var res = SKILLS.smithing.resources[idx] || SKILLS.smithing.resources[0];
+    var xpGain = Math.floor(res.xp * getXpMult() * AUTO_MODE_XP_MULT);
+    if (hasPerk('metalworker', 'smithing')) xpGain = Math.floor(xpGain * 1.25);
+    if (hasPerk('smithMastery', 'smithing')) xpGain *= 2;
+    if (xpGain > 0) addXp('smithing', xpGain);
+
+    var area = $('skills-game-area');
+    if (area) spawnParticle(area, '+' + xpGain + ' XP', 'xp');
+    animatePetAction('pet-bounce');
+    if (window.QuestSystem) window.QuestSystem.updateObjective('craft_item', { item: barName, category: 'bar', count: 1 });
+
+    state.skills.smithing.totalActions++;
+
+    // Visual: flash the gauge briefly
+    var fill = $('smelting-gauge-fill');
+    if (fill) {
+      var targetTemp = zoneBottom + Math.random() * zoneHeight;
+      fill.style.height = targetTemp + '%';
+      setTimeout(function () { if (fill) fill.style.height = '0%'; }, 400);
+    }
+
+    var heatBtn = $('smelt-heat-btn');
+    if (heatBtn) heatBtn.disabled = !canSmelt(barName) || getItemCount(barName) >= STACK_CAP;
+    updateSmeltMats();
+    renderSkillList();
+    renderRightPanel();
+    renderInventoryPanel();
+  }
+
+  function autoForgeTick() {
+    if (smithingState.phase !== 'active' && smithingState.phase !== 'idle') return;
+    var recipe = getSelectedForgeRecipe();
+    if (!recipe || !canForge(recipe) || getItemCount(recipe.name) >= STACK_CAP) return;
+
+    // Auto mode: simulate 5 hits, ~60% bonus hit rate (worse than manual)
+    var bonusHits = 0;
+    for (var h = 0; h < 5; h++) {
+      if (Math.random() < 0.6) bonusHits++;
+    }
+
+    consumeForgingMats(recipe);
+    addItem(recipe.name, 1);
+    var slog = getSmithingLog();
+    slog.totalForges++;
+    slog.itemsForged[recipe.name] = (slog.itemsForged[recipe.name] || 0) + 1;
+    slog.totalClicks += 5;
+
+    var qualityMult = 1 + (bonusHits / 5) * 0.5;
+    var xpGain = Math.floor(recipe.xp * getXpMult() * AUTO_MODE_XP_MULT * qualityMult);
+    if (hasPerk('metalworker', 'smithing')) xpGain = Math.floor(xpGain * 1.25);
+    if (hasPerk('smithMastery', 'smithing')) xpGain *= 2;
+    if (xpGain > 0) addXp('smithing', xpGain);
+
+    var area = $('skills-game-area');
+    if (area) spawnParticle(area, '+' + xpGain + ' XP', 'xp');
+    animatePetAction('pet-bounce');
+    if (window.QuestSystem) window.QuestSystem.updateObjective('craft_item', { item: recipe.name, category: 'equipment', count: 1 });
+
+    state.skills.smithing.totalActions++;
+    renderSkillList();
+    renderRightPanel();
+    renderInventoryPanel();
+  }
+
+  // Visibility change: pause auto mode when tab hidden
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden && autoModeActive) {
+      if (autoModeTimer) { clearInterval(autoModeTimer); autoModeTimer = null; }
+    } else if (!document.hidden && autoModeActive) {
+      if (!autoModeTimer) {
+        autoModeTimer = setInterval(autoModeTick, AUTO_MODE_INTERVAL);
+      }
+    }
+  });
+
   // ── Active page auto-train ────────────────────
   function startActiveAutoTrain() {
     if (activeAutoTimer) clearInterval(activeAutoTimer);
@@ -8481,6 +8955,8 @@
         var key = SKILL_KEYS[i];
         var s = state.skills[key];
         if (!s.assignedPet) continue;
+        // Skip background auto-train for active skill when auto mode is running
+        if (key === activeSkill && autoModeActive) continue;
 
         var res = (key === 'mining') ? getSelectedMiningResource() : (key === 'woodcutting') ? getSelectedWcResource() : getHighestResource(key);
         var tierMult = getTierMult(s.assignedPet);
@@ -8843,6 +9319,9 @@
 
         var unassignBtn = $('skills-unassign-btn');
         if (unassignBtn) unassignBtn.addEventListener('click', unassignPet);
+
+        var autoModeBtn = $('skills-auto-mode-btn');
+        if (autoModeBtn) autoModeBtn.addEventListener('click', toggleAutoMode);
 
         var pickerClose = $('skills-picker-close');
         if (pickerClose) pickerClose.addEventListener('click', function () {
