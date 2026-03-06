@@ -4941,6 +4941,7 @@
     // Collection
     var collLabel = document.createElement('div');
     collLabel.className = 'rpg-petstore-section-label';
+    collLabel.id = 'rpg-petstore-coll-label';
     collLabel.textContent = 'Your Collection';
     modal.appendChild(collLabel);
 
@@ -4962,6 +4963,11 @@
 
   function closePetStoreModal() {
     petStoreModalOpen = false;
+    hatchAnimating = false;
+    for (var ti = 0; ti < hatchTimeouts.length; ti++) {
+      clearTimeout(hatchTimeouts[ti]);
+    }
+    hatchTimeouts = [];
     var overlay = document.getElementById('rpg-petstore-overlay');
     if (overlay && overlay.parentNode) {
       overlay.parentNode.removeChild(overlay);
@@ -4979,8 +4985,6 @@
     }
 
     // Single egg card with rarity roll
-    var EGG_COST = 500;
-    var FREE_PULLS = 4;
     var eggsEl = document.getElementById('rpg-petstore-eggs');
     if (eggsEl && petCatalog) {
       eggsEl.innerHTML = '';
@@ -5043,8 +5047,8 @@
       var hatchBtn = document.createElement('button');
       hatchBtn.className = 'rpg-btn rpg-btn-small rpg-btn-primary';
       hatchBtn.textContent = isFree ? 'Hatch (FREE!)' : 'Hatch';
-      hatchBtn.disabled = !canAfford;
-      if (!canAfford) hatchBtn.classList.add('rpg-btn-disabled');
+      hatchBtn.disabled = !canAfford || hatchAnimating;
+      if (!canAfford || hatchAnimating) hatchBtn.classList.add('rpg-btn-disabled');
       hatchBtn.addEventListener('click', function () {
         rpgHatchEgg();
       });
@@ -5055,6 +5059,17 @@
 
     // Collection grid
     renderPetStoreCollection(rpgPets);
+
+    // Update collection counter in header
+    var collLabel = document.getElementById('rpg-petstore-coll-label');
+    if (collLabel) {
+      var allC = getRpgCreatures();
+      var ownedCount = 0;
+      for (var ci = 0; ci < allC.length; ci++) {
+        if (rpgPets.owned[allC[ci]]) ownedCount++;
+      }
+      collLabel.textContent = 'Your Collection (' + ownedCount + '/' + allC.length + ')';
+    }
   }
 
   function renderPetStoreCollection(rpgPets) {
@@ -5073,16 +5088,49 @@
 
       if (owned) {
         var level = owned.level || 1;
-        var preview = renderRpgPetSprite(id, level, 36);
+        var cTier = creature ? creature.tier : 'common';
+        cell.style.borderColor = TIER_COLORS[cTier] || TIER_COLORS.common;
+
+        // Sprite (48px)
+        var preview = renderRpgPetSprite(id, level, 48);
         if (preview) cell.appendChild(preview);
-      }
 
-      var nameEl = document.createElement('div');
-      nameEl.className = 'rpg-petstore-pet-name';
-      nameEl.textContent = owned ? creature.name : '???';
-      cell.appendChild(nameEl);
+        // Type badge
+        var cType = creature ? creature.type : null;
+        if (cType && TYPE_COLORS[cType]) {
+          var badge = document.createElement('div');
+          badge.className = 'rpg-petcell-type-badge';
+          badge.style.background = TYPE_COLORS[cType];
+          cell.appendChild(badge);
+        }
 
-      if (owned) {
+        // Name
+        var nameEl = document.createElement('div');
+        nameEl.className = 'rpg-petstore-pet-name';
+        nameEl.textContent = creature ? creature.name : id;
+        cell.appendChild(nameEl);
+
+        // Level
+        var lvEl = document.createElement('div');
+        lvEl.className = 'rpg-petcell-level';
+        lvEl.textContent = 'Lv ' + level;
+        cell.appendChild(lvEl);
+
+        // XP bar (skip for max-level pets)
+        var maxLv = creature ? creature.maxLevel : 3;
+        if (level < maxLv) {
+          var xpNeeded = rpgPetXpForLevel(level);
+          var xpPct = Math.min(((owned.xp || 0) / xpNeeded) * 100, 100);
+          var xpBar = document.createElement('div');
+          xpBar.className = 'rpg-petcell-xp-bar';
+          var xpFill = document.createElement('div');
+          xpFill.className = 'rpg-petcell-xp-fill';
+          xpFill.style.width = xpPct + '%';
+          xpBar.appendChild(xpFill);
+          cell.appendChild(xpBar);
+        }
+
+        // Status tag
         var status = getPetStatus(id);
         if (status === 'following') {
           var tag = document.createElement('div');
@@ -5096,6 +5144,20 @@
           tag.textContent = 'Stationed';
           cell.appendChild(tag);
         }
+      } else {
+        // Unknown cell — hint tier via faint border color
+        var uTier = creature ? creature.tier : 'common';
+        cell.style.borderColor = 'color-mix(in srgb, ' + (TIER_COLORS[uTier] || TIER_COLORS.common) + ' 25%, transparent)';
+
+        var unkEl = document.createElement('div');
+        unkEl.className = 'rpg-petcell-unknown';
+        unkEl.textContent = '?';
+        cell.appendChild(unkEl);
+
+        var nameEl = document.createElement('div');
+        nameEl.className = 'rpg-petstore-pet-name';
+        nameEl.textContent = '???';
+        cell.appendChild(nameEl);
       }
 
       collEl.appendChild(cell);
@@ -5111,6 +5173,15 @@
   ];
   var MERGE_XP = { common: 25, rare: 50, legendary: 100 };
   var PITY_THRESHOLD = 8; // guaranteed new creature after 8 consecutive dupes
+  var hatchAnimating = false;
+  var hatchTimeouts = [];
+
+  var TIER_COLORS = { common: '#88aa66', rare: '#6688cc', legendary: '#cc9933' };
+  var TIER_LABELS = { common: 'Common', rare: 'Rare!', legendary: 'LEGENDARY!' };
+  var TYPE_COLORS = {
+    fire: '#cc6644', aqua: '#4488bb', nature: '#66aa55',
+    tech: '#888899', shadow: '#775599', mystic: '#bb88cc'
+  };
 
   function rollRarity() {
     var roll = Math.random() * 100;
@@ -5124,8 +5195,202 @@
 
   var FREE_PULLS = 4;
 
+  function hatchTimeout(fn, delay) {
+    var id = setTimeout(fn, delay);
+    hatchTimeouts.push(id);
+    return id;
+  }
+
+  function playHatchAnimation(resultEl, petId, tier, isDuplicate, mergeXP, oldXp, oldLevel, callback) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = '';
+
+    var tierColor = TIER_COLORS[tier] || '#88aa66';
+
+    // Stage 1: Egg appears
+    var egg = document.createElement('div');
+    egg.className = 'rpg-hatch-egg';
+    resultEl.appendChild(egg);
+
+    // Stage 2: Wobbles
+    hatchTimeout(function () { egg.className = 'rpg-hatch-egg rpg-egg-wobble-1'; }, 400);
+    hatchTimeout(function () { egg.className = 'rpg-hatch-egg rpg-egg-wobble-2'; }, 800);
+    hatchTimeout(function () { egg.className = 'rpg-hatch-egg rpg-egg-wobble-3'; }, 1100);
+
+    // Stage 3: Cracks
+    hatchTimeout(function () { egg.classList.add('rpg-egg-cracked'); }, 1400);
+
+    // Stage 4: Fade egg, then split + burst
+    hatchTimeout(function () {
+      egg.style.opacity = '0';
+      hatchTimeout(function () {
+        egg.style.display = 'none';
+        var halfL = document.createElement('div');
+        halfL.className = 'rpg-egg-half-left';
+        var halfR = document.createElement('div');
+        halfR.className = 'rpg-egg-half-right';
+        var wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.height = '64px';
+        wrapper.style.margin = '0 auto';
+        wrapper.style.width = '50px';
+        wrapper.appendChild(halfL);
+        wrapper.appendChild(halfR);
+        resultEl.insertBefore(wrapper, egg);
+
+        var burst = document.createElement('div');
+        burst.className = 'rpg-hatch-burst';
+        burst.style.background = 'radial-gradient(circle, ' + tierColor + ' 0%, transparent 70%)';
+        resultEl.appendChild(burst);
+      }, 100);
+    }, 1700);
+
+    // Stage 5: Pet sprite reveals
+    hatchTimeout(function () {
+      resultEl.innerHTML = '';
+
+      var creature = petCatalog.creatures[petId];
+      var rpgPets = getRpgPetState();
+      var currentLevel = rpgPets.owned[petId] ? rpgPets.owned[petId].level : 1;
+
+      // Rarity banner
+      var rarityEl = document.createElement('div');
+      rarityEl.className = 'rpg-petstore-result-rarity rpg-rarity-slide';
+      rarityEl.textContent = TIER_LABELS[tier] || tier;
+      rarityEl.style.color = tierColor;
+      resultEl.appendChild(rarityEl);
+
+      // Sprite
+      var preview = renderRpgPetSprite(petId, currentLevel, 64);
+      if (preview) {
+        preview.className = 'rpg-petstore-result-sprite rpg-hatch-reveal';
+        resultEl.appendChild(preview);
+      }
+
+      // Name + tag fade in at t=2400
+      hatchTimeout(function () {
+        var nameEl = document.createElement('div');
+        nameEl.className = 'rpg-petstore-result-name rpg-hatch-name-fade';
+        nameEl.textContent = creature ? creature.name : petId;
+        resultEl.appendChild(nameEl);
+
+        if (isDuplicate) {
+          renderDupeResult(resultEl, petId, mergeXP, oldXp, oldLevel);
+        } else {
+          var tagEl = document.createElement('div');
+          tagEl.className = 'rpg-petstore-result-tag rpg-hatch-name-fade';
+          tagEl.textContent = 'New creature!';
+          tagEl.style.color = 'var(--accent)';
+          resultEl.appendChild(tagEl);
+        }
+
+        hatchAnimating = false;
+        if (callback) callback();
+      }, 400);
+    }, 2000);
+  }
+
+  function renderDupeResult(resultEl, petId, mergeXP, oldXp, oldLevel) {
+    var rpgPets = getRpgPetState();
+    var owned = rpgPets.owned[petId];
+    var creature = petCatalog.creatures[petId];
+    var maxLv = creature ? creature.maxLevel : 3;
+    var newLevel = owned ? owned.level : oldLevel;
+    var newXp = owned ? owned.xp : 0;
+    var didLevelUp = newLevel > oldLevel;
+
+    // "Duplicate!" tag
+    var tagEl = document.createElement('div');
+    tagEl.className = 'rpg-petstore-result-tag rpg-hatch-name-fade';
+    tagEl.textContent = 'Duplicate!';
+    tagEl.style.color = 'color-mix(in srgb, var(--foreground) 60%, transparent)';
+    resultEl.appendChild(tagEl);
+
+    // Max-level dupe: show badge instead of XP bar
+    if (oldLevel >= maxLv) {
+      var maxBadge = document.createElement('div');
+      maxBadge.className = 'rpg-dupe-xp-gain';
+      maxBadge.textContent = 'MAX LEVEL';
+      maxBadge.style.color = '#cc9933';
+      resultEl.appendChild(maxBadge);
+      var storedNote = document.createElement('div');
+      storedNote.className = 'rpg-dupe-level-text';
+      storedNote.textContent = '+' + mergeXP + ' Evo XP (stored)';
+      resultEl.appendChild(storedNote);
+      return;
+    }
+
+    // +XP text
+    var xpGain = document.createElement('div');
+    xpGain.className = 'rpg-dupe-xp-gain';
+    xpGain.textContent = '+' + mergeXP + ' Evo XP';
+    resultEl.appendChild(xpGain);
+
+    // XP bar
+    var xpNeeded = rpgPetXpForLevel(oldLevel);
+    var startPct = Math.min((oldXp / xpNeeded) * 100, 100);
+
+    var track = document.createElement('div');
+    track.className = 'rpg-dupe-xp-track';
+    var fill = document.createElement('div');
+    fill.className = 'rpg-dupe-xp-fill';
+    fill.style.width = startPct + '%';
+    track.appendChild(fill);
+    resultEl.appendChild(track);
+
+    // Level label
+    var lvText = document.createElement('div');
+    lvText.className = 'rpg-dupe-level-text';
+    lvText.textContent = 'Lv ' + oldLevel;
+    resultEl.appendChild(lvText);
+
+    // Animate fill after paint
+    hatchTimeout(function () {
+      if (didLevelUp) {
+        // Fill to 100% first
+        fill.style.width = '100%';
+        hatchTimeout(function () {
+          // Flash
+          var flash = document.createElement('div');
+          flash.className = 'rpg-dupe-levelup-flash';
+          resultEl.appendChild(flash);
+
+          // Reset bar to new level progress
+          var newNeeded = rpgPetXpForLevel(newLevel);
+          var newPct = newLevel >= maxLv ? 100 : Math.min((newXp / newNeeded) * 100, 100);
+          fill.style.transition = 'none';
+          fill.style.width = '0%';
+          hatchTimeout(function () {
+            fill.style.transition = 'width 0.5s ease-out';
+            fill.style.width = newPct + '%';
+          }, 50);
+
+          // Level up text
+          var luText = document.createElement('div');
+          luText.className = 'rpg-dupe-levelup-text';
+          luText.textContent = 'LEVEL UP!';
+          resultEl.appendChild(luText);
+
+          lvText.textContent = 'Lv ' + newLevel;
+
+          // Swap sprite to new evolution
+          var oldSprite = resultEl.querySelector('.rpg-petstore-result-sprite');
+          var newSprite = renderRpgPetSprite(petId, newLevel, 64);
+          if (oldSprite && newSprite) {
+            newSprite.className = 'rpg-petstore-result-sprite rpg-hatch-reveal';
+            oldSprite.parentNode.replaceChild(newSprite, oldSprite);
+          }
+        }, 500);
+      } else {
+        // No level up — just fill to new position
+        var endPct = newLevel >= maxLv ? 100 : Math.min(((oldXp + mergeXP) / xpNeeded) * 100, 100);
+        fill.style.width = endPct + '%';
+      }
+    }, 200);
+  }
+
   function rpgHatchEgg() {
-    if (!petCatalog) return;
+    if (!petCatalog || hatchAnimating) return;
 
     var rpgPets = getRpgPetState();
     var freeLeft = Math.max(0, FREE_PULLS - (rpgPets.totalHatched || 0));
@@ -5173,11 +5438,14 @@
       window.Wallet.deduct(EGG_COST);
     }
 
+    // Capture old state BEFORE mutation (needed for dupe XP animation)
     var isDuplicate = !!rpgPets.owned[rolled];
     var mergeXP = MERGE_XP[tier] || 25;
+    var oldXp = isDuplicate ? (rpgPets.owned[rolled].xp || 0) : 0;
+    var oldLevel = isDuplicate ? (rpgPets.owned[rolled].level || 1) : 1;
 
+    // Mutate state
     if (isDuplicate) {
-      // Dupe: award Evo XP towards next evolution
       rpgPets.owned[rolled].xp = (rpgPets.owned[rolled].xp || 0) + mergeXP;
       var needed = rpgPetXpForLevel(rpgPets.owned[rolled].level);
       if (rpgPets.owned[rolled].xp >= needed) {
@@ -5201,56 +5469,34 @@
       window.QuestSystem.updateObjective('hatch_pets', { count: 1 });
     }
 
-    // Tier display info
-    var tierColors = { common: '#88aa66', rare: '#6688cc', legendary: '#cc9933' };
-    var tierLabels = { common: 'Common', rare: 'Rare!', legendary: 'LEGENDARY!' };
-
-    // Show result
-    var resultEl = document.getElementById('rpg-petstore-result');
-    if (resultEl) {
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = '';
-
-      // Rarity banner
-      var rarityEl = document.createElement('div');
-      rarityEl.className = 'rpg-petstore-result-rarity';
-      rarityEl.textContent = tierLabels[tier] || tier;
-      rarityEl.style.color = tierColors[tier] || '#88aa66';
-      resultEl.appendChild(rarityEl);
-
-      var creature = petCatalog.creatures[rolled];
-      var preview = renderRpgPetSprite(rolled, rpgPets.owned[rolled].level, 64);
-      if (preview) {
-        preview.className = 'rpg-petstore-result-sprite';
-        resultEl.appendChild(preview);
-      }
-
-      var nameEl = document.createElement('div');
-      nameEl.className = 'rpg-petstore-result-name';
-      nameEl.textContent = creature ? creature.name : rolled;
-      resultEl.appendChild(nameEl);
-
-      var tagEl = document.createElement('div');
-      tagEl.className = 'rpg-petstore-result-tag';
-      if (isDuplicate) {
-        tagEl.textContent = 'Duplicate! (+' + mergeXP + ' Evo XP)';
-        tagEl.style.color = 'color-mix(in srgb, var(--foreground) 60%, transparent)';
-      } else {
-        tagEl.textContent = 'New creature!';
-        tagEl.style.color = 'var(--accent)';
-      }
-      resultEl.appendChild(tagEl);
-    }
-
+    // Chat message
     var creatureName = petCatalog.creatures[rolled] ? petCatalog.creatures[rolled].name : rolled;
     addGameMessage(isDuplicate
       ? 'The egg hatches... another ' + creatureName + '. (+' + mergeXP + ' Evo XP)'
-      : 'The egg hatches! A ' + creatureName + ' emerges! (' + (tierLabels[tier] || tier) + ')',
+      : 'The egg hatches! A ' + creatureName + ' emerges! (' + (TIER_LABELS[tier] || tier) + ')',
       tier === 'legendary' ? 'reward' : 'system');
 
-    // Re-render modal + pet tab
-    renderPetStoreContents();
-    renderPetTab();
+    // Immediately update balance display and disable button
+    hatchAnimating = true;
+    var balDisp = document.getElementById('rpg-petstore-balance');
+    if (balDisp) balDisp.textContent = (window.Wallet ? window.Wallet.getBalance() : 0) + ' GP';
+    var eggsContainer = document.getElementById('rpg-petstore-eggs');
+    if (eggsContainer) {
+      var hBtn = eggsContainer.querySelector('.rpg-btn-primary');
+      if (hBtn) { hBtn.disabled = true; hBtn.classList.add('rpg-btn-disabled'); }
+    }
+
+    var resultEl = document.getElementById('rpg-petstore-result');
+    if (resultEl) {
+      playHatchAnimation(resultEl, rolled, tier, isDuplicate, mergeXP, oldXp, oldLevel, function () {
+        renderPetStoreContents();
+        renderPetTab();
+      });
+    } else {
+      hatchAnimating = false;
+      renderPetStoreContents();
+      renderPetTab();
+    }
   }
 
   // ══════════════════════════════════════════════

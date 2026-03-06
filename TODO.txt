@@ -395,12 +395,14 @@ AreBooksGood - Improvement TODO
 - [x] **4B: Free Starter Pulls** — first 4 pulls free (no dupes guaranteed), tied to "Claim Your Swag Bag" quest
 - [x] **4C: Per-Slot Wallet** — each save slot has isolated GP (starts 500), decoupled from global site wallet
 - [x] **4D: Dupe Rewards** — duplicates award Evo XP towards pet evolution (25/50/100 by tier)
-- [ ] **4E: Egg Opening Animation** — multi-step canvas: egg lands → wobbles (3x) → crack lines → splits open → light burst → pet sprite fades in → rarity banner ("LEGENDARY!") → stats reveal
-- [ ] **4F: Better Pet Interface** — larger sprite previews, type badge + stat summary, sort/filter by type/tier/level, equipped gear indicator
-- [ ] **4G: Dupe Polish** — "Already owned!" badge, Evo XP bar fill animation, inline evolution animation
+- [x] **4E: Egg Opening Animation** — wobble→crack→split→burst→sprite reveal→rarity banner, CSS keyframes
+- [x] **4F: Better Pet Interface** — collection grid with type badges, tier-colored borders, XP bars, status tags, owned count. Sort/filter deferred to Phase 6 Library
+- [x] **4G: Dupe Polish** — Evo XP bar fill animation, level-up flash + sprite swap, "Duplicate!" badge
+- [x] **4H: Bug Fixes & Polish** — fixed duplicate constants, timeout cleanup on close, immediate balance/button update, egg fade-out, unowned tier hints, max-level dupe badge, collection counter
 
 ### RPG Phase 5: Combat Rework — Turn-Based Tactical (replaces auto-battle)
 New file: rpg-combat.js. Old battle.js stays as legacy standalone at /games/battle/.
+**Note:** Pet stats/types/moves/level system needs holistic redesign before combat work begins.
 
 - [ ] **5.1: Core Turn Engine** — turn order by SPD (base + gear + buffs), priority moves go first, per-round: build order → each fighter acts → resolve status effects. Toggle per pet: manual or AI (aggressive/defensive/support)
 - [ ] **5.2: Move/Ability System** — expand existing MOVES from battle.js. New effects: taunt, shield, regen, cleanse, bleed, stun, reflect, atkDown/defDown. Move schema: id, name, type, power, category (physical/special/status), cooldown, effect, aoe, selfTarget
