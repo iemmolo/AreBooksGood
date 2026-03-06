@@ -1113,7 +1113,7 @@
   var autoModeActive = false;
   var autoModeTimer = null;
   var AUTO_MODE_XP_MULT = 0.6;     // 60% of manual XP rate
-  var AUTO_MODE_INTERVAL = 2000;    // click every 2s (vs manual ~0.4-0.8s)
+  var AUTO_MODE_INTERVAL = 2500;    // tick every 2.5s (pet walks ~0.6s + action ~0.3s + pause)
 
   // ── Load / Save ───────────────────────────────
   function defaultState() {
@@ -2062,12 +2062,95 @@
   }
 
   function animatePetAction(animClass) {
-    var pet = document.querySelector('.skills-game-pet');
+    var pet = (autoModeActive && autoModePetEl) ? autoModePetEl : document.querySelector('.skills-game-pet');
     if (!pet) return;
     pet.classList.remove('pet-bounce', 'pet-wiggle', 'pet-cheer');
     void pet.offsetWidth;
     pet.classList.add(animClass);
     setTimeout(function () { pet.classList.remove(animClass); }, 500);
+  }
+
+  // Get or create the auto-mode floating pet sprite
+  var autoModePetEl = null;
+
+  function ensureAutoModePet() {
+    if (autoModePetEl && autoModePetEl.parentNode) return autoModePetEl;
+
+    var area = $('skills-game-area');
+    if (!area) return null;
+
+    // Find the source sprite to clone from
+    var dockPet = document.querySelector('.rpg-station-dock-pet');
+    var skillsPet = document.querySelector('.skills-game-pet');
+    var source = dockPet || skillsPet;
+    if (!source) return null;
+
+    // Create floating clone
+    autoModePetEl = document.createElement('div');
+    autoModePetEl.className = 'auto-mode-pet';
+    autoModePetEl.style.position = 'absolute';
+    autoModePetEl.style.zIndex = '6';
+    autoModePetEl.style.imageRendering = 'pixelated';
+    autoModePetEl.style.width = '48px';
+    autoModePetEl.style.height = '48px';
+    autoModePetEl.style.backgroundImage = source.style.backgroundImage;
+    autoModePetEl.style.backgroundPosition = source.style.backgroundPosition;
+    autoModePetEl.style.backgroundSize = source.style.backgroundSize || 'auto 48px';
+    autoModePetEl.style.backgroundRepeat = 'no-repeat';
+    autoModePetEl.style.transition = 'left 0.6s ease-in-out, bottom 0.6s ease-in-out';
+    autoModePetEl.style.left = '16px';
+    autoModePetEl.style.bottom = '60px';
+
+    // Hide the original dock pet sprite (not the whole dock)
+    if (dockPet) dockPet.style.visibility = 'hidden';
+    if (skillsPet) skillsPet.style.visibility = 'hidden';
+
+    area.appendChild(autoModePetEl);
+    return autoModePetEl;
+  }
+
+  function removeAutoModePet() {
+    if (autoModePetEl && autoModePetEl.parentNode) {
+      autoModePetEl.parentNode.removeChild(autoModePetEl);
+    }
+    autoModePetEl = null;
+    // Restore original pet visibility
+    var dockPet = document.querySelector('.rpg-station-dock-pet');
+    var skillsPet = document.querySelector('.skills-game-pet');
+    if (dockPet) dockPet.style.visibility = '';
+    if (skillsPet) skillsPet.style.visibility = '';
+  }
+
+  // Move auto-mode pet to a target element, then fire callback
+  var autoMoveTimer = null;
+  function movePetToTarget(targetEl, callback) {
+    var pet = ensureAutoModePet();
+    var area = $('skills-game-area');
+    if (!pet || !area || !targetEl) { if (callback) callback(); return; }
+
+    var areaRect = area.getBoundingClientRect();
+    var targetRect = targetEl.getBoundingClientRect();
+    var tx = targetRect.left - areaRect.left + targetRect.width / 2 - 24;
+    var ty = targetRect.top - areaRect.top + targetRect.height - 48;
+    tx = Math.max(0, Math.min(tx, areaRect.width - 48));
+    ty = Math.max(0, Math.min(ty, areaRect.height - 48));
+
+    // Flip sprite based on movement direction
+    var curLeft = parseFloat(pet.style.left) || 0;
+    if (tx < curLeft - 10) {
+      pet.style.transform = 'scaleX(-1)';
+    } else if (tx > curLeft + 10) {
+      pet.style.transform = 'scaleX(1)';
+    }
+
+    pet.style.left = tx + 'px';
+    pet.style.bottom = (areaRect.height - ty - 48) + 'px';
+
+    if (autoMoveTimer) clearTimeout(autoMoveTimer);
+    autoMoveTimer = setTimeout(function () {
+      autoMoveTimer = null;
+      if (callback) callback();
+    }, 650);
   }
 
   // ── C2: Pet Skill Speech ──────────────────────
@@ -8526,6 +8609,8 @@
   function stopAutoMode() {
     autoModeActive = false;
     if (autoModeTimer) { clearInterval(autoModeTimer); autoModeTimer = null; }
+    if (autoMoveTimer) { clearTimeout(autoMoveTimer); autoMoveTimer = null; }
+    removeAutoModePet();
     updateAutoModeBtn();
   }
 
@@ -8553,18 +8638,27 @@
 
   function autoMineTick() {
     if (miningEventActive) return;
-    // Find a non-depleted rock
     var rocks = document.querySelectorAll('.mining-rock:not(.depleted)');
     if (!rocks.length) return;
     var rock = rocks[Math.floor(Math.random() * rocks.length)];
     var idx = parseInt(rock.getAttribute('data-idx'));
     var rs = rockState[idx];
     if (!rs || rs.hp <= 0) return;
+
+    // Move pet to the rock, then mine it
+    movePetToTarget(rock, function () {
+      if (!autoModeActive) return;
+      doAutoMineHit(rock, idx);
+    });
+  }
+
+  function doAutoMineHit(rock, idx) {
+    var rs = rockState[idx];
+    if (!rs || rs.hp <= 0) return;
     var res = getSelectedMiningResource();
     var level = state.skills.mining.level;
     var log = getMiningLog();
 
-    // Simulate a hit (no combo bonus in auto mode)
     var critChance = Math.min(0.01 + level * 0.002, 0.20);
     var isCrit = Math.random() < critChance;
 
@@ -8585,7 +8679,7 @@
     setTimeout(function () {
       rock.classList.remove('shaking', 'hit', 'cracking');
       var area2 = $('skills-game-area');
-      var xpMult = getXpMult() * AUTO_MODE_XP_MULT; // reduced XP for auto
+      var xpMult = getXpMult() * AUTO_MODE_XP_MULT;
 
       if (rs.hp > 0) {
         var partialXp = Math.max(1, Math.floor(res.xp * xpMult / rs.maxHp));
@@ -8596,7 +8690,6 @@
         return;
       }
 
-      // Rock depleted
       log.oresMined[res.name] = (log.oresMined[res.name] || 0) + 1;
       var xpGain = Math.floor(res.xp * xpMult);
       if (hasPerk('prospector', 'mining')) xpGain = Math.floor(xpGain * 1.25);
@@ -8604,7 +8697,6 @@
       if (xpGain > 0) addXp('mining', xpGain);
       if (area2) spawnParticle(area2, '+' + xpGain + ' XP', 'xp');
 
-      // Material
       var matCount = 1;
       if (hasPerk('doubleStrike', 'mining') && Math.random() < 0.10) matCount = 2;
       addItem(res.name, matCount);
@@ -8636,6 +8728,16 @@
     if (!trees.length) return;
     var tree = trees[Math.floor(Math.random() * trees.length)];
     var idx = parseInt(tree.getAttribute('data-idx'));
+    var ts = treeState[idx];
+    if (!ts || ts.hp <= 0) return;
+
+    movePetToTarget(tree, function () {
+      if (!autoModeActive) return;
+      doAutoChopHit(tree, idx);
+    });
+  }
+
+  function doAutoChopHit(tree, idx) {
     var ts = treeState[idx];
     if (!ts || ts.hp <= 0) return;
     var res = getSelectedWcResource();
@@ -8674,7 +8776,6 @@
         return;
       }
 
-      // Tree depleted
       log.treesChopped[res.name] = (log.treesChopped[res.name] || 0) + 1;
       var xpGain = Math.floor(res.xp * xpMult);
       if (hasPerk('forester', 'woodcutting')) xpGain = Math.floor(xpGain * 1.25);
@@ -8735,6 +8836,18 @@
     if (!spot || spot.classList.contains('depleted')) return;
     var fs = fishSpotState[idx];
     if (fs.phase !== 'idle') return;
+
+    movePetToTarget(spot, function () {
+      if (!autoModeActive) return;
+      doAutoFishCast(idx);
+    });
+  }
+
+  function doAutoFishCast(idx) {
+    var spot = document.querySelector('.fishing-spot[data-idx="' + idx + '"]');
+    if (!spot || spot.classList.contains('depleted')) return;
+    var fs = fishSpotState[idx];
+    if (fs.phase !== 'idle') return;
     var res = getSelectedFishResource();
     var level = state.skills.fishing.level;
 
@@ -8770,6 +8883,16 @@
   }
 
   function autoFishReel(idx) {
+    var spot = document.querySelector('.fishing-spot[data-idx="' + idx + '"]');
+    if (!spot) return;
+
+    movePetToTarget(spot, function () {
+      if (!autoModeActive) return;
+      doAutoFishReel(idx);
+    });
+  }
+
+  function doAutoFishReel(idx) {
     var spot = document.querySelector('.fishing-spot[data-idx="' + idx + '"]');
     if (!spot) return;
     var fs = fishSpotState[idx];
@@ -8854,7 +8977,18 @@
     var barName = getSelectedSmeltBar();
     if (!canSmelt(barName) || getItemCount(barName) >= STACK_CAP) return;
 
-    // Simulate: hold → release in green zone (but not always perfect)
+    var furnace = $('smelt-furnace') || $('smelting-gauge');
+    movePetToTarget(furnace, function () {
+      if (!autoModeActive) return;
+      doAutoSmelt();
+    });
+  }
+
+  function doAutoSmelt() {
+    if (smithingState.phase !== 'active') return;
+    var barName = getSelectedSmeltBar();
+    if (!canSmelt(barName) || getItemCount(barName) >= STACK_CAP) return;
+
     var idx = SMELTING_ORDER.indexOf(barName);
     var zoneHeight = Math.max(10, 35 - (idx * 3.5));
     if (hasPerk('steadyHand', 'smithing')) zoneHeight *= 1.10;
@@ -8907,6 +9041,18 @@
   }
 
   function autoForgeTick() {
+    if (smithingState.phase !== 'active' && smithingState.phase !== 'idle') return;
+    var recipe = getSelectedForgeRecipe();
+    if (!recipe || !canForge(recipe) || getItemCount(recipe.name) >= STACK_CAP) return;
+
+    var anvil = $('forge-anvil');
+    movePetToTarget(anvil, function () {
+      if (!autoModeActive) return;
+      doAutoForge();
+    });
+  }
+
+  function doAutoForge() {
     if (smithingState.phase !== 'active' && smithingState.phase !== 'idle') return;
     var recipe = getSelectedForgeRecipe();
     if (!recipe || !canForge(recipe) || getItemCount(recipe.name) >= STACK_CAP) return;

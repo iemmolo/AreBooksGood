@@ -148,6 +148,16 @@
   gap: 0.5rem;
 }
 
+.auto-mode-pet {
+  pointer-events: none;
+}
+.auto-mode-pet.pet-bounce {
+  animation: petBounce 0.4s ease-out;
+}
+.auto-mode-pet.pet-wiggle {
+  animation: petWiggle 0.5s ease-in-out;
+}
+
 .skills-auto-mode-btn {
   font-family: monospace;
   font-size: 0.65rem;
