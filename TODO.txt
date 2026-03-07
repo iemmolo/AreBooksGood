@@ -408,7 +408,8 @@ Legacy battle.js UNTOUCHED.
 - [x] **Phase 1: Minimal Playable Combat** — turn engine, canvas rendering, move buttons, AI, wave transitions, dungeon select modal, team builder, quest hooks, 30 moves, 4 dungeons
 - [x] **Bug Fixes** — combat stuck when last enemy dies mid-round (checkBattleEnd between turns), pet store modal invisible (CSS conflict), mobile side panel covered by chatbox (bottom spacing)
 - [x] **Bug Fixes (Round 2)** — chatbox auto-scroll to bottom on new messages, pet re-renders after level-up ore/tree change, quest complete centered banner overlay
-- [x] **Auto Mode** — pet plays mini-game when docked. 0.6x XP rate, 2s tick, no combos. Pauses on tab hidden, stops on skill switch/unassign. Mining/fishing/woodcutting/smithing (smelting+forging)
+- [x] **Auto Mode** — pet plays mini-game when docked. 0.6x XP rate, 2.5s tick, no combos. Pauses on tab hidden, stops on skill switch/unassign. Mining/fishing/woodcutting/smithing (smelting+forging). Pet sprite walks to each target before acting.
+- [x] **Bug Fixes (Round 3)** — dock + pet disappearing on level-up ore/tree change (__RPG_REINJECT_DOCK bridge), auto mode button not showing on init, RPG stationed pet bridge for canAutoMode(), correct CSS selectors for auto click targets, gatekeeper intro text trim
 
 ### RPG Phase 6: Town Hub Hotspot Implementations (priority order)
 - [ ] **General Store** — buy/sell items, consumables, evolution stones. Shop inventory grid. Sell at fixed prices, buy potions/bait/dynamite. Prices in GP and JB
