@@ -1568,7 +1568,7 @@
         n.phase = 'speak';
         n.frame = 0;
         n.speechTimer = 0;
-        n.speechText = "Oh God, not another one. Welcome to " + KINGDOM_NAME + ", if this is your first time please make your way to the pet store for your complimentary pets. Or don't, I'm indifferent.";
+        n.speechText = "Oh God, not another one. Welcome to " + KINGDOM_NAME + ", if this is your first time please make your way to the pet store for your complimentary pets.";
         n.speechChars = 0;
         addGameMessage('[The Gatekeeper] ' + n.speechText, 'system');
         return;
@@ -5008,6 +5008,10 @@
   window.__RPG_GET_PET_STATE = function () { return getRpgPetState(); };
   window.__RPG_SAVE_PET_STATE = function (state) { saveRpgPetState(state); };
   window.__RPG_ADD_GAME_MESSAGE = function (text, type) { addGameMessage(text, type); };
+  // Re-inject stationed pet dock into game area (called after skills.js re-renders)
+  window.__RPG_REINJECT_DOCK = function () {
+    if (currentLocationId) renderStationedPetInGameArea(currentLocationId);
+  };
   // Check if a pet is stationed at the current skill location (for auto mode)
   window.__RPG_HAS_STATIONED_PET = function (skill) {
     if (!currentLocationId) return false;

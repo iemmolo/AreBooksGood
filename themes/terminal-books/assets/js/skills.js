@@ -4301,8 +4301,13 @@
       selectedMiningOre = highestIdx;
       renderMining();
       updateGameHeader();
-      // Defensive: re-render pet after a tick in case level-up effects cleared it
-      setTimeout(function () { renderPetInGameArea(); }, 300);
+      // Re-inject RPG dock + pet after area.innerHTML wipe
+      setTimeout(function () {
+        renderPetInGameArea();
+        if (typeof window.__RPG_REINJECT_DOCK === 'function') window.__RPG_REINJECT_DOCK();
+        // Re-create auto mode pet clone if active
+        if (autoModeActive) { autoModePetEl = null; ensureAutoModePet(); }
+      }, 300);
     } else {
       sel.value = oldVal;
     }
@@ -6289,7 +6294,11 @@
       selectedWcTree = highestIdx;
       renderWoodcutting();
       updateGameHeader();
-      setTimeout(function () { renderPetInGameArea(); }, 300);
+      setTimeout(function () {
+        renderPetInGameArea();
+        if (typeof window.__RPG_REINJECT_DOCK === 'function') window.__RPG_REINJECT_DOCK();
+        if (autoModeActive) { autoModePetEl = null; ensureAutoModePet(); }
+      }, 300);
     } else {
       sel.value = oldVal;
     }
@@ -8257,6 +8266,8 @@
     renderRightPanel();
     var renderer = SKILL_RENDERERS[key];
     if (renderer) renderer();
+    // Re-inject RPG dock after area wipe
+    if (typeof window.__RPG_REINJECT_DOCK === 'function') window.__RPG_REINJECT_DOCK();
     // Clear log
     var log = $('skills-game-log');
     if (log) log.innerHTML = '';
