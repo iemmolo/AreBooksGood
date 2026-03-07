@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-06T12:04:21+00:00",
+  "fetched_at": "2026-03-07T00:06:43+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -166,6 +166,36 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/perth-caravan-camping-show/perth/claremont",
+      "status": "active"
+    },
+    {
+      "id": 398904,
+      "name": "Melville Summer Music: The Kill Devil Hills & Clare Perrott",
+      "description": "Melville Summer Music is wrapping up summer with its last FREE live show in the park. \n \nJoin us at Kadidjiny Park for a powerful final night featuring The Kill Devil Hills, delivering their signature country\u2011noir rock ...",
+      "venue": "Kadidjiny Park, Booragoon, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-03-21 16:30:00",
+      "datetime_end": "2026-03-21 19:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-summer-music-last-free-concert-the-kill-devil-hills-clare/perth",
+      "status": "active"
+    },
+    {
+      "id": 398260,
+      "name": "David McCredie's \"The One That Got Away\" AUS & NZ Tour",
+      "description": "After a breakout year in 2025, releasing his debut EP, selling out a European tour, and supporting artists like Ziggy Alberts, Matt Hansen, and Pete Murray, rising Australian singer-songwriter David McCredie is heading ...",
+      "venue": "Kokomos Livid Skate Cafe, Fremantle, Western Australia",
+      "address": "",
+      "category": "Acoustic, Instrumental",
+      "datetime_start": "2026-03-21 19:00:00",
+      "datetime_end": "2026-03-21 22:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/david-mccredies-the-one-that-got-away-aus-nz-tour/perth",
       "status": "active"
     }
   ],
