@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-07T12:02:45+00:00",
+  "fetched_at": "2026-03-08T00:06:11+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,21 +76,6 @@
       "price": "",
       "age_restriction": "Family Friendly",
       "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
-      "status": "active"
-    },
-    {
-      "id": 398903,
-      "name": "Romeo Walker (Ben Witt) & Heathcote Blue",
-      "description": "Melville Summer Music is bringing FREE live shows to your doorstep until the end of March. \n \nJoin us at Kadidjiny Park for a soulful evening with Romeo Walker (Ben Witt), delivering smooth, genre\u2011defying sounds led by ...",
-      "venue": "Kadidjiny Park, Perth CBD, Western Australia",
-      "address": "",
-      "category": "Jazz",
-      "datetime_start": "2026-03-07 16:30:00",
-      "datetime_end": "2026-03-07 19:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/7-march-romeo-walker-ben-witt-heathcote-blue/perth",
       "status": "active"
     },
     {
