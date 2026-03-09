@@ -8845,6 +8845,8 @@
         autoFishReel(i);
         return;
       }
+      // Wait for the bite — don't cast on another spot
+      if (fs.phase === 'waiting') return;
     }
     // Otherwise, cast on an idle spot
     for (var j = 0; j < fishSpotState.length; j++) {
@@ -8899,6 +8901,12 @@
       var exclaim2 = $('fish-exclaim-' + idx);
       if (bobber2) bobber2.classList.add('bite-anim');
       if (exclaim2) exclaim2.classList.add('visible');
+
+      // In auto mode, reel immediately instead of waiting for next tick
+      if (autoModeActive) {
+        setTimeout(function () { autoFishReel(idx); }, 400);
+        return;
+      }
 
       fs.missTimer = setTimeout(function () {
         if (fs.phase === 'bite' || fs.phase === 'reeling') {
