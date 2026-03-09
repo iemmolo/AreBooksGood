@@ -725,9 +725,9 @@
   right: 4px;
   width: 220px;
   z-index: 101;
-  background: var(--background);
-  border: 2px solid color-mix(in srgb, var(--foreground) 35%, transparent);
-  box-shadow: 0 2px 12px color-mix(in srgb, #000 40%, transparent);
+  background: linear-gradient(180deg, #3a2e1e 0%, #2e2316 50%, #261e12 100%);
+  border: 2px solid #6b5230;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(192,160,64,0.15);
   font-size: 0.85em;
   /* Allow canvas clicks to pass through panel background */
   pointer-events: none;
@@ -742,7 +742,8 @@
   align-items: center;
   gap: 4px;
   padding: 5px 8px;
-  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: linear-gradient(180deg, #3e3020 0%, #342818 100%);
+  border-bottom: 1px solid #5a4428;
 }
 
 .osrs-side-panel-icons {
@@ -755,7 +756,7 @@
 .osrs-side-panel-toggle {
   background: transparent;
   border: none;
-  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  color: #9a8a6a;
   font-size: 0.8em;
   cursor: pointer;
   padding: 2px 6px;
@@ -763,7 +764,7 @@
   flex-shrink: 0;
 }
 
-.osrs-side-panel-toggle:hover { color: var(--foreground); }
+.osrs-side-panel-toggle:hover { color: #c0a040; }
 
 .osrs-side-panel-body {
   height: 280px;
@@ -857,13 +858,13 @@
   padding: 4px 6px;
   margin-bottom: 0;
   cursor: default;
-  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
-  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  border: 1px solid #5a4428;
+  background: linear-gradient(180deg, #4a3a24 0%, #3a2c18 100%);
 }
 
 .osrs-side-panel .skill-row:hover {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  background: linear-gradient(180deg, #554430 0%, #453620 100%);
+  border-color: #7a5a30;
 }
 
 .osrs-side-panel .skill-row.selected {
@@ -901,12 +902,14 @@
   text-overflow: ellipsis;
   order: 1;
   flex: 1;
+  color: #c0a040;
 }
 
 .osrs-side-panel .skill-level {
   font-size: 0.65rem;
   flex-shrink: 0;
   order: 2;
+  color: #c0a040;
 }
 
 .osrs-side-panel .skill-xp-bar {
@@ -922,9 +925,9 @@
   grid-column: 1 / -1;
   text-align: center;
   font-size: 0.75em;
-  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  color: #9a8a6a;
   padding: 3px 0 0;
-  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  border-top: 1px solid #5a4428;
   margin-top: 2px;
 }
 

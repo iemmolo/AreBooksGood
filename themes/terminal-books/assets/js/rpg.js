@@ -3978,6 +3978,10 @@
     fadeTransition(function () {
       showCenterContent('skill');
 
+      // Set location ID early so canAutoMode() can check stationed pets
+      currentLocationId = loc.id;
+      currentLocationSkill = loc.skill;
+
       // Click the matching skill row to switch skills.js to this skill
       setTimeout(function () {
         var skillRow = document.querySelector('.skill-row[data-skill="' + loc.skill + '"]');
@@ -3990,7 +3994,10 @@
         renderLocationPane(loc.id, loc.skill);
         switchChatTab('location');
         // Inject stationed pet sprite into game area after skills.js renders
-        setTimeout(function () { renderStationedPetInGameArea(loc.id); }, 100);
+        setTimeout(function () {
+          renderStationedPetInGameArea(loc.id);
+          if (window.__SKILLS_UPDATE_AUTO_BTN) window.__SKILLS_UPDATE_AUTO_BTN();
+        }, 100);
       }, 50);
     });
   }
@@ -5830,6 +5837,7 @@
       stationPet(petId, locId);
       renderPetTab();
       renderStationedPetInGameArea(locId);
+      if (window.__SKILLS_UPDATE_AUTO_BTN) window.__SKILLS_UPDATE_AUTO_BTN();
       return;
     }
     pendingStationLocationId = null; // clear if they picked an assigned pet
@@ -6522,6 +6530,7 @@
         ev.stopPropagation();
         unstationPet(petId);
         renderStationedPetInGameArea(locationId);
+        if (window.__SKILLS_UPDATE_AUTO_BTN) window.__SKILLS_UPDATE_AUTO_BTN();
       });
       actions.appendChild(unassignBtn);
       dock.appendChild(actions);

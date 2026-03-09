@@ -4212,6 +4212,10 @@
       selectedMiningOre = parseInt(sel.value);
       renderMining();
       updateGameHeader();
+      // Re-inject pet + RPG dock after area wipe
+      renderPetInGameArea();
+      if (typeof window.__RPG_REINJECT_DOCK === 'function') window.__RPG_REINJECT_DOCK();
+      if (autoModeActive) { autoModePetEl = null; ensureAutoModePet(); }
     });
     selectWrap.appendChild(sel);
     area.appendChild(selectWrap);
@@ -5222,6 +5226,9 @@
       selectedFish = parseInt(sel.value);
       renderFishing();
       updateGameHeader();
+      renderPetInGameArea();
+      if (typeof window.__RPG_REINJECT_DOCK === 'function') window.__RPG_REINJECT_DOCK();
+      if (autoModeActive) { autoModePetEl = null; ensureAutoModePet(); }
     });
     selectWrap.appendChild(sel);
     area.appendChild(selectWrap);
@@ -6205,6 +6212,9 @@
       selectedWcTree = parseInt(sel.value);
       renderWoodcutting();
       updateGameHeader();
+      renderPetInGameArea();
+      if (typeof window.__RPG_REINJECT_DOCK === 'function') window.__RPG_REINJECT_DOCK();
+      if (autoModeActive) { autoModePetEl = null; ensureAutoModePet(); }
     });
     selectWrap.appendChild(sel);
     area.appendChild(selectWrap);
@@ -9490,6 +9500,9 @@
 
         var autoModeBtn = $('skills-auto-mode-btn');
         if (autoModeBtn) autoModeBtn.addEventListener('click', toggleAutoMode);
+
+        // Expose for rpg.js to call when stationed pets change
+        window.__SKILLS_UPDATE_AUTO_BTN = updateAutoModeBtn;
 
         var pickerClose = $('skills-picker-close');
         if (pickerClose) pickerClose.addEventListener('click', function () {
