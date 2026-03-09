@@ -8628,12 +8628,17 @@
   function updateAutoModeBtn() {
     var btn = $('skills-auto-mode-btn');
     if (!btn) return;
+    btn.style.display = '';
     if (canAutoMode()) {
-      btn.style.display = '';
       btn.textContent = autoModeActive ? 'Auto: ON' : 'Auto: OFF';
       btn.classList.toggle('auto-mode-active', autoModeActive);
+      btn.disabled = false;
+      btn.title = '';
     } else {
-      btn.style.display = 'none';
+      btn.textContent = 'Auto: OFF';
+      btn.classList.remove('auto-mode-active');
+      btn.disabled = true;
+      btn.title = 'Dock a pet to this skill to use Auto Mode';
     }
   }
 

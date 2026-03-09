@@ -261,6 +261,47 @@
   justify-content: center;
 }
 
+/* ── Character Picker ─────────────────────────── */
+.rpg-char-picker {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.rpg-char-option {
+  cursor: pointer;
+  padding: 6px;
+  border: 2px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 6px;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.rpg-char-option:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.rpg-char-option.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.rpg-char-option-canvas {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 4px;
+  image-rendering: pixelated;
+}
+.rpg-char-option-label {
+  font-size: 11px;
+  color: var(--foreground);
+  opacity: 0.7;
+}
+.rpg-char-option.selected .rpg-char-option-label {
+  color: var(--accent);
+  opacity: 1;
+}
+
 /* ── Game Screen Topbar ──────────────────────── */
 .rpg-game-topbar {
   display: flex;

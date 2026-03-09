@@ -180,6 +180,15 @@
   color: var(--accent);
   box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
 }
+.skills-auto-mode-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+.skills-auto-mode-btn:disabled:hover {
+  border-color: color-mix(in srgb, var(--foreground) 15%, transparent);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
 
 .skills-game-area {
   flex: 1;

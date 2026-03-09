@@ -384,36 +384,280 @@
   ];
   var PLAYER_SPEED = 180; // px/sec (scaled for larger map)
   var HIT_RADIUS = 55;
-  var CHAR_SIZE = 16; // native pixel size
-  var CHAR_SCALE = 2; // render at 32x32
+  // ── Character Sprite System ──────────────────────
+  var CHAR_SPRITE_FRAME = 32; // native frame size in px
+  var CHAR_DRAW_SCALE = 1.5;  // render at 48x48
+  var CHAR_DRAW_SIZE = CHAR_SPRITE_FRAME * CHAR_DRAW_SCALE;
 
-  // Character pixel art — 16x16, 4 directions, 2 walk frames + 1 idle
-  // Colors: 0=skin, 1=hair, 2=tunic, 3=belt, 4=pants, 5=boots, 6=eye, 7=sword, 8=hilt, 9=skinHi, A=tunicShadow
-  var CHAR_COLORS = ['#f0c090','#5a3010','#2d8c3c','#8b5e2b','#6b4226','#2a1a0a','#1a1a2e','#a0a0a0','#c0a060','#e0d0b0','#1d6a28'];
+  // Pre-made character options (sprite sheets in /images/rpg/characters/)
+  var CHAR_APPEARANCE_IDS = ['alex', 'josh', 'lyria', 'manu', 'tori'];
+  var CHAR_APPEARANCE_NAMES = { alex: 'Alex', josh: 'Josh', lyria: 'Lyria', manu: 'Manu', tori: 'Tori' };
+  var CHAR_SPRITES = {}; // charId → { idle: Image, walk: Image }
+
+  // Shared overlay layers (equipment visualization)
+  var charClothesIdle = null, charClothesWalk = null;
+  var charAccHelmIdle = null, charAccHelmWalk = null;
+  // Tinted overlay caches (regenerated when equipment changes)
+  var tintedClothes = { idle: null, walk: null };
+  var tintedAccHelm = { idle: null, walk: null };
+  var charTintsDirty = true;
+
+  // Animation frame counts per direction for each animation type
+  var CHAR_ANIM_DATA = {
+    idle: { framesPerDir: 4, cols: 4 }, // 128px wide, 3 rows
+    walk: { framesPerDir: 6, cols: 6 }  // 192px wide, 3 rows
+  };
+
+  // Pre-made sheets: 3 rows — row 0=down, row 1=up, row 2=right; left=flip right
+  var DIR_ROW = { down: 0, up: 1, right: 2, left: 2 };
+  var DIR_FLIP = { down: false, up: false, right: false, left: true };
+
+  // Layer strips: single row, sequential groups of N frames
+  // down=group0, up=group1, right=group2, left=group3
+  var DIR_GROUP = { down: 0, up: 1, right: 2, left: 3 };
+
+  // Equipment tier → HSL tint for clothing/accessory recoloring
+  var TIER_TINTS = {
+    copper:   { h: 25,  s: 0.55, l: 0.48 },
+    bronze:   { h: 30,  s: 0.50, l: 0.50 },
+    gold:     { h: 48,  s: 0.90, l: 0.55 },
+    astral:   { h: 240, s: 0.35, l: 0.60 },
+    silver:   { h: 0,   s: 0.00, l: 0.70 },
+    emerald:  { h: 150, s: 0.55, l: 0.50 },
+    mithril:  { h: 210, s: 0.40, l: 0.58 },
+    amethyst: { h: 275, s: 0.45, l: 0.55 },
+    cobalt:   { h: 220, s: 0.70, l: 0.40 },
+    molten:   { h: 12,  s: 0.85, l: 0.50 },
+    frost:    { h: 200, s: 0.60, l: 0.70 },
+    obsidian: { h: 280, s: 0.50, l: 0.18 }
+  };
+
+  // Current character appearance (set from save slot)
+  var currentCharId = 'alex';
+
+  function getCharAppearance() {
+    if (activeSlot >= 0 && meta && meta.slots[activeSlot] && meta.slots[activeSlot].appearance) {
+      return meta.slots[activeSlot].appearance;
+    }
+    return 'alex';
+  }
+
+  // ── Sprite Loading ──────────────────────────────
+  var charSpritesLoaded = false;
+
+  function loadCharSprites(callback) {
+    var basePath = '/images/rpg/characters/';
+    var toLoad = 0, loaded = 0;
+    function onLoad() {
+      loaded++;
+      if (loaded >= toLoad) { charSpritesLoaded = true; if (callback) callback(); }
+    }
+    function onError() { loaded++; if (loaded >= toLoad && callback) callback(); }
+
+    // Load each pre-made character's idle + walk sheets
+    for (var i = 0; i < CHAR_APPEARANCE_IDS.length; i++) {
+      var cid = CHAR_APPEARANCE_IDS[i];
+      CHAR_SPRITES[cid] = { idle: new Image(), walk: new Image() };
+      toLoad += 2;
+      CHAR_SPRITES[cid].idle.onload = onLoad; CHAR_SPRITES[cid].idle.onerror = onError;
+      CHAR_SPRITES[cid].idle.src = basePath + cid + '-idle.png';
+      CHAR_SPRITES[cid].walk.onload = onLoad; CHAR_SPRITES[cid].walk.onerror = onError;
+      CHAR_SPRITES[cid].walk.src = basePath + cid + '-walk.png';
+    }
+
+    // Clothing overlay layers
+    toLoad += 2;
+    charClothesIdle = new Image(); charClothesIdle.onload = onLoad; charClothesIdle.onerror = onError;
+    charClothesIdle.src = basePath + 'clothes-idle.png';
+    charClothesWalk = new Image(); charClothesWalk.onload = onLoad; charClothesWalk.onerror = onError;
+    charClothesWalk.src = basePath + 'clothes-walk.png';
+
+    // Accessory/helm overlay layers
+    toLoad += 2;
+    charAccHelmIdle = new Image(); charAccHelmIdle.onload = onLoad; charAccHelmIdle.onerror = onError;
+    charAccHelmIdle.src = basePath + 'acc-helm-idle.png';
+    charAccHelmWalk = new Image(); charAccHelmWalk.onload = onLoad; charAccHelmWalk.onerror = onError;
+    charAccHelmWalk.src = basePath + 'acc-helm-walk.png';
+  }
+
+  // ── HSL <-> RGB helpers ─────────────────────────
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h, s, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return [h * 360, s, l];
+  }
+
+  function hslToRgb(h, s, l) {
+    h /= 360;
+    var r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+  }
+
+  function hue2rgb(p, q, t) {
+    if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  }
+
+  // Recolor a sprite sheet by shifting hue/saturation, preserving luminance
+  function recolorSpriteSheet(img, targetH, targetS, targetL) {
+    if (!img || !img.complete || !img.naturalWidth) return null;
+    var c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    var ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    var data = ctx.getImageData(0, 0, c.width, c.height);
+    var d = data.data;
+    for (var i = 0; i < d.length; i += 4) {
+      if (d[i + 3] === 0) continue;
+      var hsl = rgbToHsl(d[i], d[i + 1], d[i + 2]);
+      hsl[0] = targetH;
+      hsl[1] = targetS;
+      // Preserve relative lightness but blend toward target
+      hsl[2] = hsl[2] * 0.6 + targetL * 0.4;
+      var rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
+      d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2];
+    }
+    ctx.putImageData(data, 0, 0);
+    return c;
+  }
+
+  // Rebuild tinted overlays when equipment changes
+  function updateCharTints() {
+    if (!charTintsDirty) return;
+    charTintsDirty = false;
+    tintedClothes.idle = null; tintedClothes.walk = null;
+    tintedAccHelm.idle = null; tintedAccHelm.walk = null;
+
+    var equip = getEquipment();
+    if (!equip) return;
+    var api = window.__RPG_SKILLS_API;
+    if (!api) return;
+
+    // Chest armor → clothing tint
+    if (equip.chest) {
+      var chestData = api.getEquipmentData(equip.chest);
+      if (chestData && TIER_TINTS[chestData.tier]) {
+        var ct = TIER_TINTS[chestData.tier];
+        tintedClothes.idle = recolorSpriteSheet(charClothesIdle, ct.h, ct.s, ct.l);
+        tintedClothes.walk = recolorSpriteSheet(charClothesWalk, ct.h, ct.s, ct.l);
+      }
+    }
+
+    // Helm → accessory tint
+    if (equip.helm) {
+      var helmData = api.getEquipmentData(equip.helm);
+      if (helmData && TIER_TINTS[helmData.tier]) {
+        var ht = TIER_TINTS[helmData.tier];
+        tintedAccHelm.idle = recolorSpriteSheet(charAccHelmIdle, ht.h, ht.s, ht.l);
+        tintedAccHelm.walk = recolorSpriteSheet(charAccHelmWalk, ht.h, ht.s, ht.l);
+      }
+    }
+  }
+
+  // ── Unified Character Drawing ───────────────────
+  // Draws a character sprite with optional equipment overlays
+  function drawCharSprite(ctx, x, y, dir, animFrame, animType, charId) {
+    charId = charId || currentCharId;
+    var sprites = CHAR_SPRITES[charId];
+    if (!sprites) return;
+    var anim = CHAR_ANIM_DATA[animType] || CHAR_ANIM_DATA.idle;
+    var sheet = animType === 'walk' ? sprites.walk : sprites.idle;
+    if (!sheet || !sheet.complete) return;
+
+    var frame = animFrame % anim.framesPerDir;
+    var flip = DIR_FLIP[dir];
+    var row = DIR_ROW[dir];
+    var sx = frame * CHAR_SPRITE_FRAME;
+    var sy = row * CHAR_SPRITE_FRAME;
+
+    var size = CHAR_DRAW_SIZE;
+    var dx = Math.round(x) - size / 2;
+    var dy = Math.round(y) - size + 10; // feet at y position
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath();
+    ctx.ellipse(Math.round(x), Math.round(y) + 2, size * 0.3, size * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw base character (flip for left direction)
+    if (flip) {
+      ctx.save();
+      ctx.translate(dx + size, dy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sheet, sx, sy, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, 0, 0, size, size);
+      ctx.restore();
+    } else {
+      ctx.drawImage(sheet, sx, sy, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, dx, dy, size, size);
+    }
+
+    // Equipment overlays (layer strips use all 4 directions, no flip needed)
+    updateCharTints();
+    var clothesSrc = animType === 'walk' ? tintedClothes.walk : tintedClothes.idle;
+    var accSrc = animType === 'walk' ? tintedAccHelm.walk : tintedAccHelm.idle;
+    var dirGroup = DIR_GROUP[dir];
+    var layerX = (dirGroup * anim.framesPerDir + frame) * CHAR_SPRITE_FRAME;
+
+    if (clothesSrc) {
+      ctx.drawImage(clothesSrc, layerX, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, dx, dy, size, size);
+    }
+    if (accSrc) {
+      ctx.drawImage(accSrc, layerX, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, dx, dy, size, size);
+    }
+  }
+
+  // Draw character preview (for equipment panel, etc.)
+  function drawCharPreview(canvas, charId) {
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    charId = charId || currentCharId;
+    var sprites = CHAR_SPRITES[charId];
+    if (!sprites || !sprites.idle || !sprites.idle.complete) return;
+
+    // Draw front-facing idle frame 0, centered in canvas
+    var scale = Math.min(w, h) / CHAR_SPRITE_FRAME;
+    var drawW = CHAR_SPRITE_FRAME * scale;
+    var drawH = CHAR_SPRITE_FRAME * scale;
+    var ox = (w - drawW) / 2;
+    var oy = (h - drawH) / 2;
+    ctx.drawImage(sprites.idle, 0, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, ox, oy, drawW, drawH);
+
+    // Clothing overlay
+    updateCharTints();
+    if (tintedClothes.idle) {
+      ctx.drawImage(tintedClothes.idle, 0, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, ox, oy, drawW, drawH);
+    }
+    if (tintedAccHelm.idle) {
+      ctx.drawImage(tintedAccHelm.idle, 0, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, ox, oy, drawW, drawH);
+    }
+  }
 
   // ── Equipment System ───────────────────────────
   var EQUIP_SLOTS = ['weapon', 'helm', 'chest', 'legs', 'boots', 'gloves'];
   var EQUIP_SLOT_LABELS = { weapon: 'Weapon', helm: 'Helm', chest: 'Chest', legs: 'Legs', boots: 'Boots', gloves: 'Gloves' };
-
-  // Per-tier color overrides by slot → color indices
-  // Slot → index map: weapon[7,8], chest[2,10], legs[4], boots[5], helm[1], gloves[3]
-  var TIER_COLORS = {
-    copper:   { weapon: { 7:'#b87333', 8:'#8b4513' }, chest: { 2:'#cd853f', 10:'#a0522d' }, legs: { 4:'#8b6914' }, boots: { 5:'#654321' }, helm: { 1:'#b87333' }, gloves: { 3:'#a0522d' } },
-    bronze:   { weapon: { 7:'#cd7f32', 8:'#8b4513' }, chest: { 2:'#d2a060', 10:'#b8860b' }, legs: { 4:'#9a7048' }, boots: { 5:'#6b4423' }, helm: { 1:'#cd7f32' }, gloves: { 3:'#b8860b' } },
-    gold:     { weapon: { 7:'#ffd700', 8:'#daa520' }, chest: { 2:'#ffe680', 10:'#daa520' }, legs: { 4:'#e6c300' }, boots: { 5:'#b8860b' }, helm: { 1:'#ffd700' }, gloves: { 3:'#daa520' } },
-    astral:   { weapon: { 7:'#9090d0', 8:'#6060a0' }, chest: { 2:'#b0b0e0', 10:'#7070b0' }, legs: { 4:'#8080c0' }, boots: { 5:'#5050a0' }, helm: { 1:'#9090d0' }, gloves: { 3:'#7070b0' } },
-    silver:   { weapon: { 7:'#c0c0c0', 8:'#808080' }, chest: { 2:'#d8d8d8', 10:'#a0a0a0' }, legs: { 4:'#b0b0b0' }, boots: { 5:'#707070' }, helm: { 1:'#c0c0c0' }, gloves: { 3:'#a0a0a0' } },
-    emerald:  { weapon: { 7:'#50c878', 8:'#2e8b57' }, chest: { 2:'#66cdaa', 10:'#3cb371' }, legs: { 4:'#48b070' }, boots: { 5:'#2d6840' }, helm: { 1:'#50c878' }, gloves: { 3:'#3cb371' } },
-    mithril:  { weapon: { 7:'#7ba4c9', 8:'#4682b4' }, chest: { 2:'#a0c8e8', 10:'#5f8fad' }, legs: { 4:'#6898c0' }, boots: { 5:'#3a6080' }, helm: { 1:'#7ba4c9' }, gloves: { 3:'#5f8fad' } },
-    amethyst: { weapon: { 7:'#9966cc', 8:'#7b2d8e' }, chest: { 2:'#b88dd8', 10:'#8a50b0' }, legs: { 4:'#9060c0' }, boots: { 5:'#5c3080' }, helm: { 1:'#9966cc' }, gloves: { 3:'#8a50b0' } },
-    cobalt:   { weapon: { 7:'#0047ab', 8:'#003380' }, chest: { 2:'#4080d0', 10:'#2060b0' }, legs: { 4:'#3070c0' }, boots: { 5:'#1a4080' }, helm: { 1:'#0047ab' }, gloves: { 3:'#2060b0' } },
-    molten:   { weapon: { 7:'#ff4500', 8:'#cc3300' }, chest: { 2:'#ff6b40', 10:'#e03500' }, legs: { 4:'#e05020' }, boots: { 5:'#a02800' }, helm: { 1:'#ff4500' }, gloves: { 3:'#e03500' } },
-    frost:    { weapon: { 7:'#87ceeb', 8:'#4aa8d0' }, chest: { 2:'#b0e0ff', 10:'#70b8e0' }, legs: { 4:'#80c8e0' }, boots: { 5:'#4090b0' }, helm: { 1:'#87ceeb' }, gloves: { 3:'#70b8e0' } },
-    obsidian: { weapon: { 7:'#2a0040', 8:'#1a0028' }, chest: { 2:'#3a1050', 10:'#280038' }, legs: { 4:'#301040' }, boots: { 5:'#180028' }, helm: { 1:'#2a0040' }, gloves: { 3:'#280038' } }
-  };
-
-  var equippedColorsCache = null;
-  var equippedColorsDirty = true;
 
   function getEquipment() {
     if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return null;
@@ -427,33 +671,8 @@
   function setEquipment(equip) {
     if (activeSlot < 0 || !meta || !meta.slots[activeSlot]) return;
     meta.slots[activeSlot].equipment = equip;
-    equippedColorsDirty = true;
+    charTintsDirty = true;
     saveMeta();
-  }
-
-  function getEquippedColors() {
-    if (!equippedColorsDirty && equippedColorsCache) return equippedColorsCache;
-    var colors = CHAR_COLORS.slice();
-    var equip = getEquipment();
-    if (!equip) { equippedColorsCache = colors; equippedColorsDirty = false; return colors; }
-    var api = window.__RPG_SKILLS_API;
-    if (!api) { equippedColorsCache = colors; equippedColorsDirty = false; return colors; }
-    for (var s = 0; s < EQUIP_SLOTS.length; s++) {
-      var slotName = EQUIP_SLOTS[s];
-      var itemName = equip[slotName];
-      if (!itemName) continue;
-      var data = api.getEquipmentData(itemName);
-      if (!data) continue;
-      var tierPalette = TIER_COLORS[data.tier];
-      if (!tierPalette || !tierPalette[slotName]) continue;
-      var slotColors = tierPalette[slotName];
-      for (var idx in slotColors) {
-        if (slotColors.hasOwnProperty(idx)) colors[parseInt(idx)] = slotColors[idx];
-      }
-    }
-    equippedColorsCache = colors;
-    equippedColorsDirty = false;
-    return colors;
   }
 
   function getEquipStats() {
@@ -473,171 +692,6 @@
     return totals;
   }
 
-  var CHAR_FRAMES = {
-    down: [
-      // idle — bigger head (3px tall), sword at right hip
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'6'],[8,2,'0'],[9,2,'6'],[10,2,'1'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
-       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
-       [5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],[11,9,'7'],
-       [5,10,'4'],[6,10,'4'],[9,10,'4'],[10,10,'4'],[11,10,'7'],
-       [5,11,'5'],[6,11,'5'],[9,11,'5'],[10,11,'5'],[11,11,'8'],
-       [5,12,'5'],[6,12,'5'],[9,12,'5'],[10,12,'5']],
-      // walk1
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'6'],[8,2,'0'],[9,2,'6'],[10,2,'1'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
-       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [4,8,'4'],[5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],
-       [3,9,'4'],[4,9,'4'],[9,9,'4'],[10,9,'4'],[11,9,'7'],
-       [3,10,'5'],[4,10,'5'],[9,10,'4'],[10,10,'4'],[11,10,'7'],
-       [3,11,'5'],[4,11,'5'],[9,11,'5'],[10,11,'5'],[11,11,'8'],
-       [9,12,'5'],[10,12,'5']],
-      // walk2
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
-       [5,2,'1'],[6,2,'0'],[7,2,'6'],[8,2,'0'],[9,2,'6'],[10,2,'1'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
-       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],[11,8,'4'],
-       [5,9,'4'],[6,9,'4'],[11,9,'4'],[12,9,'4'],
-       [5,10,'4'],[6,10,'4'],[11,10,'5'],[12,10,'5'],
-       [5,11,'5'],[6,11,'5'],[11,11,'5'],[12,11,'5'],
-       [5,12,'5'],[6,12,'5']]
-    ],
-    up: [
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [5,1,'1'],[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],[10,1,'1'],
-       [5,2,'1'],[6,2,'1'],[7,2,'1'],[8,2,'1'],[9,2,'1'],[10,2,'1'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
-       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
-       [5,9,'4'],[6,9,'4'],[9,9,'4'],[10,9,'4'],
-       [5,10,'4'],[6,10,'4'],[9,10,'4'],[10,10,'4'],
-       [5,11,'5'],[6,11,'5'],[9,11,'5'],[10,11,'5'],
-       [5,12,'5'],[6,12,'5'],[9,12,'5'],[10,12,'5']],
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [5,1,'1'],[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],[10,1,'1'],
-       [5,2,'1'],[6,2,'1'],[7,2,'1'],[8,2,'1'],[9,2,'1'],[10,2,'1'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
-       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [4,8,'4'],[5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],
-       [3,9,'4'],[4,9,'4'],[9,9,'4'],[10,9,'4'],
-       [3,10,'5'],[4,10,'5'],[9,10,'4'],[10,10,'4'],
-       [3,11,'5'],[4,11,'5'],[9,11,'5'],[10,11,'5'],
-       [9,12,'5'],[10,12,'5']],
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [5,1,'1'],[6,1,'1'],[7,1,'1'],[8,1,'1'],[9,1,'1'],[10,1,'1'],
-       [5,2,'1'],[6,2,'1'],[7,2,'1'],[8,2,'1'],[9,2,'1'],[10,2,'1'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'2'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'2'],
-       [5,5,'A'],[6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'2'],[10,5,'A'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [5,8,'4'],[6,8,'4'],[9,8,'4'],[10,8,'4'],[11,8,'4'],
-       [5,9,'4'],[6,9,'4'],[11,9,'4'],[12,9,'4'],
-       [5,10,'4'],[6,10,'4'],[11,10,'5'],[12,10,'5'],
-       [5,11,'5'],[6,11,'5'],[11,11,'5'],[12,11,'5'],
-       [5,12,'5'],[6,12,'5']]
-    ],
-    left: [
-      [[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [6,1,'1'],[7,1,'0'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
-       [6,2,'6'],[7,2,'0'],[8,2,'0'],[9,2,'0'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'0'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],
-       [5,5,'0'],[6,5,'A'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],
-       [5,9,'4'],[6,9,'4'],[8,9,'4'],[9,9,'4'],
-       [5,10,'4'],[6,10,'4'],[8,10,'4'],[9,10,'4'],
-       [5,11,'5'],[6,11,'5'],[8,11,'5'],[9,11,'5'],
-       [5,12,'5'],[6,12,'5'],[8,12,'5'],[9,12,'5']],
-      [[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [6,1,'1'],[7,1,'0'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
-       [6,2,'6'],[7,2,'0'],[8,2,'0'],[9,2,'0'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'0'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],
-       [5,5,'0'],[6,5,'A'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [4,8,'4'],[5,8,'4'],[6,8,'4'],[8,8,'4'],[9,8,'4'],
-       [3,9,'4'],[4,9,'4'],[8,9,'4'],[9,9,'4'],
-       [3,10,'5'],[4,10,'5'],[8,10,'5'],[9,10,'5'],
-       [3,11,'5'],[4,11,'5']],
-      [[7,0,'1'],[8,0,'1'],[9,0,'1'],
-       [6,1,'1'],[7,1,'0'],[8,1,'9'],[9,1,'0'],[10,1,'1'],
-       [6,2,'6'],[7,2,'0'],[8,2,'0'],[9,2,'0'],
-       [7,3,'0'],[8,3,'0'],
-       [5,4,'0'],[6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],
-       [5,5,'0'],[6,5,'A'],[7,5,'2'],[8,5,'2'],[9,5,'2'],
-       [5,6,'2'],[6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [5,8,'4'],[6,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
-       [5,9,'4'],[6,9,'4'],[10,9,'4'],[11,9,'4'],
-       [5,10,'5'],[6,10,'5'],[10,10,'5'],[11,10,'5'],
-       [10,11,'5'],[11,11,'5']]
-    ],
-    right: [
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],
-       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'0'],[9,1,'1'],
-       [6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'6'],
-       [7,3,'0'],[8,3,'0'],
-       [6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'0'],
-       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'A'],[10,5,'0'],
-       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [6,8,'4'],[7,8,'4'],[8,8,'4'],[9,8,'4'],[10,8,'4'],
-       [6,9,'4'],[7,9,'4'],[9,9,'4'],[10,9,'4'],[4,9,'7'],
-       [6,10,'4'],[7,10,'4'],[9,10,'4'],[10,10,'4'],[4,10,'7'],
-       [6,11,'5'],[7,11,'5'],[9,11,'5'],[10,11,'5'],[4,11,'8'],
-       [6,12,'5'],[7,12,'5'],[9,12,'5'],[10,12,'5']],
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],
-       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'0'],[9,1,'1'],
-       [6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'6'],
-       [7,3,'0'],[8,3,'0'],
-       [6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'0'],
-       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'A'],[10,5,'0'],
-       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [6,8,'4'],[7,8,'4'],[8,8,'4'],[10,8,'4'],[11,8,'4'],
-       [6,9,'4'],[7,9,'4'],[11,9,'4'],[12,9,'4'],
-       [6,10,'5'],[7,10,'5'],[11,10,'5'],[12,10,'5'],
-       [6,11,'5'],[7,11,'5']],
-      [[6,0,'1'],[7,0,'1'],[8,0,'1'],
-       [5,1,'1'],[6,1,'0'],[7,1,'9'],[8,1,'0'],[9,1,'1'],
-       [6,2,'0'],[7,2,'0'],[8,2,'0'],[9,2,'6'],
-       [7,3,'0'],[8,3,'0'],
-       [6,4,'2'],[7,4,'2'],[8,4,'2'],[9,4,'2'],[10,4,'0'],
-       [6,5,'2'],[7,5,'2'],[8,5,'2'],[9,5,'A'],[10,5,'0'],
-       [6,6,'2'],[7,6,'2'],[8,6,'2'],[9,6,'2'],[10,6,'2'],
-       [6,7,'3'],[7,7,'3'],[8,7,'3'],[9,7,'3'],
-       [4,8,'4'],[5,8,'4'],[6,8,'4'],[7,8,'4'],[8,8,'4'],
-       [3,9,'4'],[4,9,'4'],[6,9,'4'],[7,9,'4'],
-       [3,10,'5'],[4,10,'5'],[6,10,'5'],[7,10,'5'],
-       [3,11,'5'],[4,11,'5']]
-    ]
-  };
 
   // Decoration positions — [x, y, type]
   // type: 0=flower, 1=rock, 2=bush, 3=tree, 4=mushroom, 5=stump, 6=signpost, 7=fence
@@ -1236,10 +1290,67 @@
   function onSlotCreate(e) {
     var slot = parseInt(e.target.getAttribute('data-slot'), 10);
     createTargetSlot = slot;
+    createSelectedChar = 'alex';
     $('rpg-name-input').value = '';
     $('rpg-btn-begin').disabled = true;
     showScreen('rpg-create-screen');
+    renderCharPicker();
     $('rpg-name-input').focus();
+  }
+
+  function renderCharPicker() {
+    var container = $('rpg-char-picker');
+    if (!container) return;
+    container.innerHTML = '';
+    for (var i = 0; i < CHAR_APPEARANCE_IDS.length; i++) {
+      var cid = CHAR_APPEARANCE_IDS[i];
+      var option = document.createElement('div');
+      option.className = 'rpg-char-option' + (cid === createSelectedChar ? ' selected' : '');
+      option.setAttribute('data-char', cid);
+
+      var canvas = document.createElement('canvas');
+      canvas.width = 48; canvas.height = 48;
+      canvas.className = 'rpg-char-option-canvas';
+      canvas.style.imageRendering = 'pixelated';
+      option.appendChild(canvas);
+
+      var label = document.createElement('div');
+      label.className = 'rpg-char-option-label';
+      label.textContent = CHAR_APPEARANCE_NAMES[cid];
+      option.appendChild(label);
+
+      option.addEventListener('click', onCharPickerClick);
+      container.appendChild(option);
+
+      // Draw preview
+      var sprites = CHAR_SPRITES[cid];
+      if (sprites && sprites.idle && sprites.idle.complete) {
+        var ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprites.idle, 0, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, 0, 0, 48, 48);
+      } else if (sprites && sprites.idle) {
+        // Wait for load then draw
+        (function (cv, sp) {
+          sp.idle.addEventListener('load', function () {
+            var c = cv.getContext('2d');
+            c.imageSmoothingEnabled = false;
+            c.drawImage(sp.idle, 0, 0, CHAR_SPRITE_FRAME, CHAR_SPRITE_FRAME, 0, 0, 48, 48);
+          });
+        })(canvas, sprites);
+      }
+    }
+  }
+
+  function onCharPickerClick(e) {
+    var option = e.currentTarget;
+    var cid = option.getAttribute('data-char');
+    if (!cid) return;
+    createSelectedChar = cid;
+    var container = $('rpg-char-picker');
+    var options = container.querySelectorAll('.rpg-char-option');
+    for (var i = 0; i < options.length; i++) {
+      options[i].classList.toggle('selected', options[i].getAttribute('data-char') === cid);
+    }
   }
 
   function onSlotPlay(e) {
@@ -1271,6 +1382,8 @@
     $('rpg-btn-begin').disabled = !name;
   }
 
+  var createSelectedChar = 'alex'; // default character for creation screen
+
   function onBeginAdventure() {
     var name = $('rpg-name-input').value.trim();
     if (!name || createTargetSlot < 0) return;
@@ -1278,6 +1391,7 @@
     var now = Date.now();
     meta.slots[createTargetSlot] = {
       name: name,
+      appearance: createSelectedChar,
       created: now,
       lastPlayed: now,
       wallet: getDefaultRpgWallet(),
@@ -1534,7 +1648,7 @@
   }
 
   // ── NPC Intro ("The Gatekeeper") ─────────────
-  var NPC_COLORS = ['#f0c090','#6a4a2a','#8b0000','#5c3a1a','#3a2a1a','#1a0a00','#1a1a2e','#a0a0a0','#c0a060','#e0d0b0','#6a0000'];
+  // NPC_COLORS removed — NPCs now use pre-made character sprites
   var npcIntro = null; // { active, phase, pos, dir, frame, timer, speechTimer, done }
 
   function startNpcIntro() {
@@ -1579,7 +1693,7 @@
       n.pos.y += (dy / dist) * step;
       n.dir = dx > 0 ? 'right' : 'left';
       n.animTimer += dt;
-      if (n.animTimer > 0.2) { n.animTimer = 0; n.frame = n.frame === 1 ? 2 : 1; }
+      if (n.animTimer > 0.12) { n.animTimer = 0; n.frame = (n.frame + 1) % CHAR_ANIM_DATA.walk.framesPerDir; }
 
     } else if (n.phase === 'speak') {
       n.speechTimer += dt;
@@ -1624,32 +1738,16 @@
       n.pos.y += (dy / dist) * step;
       n.dir = dx > 0 ? 'right' : 'left';
       n.animTimer += dt;
-      if (n.animTimer > 0.2) { n.animTimer = 0; n.frame = n.frame === 1 ? 2 : 1; }
+      if (n.animTimer > 0.12) { n.animTimer = 0; n.frame = (n.frame + 1) % CHAR_ANIM_DATA.walk.framesPerDir; }
     }
   }
 
   function drawNpcIntro(ctx) {
     if (!npcIntro || !npcIntro.active) return;
     var n = npcIntro;
-    var frames = CHAR_FRAMES[n.dir];
-    if (!frames) return;
-    var frame = frames[n.frame] || frames[0];
-    var s = CHAR_SCALE;
-    var ox = Math.round(n.pos.x) - 8 * s;
-    var oy = Math.round(n.pos.y) - 12 * s;
-
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.beginPath();
-    ctx.ellipse(Math.round(n.pos.x), Math.round(n.pos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    for (var i = 0; i < frame.length; i++) {
-      var px = frame[i];
-      var ci = parseInt(px[2], 16);
-      ctx.fillStyle = NPC_COLORS[ci];
-      ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
-    }
+    var npcCharId = n.charId || 'manu'; // NPCs use different pre-made character
+    var npcAnimType = (n.phase === 'walk-in' || n.phase === 'walk-out') ? 'walk' : 'idle';
+    drawCharSprite(ctx, n.pos.x, n.pos.y, n.dir, n.frame, npcAnimType, npcCharId);
 
     // Speech bubble
     if (n.phase === 'speak' && n.speechText) {
@@ -1680,7 +1778,7 @@
           if (lw > maxW) maxW = lw;
         }
         var bw = maxW + 16, bh = lines.length * lineHeight + 10;
-        var bx = n.pos.x - bw / 2, by = n.pos.y - 30 * s - bh;
+        var bx = n.pos.x - bw / 2, by = n.pos.y - CHAR_DRAW_SIZE - bh;
 
         ctx.fillStyle = 'rgba(0,0,0,0.9)';
         ctx.fillRect(bx, by, bw, bh);
@@ -1708,6 +1806,8 @@
   function enterGame(slot) {
     activeSlot = slot;
     meta.currentSlot = slot;
+    currentCharId = getCharAppearance();
+    charTintsDirty = true;
     var prevLastPlayed = meta.slots[slot].lastPlayed;
     var isFirstLogin = Math.abs(prevLastPlayed - meta.slots[slot].created) < 2000;
     meta.slots[slot].lastPlayed = Date.now();
@@ -1864,19 +1964,7 @@
     // Draw preview canvas
     var canvas = $('rpg-char-preview-canvas');
     if (canvas) {
-      var ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, 48, 48);
-      var frame = (CHAR_FRAMES.down && CHAR_FRAMES.down[0]) ? CHAR_FRAMES.down[0] : null;
-      if (frame) {
-        var colors = getEquippedColors();
-        var s = 3; // 16px * 3 = 48px
-        for (var i = 0; i < frame.length; i++) {
-          var px = frame[i];
-          var ci = parseInt(px[2], 16);
-          ctx.fillStyle = colors[ci];
-          ctx.fillRect(px[0] * s, px[1] * s, s, s);
-        }
-      }
+      drawCharPreview(canvas, currentCharId);
     }
 
     // Update stats
@@ -1972,6 +2060,7 @@
       mapCanvas.height = MAP_H * 2;
       container.appendChild(mapCanvas);
       mapCtx = mapCanvas.getContext('2d');
+      mapCtx.imageSmoothingEnabled = false;
       mapCanvas.addEventListener('click', onMapCanvasClick);
     }
 
@@ -2031,7 +2120,15 @@
 
   // ── Player Movement ────────────────────────────
   function updatePlayer(dt) {
-    if (!playerTarget) return;
+    // Idle animation when not moving
+    if (!playerTarget) {
+      playerAnimTimer += dt;
+      if (playerAnimTimer > 0.3) {
+        playerAnimTimer = 0;
+        playerFrame = (playerFrame + 1) % CHAR_ANIM_DATA.idle.framesPerDir;
+      }
+      return;
+    }
 
     var dx = playerTarget.x - playerPos.x;
     var dy = playerTarget.y - playerPos.y;
@@ -2078,11 +2175,11 @@
     playerPos.x += (dx / dist) * step;
     playerPos.y += (dy / dist) * step;
 
-    // Animate walk
+    // Animate walk (6 frames per direction)
     playerAnimTimer += dt;
-    if (playerAnimTimer > 0.2) {
+    if (playerAnimTimer > 0.12) {
       playerAnimTimer = 0;
-      playerFrame = playerFrame === 1 ? 2 : 1;
+      playerFrame = (playerFrame + 1) % CHAR_ANIM_DATA.walk.framesPerDir;
     }
 
     enterPromptVisible = false;
@@ -3640,27 +3737,8 @@
 
   // ── Player Drawing ──────────────────────────────
   function drawPlayer(ctx) {
-    var frames = CHAR_FRAMES[playerDir];
-    if (!frames) return;
-    var frame = frames[playerFrame] || frames[0];
-
-    var s = CHAR_SCALE;
-    var ox = Math.round(playerPos.x) - 8 * s;
-    var oy = Math.round(playerPos.y) - 12 * s;
-
-    // Shadow ellipse
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.beginPath();
-    ctx.ellipse(Math.round(playerPos.x), Math.round(playerPos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    var colors = getEquippedColors();
-    for (var i = 0; i < frame.length; i++) {
-      var px = frame[i];
-      var ci = parseInt(px[2], 16);
-      ctx.fillStyle = colors[ci];
-      ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
-    }
+    var animType = playerTarget ? 'walk' : 'idle';
+    drawCharSprite(ctx, playerPos.x, playerPos.y, playerDir, playerFrame, animType, currentCharId);
   }
 
   // ── Enter Prompt (OSRS style) ───────────────────
@@ -3674,7 +3752,7 @@
     ctx.textAlign = 'center';
     var tw = ctx.measureText(text).width;
     var px = playerPos.x;
-    var py = playerPos.y - 36;
+    var py = playerPos.y - CHAR_DRAW_SIZE + 4; // above character sprite
     var bw = tw + 20, bh = 22;
     var bx = px - bw / 2, by = py - 12;
 
@@ -3749,7 +3827,7 @@
 
     // Check collect badge click (below enter prompt)
     if (enterPromptVisible && playerAtLocation && hasUncollectedRewards(playerAtLocation)) {
-      var collectY = playerPos.y - 48 + 22 + 32; // must match draw: by + bh + 32
+      var collectY = playerPos.y - CHAR_DRAW_SIZE + 4 - 12 + 22 + 32; // must match draw: by + bh + 32
       if (Math.abs(cx - playerPos.x) < 100 && Math.abs(cy - collectY) < 14) {
         collectAtLocation(playerAtLocation);
         return;
@@ -3759,7 +3837,7 @@
     // Check enter prompt click (blocked during NPC intro)
     if (enterPromptVisible && playerAtLocation && !npcIntro) {
       var loc = MAP_LOCATIONS[playerAtLocation];
-      var promptY = playerPos.y - 36;
+      var promptY = playerPos.y - CHAR_DRAW_SIZE + 4;
       if (Math.abs(cx - playerPos.x) < 80 && Math.abs(cy - promptY) < 16) {
         onEnterLocation(playerAtLocation);
         return;
@@ -4103,7 +4181,15 @@
 
   // ── Town Player Movement ──────────────────────
   function updateTownPlayer(dt) {
-    if (!townPlayerTarget) return;
+    // Idle animation when not moving
+    if (!townPlayerTarget) {
+      townPlayerAnimTimer += dt;
+      if (townPlayerAnimTimer > 0.3) {
+        townPlayerAnimTimer = 0;
+        townPlayerFrame = (townPlayerFrame + 1) % CHAR_ANIM_DATA.idle.framesPerDir;
+      }
+      return;
+    }
 
     var dx = townPlayerTarget.x - townPlayerPos.x;
     var dy = townPlayerTarget.y - townPlayerPos.y;
@@ -4158,11 +4244,11 @@
     townPlayerPos.x = nx;
     townPlayerPos.y = ny;
 
-    // Animate
+    // Animate walk (6 frames per direction)
     townPlayerAnimTimer += dt;
-    if (townPlayerAnimTimer > 0.2) {
+    if (townPlayerAnimTimer > 0.12) {
       townPlayerAnimTimer = 0;
-      townPlayerFrame = townPlayerFrame === 1 ? 2 : 1;
+      townPlayerFrame = (townPlayerFrame + 1) % CHAR_ANIM_DATA.walk.framesPerDir;
     }
     townEnterPromptVisible = false;
   }
@@ -4183,7 +4269,7 @@
 
     // Check enter prompt click
     if (townEnterPromptVisible && townPlayerAtLocation) {
-      var promptY = townPlayerPos.y - 36;
+      var promptY = townPlayerPos.y - CHAR_DRAW_SIZE + 4;
       if (Math.abs(cx - townPlayerPos.x) < 80 && Math.abs(cy - promptY) < 16) {
         onEnterTownHotspot(townPlayerAtLocation);
         return;
@@ -4847,7 +4933,7 @@
     ctx.textAlign = 'center';
     var tw = ctx.measureText(text).width;
     var px = townPlayerPos.x;
-    var py = townPlayerPos.y - 36;
+    var py = townPlayerPos.y - CHAR_DRAW_SIZE + 4;
     var bw = tw + 20, bh = 22;
     var bx = px - bw / 2, by = py - 12;
 
@@ -4873,27 +4959,8 @@
 
   // ── Town Player Drawing ───────────────────────
   function drawTownPlayer(ctx) {
-    var frames = CHAR_FRAMES[townPlayerDir];
-    if (!frames) return;
-    var frame = frames[townPlayerFrame] || frames[0];
-
-    var s = CHAR_SCALE;
-    var ox = Math.round(townPlayerPos.x) - 8 * s;
-    var oy = Math.round(townPlayerPos.y) - 12 * s;
-
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.beginPath();
-    ctx.ellipse(Math.round(townPlayerPos.x), Math.round(townPlayerPos.y) + 2 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    var colors = getEquippedColors();
-    for (var i = 0; i < frame.length; i++) {
-      var px = frame[i];
-      var ci = parseInt(px[2], 16);
-      ctx.fillStyle = colors[ci];
-      ctx.fillRect(ox + px[0] * s, oy + px[1] * s, s, s);
-    }
+    var animType = townPlayerTarget ? 'walk' : 'idle';
+    drawCharSprite(ctx, townPlayerPos.x, townPlayerPos.y, townPlayerDir, townPlayerFrame, animType, currentCharId);
   }
 
   // ── Town Map Orchestrator ─────────────────────
@@ -6549,6 +6616,9 @@
         }
       }
     }
+
+    // Load character sprite sheets (async — renders once loaded)
+    loadCharSprites();
 
     // Set RPG mode flag so skills.js knows not to auto-init
     window.__RPG_STORAGE_KEY = '__rpg_pending__';
