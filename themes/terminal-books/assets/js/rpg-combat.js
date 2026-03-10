@@ -1178,6 +1178,10 @@
     preloadFighterSprites(allFighters, function () {
       battleState.phase = 'wave-intro';
       renderBattleUI();
+      // Pre-render move buttons for first player so they don't pop in after wave banner
+      if (battleState.playerTeam.length > 0) {
+        renderMoveButtons(battleState.playerTeam[0]);
+      }
       startAnimLoop();
       // Show wave intro briefly then start turns
       showWaveBanner(battleState.currentWave + 1, battleState.totalWaves, function () {
@@ -1617,6 +1621,8 @@
     var combatXp = 0;
     var stoneType = null;
     var gotStone = false;
+    var streakBonus = 0;
+    var nextStreak = 0;
 
     var rewardMult = battleState.rewardMult || 1;
 
@@ -1643,8 +1649,7 @@
       // Streak bonus: check current streak (will be incremented in saveCombatResults)
       if (victory) {
         var cs = loadCombatState();
-        var nextStreak = (cs.arenaStats.currentStreak || 0) + 1;
-        var streakBonus = 0;
+        nextStreak = (cs.arenaStats.currentStreak || 0) + 1;
         if (nextStreak === 5) streakBonus = 100;
         else if (nextStreak === 10) streakBonus = 250;
         else if (nextStreak === 25) streakBonus = 500;
@@ -1683,7 +1688,9 @@
       stoneType: stoneType,
       gotStone: gotStone,
       droppedItems: droppedItems,
-      arenaMilestone: null
+      arenaMilestone: null,
+      streakBonus: streakBonus,
+      streak: nextStreak
     };
 
     // Apply rewards
@@ -3280,6 +3287,11 @@
     html += '<div>Waves Cleared: ' + r.wavesCleared + '/' + battleState.totalWaves + '</div>';
     html += '<div>Enemies Defeated: ' + r.kills + '</div>';
     html += '<div>GP Earned: <span class="rpg-combat-gp">+' + r.gp + '</span></div>';
+    if (r.streakBonus > 0) {
+      html += '<div class="rpg-combat-streak-bonus">' + r.streak + '-Win Streak Bonus: +' + r.streakBonus + ' GP!</div>';
+    } else if (r.streak > 0 && r.victory) {
+      html += '<div style="font-size:0.85em;color:color-mix(in srgb, var(--foreground) 60%, transparent)">Win Streak: ' + r.streak + '</div>';
+    }
     html += '<div>Combat XP: <span class="rpg-combat-xp">+' + r.combatXp + '</span></div>';
     if (r.gotStone) {
       html += '<div class="rpg-combat-stone">Evolution Stone (' + r.stoneType + ') obtained!</div>';
@@ -3526,7 +3538,7 @@
 
         html += '<div class="rpg-team-pet' + (isSelected ? ' selected' : '') + '" data-pet-id="' + pid + '">';
         html += '<div class="rpg-team-pet-name">' + creature.name + ' Lv' + pet.level + '</div>';
-        html += '<div class="rpg-team-pet-type">' + creature.type + '</div>';
+        html += '<div class="rpg-team-pet-type">' + creature.type + (creature.tier ? ' <span class="rpg-arena-rarity-badge rpg-rarity-' + creature.tier + '">' + creature.tier + '</span>' : '') + '</div>';
         html += '<div class="rpg-team-pet-stats">HP:' + stats.hp + ' ATK:' + stats.atk + petEquipAtk + ' DEF:' + stats.def + petEquipDef + '</div>';
         // XP bar
         var petLevelCap = getPetLevelCap(pid);
@@ -3875,6 +3887,7 @@
         html += '<div class="rpg-arena-card-name">' + creature.name + '</div>';
         html += '<span class="rpg-arena-card-level">Lv ' + pet.level + '</span>';
         html += ' <span class="rpg-type-badge rpg-type-' + creature.type + '">' + creature.type + '</span>';
+        if (creature.tier) html += ' <span class="rpg-arena-rarity-badge rpg-rarity-' + creature.tier + '">' + creature.tier + '</span>';
         html += '<div class="rpg-arena-card-stats">HP:' + stats.hp + ' ATK:' + stats.atk + '</div>';
         // XP bar
         var petLevelCap = getPetLevelCap(pid);
@@ -4677,21 +4690,25 @@
     modal.innerHTML = html;
     modal.style.display = 'flex';
 
-    // Load sprites into divs
+    // Load sprites into divs (use Image to get natural dimensions for correct backgroundSize)
     var spriteDivs = modal.querySelectorAll('.rpg-bestiary-sprite[data-sprite]');
     for (var si = 0; si < spriteDivs.length; si++) {
-      var sd = spriteDivs[si];
-      var src = sd.getAttribute('data-sprite');
-      var fw = parseInt(sd.getAttribute('data-fw')) || 32;
-      var fh = parseInt(sd.getAttribute('data-fh')) || 32;
-      if (src) {
+      (function (sd) {
+        var src = sd.getAttribute('data-sprite');
+        var fw = parseInt(sd.getAttribute('data-fw')) || 32;
+        var fh = parseInt(sd.getAttribute('data-fh')) || 32;
+        if (!src) return;
         sd.style.width = fw + 'px';
         sd.style.height = fh + 'px';
-        sd.style.backgroundImage = 'url(' + src + ')';
-        sd.style.backgroundPosition = '0 0';
-        sd.style.backgroundSize = 'auto';
         sd.style.imageRendering = 'pixelated';
-      }
+        var img = new Image();
+        img.onload = function () {
+          sd.style.backgroundImage = 'url(' + src + ')';
+          sd.style.backgroundPosition = '0 0';
+          sd.style.backgroundSize = img.naturalWidth + 'px ' + img.naturalHeight + 'px';
+        };
+        img.src = src;
+      })(spriteDivs[si]);
     }
 
     // Click for detail
@@ -4729,6 +4746,9 @@
     var html = '<div class="rpg-modal rpg-bestiary-detail">';
     html += '<div class="rpg-modal-header"><h3>' + ed.name + '</h3>';
     html += '<button class="rpg-modal-close" id="rpg-bestiary-detail-close">&times;</button></div>';
+    if (ed.sprite) {
+      html += '<div class="rpg-bestiary-detail-sprite" data-sprite="' + ed.sprite + '" data-fw="' + (ed.frameWidth || 32) + '" data-fh="' + (ed.frameHeight || 32) + '"></div>';
+    }
     html += '<div class="rpg-detail-info">';
     html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Type:</span> <span class="rpg-type-badge rpg-type-' + ed.type + '">' + ed.type + '</span></div>';
     html += '<div class="rpg-detail-row"><span class="rpg-detail-label">HP:</span> ' + ed.hpBase + '</div>';
@@ -4740,6 +4760,26 @@
 
     modal.innerHTML = html;
     modal.style.display = 'flex';
+
+    // Load detail sprite
+    var detailSprite = modal.querySelector('.rpg-bestiary-detail-sprite');
+    if (detailSprite) {
+      var dSrc = detailSprite.getAttribute('data-sprite');
+      var dFw = parseInt(detailSprite.getAttribute('data-fw')) || 32;
+      var dFh = parseInt(detailSprite.getAttribute('data-fh')) || 32;
+      detailSprite.style.width = (dFw * 2) + 'px';
+      detailSprite.style.height = (dFh * 2) + 'px';
+      detailSprite.style.margin = '8px auto';
+      detailSprite.style.imageRendering = 'pixelated';
+      detailSprite.style.backgroundRepeat = 'no-repeat';
+      var dImg = new Image();
+      dImg.onload = function () {
+        detailSprite.style.backgroundImage = 'url(' + dSrc + ')';
+        detailSprite.style.backgroundPosition = '0 0';
+        detailSprite.style.backgroundSize = (dImg.naturalWidth * 2) + 'px ' + (dImg.naturalHeight * 2) + 'px';
+      };
+      dImg.src = dSrc;
+    }
 
     document.getElementById('rpg-bestiary-detail-close').addEventListener('click', function () {
       modal.style.display = 'none';

@@ -160,6 +160,10 @@
     {{- $rpgCombat := . | minify | fingerprint -}}
     <link rel="stylesheet" href="{{ $rpgCombat.RelPermalink }}">
   {{- end -}}
+  {{- with resources.Get "css/rpg-casino.css" -}}
+    {{- $rpgCasino := . | minify | fingerprint -}}
+    <link rel="stylesheet" href="{{ $rpgCasino.RelPermalink }}">
+  {{- end -}}
 {{- end }}
 
 {{/* Preload critical sprite sheets for RPG and Skills pages */}}

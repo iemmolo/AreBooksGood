@@ -989,6 +989,29 @@
 .rpg-bestiary-sprite {
   margin: 0 auto 4px;
   image-rendering: pixelated;
+  background-repeat: no-repeat;
+}
+.rpg-arena-rarity-badge {
+  font-size: 0.65em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 2px;
+}
+.rpg-rarity-common { color: color-mix(in srgb, var(--foreground) 55%, transparent); }
+.rpg-rarity-rare { color: var(--accent); }
+.rpg-rarity-legendary { color: #ffd700; }
+.rpg-combat-streak-bonus {
+  color: #ffd700;
+  font-weight: bold;
+  animation: rpg-streak-flash 0.5s ease;
+}
+@keyframes rpg-streak-flash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
 }
 .rpg-bestiary-sprite.unknown {
   width: 32px;

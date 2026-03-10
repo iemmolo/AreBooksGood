@@ -134,6 +134,10 @@
       {{- $rpgCombat := . | minify | fingerprint -}}
       <script src="{{ $rpgCombat.RelPermalink }}"></script>
     {{- end -}}
+    {{- with resources.Get "js/rpg-casino.js" -}}
+      {{- $rpgCasino := . | minify | fingerprint -}}
+      <script src="{{ $rpgCasino.RelPermalink }}"></script>
+    {{- end -}}
     {{- with resources.Get "js/skills.js" -}}
       {{- $skills := . | minify | fingerprint -}}
       <script src="{{ $skills.RelPermalink }}"></script>

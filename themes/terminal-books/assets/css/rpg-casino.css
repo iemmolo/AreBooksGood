@@ -1,0 +1,51 @@
+/* ══════════════════════════════════════════════════
+   RPG CASINO INTERIOR STYLES
+   ══════════════════════════════════════════════════ */
+
+/* Casino uses the same canvas as world/town map — no extra DOM needed.
+   This file only styles the "coming soon" placeholder modals. */
+
+.rpg-casino-modal {
+  max-width: 360px;
+}
+
+.rpg-casino-modal-body {
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.rpg-casino-table-art {
+  margin: 12px auto;
+  border-radius: 6px;
+  overflow: hidden;
+  image-rendering: pixelated;
+  border: 2px solid #6b5230;
+}
+
+.rpg-casino-game-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.rpg-casino-game-desc {
+  font-size: 0.85em;
+  color: #c4b090;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.rpg-casino-coming-soon {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #9a8a6a;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 16px;
+  border: 1px dashed #5a4428;
+  border-radius: 4px;
+  display: inline-block;
+}

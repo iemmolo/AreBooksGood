@@ -1088,6 +1088,7 @@
   var townStaticBuffer = null, townStaticBufferCtx = null;
   var townAnimId = null;
   var insideTown = false;
+  var insideCasino = false;
   var townPlayerPos = { x: 530, y: 580 };
   var townPlayerTarget = null;
   var townPlayerAtLocation = null;
@@ -2021,6 +2022,7 @@
     // Check if player was inside a skill location or town on last session
     var resumeLocId = meta.slots[slot].insideLocation || null;
     var resumeTown = meta.slots[slot].insideTown || false;
+    var resumeCasino = meta.slots[slot].insideCasino || false;
     var resumeLoc = null;
     if (resumeLocId && MAP_LOCATIONS[resumeLocId] && MAP_LOCATIONS[resumeLocId].skill) {
       for (var li = 0; li < LOCATIONS.length; li++) {
@@ -2028,10 +2030,14 @@
       }
     }
 
-    if (resumeTown) {
-      // Resume inside town
+    if (resumeCasino || resumeTown) {
+      // Resume inside town (casino resumes to town — player re-enters casino from there)
       showCenterContent('map');
       window.dispatchEvent(new Event('rpg-skills-init'));
+      if (resumeCasino) {
+        meta.slots[slot].insideCasino = false;
+        saveMeta();
+      }
       enterTown(true); // true = skip fade (already loading)
     } else if (resumeLoc) {
       // Go straight into skill view — no map flash, no fade
@@ -4658,6 +4664,7 @@
   // ── Map Click Handling ──────────────────────────
   function onMapCanvasClick(e) {
     if (!mapCanvas) return;
+    if (insideCasino) return; // casino handles its own clicks
     if (insideTown) { onTownMapCanvasClick(e); return; }
     var rect = mapCanvas.getBoundingClientRect();
     var scaleX = MAP_W / rect.width;
@@ -4961,8 +4968,10 @@
     if (activeSlot >= 0 && meta.slots[activeSlot]) {
       meta.slots[activeSlot].lastPlayed = Date.now();
       meta.slots[activeSlot].insideTown = false;
+      meta.slots[activeSlot].insideCasino = false;
     }
     insideTown = false;
+    insideCasino = false;
     meta.currentSlot = -1;
     saveMeta();
 
@@ -5079,6 +5088,90 @@
       addGameMessage('You return to the world map.', 'return');
       showCenterContent('map');
       startMapLoop();
+    });
+  }
+
+  // ── Casino Entry / Exit ──────────────────────────
+  function enterCasino() {
+    if (!window.RpgCasino) {
+      addGameMessage('The casino is not available yet.', 'system');
+      return;
+    }
+    stopTownMapLoop();
+    insideCasino = true;
+
+    // Persist to save slot
+    if (activeSlot >= 0 && meta.slots[activeSlot]) {
+      meta.slots[activeSlot].insideCasino = true;
+      saveMeta();
+    }
+
+    var bridgeAPI = {
+      drawPlayer: function (ctx, x, y, dir, frame, animType) {
+        drawCharSprite(ctx, x, y, dir, frame, animType);
+      },
+      drawFollower: function (ctx) {
+        drawFollower(ctx);
+      },
+      updateFollower: function (pos, dir, dt) {
+        // Mirror town follower logic but using casino player pos
+        if (!followerSpriteSheet || !followerPetId) return;
+        var tx = pos.x, ty = pos.y;
+        switch (dir) {
+          case 'up':    ty += FOLLOWER_TRAIL; break;
+          case 'down':  ty -= FOLLOWER_TRAIL; break;
+          case 'left':  tx += FOLLOWER_TRAIL; break;
+          case 'right': tx -= FOLLOWER_TRAIL; break;
+          default:      ty += FOLLOWER_TRAIL; break;
+        }
+        var lerpSpeed = 3.0 * (dt || 1 / 60);
+        followerPos.x += (tx - followerPos.x) * lerpSpeed;
+        followerPos.y += (ty - followerPos.y) * lerpSpeed;
+        // Update follower facing direction
+        var fdx = pos.x - followerPos.x;
+        if (Math.abs(fdx) > 2) {
+          followerDir = fdx > 0 ? 'right' : 'left';
+        }
+      },
+      addMessage: function (text, type) {
+        addGameMessage(text, type);
+      },
+      onLeave: function () {
+        returnFromCasino();
+      }
+    };
+
+    fadeTransition(function () {
+      window.RpgCasino.enter(mapCanvas, bridgeAPI);
+    });
+  }
+
+  function returnFromCasino() {
+    insideCasino = false;
+
+    // Clear casino from save
+    if (activeSlot >= 0 && meta.slots[activeSlot]) {
+      meta.slots[activeSlot].insideCasino = false;
+      saveMeta();
+    }
+
+    // Re-enter town (player stays where casino hotspot is)
+    var casinoLoc = TOWN_LOCATIONS.casino;
+    if (casinoLoc) {
+      townPlayerPos.x = casinoLoc.x;
+      townPlayerPos.y = casinoLoc.y + 20;
+      followerPos.x = casinoLoc.x;
+      followerPos.y = casinoLoc.y + 20 + FOLLOWER_TRAIL;
+    }
+    townPlayerTarget = null;
+    townEnterPromptVisible = false;
+    townPlayerAtLocation = null;
+    townStaticBuffer = null; // force re-render
+
+    fadeTransition(function () {
+      addGameMessage('You step back into the town.', 'return');
+      showCenterContent('map');
+      startTownMapLoop();
     });
   }
 
@@ -5280,6 +5373,10 @@
       if (window.RpgCombat && window.RpgCombat.showTypeChart) {
         window.RpgCombat.showTypeChart();
       }
+      return;
+    }
+    if (locId === 'casino') {
+      enterCasino();
       return;
     }
     // placeholder
@@ -7911,11 +8008,12 @@
     if (currentScreen !== 'rpg-game-screen') return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
-    // Escape: close pet popup → close pet store modal → exit town → return to map
+    // Escape: close pet popup → close store → close pet store → exit casino → exit town → return to map
     if (e.key === 'Escape') {
       if (activePetPopup) { closePetPopup(); return; }
       if (generalStoreOpen) { closeGeneralStore(); return; }
       if (petStoreModalOpen) { closePetStoreModal(); return; }
+      if (insideCasino && window.RpgCasino) { window.RpgCasino.handleEscape(); return; }
       if (insideTown) { returnToWorldMap(); return; }
     }
 
