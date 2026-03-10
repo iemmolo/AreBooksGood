@@ -1,7 +1,7 @@
 RPG Combat System Overhaul — Task Tracking
 ===========================================
 
-## Phase 0: Persist Plan
+## Phase 0: Persist Plan (DONE)
 - [x] Create RPG-COMBAT-TODO.txt (this file)
 - [x] Update TODO.txt with combat plan summary
 - [x] Update memory/rpg-roadmap.md
@@ -29,63 +29,143 @@ RPG Combat System Overhaul — Task Tracking
 - [x] Fix: pet store modal invisible (rpg-combat.css overrode .rpg-modal-overlay display)
 - [x] Fix: mobile side panel covered by chatbox (raised bottom from 145px to 200px)
 
-## Phase 2: Move Equipment + Training Arena
-- [ ] Expand rpg-moves.json to ~80 moves
-- [ ] Move learning on level-up + toast notifications
-- [ ] Expand pet detail popup: move list with equip/unequip
-- [ ] Per-pet Auto/Manual toggle in battle UI
-- [ ] AI stances (aggressive/defensive/balanced)
-- [ ] Cooldown system for powerful moves
-- [ ] Training Arena → 1v1 arena mode
-- [ ] Remove old combat click-mini-game from skills.js
+## Phase 2A: Arena + Equipment Integration (NEXT — Quick Wins)
 
-## Phase 3: Evolution + Level Cap System
-- [ ] Update petcatalog.json maxLevel (common:50, rare:75, legendary:99)
-- [ ] Evolution stone inventory in rpgPets state
-- [ ] Evolution UI in pet detail popup
-- [ ] New stat formula (diminishing growth: 8%/4%/2% tiers)
-- [ ] New XP curve (polynomial)
-- [ ] State migration (_combatVersion)
-- [ ] Evolution animation
-- [ ] Stone drops from dungeon rewards
+### 2A-1: Wire Training Arena to RPG Combat
+Currently: Training Arena on world map enters old skills.js click-mini-game.
+Goal: Arena should open rpg-combat.js 1v1 arena mode (showArenaSelect already exists).
 
-## Phase 4: Spec Paths
+- [x] In rpg.js `enterSkillLocation()`: detect if loc.id === 'arena', call `RpgCombat.showArenaSelect(rpgPets)` instead of loading skills combat
+- [ ] Show arena stats in chatbox location tab (wins, streak, best streak)
+- [ ] Add "Enter Arena" button to location pane for re-entry without walking back to map
+- [x] Keep old combat click-mini-game accessible from standalone /pets/skills/ page (non-RPG mode only)
+
+### 2A-2: Equipment Stats in Combat
+Currently: Player equipment has ATK/DEF stats but createPlayerFighter() ignores them.
+Goal: Equipped gear on player character buffs the lead pet (or all pets proportionally).
+
+- [x] In rpg-combat.js `createPlayerFighter()`: call `window.__RPG_GET_EQUIP_STATS()` from rpg.js
+- [x] Add equipment bonuses to fighter stats: lead pet gets 100% of equip ATK/DEF, others get 50%
+- [x] Show equip bonus in team builder stat display (base + equip in parentheses)
+- [x] Expose `getEquipStats()` via `window.__RPG_GET_EQUIP_STATS` in rpg.js
+
+### 2A-3: Fix Priority Moves
+Currently: quickStrike has `priority: true` but processNextTurn() ignores it.
+NOTE: Full priority system requires move-selection-first-then-resolve architecture (deferred to Phase 4).
+
+- [ ] Full priority: restructure so all combatants choose moves, then resolve order with priority first
+- [x] Priority indicator: lightning bolt icon on priority move buttons
+
+### 2A-4: Fix Level Cap Band-Aid
+Currently: `distributePetXp()` line 1058 hardcodes `if (maxLevel <= 3) maxLevel = 30`.
+
+- [ ] Add `levelCap` field to petcatalog.json: common=30, rare=50, legendary=50
+- [x] Update `distributePetXp()` to use tier-based defaults instead of hardcoded `if <= 3` check
+- [x] maxLevel stays as evolution stage indicator (1/2/3), levelCap read from catalog or per-pet override
+- [ ] State migration: existing pets keep their levels
+
+## Phase 2B: Move System Overhaul (DONE)
+
+### 2B-1: Expand Moves (~60 total) (DONE)
+Currently: 67 moves (9-10 per type + 13 neutral).
+
+- [x] Add 5 more moves per type (fire/aqua/nature/tech/shadow/mystic) = 35 new moves
+- [x] New move categories: multi-hit, drain, conditional, debuff + damage combos
+- [x] Spread learnLevel requirements: Lv1, 5, 10, 15, 20, 25, 30, 40, 50 per type
+- [x] Add more neutral utility moves: Taunt, Cleanse, Sacrifice (lose HP to buff team)
+
+### 2B-2: Persistent Move Learning (DONE)
+- [x] Add `learnedMoves[]` to rpgPets.owned[petId] state (persisted per slot)
+- [x] On pet level-up: check if any new moves available (learnLevel <= newLevel && type matches)
+- [x] Show "New move learned: [name]!" via chatbox message
+- [x] Auto-add to learnedMoves, auto-equip if fewer than 4 equipped
+- [x] Add `equippedMoves[]` (max 4) to rpgPets.owned[petId] state (persisted)
+- [x] Fallback: if no equippedMoves saved, use getMovesForPet() for backwards compatibility
+- [x] Backfill on first combat entry via initPetMoves()
+
+### 2B-3: Pet Detail + Move Management Popup (DONE)
+- [x] New modal: pet name, type, level, XP bar, stats (HP/ATK/DEF/SPD/CRI)
+- [x] "Equipped Moves" list (click to unequip)
+- [x] "Available Moves" list (click to equip, greyed if full)
+- [x] Move type color coding (fire=red, aqua=blue, etc.) with type badges
+- [x] Accessible from: team builder ("Moves" button per pet card)
+- [x] Also accessible from: Pets tab (click pet → "Moves & Stats"), collection grid (click owned pet)
+
+### 2B-4: Per-Pet Auto/Manual Toggle (DONE)
+- [x] Add auto/manual toggle per pet in team builder (default: manual)
+- [x] Store isAuto flag per fighter in battleState (from party config)
+- [x] Show A/M indicator on pet in turn order strip (canvas)
+- [x] Keyboard shortcut: Tab to toggle active pet's auto mode mid-battle
+- [x] "Auto All" button still works as global override
+- [x] CSS for team builder buttons (.rpg-team-moves-btn, .rpg-team-auto-toggle)
+
+## Phase 2C: More Dungeons + Arena Polish
+
+### 2C-1: Expand to 8 Dungeons (DONE)
+- [x] rpg-5: "Circuit Lab" (tech themed, 5 waves, 3★, req Lv80, boss: Iron Golem)
+- [x] rpg-6: "Enchanted Ruins" (mystic themed, 6 waves, 3★, req Lv120, boss: Void Mimic)
+- [x] rpg-7: "Volcanic Core" (fire themed, 7 waves, 4★, req Lv180, bosses: Cursed Spirits + Demon Slime)
+- [x] rpg-8: "Abyssal Depths" (shadow+aqua themed, 8 waves, 4★, req Lv250, boss: Ronin Samurai)
+- [x] Uses existing enemies from dungeon-enemies.json (golems, bats, fantasy goblins, skeletons, etc.)
+- [x] Each dungeon awards evolution stone: nature→fire→aqua→shadow→tech→mystic→fire→shadow
+
+### 2C-2: Arena Improvements (DONE)
+- [x] Enemy difficulty scaling: offer Easy/Normal/Hard arena fights
+- [x] Arena win streak rewards: bonus GP at 5/10/25/50 streak milestones (+100/250/500/1000)
+- [x] Arena stats display: wins, current streak, best streak shown in arena select header
+- [x] Show opponent preview before fight (name, type badge, HP/ATK/DEF/SPD)
+
+### 2C-3: Dungeon-Themed Backgrounds (DONE)
+- [x] Generate procedural pixel art backgrounds per dungeon type
+- [x] 7 themes: nature (cave/stalactites/moss), fire (volcanic/lava cracks/embers), aqua (underwater/bubbles/light rays), shadow (crypt/bricks/purple wisps), tech (lab/circuit traces/grid), mystic (ruins/broken pillars/glowing runes), arena (colosseum/columns/sand)
+- [x] Cache as Image via toDataURL, keyed by stoneType
+- [x] Fallback gradient while image loads
+
+## Phase 3: Evolution + Level Caps (DONE)
+
+### 3-1: Proper Level Cap System (DONE)
+- [x] Add `levelCap` field to petcatalog.json: Common=30, Rare=25, Legendary=50
+- [x] EVOLUTION_TIERS constant: Common 30→50, Rare 25→50→75, Legendary 50→75
+- [x] Per-pet `levelCap` override stored in rpgPets.owned[id].levelCap
+- [x] XP stops accumulating at cap (pet.xp = 0 when at cap)
+- [x] Pet detail shows "MAX (Cap: N)" on XP bar when at cap
+
+### 3-2: Evolution Stones (DONE)
+- [x] `stones` map in combat save state: { fire: 0, aqua: 0, nature: 0, tech: 0, shadow: 0, mystic: 0 }
+- [x] Stone drops actually stored on dungeon victory (stoneChance + stoneType from dungeon data)
+- [x] Stone display in pet detail evolution section (shows held/required)
+- [x] Evolution costs: Common 1 stone + 500 GP, Rare 1/2 stones + 1500/3000 GP, Legendary 2 stones + 5000 GP
+
+### 3-3: Evolution UI (DONE)
+- [x] "Evolve" button in pet detail popup when at level cap + has stone + has GP
+- [x] Evolution raises levelCap, resets XP to 0, stat growth continues
+- [x] Chatbox celebration message via addBattleLog
+- [x] Disabled button with red/green requirement indicators
+- [x] "Max evolution reached" shown for fully evolved pets
+- [ ] Evolution animation: glow → shake → flash (deferred to Phase 5 polish)
+
+## Phase 4: Spec Paths (defer)
 - [ ] Create rpg-spec-trees.json (3 paths, 6 sub-specs)
-- [ ] Spec choice modal at level 5
-- [ ] Sub-spec choice modal at level 30
-- [ ] Spec stat bonuses in combat calc
-- [ ] Spec-gated moves in equip UI
-- [ ] Respec option (doubling GP cost)
-- [ ] Spec badge in pet detail + team builder
+- [ ] Spec choice at level 5, sub-spec at level 30
+- [ ] Stat bonuses, spec-gated moves, respec
+- [ ] 2 moves already have specRequired (rallyCry, lastStand) — will unlock when implemented
 
-## Phase 5: Battle Polish + Variable Sizes
-- [ ] Variable party size canvas layout (1v1 through 4v4)
-- [ ] Boss encounters with larger sprites
-- [ ] VFX layer (reuse battle_vfx.png)
-- [ ] Attack slide animations
-- [ ] Screen shake on crits
-- [ ] Type effectiveness popups
-- [ ] 2x speed toggle
-- [ ] Expand to 12+ dungeons
-
-## Phase 6: Difficulty + Legendary Stars
-- [ ] Difficulty system (Normal/Hard/Brutal with stat multipliers)
-- [ ] Per-difficulty progress tracking
-- [ ] Legendary Star System (post-99, 5 stars, Star Fragments)
-- [ ] First-clear rewards
-- [ ] Dungeon card badges
+## Phase 5: Battle Polish (PARTIAL)
+- [x] Attack slide animations (fighter slides toward target, slides back)
+- [x] Screen shake on crits
+- [x] Type effectiveness popups ("Super effective!", "Not very effective...") — colored floating text
+- [x] 2x speed toggle button during combat
+- [ ] VFX layer using battle_vfx.png sprite sheet
+- [x] Death animation (fade out + collapse)
+- [x] Difficulty system (Normal/Hard/Brutal with stat multipliers)
 
 ## Key Design Decisions
-- Hybrid combat: manual + auto toggle per pet
+- Hybrid combat: manual + auto toggle per pet (currently per-battle, goal: per-pet)
 - Level caps: Common 30→50, Rare 25→50→75, Legendary 50→75→99
-- 4 equipped moves from 8-12 learned pool
-- Full spec trees: DPS(Assassin/Berserker), Tank(Juggernaut/Paladin), Support(Healer/Buffer)
-- Variable party size: 1-4 per side
-- Move management in pet detail popup (side panel)
-- Training Arena → 1v1 arena battles (replaces click mini-game)
-- Dungeon Gate → dungeon select modal → team builder → battle
-- New file: rpg-combat.js, rpg-combat.css
-- Data files: rpg-moves.json, rpg-dungeons.json, rpg-spec-trees.json
-- Storage: rpg-slot-N-combat (per-slot, isolated)
-- Stat formula: diminishing growth (8% Lv1-30, 4% Lv31-60, 2% Lv61-99)
+- 4 equipped moves from learned pool (all type-matching moves up to current level)
+- Equipment buffs: lead pet 100%, others 50% of player equip ATK/DEF
+- Training Arena = rpg-combat.js 1v1 (old click-mini-game stays on standalone /pets/skills/)
+- Full spec trees deferred to Phase 4 (rallyCry + lastStand locked until then)
 - Legacy battle.js UNTOUCHED
+- Files: rpg-combat.js, rpg-combat.css, rpg-moves.json, rpg-dungeons.json
+- Storage: rpg-slot-N-combat (per-slot, isolated)

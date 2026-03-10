@@ -62,5 +62,79 @@
       ["slime-black-big"]
     ],
     "rewards": { "gpBase": 900, "petXpBase": 180, "stoneChance": 0.12, "stoneType": "shadow" }
+  },
+  {
+    "id": "rpg-5",
+    "name": "Circuit Lab",
+    "desc": "A malfunctioning lab overrun by rogue machines.",
+    "typeLock": null,
+    "requiredTotalLevel": 120,
+    "stars": 3,
+    "partySize": 3,
+    "waves": [
+      ["goblin-spear", "goblin-spear", "slime-golden"],
+      ["goblin-archer", "goblin-bomb", "slime-golden"],
+      ["fantasy-goblin", "goblin-spear", "goblin-archer"],
+      ["fantasy-goblin", "goblin-bomb", "slime-golden", "goblin-archer"],
+      ["iron-golem"]
+    ],
+    "rewards": { "gpBase": 1100, "petXpBase": 220, "stoneChance": 0.12, "stoneType": "tech" }
+  },
+  {
+    "id": "rpg-6",
+    "name": "Enchanted Ruins",
+    "desc": "Ancient ruins pulsing with arcane energy.",
+    "typeLock": null,
+    "requiredTotalLevel": 150,
+    "stars": 3,
+    "partySize": 3,
+    "waves": [
+      ["slime-purple", "myconid-pink", "slime-purple"],
+      ["myconid-pink", "dark-bat", "slime-purple"],
+      ["dark-bat", "dark-bat", "myconid-pink", "sprout-purple"],
+      ["myconid-pink", "dark-bat", "slime-purple", "sprout-purple"],
+      ["flying-eye", "dark-bat"],
+      ["void-mimic"]
+    ],
+    "rewards": { "gpBase": 1400, "petXpBase": 280, "stoneChance": 0.14, "stoneType": "mystic" }
+  },
+  {
+    "id": "rpg-7",
+    "name": "Volcanic Core",
+    "desc": "The heart of a volcano, home to a fiery titan.",
+    "typeLock": null,
+    "requiredTotalLevel": 180,
+    "stars": 4,
+    "partySize": 3,
+    "waves": [
+      ["slime-pink", "golem-orange", "slime-pink"],
+      ["golem-orange", "myconid-red", "slime-pink", "goblin-bomb"],
+      ["golem-orange", "golem-orange", "myconid-red"],
+      ["slime-pink-big", "golem-orange", "goblin-bomb"],
+      ["goblin-bomb", "golem-orange", "myconid-red", "slime-pink"],
+      ["cursed-spirit-boss", "golem-orange"],
+      ["demon-slime-boss"]
+    ],
+    "rewards": { "gpBase": 1800, "petXpBase": 360, "stoneChance": 0.16, "stoneType": "fire" }
+  },
+  {
+    "id": "rpg-8",
+    "name": "Abyssal Depths",
+    "desc": "The deepest abyss where shadow and sea converge.",
+    "typeLock": null,
+    "requiredTotalLevel": 250,
+    "stars": 4,
+    "partySize": 3,
+    "waves": [
+      ["slime-black", "golem-blue", "dark-bat"],
+      ["golem-blue", "slime-blue", "dark-bat", "sprout-purple"],
+      ["skeleton-knight", "golem-blue", "dark-bat"],
+      ["mushroom-warrior", "slime-black", "golem-blue", "dark-bat"],
+      ["flying-eye", "skeleton-knight", "dark-bat"],
+      ["cloud-boss", "golem-blue", "slime-black"],
+      ["pumpkin-boss", "skeleton-knight"],
+      ["samurai-boss"]
+    ],
+    "rewards": { "gpBase": 2500, "petXpBase": 500, "stoneChance": 0.20, "stoneType": "shadow" }
   }
 ]

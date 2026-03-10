@@ -4126,17 +4126,17 @@
         drawSmoke(ctx, ox + 8, oy - 14, smokeFrame, 3);
         // Sparks from anvil
         drawSparks(ctx, ox + 55, oy + 22, smokeFrame);
-        // Enhanced forge glow — larger, more dynamic
+        // Forge glow — warm pulse
         var ft = smokeFrame * 0.04;
-        var fa1 = 0.08 + Math.sin(ft * 1.5) * 0.12;
+        var fa1 = 0.06 + Math.sin(ft * 1.5) * 0.06;
         ctx.fillStyle = '#ff6020';
         ctx.globalAlpha = fa1;
         ctx.fillRect(ox + 2, oy + 12, 20, 14);
         ctx.globalAlpha = fa1 * 0.4;
         ctx.fillRect(ox - 2, oy + 8, 28, 20);
-        // Rare bright flash (5% chance simulating sparks)
-        if (Math.sin(ft * 7.3 + 0.5) > 0.9) {
-          ctx.globalAlpha = 0.35;
+        // Rare bright flash (sparks)
+        if (Math.sin(ft * 7.3 + 0.5) > 0.95) {
+          ctx.globalAlpha = 0.18;
           ctx.fillRect(ox + 4, oy + 14, 16, 10);
         }
         ctx.globalAlpha = 1;
@@ -4324,15 +4324,6 @@
       ctx.globalAlpha = alpha * 0.08;
       ctx.fillRect(fx - 4, fy - 4, 10, 10);
     }
-    ctx.globalAlpha = 1;
-
-    // Forge glow pulse (on smithy)
-    var forgeAlpha = 0.1 + Math.sin(t * 1.5) * 0.1;
-    ctx.fillStyle = '#ff6020';
-    ctx.globalAlpha = forgeAlpha;
-    var sx = MAP_LOCATIONS.smithy.x - 28;
-    var sy = MAP_LOCATIONS.smithy.y - 32;
-    ctx.fillRect(sx + 4, sy + 14, 16, 12);
     ctx.globalAlpha = 1;
 
     // Lantern flicker (per type-12 deco, per-lantern phase offset, occasional bright flash)
@@ -4753,6 +4744,19 @@
 
   // ── Skill Location Entry ──────────────────────
   function enterSkillLocation(loc) {
+    // Arena intercept — launch 1v1 combat modal instead of skill mini-game
+    if (loc.id === 'arena' && window.RpgCombat) {
+      currentLocationId = 'arena';
+      var rpgPetsState = getRpgPetState();
+      var ownedIds = Object.keys(rpgPetsState.owned);
+      if (ownedIds.length === 0) {
+        addGameMessage('You need at least one pet to enter the arena! Visit the Pet Store first.', 'system');
+        return;
+      }
+      window.RpgCombat.showArenaSelect(rpgPetsState);
+      return;
+    }
+
     fadeTransition(function () {
       showCenterContent('skill');
 
@@ -5809,8 +5813,8 @@
     if (window.RpgCombat) {
       window.RpgCombat.init(canvasEl, containerEl);
       window.RpgCombat.onComplete = function (result) {
-        // Return to town hub map
-        showCenterContent('map');
+        // Full return-to-map cleanup (clears insideLocation, restarts map loop, etc.)
+        returnToMap();
         if (result.victory) {
           addGameMessage('Dungeon cleared! Earned ' + result.gp + ' GP and ' + result.petXp + ' pet XP.', 'reward');
         } else {
@@ -5834,10 +5838,12 @@
       // Remove old listeners by cloning
       var newAutoBtn = autoBtn.cloneNode(true);
       autoBtn.parentNode.replaceChild(newAutoBtn, autoBtn);
+      newAutoBtn.textContent = 'Auto All';
       newAutoBtn.addEventListener('click', function () {
         if (window.RpgCombat && window.RpgCombat.isActive()) {
           newAutoBtn.classList.toggle('active');
           var isAuto = newAutoBtn.classList.contains('active');
+          newAutoBtn.textContent = isAuto ? 'Auto All: ON' : 'Auto All';
           window.RpgCombat.toggleAuto(isAuto);
         }
       });
@@ -5860,6 +5866,8 @@
   window.__RPG_GET_PET_STATE = function () { return getRpgPetState(); };
   window.__RPG_SAVE_PET_STATE = function (state) { saveRpgPetState(state); };
   window.__RPG_ADD_GAME_MESSAGE = function (text, type) { addGameMessage(text, type); };
+  window.__RPG_GET_EQUIP_STATS = getEquipStats;
+  window.__RPG_RETURN_TO_MAP = function () { returnToMap(); };
   // Re-inject stationed pet dock into game area (called after skills.js re-renders)
   window.__RPG_REINJECT_DOCK = function () {
     if (currentLocationId) renderStationedPetInGameArea(currentLocationId);
@@ -6135,6 +6143,20 @@
           tag.style.color = '#6688cc';
           tag.textContent = 'Stationed';
           cell.appendChild(tag);
+        }
+
+        // Click to open pet detail
+        if (window.RpgCombat && window.RpgCombat.showPetDetail) {
+          cell.style.cursor = 'pointer';
+          cell.setAttribute('data-pet-id', id);
+          cell.addEventListener('click', (function (pid) {
+            return function () {
+              var freshPets = getRpgPetState();
+              window.RpgCombat.showPetDetail(pid, freshPets, function () {
+                renderPetStoreCollection(getRpgPetState());
+              });
+            };
+          })(id));
         }
       } else {
         // Unknown cell — hint tier via faint border color
@@ -6531,11 +6553,26 @@
     fLabel.textContent = 'Follower';
     followerSlot.appendChild(fLabel);
     if (rpgPets.follower && rpgPets.owned[rpgPets.follower]) {
+      var fPet = rpgPets.owned[rpgPets.follower];
+      var fCreature = petCatalog.creatures[rpgPets.follower];
       var fName = document.createElement('div');
       fName.className = 'rpg-pet-follower-name';
-      fName.textContent = petCatalog.creatures[rpgPets.follower] ? petCatalog.creatures[rpgPets.follower].name : rpgPets.follower;
+      fName.textContent = (fCreature ? fCreature.name : rpgPets.follower) + ' Lv' + fPet.level;
       followerSlot.appendChild(fName);
-      var fSprite = renderRpgPetSprite(rpgPets.follower, rpgPets.owned[rpgPets.follower].level, 28);
+      // Follower XP bar
+      var fCap = fPet.levelCap || (fCreature ? fCreature.levelCap : 30) || 30;
+      if (fPet.level < fCap) {
+        var fNeeded = rpgPetXpForLevel(fPet.level);
+        var fPct = Math.min(100, Math.floor(((fPet.xp || 0) / fNeeded) * 100));
+        var fXpBar = document.createElement('div');
+        fXpBar.className = 'rpg-follower-xp-bar';
+        var fXpFill = document.createElement('div');
+        fXpFill.className = 'rpg-follower-xp-fill';
+        fXpFill.style.width = fPct + '%';
+        fXpBar.appendChild(fXpFill);
+        followerSlot.appendChild(fXpBar);
+      }
+      var fSprite = renderRpgPetSprite(rpgPets.follower, fPet.level, 28);
       if (fSprite) {
         fSprite.style.marginLeft = 'auto';
         followerSlot.appendChild(fSprite);
@@ -6565,6 +6602,21 @@
 
       var sprite = renderRpgPetSprite(pid, petData.level, 36);
       if (sprite) cell.appendChild(sprite);
+
+      // XP bar at bottom of cell
+      var cellCreature = petCatalog.creatures[pid];
+      var cellCap = petData.levelCap || (cellCreature ? cellCreature.levelCap : 30) || 30;
+      if (petData.level < cellCap) {
+        var cellNeeded = rpgPetXpForLevel(petData.level);
+        var cellPct = Math.min(100, Math.floor(((petData.xp || 0) / cellNeeded) * 100));
+        var cellXpBar = document.createElement('div');
+        cellXpBar.className = 'rpg-petcell-xp-bar';
+        var cellXpFill = document.createElement('div');
+        cellXpFill.className = 'rpg-petcell-xp-fill';
+        cellXpFill.style.width = cellPct + '%';
+        cellXpBar.appendChild(cellXpFill);
+        cell.appendChild(cellXpBar);
+      }
 
       // Status badge
       if (status === 'following') {
@@ -6643,13 +6695,20 @@
     popup.appendChild(info);
 
     // XP bar
-    var maxLv = creature.maxLevel || 3;
-    if (petData.level < maxLv) {
+    var petLevelCap = petData.levelCap || creature.levelCap || 30;
+    if (petData.level < petLevelCap) {
       var needed = rpgPetXpForLevel(petData.level);
-      var xpInfo = document.createElement('div');
-      xpInfo.style.cssText = 'font-size:0.75em;color:color-mix(in srgb,var(--foreground) 45%,transparent);margin-bottom:6px';
-      xpInfo.textContent = 'XP: ' + (petData.xp || 0) + '/' + needed;
-      popup.appendChild(xpInfo);
+      var xpPct = Math.min(100, Math.floor(((petData.xp || 0) / needed) * 100));
+      var xpWrap = document.createElement('div');
+      xpWrap.className = 'rpg-popup-xp-wrap';
+      xpWrap.innerHTML = '<div class="rpg-popup-xp-bar"><div class="rpg-popup-xp-fill" style="width:' + xpPct + '%"></div></div>' +
+        '<span class="rpg-popup-xp-text">' + (petData.xp || 0) + '/' + needed + '</span>';
+      popup.appendChild(xpWrap);
+    } else {
+      var capEl = document.createElement('div');
+      capEl.style.cssText = 'font-size:0.7em;color:var(--accent);margin-bottom:4px';
+      capEl.textContent = 'MAX (Cap: ' + petLevelCap + ')';
+      popup.appendChild(capEl);
     }
 
     // Stats grid
@@ -6673,6 +6732,20 @@
     // Actions
     var actions = document.createElement('div');
     actions.className = 'rpg-pet-popup-actions';
+
+    // Moves / Detail button (opens combat pet detail modal)
+    if (window.RpgCombat && window.RpgCombat.showPetDetail) {
+      var movesBtn = document.createElement('button');
+      movesBtn.className = 'rpg-btn rpg-btn-small';
+      movesBtn.textContent = 'Moves & Stats';
+      movesBtn.addEventListener('click', function () {
+        closePetPopup();
+        window.RpgCombat.showPetDetail(petId, rpgPets, function () {
+          renderPetTab();
+        });
+      });
+      actions.appendChild(movesBtn);
+    }
 
     if (status === 'unassigned') {
       // Set Follower

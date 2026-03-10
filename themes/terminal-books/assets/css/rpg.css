@@ -1881,15 +1881,51 @@
 }
 
 .rpg-petcell-xp-bar {
-  width: 80%;
+  position: absolute;
+  bottom: 1px;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.rpg-petcell-xp-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* Popup XP bar */
+.rpg-popup-xp-wrap {
+  margin-bottom: 6px;
+}
+.rpg-popup-xp-bar {
+  height: 6px;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rpg-popup-xp-fill {
+  height: 100%;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 3px;
+}
+.rpg-popup-xp-text {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+/* Follower XP bar */
+.rpg-follower-xp-bar {
   height: 3px;
   background: color-mix(in srgb, var(--foreground) 10%, transparent);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 2px;
 }
-
-.rpg-petcell-xp-fill {
+.rpg-follower-xp-fill {
   height: 100%;
   background: var(--accent);
   border-radius: 2px;
