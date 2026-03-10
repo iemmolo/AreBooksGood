@@ -1,0 +1,79 @@
+{
+  "specLevel": 5,
+  "subSpecLevel": 30,
+  "respecCost": 1000,
+  "paths": {
+    "striker": {
+      "name": "Striker",
+      "desc": "Offense-focused path. Deal more damage.",
+      "icon": "\u2694",
+      "bonuses": { "atk": 0.10, "spd": 0.05 },
+      "specGate": "dps",
+      "subSpecs": {
+        "berserker": {
+          "name": "Berserker",
+          "desc": "Raw power. Crush enemies with brute force.",
+          "icon": "\ud83d\udca5",
+          "bonuses": { "atk": 0.15, "cri": 0.05 },
+          "specGate": "berserker"
+        },
+        "assassin": {
+          "name": "Assassin",
+          "desc": "Precision strikes. High crit, high speed.",
+          "icon": "\ud83d\udde1",
+          "bonuses": { "cri": 0.10, "spd": 0.10 },
+          "specGate": "assassin"
+        }
+      }
+    },
+    "guardian": {
+      "name": "Guardian",
+      "desc": "Defense-focused path. Endure and protect.",
+      "icon": "\ud83d\udee1",
+      "bonuses": { "hp": 0.10, "def": 0.10 },
+      "specGate": "tank",
+      "subSpecs": {
+        "sentinel": {
+          "name": "Sentinel",
+          "desc": "Immovable wall. Maximum durability.",
+          "icon": "\ud83c\udff0",
+          "bonuses": { "hp": 0.15, "def": 0.10 },
+          "specGate": "sentinel"
+        },
+        "paladin": {
+          "name": "Paladin",
+          "desc": "Holy defender. Self-sustaining protector.",
+          "icon": "\u2728",
+          "bonuses": { "def": 0.10, "hp": 0.05 },
+          "specGate": "paladin",
+          "special": "regenBoost"
+        }
+      }
+    },
+    "support": {
+      "name": "Support",
+      "desc": "Utility path. Buff allies, debuff foes.",
+      "icon": "\ud83d\udc9a",
+      "bonuses": { "hp": 0.05, "atk": 0.05, "def": 0.05 },
+      "specGate": "support",
+      "subSpecs": {
+        "sage": {
+          "name": "Sage",
+          "desc": "Master of buffs and debuffs. Controls the tempo.",
+          "icon": "\ud83d\udcda",
+          "bonuses": { "spd": 0.10, "hp": 0.05 },
+          "specGate": "sage",
+          "special": "buffDuration"
+        },
+        "shaman": {
+          "name": "Shaman",
+          "desc": "Nature's healer. Sustains the team.",
+          "icon": "\ud83c\udf3f",
+          "bonuses": { "hp": 0.10, "def": 0.05 },
+          "specGate": "shaman",
+          "special": "healBoost"
+        }
+      }
+    }
+  }
+}

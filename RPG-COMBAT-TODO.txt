@@ -142,13 +142,16 @@ Currently: 67 moves (9-10 per type + 13 neutral).
 - [x] Chatbox celebration message via addBattleLog
 - [x] Disabled button with red/green requirement indicators
 - [x] "Max evolution reached" shown for fully evolved pets
-- [ ] Evolution animation: glow → shake → flash (deferred to Phase 5 polish)
+- [x] Evolution animation: glow → shake → flash in pet detail modal
 
-## Phase 4: Spec Paths (defer)
-- [ ] Create rpg-spec-trees.json (3 paths, 6 sub-specs)
-- [ ] Spec choice at level 5, sub-spec at level 30
-- [ ] Stat bonuses, spec-gated moves, respec
-- [ ] 2 moves already have specRequired (rallyCry, lastStand) — will unlock when implemented
+## Phase 4: Spec Paths (DONE)
+- [x] Create rpg-spec-trees.json (3 paths: Striker/Guardian/Support, 6 sub-specs)
+- [x] Spec choice at level 5, sub-spec at level 30 (post-combat modal)
+- [x] Stat bonuses from spec + sub-spec applied in getPetCombatStats
+- [x] Spec-gated moves: rallyCry (support), lastStand (dps) now learnable with correct spec
+- [x] Respec for GP cost (removes spec-gated moves, resets spec/subSpec)
+- [x] Spec display in pet detail modal with Choose/Respec buttons
+- [x] Pending spec queue: if multiple pets level to 5/30 in one fight, prompts shown sequentially
 
 ## Phase 5: Battle Polish (PARTIAL)
 - [x] Attack slide animations (fighter slides toward target, slides back)

@@ -496,6 +496,47 @@
 .rpg-pet-detail {
   max-width: 440px;
 }
+.rpg-detail-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#rpg-detail-sprite-wrap {
+  flex-shrink: 0;
+}
+
+/* Evolution animation */
+.rpg-evo-glow {
+  animation: evo-glow 0.4s ease-in forwards;
+}
+.rpg-evo-shake {
+  animation: evo-shake 0.4s linear forwards;
+}
+.rpg-evo-flash {
+  animation: evo-flash 0.4s ease-out forwards;
+}
+@keyframes evo-glow {
+  0% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+  100% { filter: brightness(1.8) drop-shadow(0 0 12px var(--accent)); }
+}
+@keyframes evo-shake {
+  0%, 100% { transform: translateX(0); filter: brightness(1.8) drop-shadow(0 0 12px var(--accent)); }
+  10% { transform: translateX(-4px); }
+  20% { transform: translateX(4px); }
+  30% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  90% { transform: translateX(-1px); }
+}
+@keyframes evo-flash {
+  0% { filter: brightness(1.8) drop-shadow(0 0 12px var(--accent)); transform: scale(1); }
+  30% { filter: brightness(4) drop-shadow(0 0 24px #fff); transform: scale(1.3); }
+  60% { filter: brightness(3) drop-shadow(0 0 16px var(--accent)); transform: scale(1.1); }
+  100% { filter: brightness(1) drop-shadow(0 0 0 transparent); transform: scale(1); }
+}
 
 .rpg-detail-info {
   padding: 12px 16px;
@@ -700,4 +741,69 @@
   .rpg-combat-moves {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Spec Choice Modal ─────────────────────────────── */
+.rpg-spec-modal {
+  max-width: 480px;
+}
+.rpg-spec-options {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rpg-spec-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
+  font-size: inherit;
+}
+.rpg-spec-option:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.rpg-spec-option-name {
+  font-weight: bold;
+  font-size: 1em;
+  margin-bottom: 4px;
+}
+.rpg-spec-option-desc {
+  font-size: 0.82em;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  margin-bottom: 6px;
+}
+.rpg-spec-option-bonuses {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rpg-spec-option-bonuses span {
+  font-size: 0.75em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* Tiny button variant for inline use */
+.rpg-btn-tiny {
+  font-size: 0.7em;
+  padding: 1px 6px;
+  vertical-align: middle;
+}
+.rpg-btn-accent {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rpg-btn-accent:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
 }

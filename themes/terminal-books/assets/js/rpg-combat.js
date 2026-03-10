@@ -55,6 +55,7 @@
   var enemyData = null;
   var petCatalog = null;
   var petSpriteData = null;
+  var specData = null; // rpg-spec-trees.json
 
   var battleState = null; // active battle state or null
   var animFrame = null;
@@ -132,6 +133,12 @@
       xhr5.send();
       if (xhr5.status === 200) petSpriteData = JSON.parse(xhr5.responseText);
     } catch (e) { console.warn('rpg-combat: failed to load petsprites', e); }
+    try {
+      var xhr6 = new XMLHttpRequest();
+      xhr6.open('GET', '/data/rpg-spec-trees.json', false);
+      xhr6.send();
+      if (xhr6.status === 200) specData = JSON.parse(xhr6.responseText);
+    } catch (e) { console.warn('rpg-combat: failed to load spec trees', e); }
     // Preload VFX sprite sheet (async, non-blocking)
     if (!vfxImage) {
       vfxImage = new Image();
@@ -194,18 +201,67 @@
              + 0.02 * Math.max(0, level - 61);
   }
 
+  function getSpecBonuses(petId) {
+    // Returns cumulative stat multiplier bonuses from spec + sub-spec
+    var bonuses = {};
+    if (!specData || !specData.paths) return bonuses;
+    var pet = null;
+    if (window.__RPG_GET_PET_STATE) {
+      var rpgPets = window.__RPG_GET_PET_STATE();
+      if (rpgPets) pet = rpgPets.owned[petId];
+    }
+    if (!pet || !pet.spec) return bonuses;
+    var path = specData.paths[pet.spec];
+    if (!path) return bonuses;
+    // Add path bonuses
+    if (path.bonuses) {
+      for (var k in path.bonuses) bonuses[k] = (bonuses[k] || 0) + path.bonuses[k];
+    }
+    // Add sub-spec bonuses
+    if (pet.subSpec && path.subSpecs && path.subSpecs[pet.subSpec]) {
+      var sub = path.subSpecs[pet.subSpec];
+      if (sub.bonuses) {
+        for (var k in sub.bonuses) bonuses[k] = (bonuses[k] || 0) + sub.bonuses[k];
+      }
+    }
+    return bonuses;
+  }
+
+  function petHasSpecGate(petId, gate) {
+    // Check if pet's spec or sub-spec satisfies a specRequired gate
+    if (!gate) return true;
+    if (!specData || !specData.paths) return false;
+    var pet = null;
+    if (window.__RPG_GET_PET_STATE) {
+      var rpgPets = window.__RPG_GET_PET_STATE();
+      if (rpgPets) pet = rpgPets.owned[petId];
+    }
+    if (!pet || !pet.spec) return false;
+    var path = specData.paths[pet.spec];
+    if (!path) return false;
+    // Check path gate
+    if (path.specGate === gate) return true;
+    // Check sub-spec gate
+    if (pet.subSpec && path.subSpecs && path.subSpecs[pet.subSpec]) {
+      if (path.subSpecs[pet.subSpec].specGate === gate) return true;
+    }
+    return false;
+  }
+
   function getPetCombatStats(petId, level) {
     if (!petCatalog || !petCatalog.creatures[petId]) return { hp: 1, atk: 1, def: 1, spd: 1, cri: 1 };
     var c = petCatalog.creatures[petId];
     var base = RPG_PET_BASE_STATS[c.tier] || RPG_PET_BASE_STATS.common;
     var leaning = RPG_TYPE_LEANINGS[c.type];
     var growth = calcGrowth(level);
+    var specBonus = getSpecBonuses(petId);
     var stats = {};
     var keys = ['hp', 'atk', 'def', 'spd', 'cri'];
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i];
       var val = base[k] * growth;
       if (leaning === k) val *= 1.15;
+      if (specBonus[k]) val *= (1 + specBonus[k]);
       stats[k] = Math.floor(val);
     }
     return stats;
@@ -269,7 +325,7 @@
       pet.learnedMoves = [];
       for (var mid in moveData) {
         var m = moveData[mid];
-        if (m.specRequired) continue;
+        if (m.specRequired && !petHasSpecGate(petId, m.specRequired)) continue;
         if (m.learnLevel <= oldLevel && (m.learnTypes === null || (m.learnTypes && m.learnTypes.indexOf(petType) >= 0))) {
           pet.learnedMoves.push(mid);
         }
@@ -284,7 +340,7 @@
     var newlyLearned = [];
     for (var mid in moveData) {
       var m = moveData[mid];
-      if (m.specRequired) continue;
+      if (m.specRequired && !petHasSpecGate(petId, m.specRequired)) continue;
       if (m.learnLevel > oldLevel && m.learnLevel <= newLevel) {
         if (m.learnTypes === null || (m.learnTypes && m.learnTypes.indexOf(petType) >= 0)) {
           if (pet.learnedMoves.indexOf(mid) < 0) {
@@ -1400,6 +1456,23 @@
         }
       }
 
+      // Check for pending spec/sub-spec choice (persisted on pet for refresh safety)
+      if (specData && pet.level > oldLevel) {
+        var specLv = specData.specLevel || 5;
+        var subLv = specData.subSpecLevel || 30;
+        if (!pet.spec && pet.level >= specLv) {
+          pet.needsSpec = true;
+          if (!battleState._pendingSpecs) battleState._pendingSpecs = [];
+          battleState._pendingSpecs.push({ petId: petId, petName: pf.name, type: 'spec' });
+        }
+        // Sub-spec: only queue if spec already chosen (not just crossed threshold)
+        if (pet.spec && !pet.subSpec && pet.level >= subLv) {
+          pet.needsSubSpec = true;
+          if (!battleState._pendingSpecs) battleState._pendingSpecs = [];
+          battleState._pendingSpecs.push({ petId: petId, petName: pf.name, type: 'subSpec' });
+        }
+      }
+
       // Store per-pet details for results overlay
       var atCap = pet.level >= maxLevel;
       petDetails.push({
@@ -2474,9 +2547,15 @@
 
     $('rpg-combat-continue').addEventListener('click', function () {
       overlay.style.display = 'none';
-      cleanup();
-      if (window.RpgCombat.onComplete) {
-        window.RpgCombat.onComplete(r);
+      // Check for pending spec/sub-spec choices before completing
+      if (battleState && battleState._pendingSpecs && battleState._pendingSpecs.length > 0) {
+        showPendingSpecChoices(battleState._pendingSpecs, function () {
+          cleanup();
+          if (window.RpgCombat.onComplete) window.RpgCombat.onComplete(r);
+        });
+      } else {
+        cleanup();
+        if (window.RpgCombat.onComplete) window.RpgCombat.onComplete(r);
       }
     });
   }
@@ -3019,7 +3098,8 @@
       }
 
       var html = '<div class="rpg-modal rpg-pet-detail">';
-      html += '<div class="rpg-modal-header"><h3>' + creature.name + '</h3>';
+      html += '<div class="rpg-modal-header">';
+      html += '<div class="rpg-detail-header-row"><div id="rpg-detail-sprite-wrap"></div><h3>' + creature.name + '</h3></div>';
       html += '<button class="rpg-modal-close" id="rpg-detail-close">&times;</button></div>';
 
       // Pet info
@@ -3027,6 +3107,28 @@
       html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Type:</span> <span class="rpg-type-badge rpg-type-' + creature.type + '">' + creature.type + '</span></div>';
       html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Level:</span> ' + pet.level + '</div>';
       html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Tier:</span> ' + creature.tier + '</div>';
+
+      // Spec display
+      if (specData && specData.paths) {
+        var specLvl = specData.specLevel || 5;
+        var subLvl = specData.subSpecLevel || 30;
+        if (pet.spec && specData.paths[pet.spec]) {
+          var sp = specData.paths[pet.spec];
+          var specLabel = sp.icon + ' ' + sp.name;
+          if (pet.subSpec && sp.subSpecs && sp.subSpecs[pet.subSpec]) {
+            specLabel += ' / ' + sp.subSpecs[pet.subSpec].icon + ' ' + sp.subSpecs[pet.subSpec].name;
+          } else if (!pet.subSpec && pet.level >= subLvl) {
+            specLabel += ' <button class="rpg-btn rpg-btn-tiny rpg-btn-accent" id="rpg-choose-spec-btn">Choose Sub-Spec</button>';
+          }
+          html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Spec:</span> ' + specLabel;
+          html += ' <button class="rpg-btn rpg-btn-tiny" id="rpg-respec-btn">Respec (' + (specData.respecCost || 1000) + ' GP)</button>';
+          html += '</div>';
+        } else if (pet.level >= specLvl) {
+          html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Spec:</span> <button class="rpg-btn rpg-btn-tiny rpg-btn-accent" id="rpg-choose-spec-btn">Choose Spec</button></div>';
+        } else {
+          html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Spec:</span> <span style="opacity:0.5">Unlocks at Lv' + specLvl + '</span></div>';
+        }
+      }
 
       // XP bar — show MAX at cap
       var currentCap = getPetLevelCap(petId);
@@ -3134,11 +3236,75 @@
       modal.innerHTML = html;
       modal.style.display = 'flex';
 
+      // Insert pet sprite into header
+      var spriteWrap = $('rpg-detail-sprite-wrap');
+      if (spriteWrap && petSpriteData) {
+        var spriteId = creature.spriteId;
+        var info = petSpriteData[spriteId];
+        if (info) {
+          var evoStg = getEvoStage(pet, creature);
+          var fw = info.frameWidth || 48;
+          var fh = info.frameHeight || 48;
+          var frames = info.frames || 3;
+          var frameOffset = info.frameOffset || 0;
+          var frameIdx = Math.min(frameOffset + evoStg, frames - 1);
+          var ds = 48;
+          var scale = ds / fw;
+          var bgW = Math.round(fw * frames * scale);
+          var bgH = Math.round(fh * scale);
+          var bgX = Math.round(frameIdx * fw * scale);
+          var petSkin = pet.skin || 'default';
+          var sheetUrl = (petSkin === 'alt' && info.altSheet) ? info.altSheet : info.sheet;
+          var spr = document.createElement('div');
+          spr.id = 'rpg-detail-sprite';
+          spr.style.cssText = 'width:' + ds + 'px;height:' + ds + 'px;background-image:url(' + sheetUrl + ');background-size:' + bgW + 'px ' + bgH + 'px;background-position:-' + bgX + 'px 0;background-repeat:no-repeat;image-rendering:pixelated;flex-shrink:0';
+          spriteWrap.appendChild(spr);
+        }
+      }
+
       // Close button
       $('rpg-detail-close').addEventListener('click', function () {
         modal.style.display = 'none';
         if (onClose) onClose();
       });
+
+      // Respec button
+      var respecBtn = $('rpg-respec-btn');
+      if (respecBtn) {
+        respecBtn.addEventListener('click', function () {
+          if (respecPet(petId)) {
+            if (window.__RPG_GET_PET_STATE) {
+              var freshState = window.__RPG_GET_PET_STATE();
+              if (freshState && freshState.owned[petId]) {
+                pet = freshState.owned[petId];
+                rpgPets = freshState;
+              }
+            }
+            render();
+          }
+        });
+      }
+
+      // Choose spec button (for pets that skipped the post-combat prompt)
+      var chooseSpecBtn = $('rpg-choose-spec-btn');
+      if (chooseSpecBtn) {
+        chooseSpecBtn.addEventListener('click', function () {
+          modal.style.display = 'none';
+          var cType = (!pet.spec) ? 'spec' : 'subSpec';
+          showSpecChoiceModal(petId, creature.name, cType, function () {
+            // Re-read state after spec choice
+            if (window.__RPG_GET_PET_STATE) {
+              var freshState = window.__RPG_GET_PET_STATE();
+              if (freshState && freshState.owned[petId]) {
+                pet = freshState.owned[petId];
+                rpgPets = freshState;
+              }
+            }
+            modal.style.display = 'flex';
+            render();
+          });
+        });
+      }
 
       // Move click handlers
       var moveDivs = modal.querySelectorAll('.rpg-detail-move[data-action]');
@@ -3164,8 +3330,36 @@
       var evoBtn = $('rpg-evolve-btn');
       if (evoBtn) {
         evoBtn.addEventListener('click', function () {
-          if (evolvePet(petId)) {
-            // Re-read state after evolution
+          var sprEl = $('rpg-detail-sprite');
+          var evoCheck = canEvolve(petId);
+          if (sprEl && evoCheck && evoCheck.canDo) {
+            // Disable button during animation
+            evoBtn.disabled = true;
+            // Phase 1: Glow (400ms)
+            sprEl.classList.add('rpg-evo-glow');
+            setTimeout(function () {
+              // Phase 2: Shake (400ms)
+              sprEl.classList.add('rpg-evo-shake');
+              setTimeout(function () {
+                // Phase 3: Flash
+                sprEl.classList.add('rpg-evo-flash');
+                // Execute evolution during flash
+                if (evolvePet(petId)) {
+                  if (window.__RPG_GET_PET_STATE) {
+                    var freshState = window.__RPG_GET_PET_STATE();
+                    if (freshState && freshState.owned[petId]) {
+                      pet = freshState.owned[petId];
+                      rpgPets = freshState;
+                    }
+                  }
+                }
+                setTimeout(function () {
+                  render();
+                }, 400);
+              }, 400);
+            }, 400);
+          } else if (evolvePet(petId)) {
+            // Fallback: no sprite element, just evolve
             if (window.__RPG_GET_PET_STATE) {
               var freshState = window.__RPG_GET_PET_STATE();
               if (freshState && freshState.owned[petId]) {
@@ -3192,6 +3386,168 @@
     render();
   }
 
+  // ── Spec Choice UI ────────────────────────────────
+  function showPendingSpecChoices(queue, onDone) {
+    if (!queue || queue.length === 0) { if (onDone) onDone(); return; }
+    var item = queue.shift();
+    showSpecChoiceModal(item.petId, item.petName, item.type, function () {
+      // Process next in queue
+      showPendingSpecChoices(queue, onDone);
+    });
+  }
+
+  function showSpecChoiceModal(petId, petName, choiceType, onDone) {
+    loadData();
+    if (!specData || !specData.paths) { if (onDone) onDone(); return; }
+
+    var modal = $('rpg-dungeon-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'rpg-dungeon-modal';
+      modal.className = 'rpg-modal-overlay';
+      document.body.appendChild(modal);
+    }
+    document.body.appendChild(modal); // ensure on top
+
+    var rpgPets = window.__RPG_GET_PET_STATE ? window.__RPG_GET_PET_STATE() : null;
+    var pet = rpgPets ? rpgPets.owned[petId] : null;
+
+    var options = [];
+    if (choiceType === 'spec') {
+      // Main spec choice: show all 3 paths
+      for (var pid in specData.paths) {
+        var p = specData.paths[pid];
+        options.push({ key: pid, name: p.name, icon: p.icon, desc: p.desc, bonuses: p.bonuses });
+      }
+    } else if (choiceType === 'subSpec' && pet && pet.spec) {
+      // Sub-spec choice: show sub-specs of current path
+      var path = specData.paths[pet.spec];
+      if (path && path.subSpecs) {
+        for (var sid in path.subSpecs) {
+          var s = path.subSpecs[sid];
+          options.push({ key: sid, name: s.name, icon: s.icon, desc: s.desc, bonuses: s.bonuses });
+        }
+      }
+    }
+
+    if (options.length === 0) { if (onDone) onDone(); return; }
+
+    var title = choiceType === 'spec'
+      ? petName + ' reached Level ' + (specData.specLevel || 5) + '! Choose a Specialization:'
+      : petName + ' reached Level ' + (specData.subSpecLevel || 30) + '! Choose a Sub-Specialization:';
+
+    var html = '<div class="rpg-modal rpg-spec-modal">';
+    html += '<div class="rpg-modal-header"><h3>' + title + '</h3></div>';
+    html += '<div class="rpg-spec-options">';
+    for (var o = 0; o < options.length; o++) {
+      var opt = options[o];
+      html += '<button class="rpg-spec-option" data-spec-key="' + opt.key + '">';
+      html += '<div class="rpg-spec-option-name">' + (opt.icon || '') + ' ' + opt.name + '</div>';
+      html += '<div class="rpg-spec-option-desc">' + opt.desc + '</div>';
+      html += '<div class="rpg-spec-option-bonuses">';
+      for (var bk in opt.bonuses) {
+        html += '<span>+' + Math.round(opt.bonuses[bk] * 100) + '% ' + bk.toUpperCase() + '</span>';
+      }
+      html += '</div>';
+      html += '</button>';
+    }
+    html += '</div>';
+    html += '<div style="padding:0 16px 12px;text-align:center"><button class="rpg-btn rpg-btn-small" id="rpg-spec-defer">Decide Later</button></div>';
+    html += '</div>';
+
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
+
+    // "Decide Later" button — skip without choosing
+    var deferBtn = $('rpg-spec-defer');
+    if (deferBtn) {
+      deferBtn.addEventListener('click', function () {
+        modal.style.display = 'none';
+        if (onDone) onDone();
+      });
+    }
+
+    var specBtns = modal.querySelectorAll('.rpg-spec-option');
+    for (var b = 0; b < specBtns.length; b++) {
+      specBtns[b].addEventListener('click', function () {
+        var key = this.getAttribute('data-spec-key');
+        // Save choice and clear pending flag
+        var freshPets = window.__RPG_GET_PET_STATE ? window.__RPG_GET_PET_STATE() : null;
+        if (freshPets && freshPets.owned[petId]) {
+          if (choiceType === 'spec') {
+            freshPets.owned[petId].spec = key;
+            delete freshPets.owned[petId].needsSpec;
+            // If also past sub-spec level, flag for later
+            var subLv = specData.subSpecLevel || 30;
+            if (freshPets.owned[petId].level >= subLv && !freshPets.owned[petId].subSpec) {
+              freshPets.owned[petId].needsSubSpec = true;
+            }
+          } else {
+            freshPets.owned[petId].subSpec = key;
+            delete freshPets.owned[petId].needsSubSpec;
+          }
+          if (window.__RPG_SAVE_PET_STATE) window.__RPG_SAVE_PET_STATE(freshPets);
+        }
+        var choiceName = '';
+        for (var oi = 0; oi < options.length; oi++) {
+          if (options[oi].key === key) choiceName = options[oi].name;
+        }
+        if (window.__RPG_ADD_GAME_MESSAGE) {
+          window.__RPG_ADD_GAME_MESSAGE(petName + ' specialized as ' + choiceName + '!', 'reward');
+        }
+
+        // Check if new moves are now learnable with this spec
+        if (freshPets && freshPets.owned[petId]) {
+          var p = freshPets.owned[petId];
+          var newMoves = checkNewMovesLearned(petId, p.level - 1, p.level);
+          for (var nm = 0; nm < newMoves.length; nm++) {
+            if (window.__RPG_ADD_GAME_MESSAGE) {
+              window.__RPG_ADD_GAME_MESSAGE(petName + ' learned ' + newMoves[nm].name + '!', 'reward');
+            }
+          }
+        }
+
+        modal.style.display = 'none';
+        if (onDone) onDone();
+      });
+    }
+  }
+
+  function respecPet(petId) {
+    loadData();
+    if (!specData) return false;
+    var rpgPets = window.__RPG_GET_PET_STATE ? window.__RPG_GET_PET_STATE() : null;
+    if (!rpgPets || !rpgPets.owned[petId]) return false;
+    var pet = rpgPets.owned[petId];
+    if (!pet.spec) return false;
+
+    var cost = specData.respecCost || 1000;
+    if (!window.Wallet || window.Wallet.get() < cost) return false;
+
+    window.Wallet.subtract(cost);
+
+    // Remove spec-gated moves from equipped/learned
+    if (pet.equippedMoves && moveData) {
+      pet.equippedMoves = pet.equippedMoves.filter(function (mid) {
+        var m = moveData[mid];
+        return !m || !m.specRequired;
+      });
+    }
+    if (pet.learnedMoves && moveData) {
+      pet.learnedMoves = pet.learnedMoves.filter(function (mid) {
+        var m = moveData[mid];
+        return !m || !m.specRequired;
+      });
+    }
+
+    pet.spec = null;
+    pet.subSpec = null;
+    pet.needsSpec = true;
+    delete pet.needsSubSpec;
+    if (window.__RPG_SAVE_PET_STATE) window.__RPG_SAVE_PET_STATE(rpgPets);
+    return true;
+  }
+
   // ── Public API ─────────────────────────────────────
   window.RpgCombat = {
     init: init,
@@ -3208,7 +3564,12 @@
     showPetDetail: showPetDetail,
     toggleAuto: toggleAuto,
     canEvolve: canEvolve,
-    evolvePet: evolvePet
+    evolvePet: evolvePet,
+    respecPet: respecPet,
+    showSpecChoiceModal: showSpecChoiceModal,
+    getSpecData: function () { loadData(); return specData; },
+    getSpecBonuses: getSpecBonuses,
+    petHasSpecGate: petHasSpecGate
   };
 
 })();
