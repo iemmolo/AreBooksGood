@@ -371,9 +371,9 @@
   "soulDrain": {
     "id": "soulDrain", "name": "Soul Drain", "type": "shadow", "power": 50,
     "category": "special", "cooldown": 2, "effect": null, "effectChance": 0,
-    "aoe": false, "selfTarget": false, "priority": false,
+    "aoe": false, "selfTarget": false, "priority": false, "drain": 0.5,
     "specRequired": null, "learnLevel": 14, "learnTypes": ["shadow"],
-    "desc": "Drain life force."
+    "desc": "Drain life force. Heal for 50% of damage dealt."
   },
   "nightSlash": {
     "id": "nightSlash", "name": "Night Slash", "type": "shadow", "power": 65,
@@ -473,5 +473,312 @@
     "aoe": true, "selfTarget": false, "priority": false,
     "specRequired": null, "learnLevel": 30, "learnTypes": ["mystic"],
     "desc": "Cosmic energy hits all foes."
+  },
+
+  "recklessCharge": {
+    "id": "recklessCharge", "name": "Reckless Charge", "type": "neutral", "power": 95,
+    "category": "physical", "cooldown": 4, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": "dps", "learnLevel": 20, "learnTypes": null,
+    "desc": "A devastating all-out attack. Recoil damages the user."
+  },
+
+  "ironWall": {
+    "id": "ironWall", "name": "Iron Wall", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "defUp", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "tank", "learnLevel": 10, "learnTypes": null,
+    "desc": "Raise DEF of all allies for 3 turns."
+  },
+  "shieldBash": {
+    "id": "shieldBash", "name": "Shield Bash", "type": "neutral", "power": 55,
+    "category": "physical", "cooldown": 2, "effect": "stun", "effectChance": 30,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": "tank", "learnLevel": 18, "learnTypes": null,
+    "desc": "Slam with your shield. May stun."
+  },
+
+  "wardingChant": {
+    "id": "wardingChant", "name": "Warding Chant", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 5, "effect": "defUp", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "support", "learnLevel": 18, "learnTypes": null,
+    "desc": "A protective chant raises all allies' DEF."
+  },
+
+  "bloodFrenzy": {
+    "id": "bloodFrenzy", "name": "Blood Frenzy", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 5, "effect": "atkUp", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": "berserker", "learnLevel": 30, "learnTypes": null,
+    "desc": "Sacrifice 20% HP for a massive ATK boost."
+  },
+  "rampage": {
+    "id": "rampage", "name": "Rampage", "type": "neutral", "power": 70,
+    "category": "physical", "cooldown": 4, "effect": null, "effectChance": 0,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": "berserker", "learnLevel": 40, "learnTypes": null,
+    "desc": "A frenzied assault hits all enemies."
+  },
+
+  "shadowStep": {
+    "id": "shadowStep", "name": "Shadow Step", "type": "neutral", "power": 50,
+    "category": "physical", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": true, "critBonus": 20,
+    "specRequired": "assassin", "learnLevel": 30, "learnTypes": null,
+    "desc": "Teleport behind the target. Always strikes first. High crit."
+  },
+  "executionStrike": {
+    "id": "executionStrike", "name": "Execution Strike", "type": "neutral", "power": 100,
+    "category": "physical", "cooldown": 5, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "critBonus": 30,
+    "specRequired": "assassin", "learnLevel": 40, "learnTypes": null,
+    "desc": "A lethal precision strike. Extreme crit rate."
+  },
+
+  "fortify": {
+    "id": "fortify", "name": "Fortify", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "shield", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": "sentinel", "learnLevel": 30, "learnTypes": null,
+    "desc": "Reinforce your defenses. Absorb heavy damage."
+  },
+  "unyieldingStand": {
+    "id": "unyieldingStand", "name": "Unyielding Stand", "type": "neutral", "power": 45,
+    "category": "physical", "cooldown": 3, "effect": "taunt", "effectChance": 100,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": "sentinel", "learnLevel": 40, "learnTypes": null,
+    "desc": "Strike and force the target to attack you. Immovable."
+  },
+
+  "holyShield": {
+    "id": "holyShield", "name": "Holy Shield", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 5, "effect": "shield", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "paladin", "learnLevel": 30, "learnTypes": null,
+    "desc": "Bless all allies with a holy barrier."
+  },
+  "divineSmite": {
+    "id": "divineSmite", "name": "Divine Smite", "type": "neutral", "power": 70,
+    "category": "physical", "cooldown": 3, "effect": "regen", "effectChance": 100,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": "paladin", "learnLevel": 40, "learnTypes": null,
+    "desc": "A holy strike. Heals the user over time."
+  },
+
+  "arcaneEmpowerment": {
+    "id": "arcaneEmpowerment", "name": "Arcane Empowerment", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 5, "effect": "atkUp", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "sage", "learnLevel": 30, "learnTypes": null,
+    "desc": "Empower all allies with arcane energy. Boosts ATK."
+  },
+  "mindShatter": {
+    "id": "mindShatter", "name": "Mind Shatter", "type": "neutral", "power": 50,
+    "category": "special", "cooldown": 3, "effect": "atkDown", "effectChance": 60,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": "sage", "learnLevel": 40, "learnTypes": null,
+    "desc": "Psychic blast hits all foes. Often lowers ATK."
+  },
+
+  "spiritLink": {
+    "id": "spiritLink", "name": "Spirit Link", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "regen", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "shaman", "learnLevel": 30, "learnTypes": null,
+    "desc": "Link spirits to heal all allies over time."
+  },
+  "totemOfLife": {
+    "id": "totemOfLife", "name": "Totem of Life", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 6, "effect": "regen", "effectChance": 100,
+    "aoe": true, "selfTarget": true, "priority": false,
+    "specRequired": "shaman", "learnLevel": 40, "learnTypes": null,
+    "desc": "Plant a sacred totem. Strong team regeneration."
+  },
+
+  "furySwipes": {
+    "id": "furySwipes", "name": "Fury Swipes", "type": "neutral", "power": 20,
+    "category": "physical", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "hits": 3,
+    "specRequired": null, "learnLevel": 15, "learnTypes": null,
+    "desc": "Slash 3 times in rapid succession."
+  },
+  "barrage": {
+    "id": "barrage", "name": "Barrage", "type": "neutral", "power": 15,
+    "category": "physical", "cooldown": 3, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "hits": 4,
+    "specRequired": null, "learnLevel": 22, "learnTypes": null,
+    "desc": "A relentless barrage of 4 hits."
+  },
+  "rapidFire": {
+    "id": "rapidFire", "name": "Rapid Fire", "type": "tech", "power": 18,
+    "category": "special", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "hits": 3,
+    "specRequired": null, "learnLevel": 15, "learnTypes": ["tech"],
+    "desc": "Fire 3 energy bolts in quick succession."
+  },
+  "tripleSlash": {
+    "id": "tripleSlash", "name": "Triple Slash", "type": "shadow", "power": 22,
+    "category": "physical", "cooldown": 2, "effect": "bleed", "effectChance": 15,
+    "aoe": false, "selfTarget": false, "priority": false, "hits": 3,
+    "specRequired": null, "learnLevel": 20, "learnTypes": ["shadow"],
+    "desc": "Three swift cuts from the shadows. May cause bleeding."
+  },
+
+  "lifeDrain": {
+    "id": "lifeDrain", "name": "Life Drain", "type": "nature", "power": 45,
+    "category": "special", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "drain": 0.4,
+    "specRequired": null, "learnLevel": 16, "learnTypes": ["nature"],
+    "desc": "Sap life energy. Heal for 40% of damage dealt."
+  },
+  "vampiricBite": {
+    "id": "vampiricBite", "name": "Vampiric Bite", "type": "shadow", "power": 55,
+    "category": "physical", "cooldown": 3, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "drain": 0.35,
+    "specRequired": null, "learnLevel": 22, "learnTypes": ["shadow"],
+    "desc": "A draining bite. Recover 35% as HP."
+  },
+
+  "hexStrike": {
+    "id": "hexStrike", "name": "Hex Strike", "type": "mystic", "power": 60,
+    "category": "special", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "conditional": "bonusVsStatus",
+    "specRequired": null, "learnLevel": 20, "learnTypes": ["mystic"],
+    "desc": "1.5x damage if target has a status effect."
+  },
+  "finisher": {
+    "id": "finisher", "name": "Finisher", "type": "neutral", "power": 55,
+    "category": "physical", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "conditional": "bonusVsLowHp",
+    "specRequired": null, "learnLevel": 20, "learnTypes": null,
+    "desc": "1.5x damage if target is below 30% HP."
+  },
+  "venomFang": {
+    "id": "venomFang", "name": "Venom Fang", "type": "nature", "power": 50,
+    "category": "physical", "cooldown": 2, "effect": "poison", "effectChance": 30,
+    "aoe": false, "selfTarget": false, "priority": false, "conditional": "bonusVsDebuff",
+    "specRequired": null, "learnLevel": 22, "learnTypes": ["nature"],
+    "desc": "A venomous bite. 1.5x damage if target has a debuff."
+  },
+  "exploitWeakness": {
+    "id": "exploitWeakness", "name": "Exploit Weakness", "type": "tech", "power": 55,
+    "category": "special", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "conditional": "bonusVsDebuff",
+    "specRequired": null, "learnLevel": 24, "learnTypes": ["tech"],
+    "desc": "Analyze and strike weakness. 1.5x vs debuffed foes."
+  },
+  "pyroclasm": {
+    "id": "pyroclasm", "name": "Pyroclasm", "type": "fire", "power": 55,
+    "category": "special", "cooldown": 2, "effect": "burn", "effectChance": 25,
+    "aoe": false, "selfTarget": false, "priority": false, "conditional": "bonusVsStatus",
+    "specRequired": null, "learnLevel": 22, "learnTypes": ["fire"],
+    "desc": "Volcanic fury. 1.5x damage if target has a status."
+  },
+  "flameBurst": {
+    "id": "flameBurst", "name": "Flame Burst", "type": "fire", "power": 25,
+    "category": "special", "cooldown": 3, "effect": "burn", "effectChance": 20,
+    "aoe": false, "selfTarget": false, "priority": false, "hits": 3,
+    "specRequired": null, "learnLevel": 16, "learnTypes": ["fire"],
+    "desc": "Three quick fireballs. May burn."
+  },
+  "tidalBarrage": {
+    "id": "tidalBarrage", "name": "Tidal Barrage", "type": "aqua", "power": 20,
+    "category": "special", "cooldown": 2, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "hits": 3,
+    "specRequired": null, "learnLevel": 16, "learnTypes": ["aqua"],
+    "desc": "Three surging waves crash into the target."
+  },
+  "leechSeed": {
+    "id": "leechSeed", "name": "Leech Seed", "type": "nature", "power": 40,
+    "category": "special", "cooldown": 3, "effect": "regen", "effectChance": 100,
+    "aoe": false, "selfTarget": false, "priority": false, "drain": 0.3,
+    "specRequired": null, "learnLevel": 20, "learnTypes": ["nature"],
+    "desc": "Plant a seed that drains HP. Also grants regen."
+  },
+
+  "bossSlam": {
+    "id": "bossSlam", "name": "Crushing Slam", "type": "neutral", "power": 70,
+    "category": "physical", "cooldown": 1, "effect": "stun", "effectChance": 20,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "A devastating boss attack. May stun."
+  },
+  "bossRoar": {
+    "id": "bossRoar", "name": "Terrifying Roar", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "atkDown", "effectChance": 100,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Roar that lowers ATK of all enemies."
+  },
+  "bossShield": {
+    "id": "bossShield", "name": "Dark Shield", "type": "shadow", "power": 0,
+    "category": "status", "cooldown": 5, "effect": "shield", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss raises a dark shield."
+  },
+  "bossFireBreath": {
+    "id": "bossFireBreath", "name": "Fire Breath", "type": "fire", "power": 55,
+    "category": "special", "cooldown": 2, "effect": "burn", "effectChance": 40,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss breathes fire on all enemies."
+  },
+  "bossVoidBlast": {
+    "id": "bossVoidBlast", "name": "Void Blast", "type": "shadow", "power": 80,
+    "category": "special", "cooldown": 3, "effect": "curse", "effectChance": 30,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "A devastating void blast. May curse."
+  },
+  "bossTidalWave": {
+    "id": "bossTidalWave", "name": "Tidal Wave", "type": "aqua", "power": 50,
+    "category": "special", "cooldown": 3, "effect": "slow", "effectChance": 40,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss summons a massive wave."
+  },
+  "bossThunderStrike": {
+    "id": "bossThunderStrike", "name": "Thunder Strike", "type": "tech", "power": 75,
+    "category": "special", "cooldown": 2, "effect": "stun", "effectChance": 25,
+    "aoe": false, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss calls down lightning."
+  },
+  "bossEnrage": {
+    "id": "bossEnrage", "name": "Enrage", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 6, "effect": "atkUp", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss flies into a rage, boosting ATK."
+  },
+  "bossPoison": {
+    "id": "bossPoison", "name": "Toxic Cloud", "type": "nature", "power": 40,
+    "category": "special", "cooldown": 3, "effect": "poison", "effectChance": 50,
+    "aoe": true, "selfTarget": false, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss releases a toxic cloud."
+  },
+  "bossCounter": {
+    "id": "bossCounter", "name": "Counter Stance", "type": "neutral", "power": 0,
+    "category": "status", "cooldown": 4, "effect": "reflect", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss enters a counter stance. Reflects next attack."
+  },
+  "bossExecute": {
+    "id": "bossExecute", "name": "Execute", "type": "neutral", "power": 90,
+    "category": "physical", "cooldown": 4, "effect": null, "effectChance": 0,
+    "aoe": false, "selfTarget": false, "priority": false, "conditional": "bonusVsLowHp",
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "A lethal boss finisher. 1.5x on low HP targets."
+  },
+  "bossHealPulse": {
+    "id": "bossHealPulse", "name": "Dark Mending", "type": "shadow", "power": 0,
+    "category": "status", "cooldown": 5, "effect": "regen", "effectChance": 100,
+    "aoe": false, "selfTarget": true, "priority": false,
+    "specRequired": null, "learnLevel": 1, "learnTypes": null,
+    "desc": "Boss regenerates health."
   }
 }

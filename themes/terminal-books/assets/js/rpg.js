@@ -5219,6 +5219,18 @@
       openDungeonGate();
       return;
     }
+    if (locId === 'library') {
+      if (window.RpgCombat && window.RpgCombat.showBestiary) {
+        window.RpgCombat.showBestiary();
+      }
+      return;
+    }
+    if (locId === 'barracks') {
+      if (window.RpgCombat && window.RpgCombat.showTypeChart) {
+        window.RpgCombat.showTypeChart();
+      }
+      return;
+    }
     // placeholder
     addGameMessage(loc.name + ' is not yet open. Coming soon!', 'system');
   }
@@ -5959,9 +5971,9 @@
       runBtn.parentNode.replaceChild(newRunBtn, runBtn);
       newRunBtn.addEventListener('click', function () {
         if (window.RpgCombat && window.RpgCombat.isActive()) {
-          window.RpgCombat.cleanup();
-          showCenterContent('map');
-          addGameMessage('You fled the dungeon!', 'system');
+          if (confirm('Flee the battle? You\'ll receive reduced rewards.')) {
+            window.RpgCombat.runFromBattle();
+          }
         }
       });
     }

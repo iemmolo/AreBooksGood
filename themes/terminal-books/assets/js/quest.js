@@ -125,9 +125,16 @@
           match = data && data.dungeonId === obj.target;
         } else if (type === 'kill_enemies') {
           match = true;
+        } else if (type === 'arena_wins') {
+          match = true;
+        } else if (type === 'arena_streak') {
+          match = data && data.streak >= obj.count;
+          if (match) entry.objectives[i].current = data.streak;
+        } else if (type === 'defeat_boss') {
+          match = true;
         }
 
-        if (match && type !== 'reach_level') {
+        if (match && type !== 'reach_level' && type !== 'arena_streak') {
           entry.objectives[i].current += (data && data.count) || 1;
           changed = true;
         } else if (match) {

@@ -384,6 +384,7 @@
     { label: 'Logs', items: ['Pine Log', 'Oak Log', 'Birch Log', 'Maple Log', 'Walnut Log', 'Mahogany Log', 'Yew Log', 'Elder Log'] },
     { label: 'Fish', items: ['Anchovy', 'Goldfish', 'Small Shark', 'Koi', 'Perch', 'Clownfish', 'Piranha', 'Flying Fish', 'Barracuda', 'Dolphin Fish', 'Betta', 'Stingray', 'Eye Fish', 'Spook Boy', 'Kingfish', 'Crawfish', 'Giant Crab', 'Anglerfish', 'Hammerhead', 'Shark'] },
     { label: 'Bars', items: ['Copper Bar', 'Bronze Bar', 'Gold Bar', 'Astral Bar', 'Silver Bar', 'Emerald Bar', 'Mithril Bar', 'Amethyst Bar', 'Cobalt Bar', 'Molten Bar', 'Frost Bar', 'Obsidian Bar'] },
+    { label: 'Consumables', items: ['Health Potion', 'Antidote', 'Revive Potion', 'Bomb'] },
     { label: 'Equipment', items: [
       'Copper Sword', 'Bronze Sword', 'Gold Sword', 'Astral Sword',
       'Silver Sword', 'Emerald Sword', 'Mithril Sword', 'Amethyst Sword',
@@ -429,6 +430,11 @@
     'Opal':          { sheet: 'items_sheet', x: 224, y: 240 },
     'Sapphire':      { sheet: 'items_sheet', x: 48, y: 240 },
     'Ruby':          { sheet: 'items_sheet', x: 112, y: 240 },
+    // Consumables (row 19, potions/hearts)
+    'Health Potion':  { sheet: 'items_sheet', x: 0, y: 304 },
+    'Antidote':       { sheet: 'items_sheet', x: 32, y: 304 },
+    'Revive Potion':  { sheet: 'items_sheet', x: 48, y: 304 },
+    'Bomb':           { sheet: 'items_sheet', x: 80, y: 304 },
     // Logs (row 27, items 990-997)
     'Pine Log':      { sheet: 'items_sheet', x: 272, y: 432 },
     'Oak Log':       { sheet: 'items_sheet', x: 288, y: 432 },
@@ -9261,7 +9267,7 @@
     fishing:     ['Fish'],
     woodcutting: ['Logs'],
     smithing:    ['Bars', 'Equipment'],
-    combat:      []
+    combat:      ['Consumables']
   };
 
   // ── RPG Skills API (for location pane) ───────────
@@ -9433,6 +9439,26 @@
     getLevel: function (skill) {
       if (!state || !state.skills[skill]) return 0;
       return state.skills[skill].level;
+    },
+
+    addItem: function (key, count) {
+      if (!state) return false;
+      return addItem(key, count || 1);
+    },
+
+    getItemCount: function (key) {
+      if (!state) return 0;
+      return getItemCount(key);
+    },
+
+    hasItem: function (key, count) {
+      if (!state) return false;
+      return hasItem(key, count || 1);
+    },
+
+    removeItem: function (key, count) {
+      if (!state) return false;
+      return removeItem(key, count || 1);
     }
   };
   window.addEventListener('rpg-skills-init', reinit);

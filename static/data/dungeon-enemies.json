@@ -147,37 +147,43 @@
     "name": "Venom Bloom",
     "sprite": "/images/pets/enemies/venom-bloom.png",
     "frameWidth": 48, "frameHeight": 48, "frames": 3, "row": 0,
-    "type": "nature", "hpBase": 130, "atkBase": 16, "defBase": 10, "spdBase": 6, "criBase": 8, "isBoss": true
+    "type": "nature", "hpBase": 130, "atkBase": 16, "defBase": 10, "spdBase": 6, "criBase": 8, "isBoss": true,
+    "bossMoves": ["bossPoison", "bossSlam", "bossRoar", "bossHealPulse"]
   },
   "mimic": {
     "name": "Mimic",
     "sprite": "/images/pets/enemies/mimic.png",
     "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
-    "type": "shadow", "hpBase": 140, "atkBase": 17, "defBase": 7, "spdBase": 11, "criBase": 12, "isBoss": true
+    "type": "shadow", "hpBase": 140, "atkBase": 17, "defBase": 7, "spdBase": 11, "criBase": 12, "isBoss": true,
+    "bossMoves": ["bossVoidBlast", "bossSlam", "bossCounter", "bossEnrage"]
   },
   "frogger-boss": {
     "name": "Marsh Frogger",
     "sprite": "/images/pets/enemies/frogger-boss.png",
     "frameWidth": 128, "frameHeight": 128, "frames": 5, "row": 0,
-    "type": "aqua", "hpBase": 160, "atkBase": 18, "defBase": 12, "spdBase": 10, "criBase": 10, "isBoss": true
+    "type": "aqua", "hpBase": 160, "atkBase": 18, "defBase": 12, "spdBase": 10, "criBase": 10, "isBoss": true,
+    "bossMoves": ["bossTidalWave", "bossSlam", "bossShield", "bossRoar"]
   },
   "iron-golem": {
     "name": "Iron Golem",
     "sprite": "/images/pets/enemies/slime-golden-big.png",
     "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
-    "type": "tech", "hpBase": 150, "atkBase": 18, "defBase": 14, "spdBase": 4, "criBase": 6, "isBoss": true
+    "type": "tech", "hpBase": 150, "atkBase": 18, "defBase": 14, "spdBase": 4, "criBase": 6, "isBoss": true,
+    "bossMoves": ["bossSlam", "bossShield", "bossThunderStrike", "bossEnrage"]
   },
   "void-mimic": {
     "name": "Void Mimic",
     "sprite": "/images/pets/enemies/mimic.png",
     "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
-    "type": "mystic", "hpBase": 170, "atkBase": 19, "defBase": 9, "spdBase": 13, "criBase": 14, "isBoss": true
+    "type": "mystic", "hpBase": 170, "atkBase": 19, "defBase": 9, "spdBase": 13, "criBase": 14, "isBoss": true,
+    "bossMoves": ["bossVoidBlast", "bossCounter", "bossRoar", "bossHealPulse"]
   },
   "flying-eye": {
     "name": "Flying Eye",
     "sprite": "/images/pets/enemies/flying-eye.png",
     "frameWidth": 150, "frameHeight": 150, "frames": 8, "row": 0,
-    "type": "shadow", "hpBase": 155, "atkBase": 18, "defBase": 8, "spdBase": 14, "criBase": 12, "isBoss": true
+    "type": "shadow", "hpBase": 155, "atkBase": 18, "defBase": 8, "spdBase": 14, "criBase": 12, "isBoss": true,
+    "bossMoves": ["bossVoidBlast", "bossSlam", "bossRoar", "bossExecute"]
   },
   "fantasy-goblin": {
     "name": "Goblin Warrior",
@@ -195,7 +201,8 @@
     "name": "Skeleton Knight",
     "sprite": "/images/pets/enemies/skeleton-knight.png",
     "frameWidth": 150, "frameHeight": 150, "frames": 4, "row": 0,
-    "type": "shadow", "hpBase": 165, "atkBase": 19, "defBase": 12, "spdBase": 9, "criBase": 10, "isBoss": true
+    "type": "shadow", "hpBase": 165, "atkBase": 19, "defBase": 12, "spdBase": 9, "criBase": 10, "isBoss": true,
+    "bossMoves": ["bossSlam", "bossVoidBlast", "bossShield", "bossExecute"]
   },
   "golem-blue": {
     "name": "Frost Golem",
@@ -225,30 +232,63 @@
     "name": "Ronin Samurai",
     "sprite": "/images/pets/enemies/samurai-boss.png",
     "frameWidth": 96, "frameHeight": 96, "frames": 10, "row": 0,
-    "type": "mystic", "hpBase": 180, "atkBase": 22, "defBase": 11, "spdBase": 13, "criBase": 13, "isBoss": true
+    "type": "mystic", "hpBase": 180, "atkBase": 22, "defBase": 11, "spdBase": 13, "criBase": 13, "isBoss": true,
+    "bossMoves": ["bossSlam", "bossVoidBlast", "bossCounter", "bossHealPulse"]
   },
   "demon-slime-boss": {
     "name": "Demon Slime",
     "sprite": "/images/pets/enemies/demon-slime-boss.png",
     "frameWidth": 288, "frameHeight": 160, "frames": 6, "row": 0,
-    "type": "fire", "hpBase": 190, "atkBase": 22, "defBase": 13, "spdBase": 8, "criBase": 10, "isBoss": true
+    "type": "fire", "hpBase": 190, "atkBase": 22, "defBase": 13, "spdBase": 8, "criBase": 10, "isBoss": true,
+    "bossMoves": ["bossFireBreath", "bossSlam", "bossEnrage", "bossExecute"]
   },
   "cursed-spirit-boss": {
     "name": "Cursed Spirits",
     "sprite": "/images/pets/enemies/cursed-spirit-boss.png",
     "frameWidth": 224, "frameHeight": 112, "frames": 7, "row": 0,
-    "type": "fire", "hpBase": 175, "atkBase": 20, "defBase": 10, "spdBase": 12, "criBase": 11, "isBoss": true
+    "type": "fire", "hpBase": 175, "atkBase": 20, "defBase": 10, "spdBase": 12, "criBase": 11, "isBoss": true,
+    "bossMoves": ["bossFireBreath", "bossRoar", "bossCounter", "bossSlam"]
   },
   "pumpkin-boss": {
     "name": "Pumpkin Knight",
     "sprite": "/images/pets/enemies/pumpkin-boss.png",
     "frameWidth": 112, "frameHeight": 96, "frames": 4, "row": 0,
-    "type": "nature", "hpBase": 170, "atkBase": 19, "defBase": 13, "spdBase": 10, "criBase": 9, "isBoss": true
+    "type": "nature", "hpBase": 170, "atkBase": 19, "defBase": 13, "spdBase": 10, "criBase": 9, "isBoss": true,
+    "bossMoves": ["bossPoison", "bossSlam", "bossShield", "bossExecute"]
   },
   "cloud-boss": {
     "name": "Storm Cloud",
     "sprite": "/images/pets/enemies/cloud-boss.png",
     "frameWidth": 112, "frameHeight": 112, "frames": 4, "row": 0,
-    "type": "aqua", "hpBase": 175, "atkBase": 18, "defBase": 14, "spdBase": 9, "criBase": 8, "isBoss": true
+    "type": "aqua", "hpBase": 175, "atkBase": 18, "defBase": 14, "spdBase": 9, "criBase": 8, "isBoss": true,
+    "bossMoves": ["bossTidalWave", "bossThunderStrike", "bossShield", "bossHealPulse"]
+  },
+  "ice-wyrm": {
+    "name": "Ice Wyrm",
+    "sprite": "/images/pets/enemies/golem-blue.png",
+    "frameWidth": 90, "frameHeight": 64, "frames": 8, "row": 0,
+    "type": "aqua", "hpBase": 220, "atkBase": 24, "defBase": 16, "spdBase": 11, "criBase": 12, "isBoss": true,
+    "bossMoves": ["bossTidalWave", "bossSlam", "bossShield", "bossHealPulse", "bossRoar"]
+  },
+  "mech-dragon": {
+    "name": "Mech Dragon",
+    "sprite": "/images/pets/enemies/slime-golden-big.png",
+    "frameWidth": 32, "frameHeight": 32, "frames": 4, "row": 0,
+    "type": "tech", "hpBase": 260, "atkBase": 28, "defBase": 18, "spdBase": 12, "criBase": 14, "isBoss": true,
+    "bossMoves": ["bossThunderStrike", "bossFireBreath", "bossShield", "bossSlam", "bossEnrage"]
+  },
+  "void-lord": {
+    "name": "Void Lord",
+    "sprite": "/images/pets/enemies/flying-eye.png",
+    "frameWidth": 150, "frameHeight": 150, "frames": 8, "row": 0,
+    "type": "mystic", "hpBase": 300, "atkBase": 30, "defBase": 16, "spdBase": 14, "criBase": 16, "isBoss": true,
+    "bossMoves": ["bossVoidBlast", "bossRoar", "bossCounter", "bossExecute", "bossHealPulse"]
+  },
+  "crucible-champion": {
+    "name": "Crucible Champion",
+    "sprite": "/images/pets/enemies/samurai-boss.png",
+    "frameWidth": 96, "frameHeight": 96, "frames": 10, "row": 0,
+    "type": "shadow", "hpBase": 350, "atkBase": 34, "defBase": 20, "spdBase": 15, "criBase": 18, "isBoss": true,
+    "bossMoves": ["bossSlam", "bossVoidBlast", "bossFireBreath", "bossCounter", "bossExecute", "bossEnrage"]
   }
 }

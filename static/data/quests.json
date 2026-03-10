@@ -169,5 +169,257 @@
     },
     "chain": null,
     "autoStart": false
+  },
+
+  "combat-001": {
+    "id": "combat-001",
+    "name": "First Blood",
+    "description": "Defeat 10 enemies in dungeon combat.",
+    "category": "combat",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-001"] },
+    "objectives": [
+      { "type": "kill_enemies", "count": 10, "description": "Defeat 10 enemies" }
+    ],
+    "rewards": { "gp": 500, "xp": { "combat": 200 }, "renown": 10 },
+    "dialogue": {
+      "start": "The dungeons are crawling with creatures. Show them who's boss.",
+      "progress": "{current}/{total} enemies slain. More await.",
+      "complete": "A capable fighter. The kingdom takes notice."
+    },
+    "chain": "combat-002",
+    "autoStart": true
+  },
+  "combat-002": {
+    "id": "combat-002",
+    "name": "Dungeon Delver I",
+    "description": "Clear the Verdant Caves.",
+    "category": "combat",
+    "difficulty": "easy",
+    "requirements": { "quests": ["combat-001"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-1", "count": 1, "description": "Clear Verdant Caves" }
+    ],
+    "rewards": { "gp": 800, "xp": { "combat": 300 }, "renown": 15 },
+    "dialogue": {
+      "start": "The Verdant Caves are the easiest dungeon. Prove you can handle it.",
+      "progress": "The caves still stand unconquered.",
+      "complete": "The slimes never stood a chance."
+    },
+    "chain": "combat-003",
+    "autoStart": true
+  },
+  "combat-003": {
+    "id": "combat-003",
+    "name": "Dungeon Delver II",
+    "description": "Clear the Ember Depths and Sunken Grotto.",
+    "category": "combat",
+    "difficulty": "medium",
+    "requirements": { "quests": ["combat-002"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-2", "count": 1, "description": "Clear Ember Depths" },
+      { "type": "clear_dungeon", "target": "rpg-3", "count": 1, "description": "Clear Sunken Grotto" }
+    ],
+    "rewards": { "gp": 1500, "xp": { "combat": 500 }, "renown": 25 },
+    "dialogue": {
+      "start": "Two more dungeons await. Fire and water — can you handle both?",
+      "progress": "Keep pushing deeper.",
+      "complete": "Impressive range. Fire and water both bow to you."
+    },
+    "chain": "combat-004",
+    "autoStart": true
+  },
+  "combat-004": {
+    "id": "combat-004",
+    "name": "Dungeon Delver III",
+    "description": "Clear the Shadow Crypt and Circuit Lab.",
+    "category": "combat",
+    "difficulty": "hard",
+    "requirements": { "quests": ["combat-003"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-4", "count": 1, "description": "Clear Shadow Crypt" },
+      { "type": "clear_dungeon", "target": "rpg-5", "count": 1, "description": "Clear Circuit Lab" }
+    ],
+    "rewards": { "gp": 2500, "xp": { "combat": 800 }, "renown": 40 },
+    "dialogue": {
+      "start": "The deeper dungeons are no joke. Shadow and tech await.",
+      "progress": "The darkness grows thicker.",
+      "complete": "You've conquered shadow and machine alike."
+    },
+    "chain": "combat-005",
+    "autoStart": true
+  },
+  "combat-005": {
+    "id": "combat-005",
+    "name": "Dungeon Delver IV",
+    "description": "Clear the Enchanted Ruins, Volcanic Core, and Abyssal Depths.",
+    "category": "combat",
+    "difficulty": "hard",
+    "requirements": { "quests": ["combat-004"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-6", "count": 1, "description": "Clear Enchanted Ruins" },
+      { "type": "clear_dungeon", "target": "rpg-7", "count": 1, "description": "Clear Volcanic Core" },
+      { "type": "clear_dungeon", "target": "rpg-8", "count": 1, "description": "Clear Abyssal Depths" }
+    ],
+    "rewards": { "gp": 5000, "xp": { "combat": 1500 }, "renown": 60 },
+    "dialogue": {
+      "start": "The final three original dungeons. Only the best survive.",
+      "progress": "Not done yet. Keep fighting.",
+      "complete": "A true dungeon master. The kingdom salutes you."
+    },
+    "chain": null,
+    "autoStart": true
+  },
+  "combat-006": {
+    "id": "combat-006",
+    "name": "Arena Rookie",
+    "description": "Win 5 arena fights.",
+    "category": "combat",
+    "difficulty": "easy",
+    "requirements": { "quests": ["intro-001"] },
+    "objectives": [
+      { "type": "arena_wins", "count": 5, "description": "Win 5 arena fights" }
+    ],
+    "rewards": { "gp": 600, "xp": { "combat": 200 }, "renown": 10 },
+    "dialogue": {
+      "start": "The Training Arena is open. Win 5 fights to earn some respect.",
+      "progress": "{current}/{total} arena wins. Keep fighting.",
+      "complete": "Not bad for a rookie. The crowd wants more."
+    },
+    "chain": "combat-007",
+    "autoStart": true
+  },
+  "combat-007": {
+    "id": "combat-007",
+    "name": "Arena Contender",
+    "description": "Achieve a 5-win arena streak.",
+    "category": "combat",
+    "difficulty": "medium",
+    "requirements": { "quests": ["combat-006"] },
+    "objectives": [
+      { "type": "arena_streak", "count": 5, "description": "Reach a 5-win arena streak" }
+    ],
+    "rewards": { "gp": 1500, "xp": { "combat": 500 }, "renown": 20 },
+    "dialogue": {
+      "start": "Winning is easy. Winning five in a row? That takes skill.",
+      "progress": "Current streak doesn't count. You need 5 consecutive.",
+      "complete": "Five straight wins! The arena echoes with your name."
+    },
+    "chain": "combat-008",
+    "autoStart": true
+  },
+  "combat-008": {
+    "id": "combat-008",
+    "name": "Arena Champion",
+    "description": "Achieve a 25-win arena streak.",
+    "category": "combat",
+    "difficulty": "hard",
+    "requirements": { "quests": ["combat-007"] },
+    "objectives": [
+      { "type": "arena_streak", "count": 25, "description": "Reach a 25-win arena streak" }
+    ],
+    "rewards": { "gp": 5000, "xp": { "combat": 1500 }, "renown": 50 },
+    "dialogue": {
+      "start": "Twenty-five consecutive victories. Think you have what it takes?",
+      "progress": "Not there yet. One loss resets the count.",
+      "complete": "Twenty-five! You are the undisputed Arena Champion!"
+    },
+    "chain": null,
+    "autoStart": true
+  },
+  "combat-009": {
+    "id": "combat-009",
+    "name": "Slime Slayer",
+    "description": "Defeat 50 enemies in dungeon combat.",
+    "category": "combat",
+    "difficulty": "medium",
+    "requirements": { "quests": ["combat-001"] },
+    "objectives": [
+      { "type": "kill_enemies", "count": 50, "description": "Defeat 50 enemies" }
+    ],
+    "rewards": { "gp": 2000, "xp": { "combat": 800 }, "renown": 30 },
+    "dialogue": {
+      "start": "The dungeons are endless. Slay 50 creatures to prove your worth.",
+      "progress": "{current}/{total} enemies fallen.",
+      "complete": "Fifty down. The dungeon floors are painted with your victories."
+    },
+    "chain": "combat-010",
+    "autoStart": true
+  },
+  "combat-010": {
+    "id": "combat-010",
+    "name": "Warlord",
+    "description": "Defeat 200 enemies in dungeon combat.",
+    "category": "combat",
+    "difficulty": "hard",
+    "requirements": { "quests": ["combat-009"] },
+    "objectives": [
+      { "type": "kill_enemies", "count": 200, "description": "Defeat 200 enemies" }
+    ],
+    "rewards": { "gp": 5000, "xp": { "combat": 2000 }, "renown": 50 },
+    "dialogue": {
+      "start": "Two hundred kills. A true warlord's number.",
+      "progress": "{current}/{total} enemies defeated. The count rises.",
+      "complete": "Two hundred. They write songs about numbers like that."
+    },
+    "chain": null,
+    "autoStart": true
+  },
+  "combat-011": {
+    "id": "combat-011",
+    "name": "Boss Hunter",
+    "description": "Defeat 5 dungeon bosses.",
+    "category": "combat",
+    "difficulty": "medium",
+    "requirements": { "quests": ["combat-002"] },
+    "objectives": [
+      { "type": "defeat_boss", "count": 5, "description": "Defeat 5 bosses" }
+    ],
+    "rewards": { "gp": 3000, "xp": { "combat": 1000 }, "renown": 35 },
+    "dialogue": {
+      "start": "Bosses are the real challenge. Topple five of them.",
+      "progress": "{current}/{total} bosses defeated.",
+      "complete": "Five boss kills! You're hunting the hunters now."
+    },
+    "chain": null,
+    "autoStart": true
+  },
+  "combat-012": {
+    "id": "combat-012",
+    "name": "Frozen Conquest",
+    "description": "Clear the Frozen Wastes dungeon.",
+    "category": "combat",
+    "difficulty": "hard",
+    "requirements": { "quests": ["combat-005"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-9", "count": 1, "description": "Clear Frozen Wastes" }
+    ],
+    "rewards": { "gp": 4000, "xp": { "combat": 1200 }, "renown": 45 },
+    "dialogue": {
+      "start": "A frozen wasteland awaits beyond the abyss. The Ice Wyrm hungers.",
+      "progress": "The cold bites deep. Press on.",
+      "complete": "The Ice Wyrm falls! The frozen wastes thaw under your might."
+    },
+    "chain": "combat-013",
+    "autoStart": true
+  },
+  "combat-013": {
+    "id": "combat-013",
+    "name": "The Final Gauntlet",
+    "description": "Clear The Crucible dungeon.",
+    "category": "combat",
+    "difficulty": "hard",
+    "requirements": { "quests": ["combat-012"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-12", "count": 1, "description": "Clear The Crucible" }
+    ],
+    "rewards": { "gp": 10000, "xp": { "combat": 3000 }, "renown": 100 },
+    "dialogue": {
+      "start": "The Crucible awaits. Ten waves. Every element. One chance.",
+      "progress": "The champion still stands. Try again.",
+      "complete": "THE CRUCIBLE IS CONQUERED! You are legend."
+    },
+    "chain": null,
+    "autoStart": true
   }
 }

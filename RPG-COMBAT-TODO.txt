@@ -148,12 +148,18 @@ Currently: 67 moves (9-10 per type + 13 neutral).
 - [x] Create rpg-spec-trees.json (3 paths: Striker/Guardian/Support, 6 sub-specs)
 - [x] Spec choice at level 5, sub-spec at level 30 (post-combat modal)
 - [x] Stat bonuses from spec + sub-spec applied in getPetCombatStats
-- [x] Spec-gated moves: rallyCry (support), lastStand (dps) now learnable with correct spec
+- [x] Spec-gated moves: 18 total (2 per gate), covers all 9 spec gates
+- [x] Special move mechanics: recklessCharge (recoil), bloodFrenzy (self-damage), divineSmite (self-regen), holyShield (AoE shield)
 - [x] Respec for GP cost (removes spec-gated moves, resets spec/subSpec)
 - [x] Spec display in pet detail modal with Choose/Respec buttons
 - [x] Pending spec queue: if multiple pets level to 5/30 in one fight, prompts shown sequentially
+- [x] Fix: initPetMoves and getMovesForPet now include spec-gated moves for spec'd pets
+- [x] Fix: self-target moves now set cooldowns (was skipping cooldown block)
+- [x] Fix: AoE regen self-target moves (spiritLink, totemOfLife, healingRain) heal all allies, not just user
+- [x] Fix: sacrifice self-damage handler added (was missing)
+- [x] Fix: AI penalises bloodFrenzy/sacrifice at low HP, scores AoE buffs/attacks higher
 
-## Phase 5: Battle Polish (PARTIAL)
+## Phase 5: Battle Polish (DONE)
 - [x] Attack slide animations (fighter slides toward target, slides back)
 - [x] Screen shake on crits
 - [x] Type effectiveness popups ("Super effective!", "Not very effective...") — colored floating text
@@ -162,13 +168,47 @@ Currently: 67 moves (9-10 per type + 13 neutral).
 - [x] Death animation (fade out + collapse)
 - [x] Difficulty system (Normal/Hard/Brutal with stat multipliers)
 
+## Phase 5B: Quick Combat Fixes (DONE)
+- [x] 5B-1: Enforce Taunt — taunt status on caster, AI forced to target taunter, player auto-targets taunter
+- [x] 5B-2: Sub-Spec Specials — Paladin regenBoost (12%), Sage buffDuration (+1 turn), Shaman healBoost (12%)
+- [x] 5B-3: Priority Moves — +100 effective SPD for fighters with priority move ready
+- [x] 5B-4: Wire Run Button — confirm dialog → showResults(false) with 25% reward penalty
+- [x] 5B-5: Drain Mechanic — soulDrain heals 50% of damage dealt, new drain moves (lifeDrain, vampiricBite, leechSeed)
+
+## Phase 6: Combat Depth (DONE)
+- [x] 6-1: Boss Mechanics — bossMoves on 12 bosses, enrage at <30% HP (atkUp), boss wave banner (red skull)
+- [x] 6-2: Pet Passives — Fire Ignite (5% burn), Aqua Tidal Mend (3% heal <50%), Nature Thorns (8% reflect), Tech Overclock (10% extra turn), Shadow Life Steal (15% drain), Mystic Ward (first hit -30%)
+- [x] 6-3: Multi-Hit Moves — hits field (furySwipes 3x, barrage 4x, rapidFire 3x, tripleSlash 3x, flameBurst 3x, tidalBarrage 3x)
+- [x] 6-4: Conditional Bonuses — bonusVsStatus (hexStrike, pyroclasm), bonusVsLowHp (finisher, bossExecute), bonusVsDebuff (venomFang, exploitWeakness)
+- [x] 6-5: Team Synergy — 2 same type +10% ATK, 3 same +15% ATK +10% DEF, all different +5% all stats
+
+## Phase 7: Content & Rewards (DONE)
+- [x] 7-1: Dungeon Drop Tables — drops array on all 12 dungeons, rolled in showResults, awarded via __RPG_SKILLS_API.addItem, displayed in results overlay
+- [x] 7-2: Combat Quests — 13 combat quests (kill_enemies, clear_dungeon, arena_wins, arena_streak, defeat_boss), 3 quest chains (Dungeon Delver, Arena, Slayer)
+- [x] 7-3: New Dungeons 9-12 — Frozen Wastes (Lv300, Ice Wyrm), Clockwork Citadel (Lv400, Mech Dragon), Void Rift (Lv500, Void Lord), The Crucible (Lv600, Crucible Champion)
+- [x] 7-4: Arena Reward Track — milestones at 10/25/50/100/200/500 wins, stones + GP rewards, progress display in arena select
+- [x] 7-5: Consumable Items — Health Potion (30% heal), Antidote (cure DoT), Revive Potion (20% HP fainted ally), Bomb (AoE), Items button in combat, consumes turn + inventory item
+
+## Phase 8: Quality of Life (DONE)
+- [x] 8-1: Move Tooltips — hover move button shows type, power, category, hits, drain, AoE, cooldown, effect
+- [x] 8-2: Post-Combat Stats — damage dealt/taken, kills, crits per pet in results overlay
+- [x] 8-3: Bestiary — enemy tracking (seen/defeated count), grid modal from Library hotspot, click for detail
+- [x] 8-4: Type Chart Reference — 6x6 grid with super/neutral/resist color coding, from Guard Barracks hotspot
+- [x] 8-5: Speed Toggle Persistence — speedMult saved in combat state, restored on next battle
+
+## Known Issues (Resolved)
+- [x] Taunt status unenforced → fixed: taunt applied to caster, AI/player forced to target
+- [x] Priority moves only cosmetic → fixed: +100 SPD in buildTurnOrder
+- [x] Run button non-functional → fixed: confirm + reduced rewards
+
 ## Key Design Decisions
 - Hybrid combat: manual + auto toggle per pet (currently per-battle, goal: per-pet)
 - Level caps: Common 30→50, Rare 25→50→75, Legendary 50→75→99
 - 4 equipped moves from learned pool (all type-matching moves up to current level)
 - Equipment buffs: lead pet 100%, others 50% of player equip ATK/DEF
 - Training Arena = rpg-combat.js 1v1 (old click-mini-game stays on standalone /pets/skills/)
-- Full spec trees deferred to Phase 4 (rallyCry + lastStand locked until then)
+- Spec-gated moves: 16 total (2 per gate), covers all 9 spec gates
+- Special move mechanics: recklessCharge (recoil), bloodFrenzy (self-damage), divineSmite (self-regen), holyShield (AoE shield)
 - Legacy battle.js UNTOUCHED
 - Files: rpg-combat.js, rpg-combat.css, rpg-moves.json, rpg-dungeons.json
 - Storage: rpg-slot-N-combat (per-slot, isolated)

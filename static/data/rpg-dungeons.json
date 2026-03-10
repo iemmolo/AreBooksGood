@@ -12,7 +12,13 @@
       ["slime-green", "myconid-green", "sprout-blue"],
       ["myconid-green", "myconid-green", "slime-green"]
     ],
-    "rewards": { "gpBase": 200, "petXpBase": 50, "stoneChance": 0.05, "stoneType": "nature" }
+    "rewards": {
+      "gpBase": 200, "petXpBase": 50, "stoneChance": 0.05, "stoneType": "nature",
+      "drops": [
+        { "item": "Copper Ore", "chance": 0.30, "qty": 2, "brutalQty": 4 },
+        { "item": "Peridot", "chance": 0.05, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-2",
@@ -28,7 +34,14 @@
       ["goblin-archer", "goblin-spear", "slime-pink"],
       ["myconid-red", "goblin-archer", "goblin-archer"]
     ],
-    "rewards": { "gpBase": 400, "petXpBase": 80, "stoneChance": 0.08, "stoneType": "fire" }
+    "rewards": {
+      "gpBase": 400, "petXpBase": 80, "stoneChance": 0.08, "stoneType": "fire",
+      "drops": [
+        { "item": "Crimson Ore", "chance": 0.30, "qty": 2, "brutalQty": 4 },
+        { "item": "Coal", "chance": 0.20, "qty": 2 },
+        { "item": "Emerald", "chance": 0.05, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-3",
@@ -44,7 +57,14 @@
       ["myconid-green", "slime-light-blue", "sprout-blue", "slime-blue"],
       ["slime-blue-big"]
     ],
-    "rewards": { "gpBase": 600, "petXpBase": 120, "stoneChance": 0.10, "stoneType": "aqua" }
+    "rewards": {
+      "gpBase": 600, "petXpBase": 120, "stoneChance": 0.10, "stoneType": "aqua",
+      "drops": [
+        { "item": "Iron Ore", "chance": 0.25, "qty": 2, "brutalQty": 4 },
+        { "item": "Aquamarine", "chance": 0.08, "qty": 1 },
+        { "item": "Copper Bar", "chance": 0.10, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-4",
@@ -61,7 +81,15 @@
       ["spike", "goblin-bomb", "slime-black"],
       ["slime-black-big"]
     ],
-    "rewards": { "gpBase": 900, "petXpBase": 180, "stoneChance": 0.12, "stoneType": "shadow" }
+    "rewards": {
+      "gpBase": 900, "petXpBase": 180, "stoneChance": 0.12, "stoneType": "shadow",
+      "drops": [
+        { "item": "Gold Ore", "chance": 0.25, "qty": 2, "brutalQty": 3 },
+        { "item": "Shadow Ore", "chance": 0.15, "qty": 1 },
+        { "item": "Onyx", "chance": 0.08, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.15, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-5",
@@ -78,7 +106,16 @@
       ["fantasy-goblin", "goblin-bomb", "slime-golden", "goblin-archer"],
       ["iron-golem"]
     ],
-    "rewards": { "gpBase": 1100, "petXpBase": 220, "stoneChance": 0.12, "stoneType": "tech" }
+    "rewards": {
+      "gpBase": 1100, "petXpBase": 220, "stoneChance": 0.12, "stoneType": "tech",
+      "drops": [
+        { "item": "Silver Ore", "chance": 0.25, "qty": 2, "brutalQty": 3 },
+        { "item": "Astral Ore", "chance": 0.15, "qty": 1, "brutalQty": 2 },
+        { "item": "Topaz", "chance": 0.08, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.15, "qty": 1 },
+        { "item": "Antidote", "chance": 0.10, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-6",
@@ -96,7 +133,16 @@
       ["flying-eye", "dark-bat"],
       ["void-mimic"]
     ],
-    "rewards": { "gpBase": 1400, "petXpBase": 280, "stoneChance": 0.14, "stoneType": "mystic" }
+    "rewards": {
+      "gpBase": 1400, "petXpBase": 280, "stoneChance": 0.14, "stoneType": "mystic",
+      "drops": [
+        { "item": "Emerald Ore", "chance": 0.20, "qty": 2, "brutalQty": 3 },
+        { "item": "Moonstone", "chance": 0.08, "qty": 1 },
+        { "item": "Bronze Bar", "chance": 0.12, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.12, "qty": 1 },
+        { "item": "Antidote", "chance": 0.10, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-7",
@@ -115,7 +161,17 @@
       ["cursed-spirit-boss", "golem-orange"],
       ["demon-slime-boss"]
     ],
-    "rewards": { "gpBase": 1800, "petXpBase": 360, "stoneChance": 0.16, "stoneType": "fire" }
+    "rewards": {
+      "gpBase": 1800, "petXpBase": 360, "stoneChance": 0.16, "stoneType": "fire",
+      "drops": [
+        { "item": "Mithril Ore", "chance": 0.20, "qty": 1, "brutalQty": 2 },
+        { "item": "Slate Ore", "chance": 0.15, "qty": 1 },
+        { "item": "Diamond", "chance": 0.05, "qty": 1 },
+        { "item": "Gold Bar", "chance": 0.10, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.20, "qty": 1, "brutalQty": 2 },
+        { "item": "Revive Potion", "chance": 0.08, "qty": 1 }
+      ]
+    }
   },
   {
     "id": "rpg-8",
@@ -135,6 +191,144 @@
       ["pumpkin-boss", "skeleton-knight"],
       ["samurai-boss"]
     ],
-    "rewards": { "gpBase": 2500, "petXpBase": 500, "stoneChance": 0.20, "stoneType": "shadow" }
+    "rewards": {
+      "gpBase": 2500, "petXpBase": 500, "stoneChance": 0.20, "stoneType": "shadow",
+      "drops": [
+        { "item": "Cobalt Ore", "chance": 0.20, "qty": 1, "brutalQty": 2 },
+        { "item": "Amethyst Ore", "chance": 0.15, "qty": 1 },
+        { "item": "Sapphire", "chance": 0.06, "qty": 1 },
+        { "item": "Silver Bar", "chance": 0.10, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.20, "qty": 1, "brutalQty": 2 },
+        { "item": "Antidote", "chance": 0.12, "qty": 1 },
+        { "item": "Bomb", "chance": 0.08, "qty": 1 }
+      ]
+    }
+  },
+  {
+    "id": "rpg-9",
+    "name": "Frozen Wastes",
+    "desc": "An icy tundra where frost and nature collide.",
+    "typeLock": null,
+    "requiredTotalLevel": 300,
+    "stars": 4,
+    "partySize": 3,
+    "waves": [
+      ["slime-light-blue", "golem-blue", "sprout-blue"],
+      ["golem-blue", "golem-blue", "forest-flyer"],
+      ["slime-light-blue", "mushroom-warrior", "golem-blue", "sprout-blue"],
+      ["golem-blue", "forest-flyer", "mushroom-warrior", "slime-light-blue"],
+      ["frogger-boss", "golem-blue"],
+      ["ice-wyrm"]
+    ],
+    "rewards": {
+      "gpBase": 3200, "petXpBase": 640, "stoneChance": 0.20, "stoneType": "aqua",
+      "drops": [
+        { "item": "Frost Ore", "chance": 0.20, "qty": 1, "brutalQty": 2 },
+        { "item": "Cobalt Ore", "chance": 0.15, "qty": 2 },
+        { "item": "Opal", "chance": 0.06, "qty": 1 },
+        { "item": "Mithril Bar", "chance": 0.08, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.25, "qty": 1, "brutalQty": 2 },
+        { "item": "Revive Potion", "chance": 0.10, "qty": 1 },
+        { "item": "Bomb", "chance": 0.10, "qty": 1 }
+      ]
+    }
+  },
+  {
+    "id": "rpg-10",
+    "name": "Clockwork Citadel",
+    "desc": "A towering fortress of gears and arcane machines.",
+    "typeLock": null,
+    "requiredTotalLevel": 400,
+    "stars": 4,
+    "partySize": 3,
+    "waves": [
+      ["goblin-spear", "slime-golden", "goblin-archer"],
+      ["fantasy-goblin", "slime-golden", "goblin-bomb", "goblin-archer"],
+      ["slime-purple", "fantasy-goblin", "goblin-bomb"],
+      ["iron-golem", "fantasy-goblin", "goblin-bomb"],
+      ["slime-golden-big", "fantasy-goblin", "slime-purple"],
+      ["void-mimic", "fantasy-goblin"],
+      ["mech-dragon"]
+    ],
+    "rewards": {
+      "gpBase": 4000, "petXpBase": 800, "stoneChance": 0.22, "stoneType": "tech",
+      "drops": [
+        { "item": "Molten Ore", "chance": 0.18, "qty": 1, "brutalQty": 2 },
+        { "item": "Frost Ore", "chance": 0.12, "qty": 1 },
+        { "item": "Sapphire", "chance": 0.08, "qty": 1 },
+        { "item": "Cobalt Bar", "chance": 0.08, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.25, "qty": 2, "brutalQty": 3 },
+        { "item": "Antidote", "chance": 0.15, "qty": 1 },
+        { "item": "Revive Potion", "chance": 0.12, "qty": 1 },
+        { "item": "Bomb", "chance": 0.10, "qty": 1, "brutalQty": 2 }
+      ]
+    }
+  },
+  {
+    "id": "rpg-11",
+    "name": "Void Rift",
+    "desc": "A tear in reality leaking shadow and mystic energy.",
+    "typeLock": null,
+    "requiredTotalLevel": 500,
+    "stars": 5,
+    "partySize": 3,
+    "waves": [
+      ["slime-black", "slime-purple", "dark-bat", "dark-bat"],
+      ["myconid-purple", "dark-bat", "slime-black", "sprout-purple"],
+      ["skeleton-knight", "dark-bat", "slime-purple"],
+      ["flying-eye", "myconid-purple", "slime-black", "dark-bat"],
+      ["mimic", "skeleton-knight", "dark-bat"],
+      ["skeleton-knight", "flying-eye", "slime-purple", "dark-bat"],
+      ["samurai-boss", "skeleton-knight"],
+      ["void-lord"]
+    ],
+    "rewards": {
+      "gpBase": 5000, "petXpBase": 1000, "stoneChance": 0.25, "stoneType": "mystic",
+      "drops": [
+        { "item": "Obsidian Ore", "chance": 0.15, "qty": 1, "brutalQty": 2 },
+        { "item": "Molten Ore", "chance": 0.12, "qty": 1 },
+        { "item": "Ruby", "chance": 0.06, "qty": 1 },
+        { "item": "Molten Bar", "chance": 0.06, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.30, "qty": 2, "brutalQty": 3 },
+        { "item": "Antidote", "chance": 0.15, "qty": 1, "brutalQty": 2 },
+        { "item": "Revive Potion", "chance": 0.12, "qty": 1 },
+        { "item": "Bomb", "chance": 0.12, "qty": 1, "brutalQty": 2 }
+      ]
+    }
+  },
+  {
+    "id": "rpg-12",
+    "name": "The Crucible",
+    "desc": "The ultimate gauntlet — every element, every horror.",
+    "typeLock": null,
+    "requiredTotalLevel": 600,
+    "stars": 5,
+    "partySize": 3,
+    "waves": [
+      ["golem-orange", "golem-blue", "slime-golden"],
+      ["fantasy-goblin", "mushroom-warrior", "dark-bat", "goblin-bomb"],
+      ["skeleton-knight", "myconid-red", "slime-black", "forest-flyer"],
+      ["iron-golem", "venom-bloom"],
+      ["cursed-spirit-boss", "golem-blue", "golem-orange"],
+      ["flying-eye", "mimic", "skeleton-knight"],
+      ["demon-slime-boss", "dark-bat", "dark-bat"],
+      ["cloud-boss", "pumpkin-boss"],
+      ["samurai-boss", "skeleton-knight"],
+      ["crucible-champion"]
+    ],
+    "rewards": {
+      "gpBase": 7000, "petXpBase": 1400, "stoneChance": 0.30, "stoneType": "shadow",
+      "drops": [
+        { "item": "Obsidian Ore", "chance": 0.20, "qty": 2, "brutalQty": 3 },
+        { "item": "Frost Ore", "chance": 0.15, "qty": 2 },
+        { "item": "Diamond", "chance": 0.08, "qty": 1 },
+        { "item": "Ruby", "chance": 0.08, "qty": 1 },
+        { "item": "Frost Bar", "chance": 0.06, "qty": 1 },
+        { "item": "Health Potion", "chance": 0.35, "qty": 2, "brutalQty": 4 },
+        { "item": "Antidote", "chance": 0.20, "qty": 2 },
+        { "item": "Revive Potion", "chance": 0.15, "qty": 1, "brutalQty": 2 },
+        { "item": "Bomb", "chance": 0.15, "qty": 2, "brutalQty": 3 }
+      ]
+    }
   }
 ]

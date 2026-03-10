@@ -46,6 +46,31 @@
     dodge: 1, taunt: 2, shield: 0, reflect: 0
   };
 
+  // Pet type combat passives (Phase 6-2)
+  var COMBAT_PASSIVES = {
+    fire:   { name: 'Ignite',       desc: '5% chance to burn a random enemy each round', chance: 0.05 },
+    aqua:   { name: 'Tidal Mend',   desc: 'Heal 3% HP at round end if below 50%', threshold: 0.5, heal: 0.03 },
+    nature: { name: 'Thorns',       desc: 'Attackers take 8% reflected damage', reflect: 0.08 },
+    tech:   { name: 'Overclock',    desc: '10% chance to act twice', chance: 0.10 },
+    shadow: { name: 'Life Steal',   desc: 'Heal 15% of damage dealt', steal: 0.15 },
+    mystic: { name: 'Mystic Ward',  desc: 'First hit each wave reduced 30%', reduction: 0.30 }
+  };
+
+  // Team synergy bonuses (Phase 6-5)
+  var SYNERGY_THRESHOLDS = {
+    pair:     { atk: 0.10 },                          // 2 same type
+    triple:   { atk: 0.15, def: 0.10 },               // 3 same type
+    diverse:  { atk: 0.05, def: 0.05, spd: 0.05 }    // all different types
+  };
+
+  // Combat consumable items (Phase 7-5)
+  var COMBAT_CONSUMABLES = {
+    'Health Potion': { name: 'Health Potion', desc: 'Heal 30% of max HP', target: 'self', color: '#ff4444' },
+    'Antidote':      { name: 'Antidote', desc: 'Cure poison, burn, bleed', target: 'self', color: '#44cc44' },
+    'Revive Potion': { name: 'Revive Potion', desc: 'Revive fainted ally at 20% HP', target: 'ally', color: '#ffcc44' },
+    'Bomb':          { name: 'Bomb', desc: 'Deal flat damage to all enemies', target: 'aoe', color: '#cc6644' }
+  };
+
   // ── State ──────────────────────────────────────────
   var canvas = null;
   var ctx = null;
@@ -65,7 +90,7 @@
   var preloadedImages = {};
   var bgCache = {}; // theme -> Image
   var vfxImage = null; // battle_vfx.png sprite sheet
-  var speedMult = 1; // 1 = normal, 2 = fast
+  var speedMult = 1; // 1x normal, 2x fast — persisted in combat save (8-5)
 
   // VFX sprite sheet: 7 cols x 22 rows, 48x48 cells (336x1056)
   var VFX_CELL = 48;
@@ -91,6 +116,15 @@
   function randFloat(lo, hi) { return lo + Math.random() * (hi - lo); }
 
   function randInt(lo, hi) { return Math.floor(randFloat(lo, hi + 1)); }
+
+  function hasPriorityReady(fighter) {
+    if (!moveData) return false;
+    for (var i = 0; i < fighter.moves.length; i++) {
+      var m = moveData[fighter.moves[i]];
+      if (m && m.priority && !(fighter.cooldowns[fighter.moves[i]] > 0)) return true;
+    }
+    return false;
+  }
 
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
@@ -177,8 +211,9 @@
       version: COMBAT_VERSION,
       dungeonProgress: { unlocked: ['rpg-1'], difficulties: {} },
       stats: { raids: 0, clears: 0, totalKills: 0 },
-      arenaStats: { fights: 0, wins: 0, bestStreak: 0, currentStreak: 0 },
-      stones: { fire: 0, aqua: 0, nature: 0, tech: 0, shadow: 0, mystic: 0 }
+      arenaStats: { fights: 0, wins: 0, bestStreak: 0, currentStreak: 0, milestones: {} },
+      stones: { fire: 0, aqua: 0, nature: 0, tech: 0, shadow: 0, mystic: 0 },
+      bestiary: {} // enemyId -> { seen: true, defeated: N }
     };
   }
 
@@ -292,7 +327,7 @@
     for (var mid in moveData) {
       var m = moveData[mid];
       if (m.learnLevel > level) continue;
-      if (m.specRequired) continue; // skip spec-gated for now
+      if (m.specRequired && !petHasSpecGate(petId, m.specRequired)) continue;
       if (m.learnTypes === null || (m.learnTypes && m.learnTypes.indexOf(petType) >= 0)) {
         learned.push(mid);
       }
@@ -379,7 +414,7 @@
       pet.learnedMoves = [];
       for (var mid in moveData) {
         var m = moveData[mid];
-        if (m.specRequired) continue;
+        if (m.specRequired && !petHasSpecGate(petId, m.specRequired)) continue;
         if (m.learnLevel <= level && (m.learnTypes === null || (m.learnTypes && m.learnTypes.indexOf(petType) >= 0))) {
           pet.learnedMoves.push(mid);
         }
@@ -433,6 +468,18 @@
       }
     }
 
+    // Read sub-spec special from spec tree (5B-2)
+    var subSpecSpecial = null;
+    if (specData && petData.subSpec) {
+      for (var pathKey in specData.paths) {
+        var sp = specData.paths[pathKey];
+        if (sp.subSpecs && sp.subSpecs[petData.subSpec]) {
+          subSpecSpecial = sp.subSpecs[petData.subSpec].special || null;
+          break;
+        }
+      }
+    }
+
     // Apply equipment stat bonuses if available
     var equipAtk = 0;
     var equipDef = 0;
@@ -467,6 +514,10 @@
       spriteImg: null,
       evoStage: evoStage,
       skin: petSkin,
+      subSpecSpecial: subSpecSpecial,
+      _mysticWardUsed: false,
+      // Combat stats (8-2)
+      _stats: { dmgDealt: 0, dmgTaken: 0, kills: 0, crits: 0, statusesLanded: 0 },
       animOffsetX: 0,
       animOffsetY: 0,
       _tweens: null,
@@ -479,7 +530,7 @@
     var eData = enemyData ? enemyData[enemyId] : null;
     var name = eData ? eData.name : enemyId;
     var isBoss = eData ? eData.isBoss : false;
-    var moves = getEnemyMoves(stats.type);
+    var moves = (eData && eData.bossMoves && eData.bossMoves.length > 0) ? eData.bossMoves : getEnemyMoves(stats.type);
     var dm = diffMult || 1;
     return {
       id: enemyId,
@@ -505,6 +556,7 @@
       frameHeight: eData ? eData.frameHeight : 32,
       frames: eData ? eData.frames : 4,
       isBoss: isBoss,
+      _enraged: false,
       animOffsetX: 0,
       animOffsetY: 0,
       _tweens: null,
@@ -555,10 +607,10 @@
     for (var i = 0; i < fighters.length; i++) {
       if (fighters[i].alive) alive.push(fighters[i]);
     }
-    // Sort by effective SPD descending
+    // Sort by effective SPD descending, with priority move bonus (5B-3)
     alive.sort(function (a, b) {
-      var spdA = getEffectiveStat(a, 'spd');
-      var spdB = getEffectiveStat(b, 'spd');
+      var spdA = getEffectiveStat(a, 'spd') + (hasPriorityReady(a) ? 100 : 0);
+      var spdB = getEffectiveStat(b, 'spd') + (hasPriorityReady(b) ? 100 : 0);
       if (spdB !== spdA) return spdB - spdA;
       return Math.random() - 0.5; // tie-break random
     });
@@ -607,28 +659,55 @@
       power *= 2;
     }
 
-    var damage = Math.floor(power * ratio * stab * typeMult * critMult * variance);
+    // Conditional damage bonuses (6-4)
+    var condMult = 1.0;
+    if (move.conditional) {
+      if (move.conditional === 'bonusVsStatus' && defender.statuses.length > 0) condMult = 1.5;
+      if (move.conditional === 'bonusVsLowHp' && defender.hp < defender.maxHp * 0.3) condMult = 1.5;
+      if (move.conditional === 'bonusVsDebuff') {
+        for (var si = 0; si < defender.statuses.length; si++) {
+          var st = defender.statuses[si].type;
+          if (st === 'burn' || st === 'poison' || st === 'bleed' || st === 'curse' || st === 'slow' || st === 'atkDown' || st === 'defDown') {
+            condMult = 1.5; break;
+          }
+        }
+      }
+    }
+
+    var damage = Math.floor(power * ratio * stab * typeMult * critMult * variance * condMult);
     return { damage: Math.max(1, damage), isCrit: isCrit, typeMult: typeMult };
   }
 
   // ── Status Effect Processing ───────────────────────
-  function applyStatus(target, statusType, duration) {
+  function applyStatus(target, statusType, duration, source) {
+    var dur = duration || STATUS_DURATIONS[statusType] || 2;
+    // Sage buffDuration special (5B-2): +1 turn on atkUp/defUp when applied by a Sage
+    if (source && source.subSpecSpecial === 'buffDuration' && (statusType === 'atkUp' || statusType === 'defUp')) {
+      dur += 1;
+    }
     // Check existing
     for (var i = 0; i < target.statuses.length; i++) {
       if (target.statuses[i].type === statusType) {
-        target.statuses[i].turns = duration || STATUS_DURATIONS[statusType] || 2;
+        target.statuses[i].turns = dur;
         return;
       }
     }
-    target.statuses.push({
-      type: statusType,
-      turns: duration || STATUS_DURATIONS[statusType] || 2
-    });
+    target.statuses.push({ type: statusType, turns: dur });
   }
 
   function hasStatus(fighter, statusType) {
     for (var i = 0; i < fighter.statuses.length; i++) {
       if (fighter.statuses[i].type === statusType) return true;
+    }
+    return false;
+  }
+
+  function removeStatus(fighter, statusType) {
+    for (var i = fighter.statuses.length - 1; i >= 0; i--) {
+      if (fighter.statuses[i].type === statusType) {
+        fighter.statuses.splice(i, 1);
+        return true;
+      }
     }
     return false;
   }
@@ -643,8 +722,11 @@
       if (s.type === 'poison') dmg += Math.floor(fighter.maxHp * 0.05);
       if (s.type === 'bleed') dmg += Math.floor(fighter.maxHp * 0.04);
       if (s.type === 'curse') dmg += Math.floor(fighter.maxHp * 0.08);
-      // Heal over time
-      if (s.type === 'regen') healed += Math.floor(fighter.maxHp * 0.08);
+      // Heal over time (5B-2: Paladin regenBoost / Shaman healBoost → 12%)
+      if (s.type === 'regen') {
+        var regenPct = (fighter.subSpecSpecial === 'regenBoost' || fighter.subSpecSpecial === 'healBoost') ? 0.12 : 0.08;
+        healed += Math.floor(fighter.maxHp * regenPct);
+      }
 
       s.turns--;
       if (s.turns <= 0) {
@@ -700,53 +782,126 @@
     // Self-target moves (status buffs)
     if (move.selfTarget) {
       if (move.effect === 'regen') {
-        applyStatus(user, 'regen');
+        if (move.aoe) {
+          var regenAllies = getAllies(user);
+          for (var ra = 0; ra < regenAllies.length; ra++) {
+            applyStatus(regenAllies[ra], 'regen', undefined, user);
+          }
+        } else {
+          applyStatus(user, 'regen', undefined, user);
+        }
         result.statusApplied = 'regen';
       } else if (move.effect === 'shield') {
         // Shield absorbs 30% max HP worth of damage
-        user._shield = Math.floor(user.maxHp * 0.3);
+        if (move.aoe) {
+          var shAllies = getAllies(user);
+          for (var sa = 0; sa < shAllies.length; sa++) {
+            shAllies[sa]._shield = Math.floor(shAllies[sa].maxHp * 0.3);
+          }
+        } else {
+          user._shield = Math.floor(user.maxHp * 0.3);
+        }
         result.statusApplied = 'shield';
       } else if (move.effect) {
         if (move.aoe) {
-          // Apply to all allies
           var allies = getAllies(user);
           for (var a = 0; a < allies.length; a++) {
-            applyStatus(allies[a], move.effect);
+            applyStatus(allies[a], move.effect, undefined, user);
           }
         } else {
-          applyStatus(user, move.effect);
+          applyStatus(user, move.effect, undefined, user);
         }
         result.statusApplied = move.effect;
+      }
+      // Blood Frenzy / Sacrifice: self-damage moves
+      if (move.id === 'bloodFrenzy') {
+        var selfDmg = Math.floor(user.maxHp * 0.20);
+        user.hp = Math.max(1, user.hp - selfDmg);
+        spawnFloatingText(user, '-' + selfDmg, false);
+      }
+      if (move.id === 'sacrifice') {
+        var sacDmg = Math.floor(user.maxHp * 0.25);
+        user.hp = Math.max(1, user.hp - sacDmg);
+        spawnFloatingText(user, '-' + sacDmg, false);
+      }
+      // Set cooldown for self-target moves
+      if (move.cooldown > 0) {
+        user.cooldowns[moveId] = move.cooldown;
       }
       return result;
     }
 
-    // Damage calculation
-    if (move.category !== 'status') {
-      var dmgResult = calcDamage(user, target, move);
-      result.damage = dmgResult.damage;
-      result.isCrit = dmgResult.isCrit;
-      result.typeMult = dmgResult.typeMult;
-
-      // Shield absorb
-      if (target._shield && target._shield > 0) {
-        var absorbed = Math.min(target._shield, result.damage);
-        target._shield -= absorbed;
-        result.damage -= absorbed;
-        if (target._shield <= 0) delete target._shield;
-      }
-
-      target.hp = Math.max(0, target.hp - result.damage);
-      if (target.hp <= 0) target.alive = false;
+    // Mystic Ward passive (6-2): first hit each wave reduced 30%
+    var mysticReduction = 1.0;
+    if (target.isPlayer && target.type === 'mystic' && !target._mysticWardUsed) {
+      mysticReduction = 1.0 - (COMBAT_PASSIVES.mystic.reduction || 0.30);
+      target._mysticWardUsed = true;
+      spawnFloatingText(target, 'Mystic Ward!', false, '#cc88ff');
     }
 
-    // Status effect application
+    // Damage calculation — multi-hit support (6-3)
+    if (move.category !== 'status') {
+      var totalHits = move.hits || 1;
+      var totalDamage = 0;
+      var anyCrit = false;
+      var lastTypeMult = 1;
+
+      for (var h = 0; h < totalHits; h++) {
+        if (!target.alive) break;
+        var dmgResult = calcDamage(user, target, move);
+        var hitDmg = Math.floor(dmgResult.damage * mysticReduction);
+        mysticReduction = 1.0; // only first hit reduced
+
+        // Shield absorb
+        if (target._shield && target._shield > 0) {
+          var absorbed = Math.min(target._shield, hitDmg);
+          target._shield -= absorbed;
+          hitDmg -= absorbed;
+          if (target._shield <= 0) delete target._shield;
+        }
+
+        target.hp = Math.max(0, target.hp - hitDmg);
+        totalDamage += hitDmg;
+        if (dmgResult.isCrit) anyCrit = true;
+        lastTypeMult = dmgResult.typeMult;
+
+        if (totalHits > 1) {
+          spawnFloatingText(target, '-' + hitDmg, dmgResult.isCrit);
+        }
+        if (target.hp <= 0) { target.alive = false; break; }
+      }
+
+      result.damage = totalDamage;
+      result.isCrit = anyCrit;
+      result.typeMult = lastTypeMult;
+      if (totalHits > 1) result.multiHit = totalHits;
+
+      // Nature Thorns passive (6-2): attackers take reflected damage
+      if (target.isPlayer && target.type === 'nature' && target.alive && result.damage > 0) {
+        var thornsDmg = Math.floor(result.damage * (COMBAT_PASSIVES.nature.reflect || 0.08));
+        if (thornsDmg > 0) {
+          user.hp = Math.max(0, user.hp - thornsDmg);
+          if (user.hp <= 0) user.alive = false;
+          spawnFloatingText(user, '-' + thornsDmg + ' thorns', false, '#44aa44');
+        }
+      }
+    }
+
+    // Status effect application — taunt redirected to user (5B-1)
     if (move.effect && move.effectChance > 0) {
-      var targets = move.aoe ? getEnemiesOf(user) : [target];
-      for (var t = 0; t < targets.length; t++) {
+      if (move.effect === 'taunt') {
+        // Taunt: apply to caster so enemies are forced to attack them
         if (Math.random() * 100 < move.effectChance) {
-          applyStatus(targets[t], move.effect);
-          result.statusApplied = move.effect;
+          applyStatus(user, 'taunt', undefined, user);
+          result.statusApplied = 'taunt';
+        }
+      } else {
+        var targets = move.aoe ? getEnemiesOf(user) : [target];
+        for (var t = 0; t < targets.length; t++) {
+          if (Math.random() * 100 < move.effectChance) {
+            applyStatus(targets[t], move.effect, undefined, user);
+            result.statusApplied = move.effect;
+          }
         }
       }
     }
@@ -768,6 +923,33 @@
         if (otherTargets[ot].hp <= 0) otherTargets[ot].alive = false;
         spawnFloatingText(otherTargets[ot], '-' + finalDmg, aoeDmg.isCrit);
         spawnVfx(otherTargets[ot], move.type || 'neutral');
+      }
+    }
+
+    // Special move effects on attacker
+    if (move.id === 'recklessCharge' && result.damage > 0) {
+      var recoil = Math.floor(result.damage * 0.25);
+      user.hp = Math.max(1, user.hp - recoil);
+      spawnFloatingText(user, '-' + recoil, false);
+    }
+    if (move.id === 'divineSmite' && result.damage > 0) {
+      applyStatus(user, 'regen');
+    }
+
+    // Drain mechanic (5B-5): heal user by drain% of damage dealt
+    if (move.drain && result.damage > 0) {
+      var drainAmt = Math.floor(result.damage * move.drain);
+      user.hp = Math.min(user.maxHp, user.hp + drainAmt);
+      result.healed = drainAmt;
+      spawnFloatingText(user, '+' + drainAmt, false, '#44ff88');
+    }
+
+    // Shadow Life Steal passive (6-2): heal 15% of damage dealt
+    if (user.isPlayer && user.type === 'shadow' && result.damage > 0 && !move.drain) {
+      var stealAmt = Math.floor(result.damage * (COMBAT_PASSIVES.shadow.steal || 0.15));
+      if (stealAmt > 0) {
+        user.hp = Math.min(user.maxHp, user.hp + stealAmt);
+        spawnFloatingText(user, '+' + stealAmt + ' steal', false, '#9966cc');
       }
     }
 
@@ -799,10 +981,24 @@
     return enemies;
   }
 
+  function hasUsableAttack(fighter) {
+    for (var i = 0; i < fighter.moves.length; i++) {
+      var m = moveData ? moveData[fighter.moves[i]] : null;
+      if (m && !m.selfTarget && !(fighter.cooldowns[fighter.moves[i]] > 0)) return true;
+    }
+    return false;
+  }
+
   // ── AI Move Selection ──────────────────────────────
   function aiSelectMove(fighter) {
     var enemies = getEnemiesOf(fighter);
     if (enemies.length === 0) return null;
+
+    // Taunt enforcement (5B-1): if any enemy has taunt status, must target them
+    var taunter = null;
+    for (var ti = 0; ti < enemies.length; ti++) {
+      if (hasStatus(enemies[ti], 'taunt')) { taunter = enemies[ti]; break; }
+    }
 
     var bestMove = null;
     var bestTarget = null;
@@ -815,6 +1011,8 @@
       if (fighter.cooldowns[moveId] && fighter.cooldowns[moveId] > 0) continue;
 
       if (move.selfTarget) {
+        // Skip self-target moves when taunted, unless no attack moves are usable
+        if (taunter && hasUsableAttack(fighter)) continue;
         // Evaluate self-target moves
         var score = 0;
         if (move.effect === 'regen' && fighter.hp < fighter.maxHp * 0.5) score = 60;
@@ -823,6 +1021,10 @@
         else if (move.effect === 'atkUp') score = 35;
         else if (move.effect === 'dodge') score = 25;
         else if (move.effect === 'reflect') score = 20;
+        // Penalise self-damage moves at low HP
+        if ((move.id === 'bloodFrenzy' || move.id === 'sacrifice') && fighter.hp < fighter.maxHp * 0.35) score = 0;
+        // Bonus for AoE buffs when team is alive
+        if (move.aoe && score > 0) score += 10;
         if (score > bestScore) {
           bestScore = score;
           bestMove = moveId;
@@ -831,8 +1033,9 @@
         continue;
       }
 
-      for (var ei = 0; ei < enemies.length; ei++) {
-        var enemy = enemies[ei];
+      var targetList = taunter ? [taunter] : enemies;
+      for (var ei = 0; ei < targetList.length; ei++) {
+        var enemy = targetList[ei];
         var score = move.power || 10;
         // Type advantage bonus
         var typeChart = TYPE_CHART[move.type] || TYPE_CHART.neutral;
@@ -844,6 +1047,8 @@
         if (enemy.hp < score * 0.5) score *= 1.5;
         // Prefer low HP targets
         score += (1 - enemy.hp / enemy.maxHp) * 20;
+        // AoE bonus: scale by number of alive enemies
+        if (move.aoe && enemies.length > 1) score *= (1 + enemies.length * 0.25);
 
         if (score > bestScore) {
           bestScore = score;
@@ -860,6 +1065,41 @@
     }
 
     return { moveId: bestMove, target: bestTarget };
+  }
+
+  // ── Team Synergy (6-5) ────────────────────────────
+  function applySynergyBonuses(team) {
+    if (!team || team.length < 2) return;
+    var typeCounts = {};
+    for (var i = 0; i < team.length; i++) {
+      typeCounts[team[i].type] = (typeCounts[team[i].type] || 0) + 1;
+    }
+    var uniqueTypes = Object.keys(typeCounts).length;
+    var maxSame = 0;
+    for (var t in typeCounts) { if (typeCounts[t] > maxSame) maxSame = typeCounts[t]; }
+
+    var bonuses = null;
+    var synergyLabel = '';
+    if (maxSame >= 3) {
+      bonuses = SYNERGY_THRESHOLDS.triple;
+      synergyLabel = 'Triple Type Synergy!';
+    } else if (maxSame >= 2) {
+      bonuses = SYNERGY_THRESHOLDS.pair;
+      synergyLabel = 'Pair Type Synergy!';
+    } else if (uniqueTypes === team.length && team.length >= 3) {
+      bonuses = SYNERGY_THRESHOLDS.diverse;
+      synergyLabel = 'Diverse Team Synergy!';
+    }
+
+    if (bonuses) {
+      for (var fi = 0; fi < team.length; fi++) {
+        var f = team[fi];
+        if (bonuses.atk) f.atk = Math.floor(f.atk * (1 + bonuses.atk));
+        if (bonuses.def) f.def = Math.floor(f.def * (1 + bonuses.def));
+        if (bonuses.spd) f.spd = Math.floor(f.spd * (1 + bonuses.spd));
+      }
+      addBattleLog(synergyLabel);
+    }
   }
 
   // ── Battle Flow ────────────────────────────────────
@@ -888,6 +1128,7 @@
       selectedMove: null,
       targetHighlight: -1,
       kills: 0,
+      _bossKills: 0,
       result: null // { victory, gp, petXp, kills, wavesCleared }
     };
 
@@ -898,6 +1139,9 @@
       battleState.playerTeam.push(pf);
     }
 
+    // Team synergy bonuses (6-5)
+    applySynergyBonuses(battleState.playerTeam);
+
     if (config.mode === 'dungeon' && config.dungeon) {
       battleState.totalWaves = config.dungeon.waves.length;
       setupWave(0);
@@ -906,6 +1150,8 @@
       for (var ei = 0; ei < config.enemies.length; ei++) {
         battleState.enemyTeam.push(createEnemyFighter(config.enemies[ei], config.stars || 1, battleState.diffMult));
       }
+      // Bestiary: mark arena enemies as seen (8-3)
+      trackBestiarySeen(battleState.enemyTeam);
     }
 
     // Tab key to toggle active pet's auto mode mid-battle
@@ -954,12 +1200,20 @@
 
     // Preload new enemy sprites
     preloadFighterSprites(battleState.enemyTeam, function () {});
+
+    // Bestiary: mark enemies as seen (8-3)
+    trackBestiarySeen(battleState.enemyTeam);
   }
 
   function startTurnCycle() {
     if (!battleState) return;
     // Check win/lose before building turn order
     if (checkBattleEnd()) return;
+
+    // Reset per-round flags (overclock can trigger once per round per fighter)
+    for (var ri = 0; ri < battleState.playerTeam.length; ri++) {
+      battleState.playerTeam[ri]._overclocked = false;
+    }
 
     battleState.turnOrder = buildTurnOrder(battleState.playerTeam.concat(battleState.enemyTeam));
     battleState.currentTurnIndex = 0;
@@ -1044,11 +1298,14 @@
       spawnVfx(fighter, vfxType);
     } else if (result.damage > 0) {
       var logMsg = fighter.name + ' used ' + result.moveName + ' on ' + target.name + ' for ' + result.damage;
+      if (result.multiHit) logMsg += ' (' + result.multiHit + ' hits)';
       if (result.isCrit) logMsg += ' (CRIT!)';
+      if (result.healed) logMsg += ' (drained ' + result.healed + ' HP)';
       if (result.typeMult > 1) logMsg += ' Super effective!';
       else if (result.typeMult < 1) logMsg += ' Not very effective...';
       addBattleLog(logMsg);
-      spawnFloatingText(target, '-' + result.damage, result.isCrit);
+      // Multi-hit: per-hit floating texts already spawned in executeMove
+      if (!result.multiHit) spawnFloatingText(target, '-' + result.damage, result.isCrit);
       spawnVfx(target, vfxType);
       if (result.typeMult > 1) spawnFloatingText(target, 'Super effective!', false, '#44ff88');
       else if (result.typeMult < 1) spawnFloatingText(target, 'Not very effective...', false, '#888888');
@@ -1074,6 +1331,22 @@
     }
   }
 
+  // Tech Overclock passive (6-2): 10% chance to act again
+  function advanceTurn(fighter) {
+    if (fighter.isPlayer && fighter.type === 'tech' && fighter.alive && !fighter._overclocked) {
+      if (Math.random() < (COMBAT_PASSIVES.tech.chance || 0.10)) {
+        fighter._overclocked = true; // prevent infinite chain
+        spawnFloatingText(fighter, 'Overclock!', false, '#44ffff');
+        addBattleLog(fighter.name + ' Overclocked — extra turn!');
+        processNextTurn(); // same index, same fighter
+        return;
+      }
+    }
+    fighter._overclocked = false;
+    battleState.currentTurnIndex++;
+    processNextTurn();
+  }
+
   function executeTurnAction(fighter, moveId, target) {
     if (!battleState) return;
     battleState.waitingForInput = false;
@@ -1088,8 +1361,7 @@
       if (result) showMoveResult(fighter, target, moveId, result);
       setTimeout(function () {
         if (!battleState) return;
-        battleState.currentTurnIndex++;
-        processNextTurn();
+        advanceTurn(fighter);
       }, getDelay(500));
       return;
     }
@@ -1121,12 +1393,24 @@
       if (!result) {
         fighter.animOffsetX = 0;
         fighter.animOffsetY = 0;
-        battleState.currentTurnIndex++;
-        processNextTurn();
+        advanceTurn(fighter);
         return;
       }
 
       showMoveResult(fighter, target, moveId, result);
+
+      // Track combat stats (8-2)
+      if (fighter._stats) {
+        if (result.damage > 0 && !result.reflected) fighter._stats.dmgDealt += result.damage;
+        if (result.isCrit && !result.missed) fighter._stats.crits++;
+        if (result.statusApplied) fighter._stats.statusesLanded++;
+      }
+      if (target._stats && result.damage > 0 && !result.reflected) {
+        target._stats.dmgTaken += result.damage;
+      }
+      if (fighter._stats && result.reflected && result.damage > 0) {
+        fighter._stats.dmgTaken += result.damage;
+      }
 
       // Screen shake on crit
       if (result.isCrit && !result.missed) {
@@ -1140,6 +1424,11 @@
       for (var k = 0; k < allFighters.length; k++) {
         if (prevAlive[allFighters[k].id] && !allFighters[k].alive && !allFighters[k].isPlayer) {
           battleState.kills++;
+          if (allFighters[k].isBoss) {
+            battleState._bossKills = (battleState._bossKills || 0) + 1;
+          }
+          if (fighter._stats) fighter._stats.kills++;
+          trackBestiaryDefeat(allFighters[k]);
           addBattleLog(allFighters[k].name + ' was defeated!');
         }
       }
@@ -1160,8 +1449,7 @@
         { prop: 'animOffsetY', from: slideY, to: 0 }
       ], getDelay(150), function () {
         if (!battleState) return;
-        battleState.currentTurnIndex++;
-        processNextTurn();
+        advanceTurn(fighter);
       });
     });
   }
@@ -1189,8 +1477,55 @@
       }
     }
 
-    // Trigger death animations for fighters killed by DoT
+    // Trigger death animations and count kills for fighters killed by DoT
     triggerDeathAnims(allFighters, prevAlive);
+    for (var dk = 0; dk < allFighters.length; dk++) {
+      if (prevAlive[allFighters[dk].id] && !allFighters[dk].alive && !allFighters[dk].isPlayer) {
+        battleState.kills++;
+        if (allFighters[dk].isBoss) {
+          battleState._bossKills = (battleState._bossKills || 0) + 1;
+        }
+        trackBestiaryDefeat(allFighters[dk]);
+        addBattleLog(allFighters[dk].name + ' was defeated!');
+      }
+    }
+
+    // Pet passives — end of round (6-2)
+    for (var pi = 0; pi < battleState.playerTeam.length; pi++) {
+      var pet = battleState.playerTeam[pi];
+      if (!pet.alive) continue;
+      var passive = COMBAT_PASSIVES[pet.type];
+      if (!passive) continue;
+
+      // Fire: 5% chance to burn random enemy
+      if (pet.type === 'fire' && Math.random() < (passive.chance || 0.05)) {
+        var fireEnemies = getEnemiesOf(pet);
+        if (fireEnemies.length > 0) {
+          var burnTarget = fireEnemies[randInt(0, fireEnemies.length - 1)];
+          applyStatus(burnTarget, 'burn');
+          spawnFloatingText(burnTarget, 'Ignite!', false, '#ff6644');
+          addBattleLog(pet.name + '\'s Ignite burned ' + burnTarget.name + '!');
+        }
+      }
+      // Aqua: heal 3% HP if below 50%
+      if (pet.type === 'aqua' && pet.hp < pet.maxHp * (passive.threshold || 0.5)) {
+        var aquaHeal = Math.floor(pet.maxHp * (passive.heal || 0.03));
+        pet.hp = Math.min(pet.maxHp, pet.hp + aquaHeal);
+        spawnFloatingText(pet, '+' + aquaHeal + ' tidal', false, '#44aaff');
+      }
+    }
+
+    // Boss enrage check (6-1): bosses at <30% HP get one-time atkUp
+    for (var bi = 0; bi < battleState.enemyTeam.length; bi++) {
+      var boss = battleState.enemyTeam[bi];
+      if (!boss.alive || !boss.isBoss || boss._enraged) continue;
+      if (boss.hp < boss.maxHp * 0.30) {
+        boss._enraged = true;
+        applyStatus(boss, 'atkUp');
+        spawnFloatingText(boss, 'ENRAGED!', false, '#ff4444');
+        addBattleLog(boss.name + ' is ENRAGED!');
+      }
+    }
 
     // Tick cooldowns
     for (var i = 0; i < allFighters.length; i++) {
@@ -1258,10 +1593,11 @@
         var heal = Math.floor(p.maxHp * WAVE_HEAL_PCT);
         p.hp = Math.min(p.maxHp, p.hp + heal);
       }
-      // Reset cooldowns, statuses, shields
+      // Reset cooldowns, statuses, shields, passive flags
       p.cooldowns = {};
       p.statuses = [];
       delete p._shield;
+      p._mysticWardUsed = false;
     }
   }
 
@@ -1315,6 +1651,25 @@
       }
     }
 
+    // Roll dungeon drops
+    var droppedItems = [];
+    if (victory && battleState.dungeon && battleState.dungeon.rewards.drops) {
+      var drops = battleState.dungeon.rewards.drops;
+      var isBrutal = battleState.difficulty === 'brutal';
+      for (var dri = 0; dri < drops.length; dri++) {
+        var drop = drops[dri];
+        var dropChance = drop.chance;
+        if (isBrutal) dropChance = Math.min(1, dropChance * 1.5);
+        if (Math.random() < dropChance) {
+          var qty = (isBrutal && drop.brutalQty) ? drop.brutalQty : (drop.qty || 1);
+          droppedItems.push({ item: drop.item, qty: qty });
+        }
+      }
+    }
+
+    // Count boss kills this battle
+    var bossKills = battleState._bossKills || 0;
+
     battleState.result = {
       victory: victory,
       gp: gp,
@@ -1323,7 +1678,9 @@
       kills: battleState.kills,
       wavesCleared: wavesCleared,
       stoneType: stoneType,
-      gotStone: gotStone
+      gotStone: gotStone,
+      droppedItems: droppedItems,
+      arenaMilestone: null
     };
 
     // Apply rewards
@@ -1340,6 +1697,16 @@
     if (combatXp > 0 && window.__RPG_SKILLS_API && window.__RPG_SKILLS_API.addXp) {
       window.__RPG_SKILLS_API.addXp('combat', combatXp);
     }
+
+    // Award dropped items to inventory
+    if (droppedItems.length > 0 && window.__RPG_SKILLS_API && window.__RPG_SKILLS_API.addItem) {
+      for (var adi = 0; adi < droppedItems.length; adi++) {
+        window.__RPG_SKILLS_API.addItem(droppedItems[adi].item, droppedItems[adi].qty);
+      }
+    }
+
+    // Flush batched bestiary defeat counts before saving (8-3)
+    flushBestiaryUpdates();
 
     // Update combat storage
     var combatSave = loadCombatState();
@@ -1374,11 +1741,35 @@
       }
     } else if (battleState.mode === 'arena') {
       combatSave.arenaStats.fights++;
+      if (!combatSave.arenaStats.milestones) combatSave.arenaStats.milestones = {};
       if (victory) {
         combatSave.arenaStats.wins++;
         combatSave.arenaStats.currentStreak++;
         if (combatSave.arenaStats.currentStreak > combatSave.arenaStats.bestStreak) {
           combatSave.arenaStats.bestStreak = combatSave.arenaStats.currentStreak;
+        }
+        // Arena milestones
+        var totalWins = combatSave.arenaStats.wins;
+        var ARENA_MILESTONES = [
+          { at: 10, reward: 'stone', label: 'Evolution Stone', stoneType: 'nature' },
+          { at: 25, reward: 'gp', label: '2,000 GP', amount: 2000 },
+          { at: 50, reward: 'stone', label: 'Evolution Stone', stoneType: 'fire' },
+          { at: 100, reward: 'legendaryStone', label: 'Legendary Stone (shadow)', stoneType: 'shadow' },
+          { at: 200, reward: 'gp', label: '10,000 GP', amount: 10000 },
+          { at: 500, reward: 'legendaryStone', label: 'Legendary Stone (mystic)', stoneType: 'mystic' }
+        ];
+        for (var mi = 0; mi < ARENA_MILESTONES.length; mi++) {
+          var ms = ARENA_MILESTONES[mi];
+          if (totalWins >= ms.at && !combatSave.arenaStats.milestones[ms.at]) {
+            combatSave.arenaStats.milestones[ms.at] = true;
+            battleState.result.arenaMilestone = ms;
+            if (ms.reward === 'gp' && window.Wallet) {
+              window.Wallet.add(ms.amount);
+            } else if ((ms.reward === 'stone' || ms.reward === 'legendaryStone') && ms.stoneType) {
+              if (!combatSave.stones) combatSave.stones = { fire: 0, aqua: 0, nature: 0, tech: 0, shadow: 0, mystic: 0 };
+              combatSave.stones[ms.stoneType] = (combatSave.stones[ms.stoneType] || 0) + 1;
+            }
+          }
         }
       } else {
         combatSave.arenaStats.currentStreak = 0;
@@ -1398,6 +1789,15 @@
       }
       if (victory && battleState.dungeon) {
         window.QuestSystem.updateObjective('clear_dungeon', { dungeonId: battleState.dungeon.id });
+      }
+      if (bossKills > 0) {
+        window.QuestSystem.updateObjective('defeat_boss', { count: bossKills });
+      }
+      if (battleState.mode === 'arena') {
+        if (victory) {
+          window.QuestSystem.updateObjective('arena_wins', { count: 1 });
+          window.QuestSystem.updateObjective('arena_streak', { streak: combatSave.arenaStats.currentStreak });
+        }
       }
     }
 
@@ -1703,7 +2103,16 @@
 
   // ── Wave Banner ────────────────────────────────────
   function showWaveBanner(waveNum, totalWaves, cb) {
-    battleState._waveBanner = { text: 'Wave ' + waveNum + ' / ' + totalWaves, age: 0, maxAge: 40 };
+    // Check if this wave has a boss (6-1)
+    var hasBoss = false;
+    if (battleState && battleState.enemyTeam) {
+      for (var bi = 0; bi < battleState.enemyTeam.length; bi++) {
+        if (battleState.enemyTeam[bi].isBoss) { hasBoss = true; break; }
+      }
+    }
+    var bannerText = 'Wave ' + waveNum + ' / ' + totalWaves;
+    if (hasBoss) bannerText = '\u2620 BOSS WAVE \u2620  ' + waveNum + ' / ' + totalWaves;
+    battleState._waveBanner = { text: bannerText, age: 0, maxAge: 40, isBoss: hasBoss };
     setTimeout(function () {
       if (battleState) battleState._waveBanner = null;
       if (cb && battleState) cb();
@@ -2342,14 +2751,15 @@
     if (banner.age > 30) alpha = 1 - (banner.age - 30) / 10;
     alpha = clamp(alpha, 0, 1);
 
+    var isBoss = banner.isBoss;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(CANVAS_W / 2 - 120, CANVAS_H / 2 - 25, 240, 50);
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(CANVAS_W / 2 - 120, CANVAS_H / 2 - 25, 240, 50);
-    ctx.fillStyle = '#ffd700';
+    ctx.fillStyle = isBoss ? 'rgba(60,0,0,0.85)' : 'rgba(0,0,0,0.7)';
+    ctx.fillRect(CANVAS_W / 2 - 140, CANVAS_H / 2 - 25, 280, 50);
+    ctx.strokeStyle = isBoss ? '#ff4444' : '#ffd700';
+    ctx.lineWidth = isBoss ? 3 : 2;
+    ctx.strokeRect(CANVAS_W / 2 - 140, CANVAS_H / 2 - 25, 280, 50);
+    ctx.fillStyle = isBoss ? '#ff6644' : '#ffd700';
     ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(banner.text, CANVAS_W / 2, CANVAS_H / 2 + 6);
@@ -2373,15 +2783,24 @@
     if (btnsContainer) btnsContainer.innerHTML = '';
     if (actionsBar) actionsBar.style.display = '';
 
+    // Restore speed setting from save (8-5)
+    var cs = loadCombatState();
+    if (cs.speedMult === 2) speedMult = 2;
+
     // Wire speed toggle
     var speedBtn = $('rpg-combat-speed');
     if (speedBtn) {
       speedBtn.textContent = speedMult + 'x';
+      if (speedMult === 2) speedBtn.classList.add('active');
       speedBtn.onclick = function () {
         speedMult = speedMult === 1 ? 2 : 1;
         this.textContent = speedMult + 'x';
         if (speedMult === 2) this.classList.add('active');
         else this.classList.remove('active');
+        // Persist speed preference (8-5)
+        var sv = loadCombatState();
+        sv.speedMult = speedMult;
+        saveCombatState(sv);
       };
     }
   }
@@ -2410,6 +2829,19 @@
       if (onCooldown) label += ' (CD:' + fighter.cooldowns[moveId] + ')';
       btn.textContent = label;
 
+      // Tooltip (8-1)
+      var tip = move.name + ' [' + move.type + ']';
+      if (move.power > 0) tip += '\nPower: ' + move.power + ' (' + (move.category || 'physical') + ')';
+      if (move.hits && move.hits > 1) tip += '\nHits: ' + move.hits + 'x';
+      if (move.drain) tip += '\nDrain: ' + Math.round(move.drain * 100) + '%';
+      if (move.aoe) tip += '\nAoE: hits all enemies';
+      if (move.selfTarget) tip += '\nSelf-target';
+      if (move.cooldown) tip += '\nCooldown: ' + move.cooldown + ' turns';
+      if (move.statusEffect) tip += '\nEffect: ' + move.statusEffect;
+      if (move.conditional) tip += '\nBonus: ' + move.conditional;
+      if (move.priority) tip += '\nPriority: acts first';
+      btn.title = tip;
+
       if (onCooldown) {
         btn.disabled = true;
         btn.classList.add('on-cooldown');
@@ -2431,10 +2863,183 @@
 
       btnsContainer.appendChild(btn);
     }
+
+    // Items button (Phase 7-5)
+    if (fighter.isPlayer && window.__RPG_SKILLS_API && window.__RPG_SKILLS_API.getItemCount) {
+      var hasAnyItem = false;
+      for (var ck in COMBAT_CONSUMABLES) {
+        if (COMBAT_CONSUMABLES.hasOwnProperty(ck) && window.__RPG_SKILLS_API.getItemCount(ck) > 0) {
+          hasAnyItem = true;
+          break;
+        }
+      }
+      if (hasAnyItem) {
+        var itemBtn = document.createElement('button');
+        itemBtn.className = 'rpg-combat-move-btn rpg-combat-items-btn';
+        itemBtn.textContent = 'Items';
+        itemBtn.addEventListener('click', function () {
+          showItemsPanel(fighter);
+        });
+        btnsContainer.appendChild(itemBtn);
+      }
+    }
+  }
+
+  function showItemsPanel(fighter) {
+    var btnsContainer = $('rpg-combat-moves');
+    if (!btnsContainer) return;
+    btnsContainer.innerHTML = '';
+
+    var api = window.__RPG_SKILLS_API;
+    if (!api) return;
+
+    for (var itemKey in COMBAT_CONSUMABLES) {
+      if (!COMBAT_CONSUMABLES.hasOwnProperty(itemKey)) continue;
+      var count = api.getItemCount(itemKey);
+      if (count <= 0) continue;
+      var info = COMBAT_CONSUMABLES[itemKey];
+      var btn = document.createElement('button');
+      btn.className = 'rpg-combat-move-btn rpg-combat-item-use-btn';
+      btn.style.borderLeftColor = info.color;
+      btn.textContent = info.name + ' x' + count;
+      btn.title = info.desc;
+      btn.addEventListener('click', (function (key, inf) {
+        return function () {
+          useCombatItem(key, inf, fighter);
+        };
+      })(itemKey, info));
+      btnsContainer.appendChild(btn);
+    }
+
+    var backBtn = document.createElement('button');
+    backBtn.className = 'rpg-combat-move-btn rpg-combat-items-back';
+    backBtn.textContent = 'Back';
+    backBtn.addEventListener('click', function () {
+      renderMoveButtons(fighter);
+    });
+    btnsContainer.appendChild(backBtn);
+  }
+
+  function useCombatItem(itemKey, info, fighter) {
+    if (!battleState || !battleState.waitingForInput) return;
+    var api = window.__RPG_SKILLS_API;
+    if (!api) return;
+
+    // Pre-check: Health Potion — skip if at full HP
+    if (itemKey === 'Health Potion' && fighter.hp >= fighter.maxHp) {
+      spawnFloatingText(fighter, 'Full HP!', false, '#999999');
+      return;
+    }
+
+    // Pre-check: Antidote — skip if nothing to cure
+    if (itemKey === 'Antidote') {
+      var hasDot = hasStatus(fighter, 'burn') || hasStatus(fighter, 'poison') || hasStatus(fighter, 'bleed');
+      if (!hasDot) {
+        spawnFloatingText(fighter, 'No effect!', false, '#999999');
+        return;
+      }
+    }
+
+    // Pre-check: Revive — refund if no fainted ally
+    if (itemKey === 'Revive Potion') {
+      var hasFainted = false;
+      for (var ri = 0; ri < battleState.playerTeam.length; ri++) {
+        if (!battleState.playerTeam[ri].alive && battleState.playerTeam[ri].id !== fighter.id) {
+          hasFainted = true;
+          break;
+        }
+      }
+      if (!hasFainted) {
+        spawnFloatingText(fighter, 'No target!', false, '#999999');
+        return;
+      }
+    }
+
+    // Consume item
+    if (!api.removeItem(itemKey, 1)) return;
+
+    battleState.waitingForInput = false;
+    addBattleLog(fighter.name + ' used ' + info.name + '!');
+
+    if (itemKey === 'Health Potion') {
+      var healAmt = Math.floor(fighter.maxHp * 0.30);
+      fighter.hp = Math.min(fighter.maxHp, fighter.hp + healAmt);
+      spawnFloatingText(fighter, '+' + healAmt, false, '#44ff44');
+    } else if (itemKey === 'Antidote') {
+      var cured = [];
+      var dots = ['burn', 'poison', 'bleed'];
+      for (var di = 0; di < dots.length; di++) {
+        if (hasStatus(fighter, dots[di])) {
+          removeStatus(fighter, dots[di]);
+          cured.push(dots[di]);
+        }
+      }
+      spawnFloatingText(fighter, 'Cured!', false, '#44cc44');
+    } else if (itemKey === 'Revive Potion') {
+      for (var rvi = 0; rvi < battleState.playerTeam.length; rvi++) {
+        var ally = battleState.playerTeam[rvi];
+        if (!ally.alive && ally.id !== fighter.id) {
+          ally.alive = true;
+          ally.hp = Math.floor(ally.maxHp * 0.20);
+          ally._deathStart = null;
+          ally._deathDur = 0;
+          ally.opacity = 1;
+          spawnFloatingText(ally, 'Revived!', false, '#ffcc44');
+          addBattleLog(ally.name + ' was revived!');
+          break;
+        }
+      }
+    } else if (itemKey === 'Bomb') {
+      var bombDmg = Math.floor(fighter.atk * 1.5 + 20);
+      var bombKilled = [];
+      for (var bi = 0; bi < battleState.enemyTeam.length; bi++) {
+        var enemy = battleState.enemyTeam[bi];
+        if (!enemy.alive) continue;
+        var finalDmg = Math.max(1, bombDmg - Math.floor(enemy.def * 0.3));
+        enemy.hp = Math.max(0, enemy.hp - finalDmg);
+        if (enemy.hp <= 0) {
+          enemy.alive = false;
+          bombKilled.push(enemy);
+          battleState.kills++;
+          if (enemy.isBoss) battleState._bossKills = (battleState._bossKills || 0) + 1;
+          trackBestiaryDefeat(enemy);
+          addBattleLog(enemy.name + ' was defeated!');
+        }
+        spawnFloatingText(enemy, '-' + finalDmg, false, '#ff6644');
+      }
+      // Trigger death animations for bomb kills
+      for (var bk = 0; bk < bombKilled.length; bk++) {
+        if (!bombKilled[bk]._deathStart) {
+          bombKilled[bk]._deathStart = Date.now();
+          bombKilled[bk]._deathDur = getDelay(500);
+        }
+      }
+    }
+
+    // Item use consumes the turn
+    setTimeout(function () {
+      if (checkBattleEnd()) return;
+      advanceTurn(fighter);
+    }, getDelay(600));
   }
 
   function highlightTargets() {
     if (!battleState) return;
+
+    // Taunt enforcement for player targeting (5B-1)
+    var taunterIdx = -1;
+    for (var ti = 0; ti < battleState.enemyTeam.length; ti++) {
+      if (battleState.enemyTeam[ti].alive && hasStatus(battleState.enemyTeam[ti], 'taunt')) {
+        taunterIdx = ti;
+        break;
+      }
+    }
+    // If taunter found, auto-select them immediately
+    if (taunterIdx >= 0 && battleState.selectedMove) {
+      executeTurnAction(battleState.activeFighter, battleState.selectedMove, battleState.enemyTeam[taunterIdx]);
+      return;
+    }
+
     // Register canvas click handler for target selection
     if (canvas && !canvas._combatClickHandler) {
       canvas._combatClickHandler = function (e) {
@@ -2514,6 +3119,19 @@
     if (r.gotStone) {
       html += '<div class="rpg-combat-stone">Evolution Stone (' + r.stoneType + ') obtained!</div>';
     }
+    // Dungeon drops
+    if (r.droppedItems && r.droppedItems.length > 0) {
+      html += '<div class="rpg-combat-drops"><div class="rpg-combat-drops-title">Loot</div>';
+      for (var ddi = 0; ddi < r.droppedItems.length; ddi++) {
+        var di = r.droppedItems[ddi];
+        html += '<div class="rpg-combat-drop-item">' + di.item + ' x' + di.qty + '</div>';
+      }
+      html += '</div>';
+    }
+    // Arena milestone
+    if (r.arenaMilestone) {
+      html += '<div class="rpg-combat-milestone">Arena Milestone: ' + r.arenaMilestone.label + '!</div>';
+    }
     html += '</div>';
 
     // Per-pet XP breakdown
@@ -2539,6 +3157,31 @@
       }
       html += '</div>';
     }
+    // Post-combat stats (8-2)
+    if (battleState.playerTeam && battleState.playerTeam.length > 0) {
+      var anyStats = false;
+      for (var si = 0; si < battleState.playerTeam.length; si++) {
+        if (battleState.playerTeam[si]._stats && battleState.playerTeam[si]._stats.dmgDealt > 0) { anyStats = true; break; }
+      }
+      if (anyStats) {
+        html += '<div class="rpg-combat-post-stats">';
+        html += '<div class="rpg-combat-post-stats-title">Battle Stats</div>';
+        for (var pi2 = 0; pi2 < battleState.playerTeam.length; pi2++) {
+          var pf = battleState.playerTeam[pi2];
+          var st = pf._stats;
+          if (!st) continue;
+          html += '<div class="rpg-combat-post-stat-row">';
+          html += '<span class="rpg-post-stat-name">' + pf.name + '</span>';
+          html += '<span class="rpg-post-stat-val">DMG:' + st.dmgDealt + '</span>';
+          html += '<span class="rpg-post-stat-val">Taken:' + st.dmgTaken + '</span>';
+          html += '<span class="rpg-post-stat-val">Kills:' + st.kills + '</span>';
+          if (st.crits > 0) html += '<span class="rpg-post-stat-val">Crits:' + st.crits + '</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+    }
+
     html += '<button class="rpg-btn rpg-btn-primary rpg-combat-continue-btn" id="rpg-combat-continue">Continue</button>';
     html += '</div>';
 
@@ -2878,6 +3521,18 @@
       html += '<button class="rpg-modal-close" id="rpg-arena-close">&times;</button></div>';
       html += '<div class="rpg-team-info">Choose a pet for 1v1 combat';
       html += '<br><span style="font-size:0.85em;color:color-mix(in srgb, var(--foreground) 45%, transparent)">Wins: ' + arenaWins + ' &middot; Streak: ' + arenaStreak + ' &middot; Best: ' + arenaBest + '</span>';
+      // Arena milestone progress
+      var _msDone = combatSave.arenaStats.milestones || {};
+      var _msTargets = [10, 25, 50, 100, 200, 500];
+      var nextMs = null;
+      for (var msi = 0; msi < _msTargets.length; msi++) {
+        if (!_msDone[_msTargets[msi]]) { nextMs = _msTargets[msi]; break; }
+      }
+      if (nextMs) {
+        html += '<br><span style="font-size:0.8em;color:#ffd700">Next milestone: ' + arenaWins + '/' + nextMs + ' wins</span>';
+      } else {
+        html += '<br><span style="font-size:0.8em;color:#ffd700">All milestones claimed!</span>';
+      }
       html += '<div class="rpg-diff-row" style="margin-top:6px">';
       var adiffs = ['easy', 'normal', 'hard'];
       for (var ad = 0; ad < adiffs.length; ad++) {
@@ -3018,14 +3673,24 @@
       document.removeEventListener('keydown', document._combatKeyHandler);
       document._combatKeyHandler = null;
     }
+    flushBestiaryUpdates(); // safety flush if any pending
     battleState = null;
     floatingTexts = [];
     activeVfx = [];
-    speedMult = 1;
+    // speedMult preserved across battles (8-5), restored from save in renderBattleUI
     var overlay = $('rpg-combat-results');
     if (overlay) overlay.style.display = 'none';
     var moveBtns = $('rpg-combat-moves');
     if (moveBtns) moveBtns.innerHTML = '';
+  }
+
+  // Run from battle (5B-4): reduced rewards (25%)
+  function runFromBattle() {
+    if (!battleState || battleState.phase === 'results') return;
+    // Apply 25% reward penalty for running
+    battleState.rewardMult = (battleState.rewardMult || 1) * 0.25;
+    addBattleLog('You fled the battle!');
+    showResults(false);
   }
 
   function isActive() {
@@ -3548,6 +4213,209 @@
     return true;
   }
 
+  // ── Bestiary (8-3) ────────────────────────────────
+  // Pending bestiary updates — batched and flushed once via flushBestiaryUpdates
+  var _bestiaryPendingDefeats = {};
+
+  function trackBestiarySeen(enemies) {
+    var cs = loadCombatState();
+    if (!cs.bestiary) cs.bestiary = {};
+    var changed = false;
+    for (var i = 0; i < enemies.length; i++) {
+      var baseId = enemies[i].id.replace(/-\d+$/, ''); // strip wave index suffix
+      if (!cs.bestiary[baseId]) {
+        cs.bestiary[baseId] = { seen: true, defeated: 0 };
+        changed = true;
+      }
+    }
+    if (changed) saveCombatState(cs);
+  }
+
+  function trackBestiaryDefeat(fighter) {
+    var baseId = fighter.id.replace(/-\d+$/, '');
+    _bestiaryPendingDefeats[baseId] = (_bestiaryPendingDefeats[baseId] || 0) + 1;
+  }
+
+  function flushBestiaryUpdates() {
+    var keys = Object.keys(_bestiaryPendingDefeats);
+    if (keys.length === 0) return;
+    var cs = loadCombatState();
+    if (!cs.bestiary) cs.bestiary = {};
+    for (var i = 0; i < keys.length; i++) {
+      var id = keys[i];
+      if (!cs.bestiary[id]) cs.bestiary[id] = { seen: true, defeated: 0 };
+      cs.bestiary[id].defeated += _bestiaryPendingDefeats[id];
+    }
+    _bestiaryPendingDefeats = {};
+    saveCombatState(cs);
+  }
+
+  function showBestiary() {
+    loadData();
+    var cs = loadCombatState();
+    if (!cs.bestiary) cs.bestiary = {};
+    var modal = document.getElementById('rpg-bestiary-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'rpg-bestiary-modal';
+      modal.className = 'rpg-modal-overlay';
+      document.body.appendChild(modal);
+      attachModalOverlayClose(modal);
+    }
+
+    var allEnemies = enemyData ? Object.keys(enemyData) : [];
+    var html = '<div class="rpg-modal rpg-bestiary">';
+    html += '<div class="rpg-modal-header"><h3>Bestiary</h3>';
+    html += '<button class="rpg-modal-close" id="rpg-bestiary-close">&times;</button></div>';
+
+    // Count stats
+    var seenCount = 0, totalCount = allEnemies.length;
+    for (var sc = 0; sc < allEnemies.length; sc++) {
+      if (cs.bestiary[allEnemies[sc]]) seenCount++;
+    }
+    html += '<div class="rpg-bestiary-summary">Discovered: ' + seenCount + ' / ' + totalCount + '</div>';
+
+    html += '<div class="rpg-bestiary-grid">';
+    for (var ei = 0; ei < allEnemies.length; ei++) {
+      var eid = allEnemies[ei];
+      var ed = enemyData[eid];
+      var entry = cs.bestiary[eid];
+      var discovered = !!entry;
+
+      html += '<div class="rpg-bestiary-entry' + (discovered ? '' : ' undiscovered') + '" data-enemy-id="' + eid + '">';
+      if (discovered) {
+        html += '<div class="rpg-bestiary-sprite" data-sprite="' + (ed.sprite || '') + '" data-fw="' + (ed.frameWidth || 32) + '" data-fh="' + (ed.frameHeight || 32) + '"></div>';
+        html += '<div class="rpg-bestiary-name">' + ed.name + '</div>';
+        html += '<div class="rpg-bestiary-defeated">x' + (entry.defeated || 0) + '</div>';
+      } else {
+        html += '<div class="rpg-bestiary-sprite unknown"></div>';
+        html += '<div class="rpg-bestiary-name">???</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div></div>';
+
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
+
+    // Load sprites into divs
+    var spriteDivs = modal.querySelectorAll('.rpg-bestiary-sprite[data-sprite]');
+    for (var si = 0; si < spriteDivs.length; si++) {
+      var sd = spriteDivs[si];
+      var src = sd.getAttribute('data-sprite');
+      var fw = parseInt(sd.getAttribute('data-fw')) || 32;
+      var fh = parseInt(sd.getAttribute('data-fh')) || 32;
+      if (src) {
+        sd.style.width = fw + 'px';
+        sd.style.height = fh + 'px';
+        sd.style.backgroundImage = 'url(' + src + ')';
+        sd.style.backgroundPosition = '0 0';
+        sd.style.backgroundSize = 'auto';
+        sd.style.imageRendering = 'pixelated';
+      }
+    }
+
+    // Click for detail
+    var entries = modal.querySelectorAll('.rpg-bestiary-entry:not(.undiscovered)');
+    for (var ci = 0; ci < entries.length; ci++) {
+      entries[ci].addEventListener('click', (function (eidLocal) {
+        return function () { showBestiaryDetail(eidLocal); };
+      })(entries[ci].getAttribute('data-enemy-id')));
+    }
+
+    document.getElementById('rpg-bestiary-close').addEventListener('click', function () {
+      modal.style.display = 'none';
+    });
+  }
+
+  function showBestiaryDetail(enemyId) {
+    loadData();
+    var ed = enemyData ? enemyData[enemyId] : null;
+    if (!ed) return;
+    var cs = loadCombatState();
+    if (!cs.bestiary) cs.bestiary = {};
+    var entry = cs.bestiary[enemyId] || { seen: true, defeated: 0 };
+
+    var TYPE_COLORS = { fire: '#ff6600', aqua: '#4488cc', nature: '#44aa44', tech: '#ccaa22', shadow: '#8844cc', mystic: '#cc44aa', neutral: '#888' };
+
+    var modal = document.getElementById('rpg-bestiary-detail-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'rpg-bestiary-detail-modal';
+      modal.className = 'rpg-modal-overlay';
+      document.body.appendChild(modal);
+      attachModalOverlayClose(modal);
+    }
+
+    var html = '<div class="rpg-modal rpg-bestiary-detail">';
+    html += '<div class="rpg-modal-header"><h3>' + ed.name + '</h3>';
+    html += '<button class="rpg-modal-close" id="rpg-bestiary-detail-close">&times;</button></div>';
+    html += '<div class="rpg-detail-info">';
+    html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Type:</span> <span class="rpg-type-badge rpg-type-' + ed.type + '">' + ed.type + '</span></div>';
+    html += '<div class="rpg-detail-row"><span class="rpg-detail-label">HP:</span> ' + ed.hpBase + '</div>';
+    html += '<div class="rpg-detail-row"><span class="rpg-detail-label">ATK:</span> ' + ed.atkBase + ' <span class="rpg-detail-label">DEF:</span> ' + ed.defBase + '</div>';
+    html += '<div class="rpg-detail-row"><span class="rpg-detail-label">SPD:</span> ' + (ed.spdBase || '?') + ' <span class="rpg-detail-label">CRI:</span> ' + (ed.criBase || '?') + '</div>';
+    if (ed.isBoss) html += '<div class="rpg-detail-row" style="color:#cc4444;font-weight:bold">BOSS</div>';
+    html += '<div class="rpg-detail-row"><span class="rpg-detail-label">Defeated:</span> ' + entry.defeated + ' times</div>';
+    html += '</div></div>';
+
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
+
+    document.getElementById('rpg-bestiary-detail-close').addEventListener('click', function () {
+      modal.style.display = 'none';
+    });
+  }
+
+  // ── Type Chart (8-4) ─────────────────────────────
+  function showTypeChart() {
+    var modal = document.getElementById('rpg-typechart-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'rpg-typechart-modal';
+      modal.className = 'rpg-modal-overlay';
+      document.body.appendChild(modal);
+      attachModalOverlayClose(modal);
+    }
+
+    var types = ['fire', 'nature', 'tech', 'aqua', 'shadow', 'mystic'];
+    var TYPE_COLORS = { fire: '#ff6600', nature: '#44aa44', tech: '#ccaa22', aqua: '#4488cc', shadow: '#8844cc', mystic: '#cc44aa' };
+
+    var html = '<div class="rpg-modal rpg-typechart">';
+    html += '<div class="rpg-modal-header"><h3>Type Chart</h3>';
+    html += '<button class="rpg-modal-close" id="rpg-typechart-close">&times;</button></div>';
+    html += '<div class="rpg-typechart-body">';
+    html += '<div class="rpg-typechart-legend">';
+    html += '<span class="rpg-tc-super">1.5x Super Effective</span>';
+    html += '<span class="rpg-tc-neutral">1x Neutral</span>';
+    html += '<span class="rpg-tc-resist">0.75x Resisted</span>';
+    html += '</div>';
+    html += '<table class="rpg-typechart-table"><thead><tr><th></th>';
+    for (var h = 0; h < types.length; h++) {
+      html += '<th style="color:' + TYPE_COLORS[types[h]] + '">' + types[h].charAt(0).toUpperCase() + types[h].slice(1) + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+    for (var r = 0; r < types.length; r++) {
+      html += '<tr><td style="color:' + TYPE_COLORS[types[r]] + ';font-weight:bold">' + types[r].charAt(0).toUpperCase() + types[r].slice(1) + '</td>';
+      for (var c = 0; c < types.length; c++) {
+        var mult = TYPE_CHART[types[r]] ? (TYPE_CHART[types[r]][types[c]] || 1) : 1;
+        var cls = mult > 1 ? 'rpg-tc-super' : (mult < 1 ? 'rpg-tc-resist' : 'rpg-tc-neutral');
+        html += '<td class="' + cls + '">' + mult + 'x</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    html += '<div class="rpg-typechart-notes">Attacker type on the left, defender type on top. Neutral type has no advantages or weaknesses.</div>';
+    html += '</div></div>';
+
+    modal.innerHTML = html;
+    modal.style.display = 'flex';
+
+    document.getElementById('rpg-typechart-close').addEventListener('click', function () {
+      modal.style.display = 'none';
+    });
+  }
+
   // ── Public API ─────────────────────────────────────
   window.RpgCombat = {
     init: init,
@@ -3563,13 +4431,16 @@
     initMovesForPet: function(petId, level) { loadData(); return initPetMoves(petId, level); },
     showPetDetail: showPetDetail,
     toggleAuto: toggleAuto,
+    runFromBattle: runFromBattle,
     canEvolve: canEvolve,
     evolvePet: evolvePet,
     respecPet: respecPet,
     showSpecChoiceModal: showSpecChoiceModal,
     getSpecData: function () { loadData(); return specData; },
     getSpecBonuses: getSpecBonuses,
-    petHasSpecGate: petHasSpecGate
+    petHasSpecGate: petHasSpecGate,
+    showBestiary: showBestiary,
+    showTypeChart: showTypeChart
   };
 
 })();
