@@ -2219,21 +2219,37 @@
           bx.fillStyle = '#2a3a2a';
           bx.beginPath(); bx.moveTo(sx - sw, 0); bx.lineTo(sx + sw, 0); bx.lineTo(sx, sl); bx.fill();
         }
-        // Moss dots on walls
-        for (i = 0; i < 40; i++) {
+        // Moss dots on walls — doubled density
+        for (i = 0; i < 80; i++) {
           h = bgHash(i, 500);
-          bx.fillStyle = ['#3a6633', '#2d5525', '#4a7744'][h % 3];
+          bx.fillStyle = ['#3a6633', '#2d5525', '#4a7744', '#558844'][h % 4];
           bx.fillRect(h % W, (bgHash(i, 600) % (groundY - 20)), 2 + h % 3, 2);
+        }
+        // Small mushrooms
+        for (i = 0; i < 6; i++) {
+          h = bgHash(i, 550);
+          var mx = h % W, my = groundY - 4;
+          bx.fillStyle = ['#886644', '#aa7755', '#775533'][h % 3];
+          bx.fillRect(mx, my, 2, 4); // stem
+          bx.fillStyle = ['#cc5544', '#dd6655', '#bb4433'][h % 3];
+          bx.fillRect(mx - 1, my - 2, 4, 3); // cap
         }
         // Ground
         bx.fillStyle = '#2a3a22'; bx.fillRect(0, groundY, W, 50);
-        // Ground texture
-        for (i = 0; i < 80; i++) {
+        // Ground texture + pebbles
+        for (i = 0; i < 120; i++) {
           h = bgHash(i, 700);
           bx.fillStyle = ['#354a2d', '#3d5535', '#223318'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 3 + h % 4, 2);
         }
-        bx.fillStyle = '#3a5a33'; bx.fillRect(0, groundY, W, 2);
+        // Pebbles
+        for (i = 0; i < 10; i++) {
+          h = bgHash(i, 750);
+          bx.fillStyle = ['#4a5a42', '#3a4a32', '#5a6a52'][h % 3];
+          bx.beginPath(); bx.arc(h % W, groundY + 4 + (h % 20), 2 + h % 2, 0, Math.PI * 2); bx.fill();
+        }
+        bx.fillStyle = '#3a5a33'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#4a6a43'; bx.fillRect(0, groundY - 1, W, 1);
         break;
 
       case 'fire': // Volcanic, lava glow
@@ -2255,21 +2271,31 @@
           }
           bx.stroke();
         }
-        // Embers
-        for (i = 0; i < 20; i++) {
+        // Embers — brighter, doubled count
+        for (i = 0; i < 40; i++) {
           h = bgHash(i, 950);
-          bx.fillStyle = 'rgba(255,' + (100 + h % 100) + ',0,' + (0.2 + (h % 30) / 100) + ')';
+          bx.fillStyle = 'rgba(255,' + (140 + h % 80) + ',' + (20 + h % 40) + ',' + (0.3 + (h % 30) / 100) + ')';
           bx.fillRect(h % W, bgHash(i, 951) % groundY, 2, 2);
+        }
+        // Lava pools near ground
+        for (i = 0; i < 5; i++) {
+          h = bgHash(i, 960);
+          var lx = h % (W - 30), lw = 12 + h % 20;
+          bx.fillStyle = 'rgba(255,100,0,0.2)';
+          bx.fillRect(lx, groundY + 2, lw, 4);
+          bx.fillStyle = 'rgba(255,160,0,0.15)';
+          bx.fillRect(lx + 2, groundY + 3, lw - 4, 2);
         }
         // Ground (dark rock with lava glow)
         bx.fillStyle = '#2a1a1a'; bx.fillRect(0, groundY, W, 50);
-        for (i = 0; i < 60; i++) {
+        for (i = 0; i < 90; i++) {
           h = bgHash(i, 1000);
           bx.fillStyle = ['#3a2020', '#2a1515', '#1a0a0a'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 3 + h % 5, 2);
         }
-        bx.fillStyle = '#cc4400'; bx.fillRect(0, groundY, W, 1);
-        bx.fillStyle = 'rgba(255,68,0,0.2)'; bx.fillRect(0, groundY + 1, W, 1);
+        bx.fillStyle = '#cc4400'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#ff6600'; bx.fillRect(0, groundY - 1, W, 1);
+        bx.fillStyle = 'rgba(255,68,0,0.2)'; bx.fillRect(0, groundY + 3, W, 1);
         break;
 
       case 'aqua': // Underwater, bubbles
@@ -2285,8 +2311,8 @@
           bx.lineTo(30 + h % 20, groundY); bx.lineTo(-30 - h % 20, groundY); bx.fill();
           bx.restore();
         }
-        // Bubbles
-        for (i = 0; i < 25; i++) {
+        // Bubbles — doubled
+        for (i = 0; i < 50; i++) {
           h = bgHash(i, 1200);
           var br = 2 + h % 4;
           bx.strokeStyle = 'rgba(100,180,255,' + (0.15 + (h % 20) / 100) + ')';
@@ -2295,12 +2321,13 @@
         }
         // Sandy ground
         bx.fillStyle = '#1a2a35'; bx.fillRect(0, groundY, W, 50);
-        for (i = 0; i < 60; i++) {
+        for (i = 0; i < 90; i++) {
           h = bgHash(i, 1300);
           bx.fillStyle = ['#223344', '#1a2835', '#2a3a4a'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 3 + h % 4, 2);
         }
-        bx.fillStyle = '#3a5566'; bx.fillRect(0, groundY, W, 2);
+        bx.fillStyle = '#3a5566'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#4a6676'; bx.fillRect(0, groundY - 1, W, 1);
         break;
 
       case 'shadow': // Dark crypt, purple accents
@@ -2319,8 +2346,8 @@
             bx.fillRect(bxp, byp, bw - 1, bh - 1);
           }
         }
-        // Purple wisps
-        for (i = 0; i < 12; i++) {
+        // Purple wisps — doubled
+        for (i = 0; i < 24; i++) {
           h = bgHash(i, 1500);
           bx.fillStyle = 'rgba(136,68,204,' + (0.06 + (h % 10) / 100) + ')';
           bx.fillRect(h % W, bgHash(i, 1501) % groundY, 3 + h % 6, 3 + h % 4);
@@ -2332,8 +2359,9 @@
           bx.fillStyle = ['#221e2e', '#1a1624', '#16121e'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 3 + h % 5, 2);
         }
-        bx.fillStyle = '#6633aa'; bx.fillRect(0, groundY, W, 1);
-        bx.fillStyle = 'rgba(136,68,204,0.15)'; bx.fillRect(0, groundY + 1, W, 1);
+        bx.fillStyle = '#6633aa'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#7744bb'; bx.fillRect(0, groundY - 1, W, 1);
+        bx.fillStyle = 'rgba(136,68,204,0.15)'; bx.fillRect(0, groundY + 3, W, 1);
         break;
 
       case 'tech': // Lab, circuit lines
@@ -2369,8 +2397,9 @@
           bx.fillStyle = ['#222a30', '#1a2228', '#2a3238'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 4 + h % 4, 2);
         }
-        bx.fillStyle = '#ccaa22'; bx.fillRect(0, groundY, W, 1);
-        bx.fillStyle = 'rgba(204,170,34,0.15)'; bx.fillRect(0, groundY + 1, W, 1);
+        bx.fillStyle = '#ccaa22'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#ddbb33'; bx.fillRect(0, groundY - 1, W, 1);
+        bx.fillStyle = 'rgba(204,170,34,0.15)'; bx.fillRect(0, groundY + 3, W, 1);
         break;
 
       case 'mystic': // Ruins, glowing runes
@@ -2394,8 +2423,8 @@
             bx.fillRect(px + j, groundY - ph - chipH, 2, chipH);
           }
         }
-        // Glowing runes
-        for (i = 0; i < 8; i++) {
+        // Glowing runes — doubled
+        for (i = 0; i < 16; i++) {
           h = bgHash(i, 2000);
           bx.fillStyle = 'rgba(204,68,170,' + (0.12 + (h % 15) / 100) + ')';
           var rx = h % W, ry = bgHash(i, 2001) % (groundY - 10);
@@ -2409,8 +2438,9 @@
           bx.fillStyle = ['#2a2238', '#221a30', '#1a1224'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 3 + h % 5, 2);
         }
-        bx.fillStyle = '#cc44aa'; bx.fillRect(0, groundY, W, 1);
-        bx.fillStyle = 'rgba(204,68,170,0.15)'; bx.fillRect(0, groundY + 1, W, 1);
+        bx.fillStyle = '#cc44aa'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#dd55bb'; bx.fillRect(0, groundY - 1, W, 1);
+        bx.fillStyle = 'rgba(204,68,170,0.15)'; bx.fillRect(0, groundY + 3, W, 1);
         break;
 
       case 'arena': // Sandy colosseum
@@ -2425,21 +2455,35 @@
           bx.fillStyle = '#5a5040'; bx.fillRect(colX, 20, 14, 6);
           bx.fillStyle = '#5a5040'; bx.fillRect(colX - 2, groundY - 6, 18, 6);
           bx.fillStyle = 'rgba(255,255,255,0.05)'; bx.fillRect(colX, 20, 2, groundY - 20);
+          // Torch sconces
+          bx.fillStyle = '#6a5a40'; bx.fillRect(colX + 3, 50, 8, 4);
+          bx.fillStyle = '#ff9922'; bx.fillRect(colX + 5, 46, 4, 4);
+          bx.fillStyle = 'rgba(255,153,34,0.15)'; bx.beginPath(); bx.arc(colX + 7, 48, 10, 0, Math.PI * 2); bx.fill();
         }
-        // Crowd dots
-        for (i = 0; i < 30; i++) {
+        // Crossbeam connecting column tops
+        bx.fillStyle = '#5a5040'; bx.fillRect(30, 20, (5 * 130) + 14, 3);
+        // Crowd dots — larger, more varied, staggered rows
+        for (i = 0; i < 60; i++) {
           h = bgHash(i, 2200);
-          bx.fillStyle = ['#554830', '#665838', '#443820'][h % 3];
-          bx.fillRect(h % W, 10 + (h % 30), 3, 4);
+          bx.fillStyle = ['#554830', '#665838', '#443820', '#776848', '#554028'][h % 5];
+          var crowdRow = (h % 3);
+          bx.fillRect(h % W, 6 + crowdRow * 10 + (h % 8), 4, 5);
+        }
+        // Sand dust in air
+        for (i = 0; i < 20; i++) {
+          h = bgHash(i, 2250);
+          bx.fillStyle = 'rgba(180,160,120,' + (0.08 + (h % 10) / 100) + ')';
+          bx.fillRect(h % W, 40 + bgHash(i, 2251) % (groundY - 60), 2, 1);
         }
         // Sand floor
         bx.fillStyle = '#3a3018'; bx.fillRect(0, groundY, W, 50);
-        for (i = 0; i < 80; i++) {
+        for (i = 0; i < 120; i++) {
           h = bgHash(i, 2300);
           bx.fillStyle = ['#4a4020', '#3a3018', '#504828'][h % 3];
           bx.fillRect(h % W, groundY + (h % 48), 3 + h % 4, 2);
         }
-        bx.fillStyle = '#6a5a30'; bx.fillRect(0, groundY, W, 2);
+        bx.fillStyle = '#6a5a30'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#7a6a3a'; bx.fillRect(0, groundY - 1, W, 1);
         break;
 
       default: // Fallback
@@ -2447,9 +2491,17 @@
         grad.addColorStop(0, '#1a1a2e'); grad.addColorStop(0.6, '#16213e'); grad.addColorStop(1, '#0f3460');
         bx.fillStyle = grad; bx.fillRect(0, 0, W, H);
         bx.fillStyle = '#2a2a2a'; bx.fillRect(0, groundY, W, 50);
-        bx.fillStyle = '#333'; bx.fillRect(0, groundY, W, 2);
+        bx.fillStyle = '#444'; bx.fillRect(0, groundY, W, 3);
+        bx.fillStyle = '#555'; bx.fillRect(0, groundY - 1, W, 1);
         break;
     }
+
+    // Vignette overlay — darken edges for depth
+    var vig = bx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.7);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.4)');
+    bx.fillStyle = vig;
+    bx.fillRect(0, 0, W, H);
 
     var img = new Image();
     img.src = c.toDataURL();
@@ -2488,43 +2540,81 @@
 
   function drawTurnOrderStrip() {
     if (!battleState.turnOrder || battleState.turnOrder.length === 0) return;
-    var stripH = 28;
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    var stripH = 36;
+    // Dark gradient bar
+    var sg = ctx.createLinearGradient(0, 0, 0, stripH);
+    sg.addColorStop(0, 'rgba(0,0,0,0.7)');
+    sg.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = sg;
     ctx.fillRect(0, 0, CANVAS_W, stripH);
+    // Bottom separator
+    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+    ctx.fillRect(0, stripH - 1, CANVAS_W, 1);
 
-    var x = 8;
+    var boxW = 26, boxH = 26;
+    var x = 6;
     for (var i = 0; i < battleState.turnOrder.length && i < 8; i++) {
       var f = battleState.turnOrder[i];
       if (!f.alive) continue;
-
       var isActive = (i === battleState.currentTurnIndex);
-      var boxW = 22, boxH = 22;
+      var bx = x, by = 3;
 
-      // Background
-      ctx.fillStyle = isActive ? '#ffd700' : (f.isPlayer ? '#4488aa' : '#aa4444');
-      ctx.fillRect(x, 3, boxW, boxH);
+      // Box background with rounded look
+      if (isActive) {
+        // Gold glow behind active
+        ctx.fillStyle = 'rgba(255,215,0,0.25)';
+        ctx.fillRect(bx - 2, by - 2, boxW + 4, boxH + 4);
+      }
+      ctx.fillStyle = isActive ? '#ffd700' : (f.isPlayer ? 'rgba(68,136,170,0.6)' : 'rgba(170,68,68,0.6)');
+      ctx.fillRect(bx, by, boxW, boxH);
+
+      // Draw mini sprite if available
+      var drewSprite = false;
+      if (f.spriteImg) {
+        try {
+          if (f.isPlayer && petSpriteData && f.spriteId) {
+            var sInfo = petSpriteData[f.spriteId];
+            if (sInfo) {
+              var sfw = sInfo.frameWidth || 48, sfh = sInfo.frameHeight || 48;
+              var sfo = sInfo.frameOffset || 0;
+              var sfi = Math.min(sfo + (f.evoStage || 0), (sInfo.frames || 3) - 1);
+              ctx.imageSmoothingEnabled = false;
+              ctx.drawImage(f.spriteImg, sfi * sfw, 0, sfw, sfh, bx + 1, by + 1, boxW - 2, boxH - 2);
+              drewSprite = true;
+            }
+          } else if (!f.isPlayer) {
+            var efw = f.frameWidth || 32, efh = f.frameHeight || 32;
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(f.spriteImg, 0, 0, efw, efh, bx + 1, by + 1, boxW - 2, boxH - 2);
+            drewSprite = true;
+          }
+        } catch (e) { /* fallback to letter */ }
+      }
+      if (!drewSprite) {
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(f.name.charAt(0), bx + boxW / 2, by + 18);
+      }
 
       // Border
-      if (isActive) {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, 3, boxW, boxH);
+      ctx.strokeStyle = isActive ? '#fff' : 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = isActive ? 2 : 1;
+      ctx.strokeRect(bx, by, boxW, boxH);
+
+      // HP pip below box
+      var hpRatio = f.hp / f.maxHp;
+      var pipY = by + boxH + 1;
+      var pipW = boxW - 4;
+      var pipX = bx + 2;
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(pipX, pipY, pipW, 3);
+      if (hpRatio > 0) {
+        ctx.fillStyle = hpRatio > 0.5 ? '#33aa33' : (hpRatio > 0.25 ? '#aaaa22' : '#aa2222');
+        ctx.fillRect(pipX, pipY, pipW * hpRatio, 3);
       }
 
-      // Tiny sprite or letter
-      ctx.fillStyle = '#fff';
-      ctx.font = '10px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(f.name.charAt(0), x + boxW / 2, 18);
-
-      // A/M indicator for player pets
-      if (f.isPlayer) {
-        ctx.font = '7px monospace';
-        ctx.fillStyle = f.isAuto ? '#44cc88' : '#aaaaaa';
-        ctx.fillText(f.isAuto ? 'A' : 'M', x + boxW / 2, boxH + 5);
-      }
-
-      x += boxW + 4;
+      x += boxW + 3;
     }
     ctx.textAlign = 'left';
   }
@@ -2625,44 +2715,90 @@
     pos.y += (fighter.animOffsetY || 0);
     var size = fighter.isBoss ? 56 : 40;
 
-    drawFighterSprite(fighter, pos, size);
-
-    // Active turn indicator
+    // Active turn: animated glow ring
     if (battleState.activeFighter === fighter) {
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 2;
+      var glowAlpha = 0.35 + 0.15 * Math.sin(Date.now() * 0.005);
+      ctx.save();
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = 'rgba(255,215,0,' + glowAlpha + ')';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, size / 2 + 3, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, size / 2 + 5, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.restore();
     }
 
-    // Name label
-    ctx.fillStyle = '#fff';
-    ctx.font = '9px monospace';
+    drawFighterSprite(fighter, pos, size);
+
+    // Name plate
+    var nameText = fighter.name;
+    ctx.font = 'bold 9px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(fighter.name, pos.x, pos.y - size / 2 - 18);
+    var nameW = ctx.measureText(nameText).width + 8;
+    var nameX = pos.x - nameW / 2;
+    var nameY = pos.y - size / 2 - 22;
+    // Name plate bg
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(nameX, nameY, nameW, 13);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(nameText, pos.x, nameY + 10);
 
-    // HP bar
-    var barW = 50, barH = 5;
+    // HP bar — wider, taller, gradient fill
+    var barW = 56, barH = 6;
     var barX = pos.x - barW / 2;
-    var barY = pos.y - size / 2 - 12;
-    ctx.fillStyle = '#333';
-    ctx.fillRect(barX, barY, barW, barH);
+    var barY = pos.y - size / 2 - 8;
+    // Bar background with inset effect
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(barX, barY, barW, 1); // dark inset top
     var hpPct = fighter.hp / fighter.maxHp;
-    ctx.fillStyle = hpPct > 0.5 ? '#44cc44' : (hpPct > 0.25 ? '#ccaa44' : '#cc4444');
-    ctx.fillRect(barX, barY, barW * hpPct, barH);
-    ctx.strokeStyle = '#666';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(barX, barY, barW, barH);
+    // Gradient fill
+    if (hpPct > 0) {
+      var hpGrad = ctx.createLinearGradient(barX, barY, barX + barW * hpPct, barY);
+      if (hpPct > 0.5) {
+        hpGrad.addColorStop(0, '#33aa33'); hpGrad.addColorStop(1, '#55dd55');
+      } else if (hpPct > 0.25) {
+        hpGrad.addColorStop(0, '#aa8822'); hpGrad.addColorStop(1, '#ddcc44');
+      } else {
+        hpGrad.addColorStop(0, '#aa2222'); hpGrad.addColorStop(1, '#dd4444');
+      }
+      ctx.fillStyle = hpGrad;
+      ctx.fillRect(barX, barY, barW * hpPct, barH);
+    }
+    // Bar border — inset style
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(barX - 1, barY - 1, barW + 2, 1); // top dark
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(barX - 1, barY + barH, barW + 2, 1); // bottom light
+    // HP text for player pets
+    if (fighter.isPlayer) {
+      ctx.font = '7px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillText(fighter.hp + '/' + fighter.maxHp, barX + barW + 1, barY + barH);
+      ctx.textAlign = 'left';
+    }
 
-    // Status icons
+    // Status icons — colored dots with letter
     if (fighter.statuses.length > 0) {
-      var statusX = pos.x - (fighter.statuses.length * 8) / 2;
+      var statusY = pos.y + size / 2 + 6;
+      var statusTotalW = fighter.statuses.length * 12;
+      var statusStartX = pos.x - statusTotalW / 2;
       for (var si = 0; si < fighter.statuses.length; si++) {
         var s = fighter.statuses[si];
-        ctx.fillStyle = getStatusColor(s.type);
-        ctx.font = '8px monospace';
-        ctx.fillText(getStatusIcon(s.type), statusX + si * 10, pos.y + size / 2 + 10);
+        var sc = getStatusColor(s.type);
+        var sx = statusStartX + si * 12 + 5;
+        // Dot background
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath(); ctx.arc(sx, statusY, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = sc;
+        ctx.beginPath(); ctx.arc(sx, statusY, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 6px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(getStatusIcon(s.type).charAt(0), sx, statusY + 2);
       }
     }
 
@@ -2691,18 +2827,42 @@
 
   function drawTargetHighlights() {
     // Highlight enemy team when selecting target
+    var dashOffset = (Date.now() * 0.03) % 16;
     for (var i = 0; i < battleState.enemyTeam.length; i++) {
       var f = battleState.enemyTeam[i];
       if (!f.alive) continue;
       var pos = getFighterPosition(f, i, battleState.enemyTeam);
       var isHighlighted = (battleState.targetHighlight === i);
 
-      ctx.strokeStyle = isHighlighted ? '#ffd700' : 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = isHighlighted ? 3 : 1;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.save();
+      if (isHighlighted) {
+        // Gold glow + solid circle
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // Pulsing dashed circle
+        ctx.setLineDash([6, 4]);
+        ctx.lineDashOffset = -dashOffset;
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 28, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
+    // "Select target" prompt
+    ctx.save();
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,215,0,0.6)';
+    ctx.fillText('Select Target', CANVAS_W / 2, CANVAS_H - 12);
+    ctx.restore();
   }
 
   function drawFloatingTexts() {
@@ -3111,7 +3271,7 @@
 
     var r = battleState.result;
     var html = '<div class="rpg-combat-results-inner">';
-    html += '<h3 class="rpg-combat-results-title">' + (r.victory ? 'VICTORY!' : 'DEFEAT') + '</h3>';
+    html += '<h3 class="rpg-combat-results-title" style="color:' + (r.victory ? '#ffd700' : '#cc4444') + ';text-shadow:0 0 10px ' + (r.victory ? 'rgba(255,215,0,0.3)' : 'rgba(204,68,68,0.3)') + '">' + (r.victory ? 'VICTORY!' : 'DEFEAT') + '</h3>';
     if (battleState.difficulty && battleState.difficulty !== 'normal') {
       var diffLabel = DIFFICULTY_MULTS[battleState.difficulty] ? DIFFICULTY_MULTS[battleState.difficulty].label : (battleState.difficulty.charAt(0).toUpperCase() + battleState.difficulty.slice(1));
       html += '<div class="rpg-combat-results-diff rpg-diff-' + battleState.difficulty + '">' + diffLabel + '</div>';
@@ -3150,11 +3310,11 @@
         html += '<span class="rpg-results-pet-xpgain">+' + pd.xpGain + ' XP</span>';
         html += '</div>';
         if (pd.leveled) {
-          html += '<div class="rpg-results-pet-levelup">Lv ' + pd.oldLevel + ' → ' + pd.newLevel + '!</div>';
+          html += '<div class="rpg-results-pet-levelup">\u2B50 Level Up! Lv ' + pd.oldLevel + ' \u2192 ' + pd.newLevel + ' \u2B50</div>';
         }
-        // XP bar
+        // XP bar (animate fill)
         var xpPct = pd.atCap ? 100 : Math.min(100, Math.floor((pd.xp / pd.xpNeeded) * 100));
-        html += '<div class="rpg-results-pet-xpbar"><div class="rpg-results-pet-xpfill' + (pd.atCap ? ' at-cap' : '') + '" style="width:' + xpPct + '%"></div></div>';
+        html += '<div class="rpg-results-pet-xpbar"><div class="rpg-results-pet-xpfill' + (pd.atCap ? ' at-cap' : '') + '" data-pct="' + xpPct + '" style="width:0"></div></div>';
         if (pd.atCap) {
           html += '<div class="rpg-results-pet-cap">MAX</div>';
         }
@@ -3192,6 +3352,14 @@
 
     overlay.innerHTML = html;
     overlay.style.display = 'flex';
+
+    // Animate XP bar fills
+    setTimeout(function () {
+      var fills = overlay.querySelectorAll('.rpg-results-pet-xpfill[data-pct]');
+      for (var fi = 0; fi < fills.length; fi++) {
+        fills[fi].style.width = fills[fi].getAttribute('data-pct') + '%';
+      }
+    }, 100);
 
     $('rpg-combat-continue').addEventListener('click', function () {
       overlay.style.display = 'none';
@@ -3472,9 +3640,64 @@
   }
 
   // ── Arena (1v1) Quick Entry ────────────────────────
+  var arenaHeaderCache = null; // cached canvas header image
+
+  function renderArenaHeader(modalEl) {
+    if (!arenaHeaderCache) {
+      // Generate arena BG if not cached
+      if (!bgCache['arena']) bgCache['arena'] = generateBattleBg('arena');
+      var bgImg = bgCache['arena'];
+      if (!bgImg) return;
+
+      // Build header: draw into a temp canvas directly from the BG generation canvas
+      var hw = 640, hh = 120;
+      var headerCanvas = document.createElement('canvas');
+      headerCanvas.width = hw;
+      headerCanvas.height = hh;
+      var hctx = headerCanvas.getContext('2d');
+
+      // The bgImg is from toDataURL — try drawing; if not ready, use onload
+      var drawHeader = function () {
+        hctx.drawImage(bgImg, 0, 0, CANVAS_W, Math.floor(hh * (CANVAS_H / 320)), 0, 0, hw, hh);
+        var fadeGrad = hctx.createLinearGradient(0, hh * 0.4, 0, hh);
+        fadeGrad.addColorStop(0, 'rgba(26,24,8,0)');
+        fadeGrad.addColorStop(1, 'rgba(26,24,8,1)');
+        hctx.fillStyle = fadeGrad;
+        hctx.fillRect(0, 0, hw, hh);
+        arenaHeaderCache = headerCanvas.toDataURL();
+        applyHeader();
+      };
+
+      var applyHeader = function () {
+        var wrap = modalEl.querySelector('.rpg-arena-header-canvas');
+        if (!wrap) {
+          wrap = document.createElement('div');
+          wrap.className = 'rpg-arena-header-canvas';
+          modalEl.insertBefore(wrap, modalEl.firstChild);
+        }
+        wrap.style.backgroundImage = 'url(' + arenaHeaderCache + ')';
+        wrap.style.backgroundSize = '100% 100%';
+      };
+
+      if (bgImg.complete) {
+        drawHeader();
+      } else {
+        bgImg.onload = drawHeader;
+      }
+    } else {
+      // Already cached — just insert
+      var wrap = document.createElement('div');
+      wrap.className = 'rpg-arena-header-canvas';
+      wrap.style.cssText = 'background-image:url(' + arenaHeaderCache + ');background-size:100% 100%';
+      modalEl.insertBefore(wrap, modalEl.firstChild);
+    }
+  }
+
   function showArenaSelect(rpgPets) {
     loadData();
     if (!enemyData) return;
+
+    var TYPE_CLR = { fire: '#ff6600', aqua: '#4488cc', nature: '#44aa44', tech: '#ccaa22', shadow: '#8844cc', mystic: '#cc44aa', neutral: '#888' };
 
     var modal = $('rpg-dungeon-modal');
     if (!modal) {
@@ -3486,16 +3709,18 @@
 
     var ownedIds = Object.keys(rpgPets.owned);
     var selectedPet = null;
-    var arenaOpponent = null; // rolled when pet is selected
-    var arenaDiff = 'normal'; // easy/normal/hard
+    var arenaOpponent = null;
+    var arenaDiff = 'normal';
+    var prevWins = null; // track for post-fight animation
+    var prevStreak = null;
+    var firstRender = true;
 
     var ARENA_DIFFS = {
-      easy:   { stats: 0.75, rewards: 0.75, label: 'Easy' },
-      normal: { stats: 1.0,  rewards: 1.0,  label: 'Normal' },
-      hard:   { stats: 1.5,  rewards: 2.0,  label: 'Hard' }
+      easy:   { stats: 0.75, rewards: 0.75, label: 'Easy', mult: '\u00d70.75' },
+      normal: { stats: 1.0,  rewards: 1.0,  label: 'Normal', mult: '\u00d71' },
+      hard:   { stats: 1.5,  rewards: 2.0,  label: 'Hard', mult: '\u00d72' }
     };
 
-    // Roll a random non-boss enemy
     function rollOpponent(petLevel) {
       var enemyIds = Object.keys(enemyData);
       var normalEnemies = [];
@@ -3506,49 +3731,132 @@
       var e = enemyData[eid];
       var stars = Math.max(1, Math.floor(petLevel / 10));
       var eStats = getEnemyCombatStats(eid, stars);
-      // Scale preview stats by arena difficulty
       var dm = ARENA_DIFFS[arenaDiff] ? ARENA_DIFFS[arenaDiff].stats : 1;
       eStats.hp = Math.floor(eStats.hp * dm);
       eStats.atk = Math.floor(eStats.atk * dm);
       eStats.def = Math.floor(eStats.def * dm);
-      return { id: eid, name: e.name, type: e.type, stars: stars, stats: eStats };
+      return { id: eid, name: e.name, type: e.type, stars: stars, stats: eStats, sprite: e.sprite, frameWidth: e.frameWidth, frameHeight: e.frameHeight, frames: e.frames };
     }
 
-    // Load arena stats for display
     var combatSave = loadCombatState();
     var arenaWins = combatSave.arenaStats.wins || 0;
     var arenaStreak = combatSave.arenaStats.currentStreak || 0;
     var arenaBest = combatSave.arenaStats.bestStreak || 0;
 
+    // Preload all owned pet sprite sheets
+    function preloadPetSheets() {
+      for (var i = 0; i < ownedIds.length; i++) {
+        var pid = ownedIds[i];
+        var creature = petCatalog ? petCatalog.creatures[pid] : null;
+        if (!creature || !creature.spriteId || !petSpriteData) continue;
+        var info = petSpriteData[creature.spriteId];
+        if (!info || !info.sheet) continue;
+        var pet = rpgPets.owned[pid];
+        var petSkin = pet.skin || 'default';
+        var url = (petSkin === 'alt' && info.altSheet) ? info.altSheet : info.sheet;
+        if (!preloadedImages[url]) {
+          var img = new Image();
+          img.src = url;
+          preloadedImages[url] = img;
+        }
+      }
+    }
+    preloadPetSheets();
+
+    function buildPetSpriteStyle(creature, pet, size) {
+      if (!creature || !creature.spriteId || !petSpriteData) return '';
+      var info = petSpriteData[creature.spriteId];
+      if (!info) return '';
+      var evoStg = getEvoStage(pet, creature);
+      var fw = info.frameWidth || 48;
+      var fh = info.frameHeight || 48;
+      var frames = info.frames || 3;
+      var frameOffset = info.frameOffset || 0;
+      var frameIdx = Math.min(frameOffset + evoStg, frames - 1);
+      var scale = size / fw;
+      var bgW = Math.round(fw * frames * scale);
+      var bgH = Math.round(fh * scale);
+      var bgX = Math.round(frameIdx * fw * scale);
+      var petSkin = pet.skin || 'default';
+      var sheetUrl = (petSkin === 'alt' && info.altSheet) ? info.altSheet : info.sheet;
+      return 'width:' + size + 'px;height:' + size + 'px;background-image:url(' + sheetUrl + ');background-size:' + bgW + 'px ' + bgH + 'px;background-position:-' + bgX + 'px 0;background-repeat:no-repeat;image-rendering:pixelated';
+    }
+
+    function buildEnemySpriteStyle(op, size) {
+      if (!op.sprite) return '';
+      var fw = op.frameWidth || 32;
+      var fh = op.frameHeight || 32;
+      var scale = size / Math.max(fw, fh);
+      var w = Math.round(fw * scale);
+      var h = Math.round(fh * scale);
+      return 'width:' + w + 'px;height:' + h + 'px;background-image:url(' + op.sprite + ');background-size:' + w + 'px ' + h + 'px;background-position:0 0;background-repeat:no-repeat;image-rendering:pixelated';
+    }
+
     function render() {
-      var html = '<div class="rpg-modal rpg-arena-select">';
-      html += '<div class="rpg-modal-header"><h3>Training Arena</h3>';
-      html += '<button class="rpg-modal-close" id="rpg-arena-close">&times;</button></div>';
-      html += '<div class="rpg-team-info">Choose a pet for 1v1 combat';
-      html += '<br><span style="font-size:0.85em;color:color-mix(in srgb, var(--foreground) 45%, transparent)">Wins: ' + arenaWins + ' &middot; Streak: ' + arenaStreak + ' &middot; Best: ' + arenaBest + '</span>';
-      // Arena milestone progress
+      // Re-read stats (may have changed after a fight)
+      combatSave = loadCombatState();
+      var newWins = combatSave.arenaStats.wins || 0;
+      var newStreak = combatSave.arenaStats.currentStreak || 0;
+      var newBest = combatSave.arenaStats.bestStreak || 0;
+      var winsChanged = prevWins !== null && newWins !== prevWins;
+      prevWins = newWins;
+      prevStreak = newStreak;
+      arenaWins = newWins;
+      arenaStreak = newStreak;
+      arenaBest = newBest;
+
+      var html = '<div class="rpg-modal rpg-arena-modal' + (firstRender ? ' rpg-arena-enter' : '') + '">';
+
+      // ── Banner ──
+      html += '<div class="rpg-arena-banner">';
+      html += '<div class="rpg-arena-title">Training Arena</div>';
+      html += '<div class="rpg-arena-subtitle">Choose your champion</div>';
+
+      // Stats row: Wins | Streak | Best
+      html += '<div class="rpg-arena-stats-row">';
+      html += '<div class="rpg-arena-stat"><span class="rpg-arena-stat-num">' + arenaWins + '</span><span class="rpg-arena-stat-label">Wins</span></div>';
+      html += '<div class="rpg-arena-stat-div"></div>';
+      html += '<div class="rpg-arena-stat' + (arenaStreak >= 5 ? ' rpg-arena-stat-glow' : '') + '"><span class="rpg-arena-stat-num">' + arenaStreak + '</span><span class="rpg-arena-stat-label">Streak</span></div>';
+      html += '<div class="rpg-arena-stat-div"></div>';
+      html += '<div class="rpg-arena-stat"><span class="rpg-arena-stat-num">' + arenaBest + '</span><span class="rpg-arena-stat-label">Best</span></div>';
+      html += '</div>';
+
+      // Milestone progress bar
       var _msDone = combatSave.arenaStats.milestones || {};
       var _msTargets = [10, 25, 50, 100, 200, 500];
       var nextMs = null;
       for (var msi = 0; msi < _msTargets.length; msi++) {
         if (!_msDone[_msTargets[msi]]) { nextMs = _msTargets[msi]; break; }
       }
+      html += '<div class="rpg-arena-milestone">';
       if (nextMs) {
-        html += '<br><span style="font-size:0.8em;color:#ffd700">Next milestone: ' + arenaWins + '/' + nextMs + ' wins</span>';
+        var msPct = Math.min(100, Math.floor((arenaWins / nextMs) * 100));
+        html += '<div class="rpg-arena-ms-track"><div class="rpg-arena-ms-fill" data-pct="' + msPct + '" style="width:' + msPct + '%"></div>';
+        html += '<div class="rpg-arena-ms-label">' + arenaWins + '/' + nextMs + ' wins</div></div>';
       } else {
-        html += '<br><span style="font-size:0.8em;color:#ffd700">All milestones claimed!</span>';
+        html += '<div class="rpg-arena-ms-track"><div class="rpg-arena-ms-fill" data-pct="100" style="width:100%"></div>';
+        html += '<div class="rpg-arena-ms-label">All milestones claimed!</div></div>';
       }
-      html += '<div class="rpg-diff-row" style="margin-top:6px">';
+      html += '</div>';
+
+      // Difficulty tabs
+      html += '<div class="rpg-arena-diff-strip">';
       var adiffs = ['easy', 'normal', 'hard'];
       for (var ad = 0; ad < adiffs.length; ad++) {
         var adKey = adiffs[ad];
         var adInfo = ARENA_DIFFS[adKey];
-        html += '<button class="rpg-diff-btn rpg-diff-' + adKey + (arenaDiff === adKey ? ' active' : '') + '" data-arena-diff="' + adKey + '">' + adInfo.label + '</button>';
+        html += '<button class="rpg-arena-diff-tab rpg-arena-diff-' + adKey + (arenaDiff === adKey ? ' active' : '') + '" data-arena-diff="' + adKey + '">';
+        html += '<span class="rpg-arena-diff-name">' + adInfo.label + '</span>';
+        html += '<span class="rpg-arena-diff-mult">' + adInfo.mult + '</span>';
+        html += '</button>';
       }
       html += '</div>';
-      html += '</div>';
-      html += '<div class="rpg-team-grid">';
+      html += '</div>'; // end banner
 
+      html += '<button class="rpg-modal-close" id="rpg-arena-close">&times;</button>';
+
+      // ── Pet Cards Grid ──
+      html += '<div class="rpg-arena-grid">';
       for (var i = 0; i < ownedIds.length; i++) {
         var pid = ownedIds[i];
         var pet = rpgPets.owned[pid];
@@ -3556,56 +3864,111 @@
         if (!creature) continue;
         var isSelected = (selectedPet === pid);
         var stats = getPetCombatStats(pid, pet.level);
+        var tc = TYPE_CLR[creature.type] || '#888';
 
-        html += '<div class="rpg-team-pet' + (isSelected ? ' selected' : '') + '" data-pet-id="' + pid + '">';
-        html += '<div class="rpg-team-pet-name">' + creature.name + ' Lv' + pet.level + '</div>';
-        html += '<div class="rpg-team-pet-type">' + creature.type + '</div>';
-        html += '<div class="rpg-team-pet-stats">HP:' + stats.hp + ' ATK:' + stats.atk + '</div>';
+        html += '<div class="rpg-arena-card' + (isSelected ? ' selected' : '') + '" data-pet-id="' + pid + '" data-pet-type="' + creature.type + '" style="border-bottom:3px solid ' + tc + ';background:linear-gradient(180deg,' + tc + '14 0%,transparent 40%)">';
+        // Sprite
+        var sprStyle = buildPetSpriteStyle(creature, pet, 48);
+        if (sprStyle) {
+          html += '<div class="rpg-arena-card-sprite" style="' + sprStyle + '"></div>';
+        }
+        html += '<div class="rpg-arena-card-name">' + creature.name + '</div>';
+        html += '<span class="rpg-arena-card-level">Lv ' + pet.level + '</span>';
+        html += ' <span class="rpg-type-badge rpg-type-' + creature.type + '">' + creature.type + '</span>';
+        html += '<div class="rpg-arena-card-stats">HP:' + stats.hp + ' ATK:' + stats.atk + '</div>';
         // XP bar
         var petLevelCap = getPetLevelCap(pid);
         var petAtCap = pet.level >= petLevelCap;
         if (!petAtCap) {
           var petXpNeeded = rpgPetXpForLevel(pet.level);
           var petXpPct = Math.min(100, Math.floor(((pet.xp || 0) / petXpNeeded) * 100));
-          html += '<div class="rpg-team-pet-xpbar"><div class="rpg-team-pet-xpfill" style="width:' + petXpPct + '%"></div></div>';
+          html += '<div class="rpg-arena-card-xp"><div class="rpg-arena-card-xpfill" data-pct="' + petXpPct + '" style="width:' + petXpPct + '%"></div></div>';
         } else {
-          html += '<div class="rpg-team-pet-cap">MAX</div>';
+          html += '<div class="rpg-arena-card-cap">MAX</div>';
         }
-        if (isSelected) html += '<div class="rpg-team-pet-check">&#10003;</div>';
+        if (isSelected) html += '<div class="rpg-arena-card-check">&#10003;</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // ── VS Opponent Preview ──
+      if (selectedPet && arenaOpponent) {
+        var op = arenaOpponent;
+        var selPet = rpgPets.owned[selectedPet];
+        var selCreature = petCatalog ? petCatalog.creatures[selectedPet] : null;
+        var selStats = getPetCombatStats(selectedPet, selPet.level);
+
+        html += '<div class="rpg-arena-vs">';
+        // Player side
+        html += '<div class="rpg-arena-vs-player">';
+        var pSpr = selCreature ? buildPetSpriteStyle(selCreature, selPet, 48) : '';
+        if (pSpr) html += '<div class="rpg-arena-vs-sprite" style="' + pSpr + '"></div>';
+        html += '<div class="rpg-arena-vs-name">' + (selCreature ? selCreature.name : selectedPet) + '</div>';
+        html += '<div class="rpg-arena-vs-stat-list">';
+        var pStats = ['hp', 'atk', 'def', 'spd'];
+        for (var ps = 0; ps < pStats.length; ps++) {
+          var pk = pStats[ps];
+          var pv = selStats[pk], ev = op.stats[pk];
+          var cmp = pv > ev ? 'adv' : pv < ev ? 'dis' : 'neu';
+          html += '<span class="rpg-arena-vs-stat rpg-arena-vs-' + cmp + '">' + pk.toUpperCase() + ':' + pv + '</span>';
+        }
+        html += '</div></div>';
+
+        // Center VS
+        html += '<div class="rpg-arena-vs-center"><span class="rpg-arena-vs-text">VS</span></div>';
+
+        // Enemy side
+        html += '<div class="rpg-arena-vs-enemy">';
+        var eSpr = buildEnemySpriteStyle(op, 48);
+        if (eSpr) html += '<div class="rpg-arena-vs-sprite" id="rpg-arena-enemy-spr" style="' + eSpr + '"></div>';
+        html += '<div class="rpg-arena-vs-name">' + op.name + ' <span class="rpg-type-badge rpg-type-' + op.type + '">' + op.type + '</span></div>';
+        html += '<div class="rpg-arena-vs-stat-list">';
+        for (var es = 0; es < pStats.length; es++) {
+          var ek = pStats[es];
+          var evv = op.stats[ek], pvv = selStats[ek];
+          var ecmp = evv > pvv ? 'adv' : evv < pvv ? 'dis' : 'neu';
+          html += '<span class="rpg-arena-vs-stat rpg-arena-vs-' + ecmp + '">' + ek.toUpperCase() + ':' + evv + '</span>';
+        }
+        html += '</div></div>';
         html += '</div>';
       }
 
-      html += '</div>';
-
-      // Opponent preview
-      if (selectedPet && arenaOpponent) {
-        var op = arenaOpponent;
-        html += '<div class="rpg-team-info" style="border-top:1px solid color-mix(in srgb, var(--foreground) 10%, transparent)">';
-        html += '<strong>Opponent:</strong> ' + op.name;
-        html += ' <span class="rpg-type-badge rpg-type-' + op.type + '">' + op.type + '</span>';
-        html += '<br><span style="font-size:0.85em;color:color-mix(in srgb, var(--foreground) 50%, transparent)">';
-        html += 'HP:' + op.stats.hp + ' ATK:' + op.stats.atk + ' DEF:' + op.stats.def + ' SPD:' + op.stats.spd;
-        html += '</span></div>';
-      }
-
-      html += '<div class="rpg-team-actions">';
-      html += '<button class="rpg-btn rpg-btn-primary" id="rpg-arena-fight"' + (!selectedPet ? ' disabled' : '') + '>Fight!</button>';
+      // ── Fight Button ──
+      html += '<div class="rpg-arena-fight-wrap">';
+      html += '<button class="rpg-arena-fight-btn" id="rpg-arena-fight"' + (!selectedPet ? ' disabled' : '') + '>FIGHT!</button>';
       html += '</div></div>';
 
       modal.innerHTML = html;
       modal.style.display = 'flex';
 
+      // Insert canvas header
+      var innerModal = modal.querySelector('.rpg-arena-modal');
+      if (innerModal) renderArenaHeader(innerModal);
+
+      // Preload enemy sprite if needed
+      if (arenaOpponent && arenaOpponent.sprite && !preloadedImages[arenaOpponent.sprite]) {
+        var eImg = new Image();
+        eImg.onload = function () {
+          preloadedImages[arenaOpponent.sprite] = eImg;
+          var el = $('rpg-arena-enemy-spr');
+          if (el) el.style.backgroundImage = 'url(' + arenaOpponent.sprite + ')';
+        };
+        eImg.src = arenaOpponent.sprite;
+      }
+
+      firstRender = false;
+
+      // Close
       $('rpg-arena-close').addEventListener('click', function () {
         modal.style.display = 'none';
         if (window.__RPG_RETURN_TO_MAP) window.__RPG_RETURN_TO_MAP();
       });
 
-      // Arena difficulty buttons
+      // Difficulty tabs
       var arenaDiffBtns = modal.querySelectorAll('[data-arena-diff]');
       for (var db = 0; db < arenaDiffBtns.length; db++) {
         arenaDiffBtns[db].addEventListener('click', function () {
           arenaDiff = this.getAttribute('data-arena-diff');
-          // Re-roll opponent with new difficulty
           if (selectedPet) {
             var pet = rpgPets.owned[selectedPet];
             arenaOpponent = rollOpponent(pet ? pet.level : 1);
@@ -3614,7 +3977,8 @@
         });
       }
 
-      var petCells = modal.querySelectorAll('.rpg-team-pet');
+      // Pet card clicks
+      var petCells = modal.querySelectorAll('.rpg-arena-card');
       for (var ci = 0; ci < petCells.length; ci++) {
         petCells[ci].addEventListener('click', function () {
           selectedPet = this.getAttribute('data-pet-id');
