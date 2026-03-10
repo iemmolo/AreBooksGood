@@ -738,7 +738,28 @@
     // Hay bales (near town)
     [470,140,13],[590,140,13],[450,70,13],[610,70,13],
     // Reed clusters (along river)
-    [55,120,14],[85,240,14],[45,360,14],[75,450,14],[65,540,14],[95,180,14]
+    [55,120,14],[85,240,14],[45,360,14],[75,450,14],[65,540,14],[95,180,14],
+    // Extra flowers
+    [240,160,0],[880,420,0],[520,110,0],[670,550,0],[360,320,0],[150,480,0],
+    // Extra tall grass
+    [250,280,8],[450,350,8],[710,200,8],[830,450,8],[380,600,8],[600,120,8],
+    [170,400,8],[980,300,8],
+    // Extra wildflower patches
+    [200,370,11],[620,540,11],[760,160,11],[430,450,11],
+    // Extra reeds (along river)
+    [70,80,14],[55,300,14],[80,420,14],[60,500,14],[90,600,14],[50,200,14],
+    // Extra hay bales
+    [430,120,13],[620,120,13],
+    // Puddles (near dock/river)
+    [840,160,15],[870,340,15],[900,290,15],[110,350,15],[130,500,15],
+    // Cart tracks (near town/smithy paths)
+    [480,130,16],[560,130,16],[880,400,16],[860,480,16],
+    // Fallen leaves (near forest)
+    [180,470,17],[260,510,17],[310,480,17],[340,560,17],
+    [220,560,17],[290,430,17],[350,490,17],[270,540,17],
+    // Stone scatter (near mine/arena/paths)
+    [200,240,18],[250,220,18],[180,300,18],[280,260,18],[160,250,18],
+    [500,580,18],[540,560,18],[620,580,18],[460,600,18],[570,600,18]
   ];
 
   // ── Biome Zones & Palettes ─────────────────────
@@ -775,19 +796,38 @@
 
   // Precomputed biome index map (filled once)
   var biomeIndexMap = null;
+  var biomeWeightMap = null;
   var BIOME_TILE = 8;
 
   function buildBiomeIndexMap() {
     var cols = Math.ceil(MAP_W / BIOME_TILE);
     var rows = Math.ceil(MAP_H / BIOME_TILE);
     biomeIndexMap = new Array(cols * rows);
+    biomeWeightMap = new Float32Array(cols * rows);
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
         var px = c * BIOME_TILE + 4;
         var py = r * BIOME_TILE + 4;
-        biomeIndexMap[r * cols + c] = getBiomeType(px, py);
+        var result = getBiomeTypeWeighted(px, py);
+        biomeIndexMap[r * cols + c] = result.type;
+        biomeWeightMap[r * cols + c] = result.weight;
       }
     }
+  }
+
+  function getBiomeTypeWeighted(x, y) {
+    var bestType = 'grass';
+    var bestWeight = 0;
+    for (var i = 0; i < BIOME_ZONES.length; i++) {
+      var z = BIOME_ZONES[i];
+      var dx = x - z.cx, dy = y - z.cy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < z.r) {
+        var w = 1 - dist / z.r;
+        if (w > bestWeight) { bestWeight = w; bestType = z.type; }
+      }
+    }
+    return { type: bestType, weight: bestWeight };
   }
 
   function getBiomeType(x, y) {
@@ -879,20 +919,21 @@
   var fireflies = [];
   function initAnimatedEffects() {
     butterflies = [];
-    for (var i = 0; i < 3; i++) {
+    var bColors = ['#e84060','#4080e8','#e8a040','#50c0a0','#d050d0','#80c040'];
+    for (var i = 0; i < 6; i++) {
       butterflies.push({
-        x: 300 + i * 200 + (tileHash(i, 77) % 100),
-        y: 200 + (tileHash(i, 78) % 200),
-        phase: i * 2.1,
-        color: ['#e84060','#4080e8','#e8a040'][i]
+        x: 200 + i * 140 + (tileHash(i, 77) % 100),
+        y: 150 + (tileHash(i, 78) % 300),
+        phase: i * 1.7,
+        color: bColors[i]
       });
     }
     fireflies = [];
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 10; i++) {
       fireflies.push({
-        x: 150 + i * 180 + (tileHash(i, 88) % 80),
-        y: 300 + (tileHash(i, 89) % 200),
-        phase: i * 1.3
+        x: 100 + i * 95 + (tileHash(i, 88) % 60),
+        y: 200 + (tileHash(i, 89) % 300),
+        phase: i * 0.9 + (tileHash(i, 90) % 10) * 0.3
       });
     }
   }
@@ -2250,7 +2291,7 @@
     // Build biome index map if needed
     if (!biomeIndexMap) buildBiomeIndexMap();
 
-    // Pass 1: Biome-aware base grass
+    // Pass 1: Biome-aware base grass + sub-tile texture
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
         var h = tileHash(c, r);
@@ -2258,57 +2299,134 @@
         var pal = BIOME_PALETTES[biome] || BIOME_PALETTES.grass;
         ctx.fillStyle = pal.base[((h >>> 0) % 4)];
         ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+        // Sub-tile texture
+        var tx = c * TILE, ty = r * TILE;
+        var h2 = tileHash(c + 200, r + 200);
+        // Grass blade shadow (1x2px)
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(tx + ((h >>> 4) % 6), ty + ((h >>> 8) % 5), 1, 2);
+        if ((h2 >>> 0) % 3 === 0) {
+          ctx.fillRect(tx + ((h2 >>> 4) % 6) + 1, ty + ((h2 >>> 8) % 5), 1, 2);
+        }
+        // Dew highlight (1x1px)
+        if ((h >>> 16) % 4 === 0) {
+          ctx.fillStyle = 'rgba(255,255,255,0.1)';
+          ctx.fillRect(tx + ((h >>> 12) % 7), ty + ((h >>> 14) % 6), 1, 1);
+        }
+        // Clover patch (2x1px)
+        if ((h2 >>> 12) % 5 === 0) {
+          ctx.fillStyle = 'rgba(20,60,15,0.12)';
+          ctx.fillRect(tx + ((h2 >>> 16) % 5), ty + ((h2 >>> 18) % 6), 2, 1);
+        }
       }
     }
 
-    // Pass 2: Grass clumping (1-in-3 tiles get darker/lighter 4x4 clumps)
+    // Pass 1.5: Smooth biome transitions — feather edges where weight is low
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var w = biomeWeightMap[r * cols + c];
+        if (w > 0 && w < 0.4) {
+          var grassPal = BIOME_PALETTES.grass;
+          ctx.fillStyle = grassPal.base[((tileHash(c + 300, r + 300) >>> 0) % 4)];
+          ctx.globalAlpha = 0.3 * (1 - w / 0.4);
+          ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+
+    // Pass 2: Grass clumping (1-in-2 tiles, denser alpha + secondary accent dots)
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
         var h = tileHash(c + 500, r + 500);
-        if ((h >>> 0) % 3 !== 0) continue;
+        if ((h >>> 0) % 2 !== 0) continue;
         var bright = ((h >>> 4) & 1) === 0;
-        ctx.fillStyle = bright ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        ctx.fillStyle = bright ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.09)';
         var cx = c * TILE + ((h >>> 8) % 4);
         var cy = r * TILE + ((h >>> 12) % 4);
         ctx.fillRect(cx, cy, 4, 4);
+        // Secondary 2x2 accent dot
+        if ((h >>> 16) % 3 === 0) {
+          ctx.fillStyle = bright ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+          ctx.fillRect(cx + 3, cy + 3, 2, 2);
+        }
       }
     }
 
-    // Pass 3: Biome detail overlay
+    // Pass 3: Biome detail overlay (1-in-3, expanded patterns)
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
         var h = tileHash(c + 1000, r + 1000);
-        if ((h >>> 0) % 5 !== 0) continue;
+        if ((h >>> 0) % 3 !== 0) continue;
         var biome = biomeIndexMap[r * cols + c] || 'grass';
         var px = c * TILE + ((h >>> 4) % 6);
         var py = r * TILE + ((h >>> 8) % 6);
         if (biome === 'town') {
-          // Cobblestone dots
+          // Cobblestone dots + mortar lines
           ctx.fillStyle = 'rgba(120,110,90,0.3)';
           ctx.fillRect(px, py, 3, 3);
           ctx.fillStyle = 'rgba(160,150,130,0.2)';
           ctx.fillRect(px + 1, py, 1, 1);
+          if ((h >>> 12) % 2 === 0) {
+            ctx.fillStyle = 'rgba(80,70,50,0.15)';
+            ctx.fillRect(px, py + 3, 4, 1);
+          }
         } else if (biome === 'mine') {
-          // Gravel
+          // Gravel + specular highlight
           ctx.fillStyle = 'rgba(100,100,100,0.25)';
           ctx.fillRect(px, py, 2, 2);
+          if ((h >>> 12) % 3 === 0) {
+            ctx.fillStyle = 'rgba(180,180,180,0.15)';
+            ctx.fillRect(px, py, 1, 1);
+          }
         } else if (biome === 'dock') {
-          // Sand patches
+          // Sand patches + wave ripple
           ctx.fillStyle = 'rgba(200,180,120,0.2)';
           ctx.fillRect(px, py, 3, 2);
+          if ((h >>> 12) % 3 === 0) {
+            ctx.fillStyle = 'rgba(160,200,220,0.1)';
+            ctx.fillRect(px, py + 2, 4, 1);
+          }
         } else if (biome === 'forest') {
-          // Moss
+          // Moss + needle texture
           ctx.fillStyle = 'rgba(30,80,20,0.2)';
           ctx.fillRect(px, py, 3, 3);
+          if ((h >>> 12) % 2 === 0) {
+            ctx.fillStyle = 'rgba(20,50,10,0.15)';
+            ctx.fillRect(px + 1, py, 1, 2);
+            ctx.fillRect(px + 3, py + 1, 1, 2);
+          }
         } else if (biome === 'smithy') {
-          // Soot
+          // Soot + ember specks
           ctx.fillStyle = 'rgba(60,50,40,0.15)';
           ctx.fillRect(px, py, 2, 2);
+          if ((h >>> 12) % 4 === 0) {
+            ctx.fillStyle = 'rgba(200,80,20,0.12)';
+            ctx.fillRect(px + 1, py, 1, 1);
+          }
         } else if (biome === 'arena') {
-          // Pebbles
+          // Pebbles + drag marks
           ctx.fillStyle = 'rgba(140,120,80,0.2)';
           ctx.fillRect(px, py, 2, 1);
+          if ((h >>> 12) % 3 === 0) {
+            ctx.fillStyle = 'rgba(100,80,50,0.1)';
+            ctx.fillRect(px, py, 4, 1);
+          }
         }
+      }
+    }
+
+    // Pass 3.5: Light direction — subtle top-left highlight, bottom-right shadow
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        if ((tileHash(c + 1500, r + 1500) >>> 0) % 6 !== 0) continue;
+        var tx = c * TILE, ty = r * TILE;
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.fillRect(tx, ty, TILE, 1);
+        ctx.fillRect(tx, ty, 1, TILE);
+        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+        ctx.fillRect(tx, ty + TILE - 1, TILE, 1);
+        ctx.fillRect(tx + TILE - 1, ty, 1, TILE);
       }
     }
 
@@ -2361,73 +2479,134 @@
     var riverWidth = 40;
     var bankWidth = 6;
 
-    // Draw river from top to bottom
+    // Draw river from top to bottom with irregular banks + 5-band water
     for (var y = 0; y < MAP_H; y += 2) {
       var rx = getRiverX(y);
+      var h = tileHash(Math.floor(rx), y);
+      // Bank jitter ±2px per scanline
+      var jitterL = ((h >>> 0) % 5) - 2;
+      var jitterR = ((h >>> 4) % 5) - 2;
+
+      // Grass overhang at outer edge (1-in-3 chance)
+      if ((h >>> 20) % 3 === 0) {
+        ctx.fillStyle = '#3a7a32';
+        ctx.fillRect(rx - riverWidth / 2 - bankWidth + jitterL - 2, y, 2, 2);
+      }
+      if ((h >>> 22) % 3 === 0) {
+        ctx.fillStyle = '#3a7a32';
+        ctx.fillRect(rx + riverWidth / 2 + bankWidth + jitterR, y, 2, 2);
+      }
 
       // Sandy outer bank
       ctx.fillStyle = '#c8b478';
-      ctx.fillRect(rx - riverWidth / 2 - bankWidth, y, riverWidth + bankWidth * 2, 2);
+      ctx.fillRect(rx - riverWidth / 2 - bankWidth + jitterL, y, riverWidth + bankWidth * 2 - jitterL + jitterR, 2);
+
+      // Erosion mud line at water edge
+      ctx.fillStyle = '#7a6840';
+      ctx.fillRect(rx - riverWidth / 2 + jitterL, y, 2, 2);
+      ctx.fillRect(rx + riverWidth / 2 + jitterR - 2, y, 2, 2);
 
       // Pebble scatter on banks
-      var h = tileHash(Math.floor(rx), y);
-      if ((h >>> 0) % 8 === 0) {
+      if ((h >>> 8) % 6 === 0) {
         ctx.fillStyle = '#a09060';
-        ctx.fillRect(rx - riverWidth / 2 - bankWidth + ((h >>> 4) % (bankWidth)), y, 2, 2);
+        ctx.fillRect(rx - riverWidth / 2 - bankWidth + jitterL + ((h >>> 12) % bankWidth), y, 2, 2);
       }
-      if ((h >>> 8) % 8 === 0) {
+      if ((h >>> 14) % 6 === 0) {
         ctx.fillStyle = '#a09060';
-        ctx.fillRect(rx + riverWidth / 2 + ((h >>> 12) % (bankWidth)), y, 2, 2);
+        ctx.fillRect(rx + riverWidth / 2 + jitterR + ((h >>> 16) % bankWidth), y, 2, 2);
       }
 
-      // Deep water
-      ctx.fillStyle = '#1e5080';
-      ctx.fillRect(rx - riverWidth / 2, y, riverWidth, 2);
-
-      // Mid blue
+      // 5-band water gradient (deep outer → light center)
+      var hw = riverWidth / 2;
+      ctx.fillStyle = '#1a4870';
+      ctx.fillRect(rx - hw, y, riverWidth, 2);
+      ctx.fillStyle = '#1e5888';
+      ctx.fillRect(rx - hw + 4, y, riverWidth - 8, 2);
       ctx.fillStyle = '#2868a8';
-      ctx.fillRect(rx - riverWidth / 2 + 6, y, riverWidth - 12, 2);
-
-      // Light center
+      ctx.fillRect(rx - hw + 8, y, riverWidth - 16, 2);
       ctx.fillStyle = '#3078b8';
-      ctx.fillRect(rx - riverWidth / 2 + 12, y, riverWidth - 24, 2);
+      ctx.fillRect(rx - hw + 13, y, riverWidth - 26, 2);
+      ctx.fillStyle = '#3888c8';
+      ctx.fillRect(rx - hw + 17, y, riverWidth - 34, 2);
+
+      // Surface ripple texture every ~4th scanline
+      if (y % 8 === 0) {
+        ctx.fillStyle = 'rgba(96,176,224,0.15)';
+        var ripOff = ((h >>> 18) % 10) - 5;
+        ctx.fillRect(rx + ripOff - 4, y, 8, 1);
+      }
     }
 
-    // Reeds along river at fixed positions
+    // Reeds along river — 12 positions covering full river
     var reedPositions = [
-      { y: 50, side: 1 }, { y: 150, side: -1 }, { y: 280, side: 1 },
-      { y: 380, side: -1 }, { y: 480, side: 1 }, { y: 580, side: -1 }
+      { y: 30, side: 1 }, { y: 90, side: -1 }, { y: 150, side: 1 },
+      { y: 210, side: -1 }, { y: 280, side: 1 }, { y: 340, side: -1 },
+      { y: 400, side: 1 }, { y: 440, side: -1 }, { y: 480, side: 1 },
+      { y: 520, side: -1 }, { y: 560, side: 1 }, { y: 610, side: -1 }
     ];
     for (var i = 0; i < reedPositions.length; i++) {
       var rp = reedPositions[i];
-      var rx = getRiverX(rp.y) + rp.side * (riverWidth / 2 + 2);
-      // 3-4 reed stalks
-      var count = 3 + (tileHash(i, 200) % 2);
+      var rrx = getRiverX(rp.y) + rp.side * (riverWidth / 2 + 2);
+      var count = 3 + (tileHash(i, 200) % 3);
       for (var j = 0; j < count; j++) {
+        var rh = 8 + ((tileHash(i, j + 201) >>> 0) % 6) - 3;
+        var lean = ((tileHash(i + 10, j + 202) >>> 0) % 3) - 1;
+        // Stalk
         ctx.fillStyle = '#2a5a20';
-        ctx.fillRect(rx + j * 3 - 4, rp.y - 8 + j, 1, 10 - j);
+        ctx.fillRect(rrx + j * 3 - 4 + lean, rp.y - rh, 1, rh);
+        // Lighter inner
+        ctx.fillStyle = '#3a7a30';
+        ctx.fillRect(rrx + j * 3 - 4 + lean, rp.y - rh + 2, 1, rh - 4);
         // Seed head
         ctx.fillStyle = '#5a4a30';
-        ctx.fillRect(rx + j * 3 - 4, rp.y - 10 + j, 2, 3);
+        ctx.fillRect(rrx + j * 3 - 5 + lean, rp.y - rh - 2, 2, 3);
+        // Leaf protrusion on some
+        if (j % 2 === 0) {
+          ctx.fillStyle = '#2a5a20';
+          ctx.fillRect(rrx + j * 3 - 3 + lean, rp.y - rh + 3, 2, 1);
+        }
       }
     }
 
-    // Lily pads
+    // Lily pads — 6 with vein lines, water shadows, occasional flowers
     var lilyPositions = [
-      { y: 120 }, { y: 350 }, { y: 520 }
+      { y: 80 }, { y: 180 }, { y: 300 }, { y: 400 }, { y: 480 }, { y: 570 }
     ];
     for (var i = 0; i < lilyPositions.length; i++) {
       var lp = lilyPositions[i];
-      var lx = getRiverX(lp.y) + ((tileHash(i, 300) % 10) - 5);
-      // Green circle with V-notch
-      ctx.fillStyle = '#3a8a30';
+      var lx = getRiverX(lp.y) + ((tileHash(i, 300) % 14) - 7);
+      var lh = tileHash(i, 301);
+      // Water shadow underneath
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.beginPath();
+      ctx.arc(lx, lp.y + 1, 5, 0, Math.PI * 2);
+      ctx.fill();
+      // Green pad with V-notch
+      ctx.fillStyle = '#2e7a26';
       ctx.beginPath();
       ctx.arc(lx, lp.y, 4, 0.3, Math.PI * 2 - 0.3);
       ctx.lineTo(lx, lp.y);
       ctx.fill();
+      // Lighter center
+      ctx.fillStyle = '#3a8a30';
+      ctx.beginPath();
+      ctx.arc(lx, lp.y, 3, 0.4, Math.PI * 2 - 0.4);
+      ctx.lineTo(lx, lp.y);
+      ctx.fill();
+      // Vein lines
+      ctx.fillStyle = '#246a1e';
+      ctx.fillRect(lx - 3, lp.y, 3, 1);
+      ctx.fillRect(lx, lp.y - 2, 1, 2);
       // Highlight
       ctx.fillStyle = '#4aa040';
-      ctx.fillRect(lx - 1, lp.y - 2, 2, 2);
+      ctx.fillRect(lx - 1, lp.y - 2, 2, 1);
+      // Tiny flower on ~30%
+      if ((lh >>> 0) % 3 === 0) {
+        ctx.fillStyle = '#e050a0';
+        ctx.fillRect(lx, lp.y - 3, 2, 2);
+        ctx.fillStyle = '#f0e040';
+        ctx.fillRect(lx, lp.y - 2, 1, 1);
+      }
     }
   }
 
@@ -2506,13 +2685,13 @@
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     }
 
-    // Cobblestone near town + dirt texture along other paths
+    // Cobblestone near town + dirt texture along other paths (doubled density)
     for (var i = 0; i < PATH_SEGMENTS.length; i++) {
       var seg = PATH_SEGMENTS[i];
       var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
       var dx = b.x - a.x, dy = b.y - a.y;
       var len = Math.sqrt(dx * dx + dy * dy);
-      var steps = Math.floor(len / 8);
+      var steps = Math.floor(len / 4);
       for (var j = 0; j < steps; j++) {
         var t = j / steps;
         var px = a.x + dx * t;
@@ -2520,7 +2699,7 @@
         var h = tileHash(i * 100 + j, 9999);
 
         if (isNearTown(px, py)) {
-          // Cobblestone — individual 3x3 stone rects
+          // Cobblestone — individual stones with mortar gaps
           var stoneGrays = ['#7a7060','#8a8070','#9a9080','#6a6050'];
           var ox = ((h >>> 0) % 7) - 3;
           var oy = ((h >>> 4) % 7) - 3;
@@ -2532,38 +2711,90 @@
           // 1px shadow
           ctx.fillStyle = 'rgba(0,0,0,0.12)';
           ctx.fillRect(px + ox, py + oy + 2, 3, 1);
+          // Mortar gap lines between stones
+          ctx.fillStyle = '#4a4038';
+          if ((h >>> 16) % 2 === 0) {
+            ctx.fillRect(px + ox + 3, py + oy, 1, 3);
+          }
+          if ((h >>> 18) % 2 === 0) {
+            ctx.fillRect(px + ox, py + oy + 3, 3, 1);
+          }
         } else {
-          // Dirt pebbles
+          // Dirt pebbles — 2-3 per step with highlight specks
           var ox = ((h >>> 0) % 9) - 4;
           var oy = ((h >>> 8) % 9) - 4;
           ctx.fillStyle = '#8a6b3a';
           ctx.fillRect(px + ox, py + oy, 2, 2);
+          // Highlight speck
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fillRect(px + ox, py + oy, 1, 1);
+          // Second pebble
+          if ((h >>> 16) % 2 === 0) {
+            var ox2 = ((h >>> 12) % 7) - 3;
+            var oy2 = ((h >>> 14) % 7) - 3;
+            ctx.fillStyle = '#7a5b2a';
+            ctx.fillRect(px + ox2, py + oy2, 2, 1);
+          }
         }
       }
     }
 
-    // Grass tufts along path edges
+    // Wheel ruts — intermittent parallel dark dots along longer segments
     for (var i = 0; i < PATH_SEGMENTS.length; i++) {
       var seg = PATH_SEGMENTS[i];
       var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
       var dx = b.x - a.x, dy = b.y - a.y;
       var len = Math.sqrt(dx * dx + dy * dy);
-      var steps = Math.floor(len / 20);
+      if (len < 100) continue;
+      var nx = -dy / len, ny = dx / len;
+      var steps = Math.floor(len / 6);
+      for (var j = 0; j < steps; j++) {
+        var h = tileHash(i * 300 + j, 6666);
+        if ((h >>> 0) % 3 === 0) continue; // gaps for worn look
+        var t = j / steps;
+        var px = a.x + dx * t;
+        var py = a.y + dy * t;
+        ctx.fillStyle = 'rgba(80,60,30,0.15)';
+        ctx.fillRect(px + nx * 3, py + ny * 3, 1, 1);
+        ctx.fillRect(px - nx * 3, py - ny * 3, 1, 1);
+      }
+    }
+
+    // Grass tufts along path edges (denser, 5-6 blades with seed heads)
+    for (var i = 0; i < PATH_SEGMENTS.length; i++) {
+      var seg = PATH_SEGMENTS[i];
+      var a = MAP_LOCATIONS[seg[0]], b = MAP_LOCATIONS[seg[1]];
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var len = Math.sqrt(dx * dx + dy * dy);
+      var steps = Math.floor(len / 12);
       for (var j = 0; j < steps; j++) {
         var t = j / steps;
         var px = a.x + dx * t;
         var py = a.y + dy * t;
         var h = tileHash(i * 200 + j, 7777);
-        if ((h >>> 0) % 3 !== 0) continue;
+        if ((h >>> 0) % 2 !== 0) continue;
         // Perpendicular offset
         var nx = -dy / len, ny = dx / len;
         var side = ((h >>> 4) & 1) ? 1 : -1;
         var gx = px + nx * side * 8;
         var gy = py + ny * side * 8;
-        ctx.fillStyle = '#4a9442';
-        ctx.fillRect(gx, gy, 1, 3);
-        ctx.fillRect(gx + 1, gy - 1, 1, 3);
-        ctx.fillRect(gx + 2, gy, 1, 2);
+        // 5-6 grass blades
+        var bladeCount = 5 + ((h >>> 6) % 2);
+        for (var bl = 0; bl < bladeCount; bl++) {
+          var blx = gx + bl * 2 - bladeCount;
+          var blh = 3 + ((h >>> (bl + 8)) % 3);
+          var lean = ((h >>> (bl * 2 + 10)) % 3) - 1;
+          ctx.fillStyle = '#3a8a32';
+          ctx.fillRect(blx + lean, gy - blh, 1, blh);
+          // Lighter tip
+          ctx.fillStyle = '#5ab050';
+          ctx.fillRect(blx + lean, gy - blh, 1, 1);
+          // Seed head on taller blades
+          if (blh >= 5) {
+            ctx.fillStyle = '#8a7a40';
+            ctx.fillRect(blx + lean, gy - blh - 1, 1, 1);
+          }
+        }
       }
     }
 
@@ -2576,28 +2807,47 @@
       var bpx = mLoc.x + bDx * t;
       var bpy = mLoc.y + bDy * t;
       if (isOnRiver(bpx, bpy, 20)) {
-        // Draw bridge at this position
-        var bw = 28, bh = 18;
+        // Wider bridge with wood grain detail
+        var bw = 32, bh = 20;
         var bx = bpx - bw / 2, by = bpy - bh / 2;
+        // Shadow on water below bridge
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(bx + 2, by + bh, bw - 4, 3);
         // Bridge planks
         ctx.fillStyle = '#6b4e2b';
         ctx.fillRect(bx, by, bw, bh);
         ctx.fillStyle = '#8b6e3b';
         ctx.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
-        // Plank lines
-        ctx.fillStyle = '#5a3e1b';
+        // Plank lines with alternating wood grain
         for (var p = 0; p < bh; p += 4) {
+          ctx.fillStyle = '#5a3e1b';
           ctx.fillRect(bx + 1, by + p, bw - 2, 1);
+          // Wood grain — alternating 1px lines within plank
+          ctx.fillStyle = (p % 8 < 4) ? '#7b5e2b' : '#8b6e3b';
+          ctx.fillRect(bx + 2, by + p + 1, bw - 4, 2);
+          // Grain detail
+          ctx.fillStyle = 'rgba(0,0,0,0.06)';
+          ctx.fillRect(bx + 4 + (p % 3), by + p + 1, bw - 8, 1);
         }
         // Side rails
         ctx.fillStyle = '#4a2a10';
         ctx.fillRect(bx, by, bw, 2);
         ctx.fillRect(bx, by + bh - 2, bw, 2);
+        // Rail highlight
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(bx + 1, by + 1, bw - 2, 1);
         // Posts
-        ctx.fillRect(bx, by - 3, 3, 5);
-        ctx.fillRect(bx + bw - 3, by - 3, 3, 5);
-        ctx.fillRect(bx, by + bh - 2, 3, 5);
-        ctx.fillRect(bx + bw - 3, by + bh - 2, 3, 5);
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(bx, by - 4, 3, 6);
+        ctx.fillRect(bx + bw - 3, by - 4, 3, 6);
+        ctx.fillRect(bx, by + bh - 2, 3, 6);
+        ctx.fillRect(bx + bw - 3, by + bh - 2, 3, 6);
+        // Nail heads
+        ctx.fillStyle = '#555555';
+        ctx.fillRect(bx + 1, by + 4, 1, 1);
+        ctx.fillRect(bx + bw - 2, by + 4, 1, 1);
+        ctx.fillRect(bx + 1, by + bh - 5, 1, 1);
+        ctx.fillRect(bx + bw - 2, by + bh - 5, 1, 1);
         break;
       }
     }
@@ -2611,22 +2861,34 @@
       var h = tileHash(dx, dy);
 
       if (type === 0) {
-        // Flower — multi-petal with color variant
+        // Flower — multi-petal with color variant, leaf, petal shading, shadow
         var flowerColors = ['#e84060','#e8a040','#d050d0','#40a0e8'];
         var fc = flowerColors[((h >>> 0) % 4)];
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(dx - 1, dy + 6, 4, 2);
+        // Stem
+        ctx.fillStyle = '#2d6e28';
+        ctx.fillRect(dx + 1, dy + 3, 1, 4);
+        // Leaf on stem
+        ctx.fillStyle = '#3a8030';
+        ctx.fillRect(dx - 1, dy + 4, 2, 1);
+        ctx.fillRect(dx + 2, dy + 5, 2, 1);
+        // Petals
         ctx.fillStyle = fc;
         ctx.fillRect(dx, dy, 2, 2);
         ctx.fillRect(dx + 2, dy + 1, 2, 2);
         ctx.fillRect(dx, dy + 2, 2, 2);
         ctx.fillRect(dx - 1, dy + 1, 2, 2);
+        // Petal shading (darker on bottom petals)
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillRect(dx, dy + 2, 2, 1);
+        ctx.fillRect(dx + 2, dy + 2, 1, 1);
+        // Center
         ctx.fillStyle = '#f0e040';
         ctx.fillRect(dx + 1, dy + 1, 1, 1);
-        ctx.fillStyle = '#2d6e28';
-        ctx.fillRect(dx + 1, dy + 3, 1, 4);
-        ctx.fillStyle = '#3a8030';
-        ctx.fillRect(dx, dy + 5, 1, 1);
       } else if (type === 1) {
-        // Rock — highlight + shadow + specular
+        // Rock — highlight + shadow + specular + lichen/cracks
         ctx.fillStyle = '#606060';
         ctx.fillRect(dx, dy + 3, 8, 5);
         ctx.fillStyle = '#808080';
@@ -2638,11 +2900,26 @@
         // Specular highlight
         ctx.fillStyle = '#d0d0d0';
         ctx.fillRect(dx + 3, dy + 1, 1, 1);
-        // Shadow
+        // Directional shadow (right + bottom)
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
         ctx.fillRect(dx + 1, dy + 7, 7, 2);
+        ctx.fillRect(dx + 7, dy + 3, 2, 4);
+        // Crack lines ~30%
+        if ((h >>> 4) % 3 === 0) {
+          ctx.fillStyle = 'rgba(0,0,0,0.2)';
+          ctx.fillRect(dx + 2, dy + 3, 1, 3);
+          ctx.fillRect(dx + 3, dy + 5, 2, 1);
+        }
+        // Lichen patches ~40%
+        if ((h >>> 6) % 5 < 2) {
+          ctx.fillStyle = 'rgba(120,140,60,0.3)';
+          ctx.fillRect(dx + 4, dy + 2, 2, 2);
+        }
       } else if (type === 2) {
-        // Bush with berry dots
+        // Bush with berry dots, more highlights, occasional flower
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(dx - 1, dy + 8, 12, 2);
         ctx.fillStyle = '#1e5e18';
         ctx.fillRect(dx, dy + 3, 10, 6);
         ctx.fillStyle = '#2d7a28';
@@ -2651,6 +2928,11 @@
         ctx.fillRect(dx + 2, dy, 6, 5);
         ctx.fillStyle = '#4ab044';
         ctx.fillRect(dx + 3, dy + 1, 4, 3);
+        // Extra leaf highlights
+        ctx.fillStyle = '#58c050';
+        ctx.fillRect(dx + 4, dy + 1, 2, 1);
+        ctx.fillRect(dx + 2, dy + 3, 1, 1);
+        ctx.fillRect(dx + 7, dy + 2, 1, 1);
         // Berry dots
         if ((h & 1) === 0) {
           ctx.fillStyle = '#cc3030';
@@ -2658,16 +2940,31 @@
           ctx.fillRect(dx + 6, dy + 3, 1, 1);
           ctx.fillRect(dx + 4, dy + 5, 1, 1);
         }
+        // Occasional flower on canopy ~25%
+        if ((h >>> 8) % 4 === 0) {
+          ctx.fillStyle = '#e8a040';
+          ctx.fillRect(dx + 5, dy - 1, 2, 2);
+          ctx.fillStyle = '#f0e040';
+          ctx.fillRect(dx + 5, dy, 1, 1);
+        }
       } else if (type === 3) {
-        // Tree (12x18px with trunk, crown, shadow)
+        // Tree (12x18px with trunk, crown, shadow, bark texture, root, fruit)
         // Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.15)';
         ctx.fillRect(dx - 1, dy + 16, 14, 3);
-        // Trunk
+        // Root protrusions
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(dx + 2, dy + 16, 2, 2);
+        ctx.fillRect(dx + 8, dy + 16, 2, 2);
+        // Trunk with bark texture
         ctx.fillStyle = '#5a3a1a';
         ctx.fillRect(dx + 4, dy + 10, 4, 8);
         ctx.fillStyle = '#4a2a10';
         ctx.fillRect(dx + 4, dy + 10, 2, 8);
+        // Bark lines
+        ctx.fillStyle = '#3a1a08';
+        ctx.fillRect(dx + 5, dy + 12, 1, 2);
+        ctx.fillRect(dx + 6, dy + 15, 1, 2);
         // Crown layers
         ctx.fillStyle = '#1e5e18';
         ctx.fillRect(dx, dy + 3, 12, 9);
@@ -2680,17 +2977,43 @@
         // Highlight
         ctx.fillStyle = '#58c050';
         ctx.fillRect(dx + 4, dy + 2, 3, 2);
+        // Irregular crown bumps
+        ctx.fillStyle = '#2d7a28';
+        ctx.fillRect(dx - 1, dy + 4, 2, 3);
+        ctx.fillRect(dx + 11, dy + 5, 2, 3);
+        ctx.fillRect(dx + 4, dy - 1, 3, 2);
+        // Fruit dots ~20%
+        if ((h >>> 4) % 5 === 0) {
+          ctx.fillStyle = '#cc3030';
+          ctx.fillRect(dx + 2, dy + 4, 1, 1);
+          ctx.fillRect(dx + 8, dy + 6, 1, 1);
+          ctx.fillRect(dx + 5, dy + 8, 1, 1);
+        }
       } else if (type === 4) {
-        // Mushroom (4x5px)
+        // Mushroom — size variation, more spots, grass at base
+        var mScale = ((h >>> 4) % 3 === 0) ? 1.5 : 1;
+        var mw = Math.round(4 * mScale), mh = Math.round(5 * mScale);
+        // Grass at base
+        ctx.fillStyle = '#3a8a32';
+        ctx.fillRect(dx - 1, dy + mh - 1, 1, 2);
+        ctx.fillRect(dx + mw, dy + mh - 1, 1, 2);
+        // Stem
         ctx.fillStyle = '#c8a878';
-        ctx.fillRect(dx + 1, dy + 3, 2, 3);
+        ctx.fillRect(dx + Math.round(mScale), dy + Math.round(3 * mScale), Math.round(2 * mScale), Math.round(3 * mScale));
+        // Stem highlight
+        ctx.fillStyle = '#d8b888';
+        ctx.fillRect(dx + Math.round(mScale), dy + Math.round(3 * mScale), 1, Math.round(2 * mScale));
+        // Cap
         ctx.fillStyle = '#d03030';
-        ctx.fillRect(dx, dy + 1, 4, 2);
-        ctx.fillRect(dx + 1, dy, 2, 1);
-        // Spots
+        ctx.fillRect(dx, dy + Math.round(mScale), mw, Math.round(2 * mScale));
+        ctx.fillRect(dx + Math.round(mScale), dy, Math.round(2 * mScale), Math.round(mScale));
+        // More spots
         ctx.fillStyle = '#f0e0c0';
-        ctx.fillRect(dx + 1, dy + 1, 1, 1);
-        ctx.fillRect(dx + 3, dy + 2, 1, 1);
+        ctx.fillRect(dx + Math.round(mScale), dy + Math.round(mScale), 1, 1);
+        ctx.fillRect(dx + Math.round(3 * mScale) - 1, dy + Math.round(2 * mScale) - 1, 1, 1);
+        if (mScale > 1) {
+          ctx.fillRect(dx + 1, dy + 2, 1, 1);
+        }
       } else if (type === 5) {
         // Stump (6x4px)
         ctx.fillStyle = '#5a3a1a';
@@ -2720,21 +3043,33 @@
         ctx.fillRect(dx + 1, dy, 1, 2);
         ctx.fillRect(dx + 11, dy, 1, 2);
       } else if (type === 8) {
-        // Tall grass — 3-4 blades with lighter tips
-        var blades = 3 + ((h >>> 0) % 2);
+        // Tall grass — 5-6 blades, variable heights 4-8px, seed heads, curved tips
+        var blades = 5 + ((h >>> 0) % 2);
         for (var b = 0; b < blades; b++) {
-          var bx = dx + b * 3 - 2;
-          var lean = ((h >>> (b * 2)) % 3) - 1;
+          var bx = dx + b * 2 - 3;
+          var bladeH = 4 + ((h >>> (b * 3)) % 5);
+          var lean = ((h >>> (b * 2 + 8)) % 3) - 1;
+          // Main blade
           ctx.fillStyle = '#3a8a32';
-          ctx.fillRect(bx + lean, dy, 1, 6);
-          ctx.fillRect(bx, dy + 2, 1, 4);
-          // Lighter tip
+          ctx.fillRect(bx + lean, dy + 8 - bladeH, 1, bladeH);
+          // Curved tip (shifted 1px at top)
           ctx.fillStyle = '#5ab050';
-          ctx.fillRect(bx + lean, dy, 1, 2);
+          ctx.fillRect(bx + lean + ((b % 2) ? 1 : -1), dy + 8 - bladeH, 1, 1);
+          ctx.fillRect(bx + lean, dy + 8 - bladeH, 1, 2);
+          // Seed head on tallest blades
+          if (bladeH >= 7) {
+            ctx.fillStyle = '#8a7a40';
+            ctx.fillRect(bx + lean, dy + 8 - bladeH - 1, 1, 1);
+          }
         }
       } else if (type === 9) {
-        // Boulder formation — 2-3 clustered rocks with 4-shade treatment
+        // Boulder formation — 2-3 clustered rocks with crack detail, lichen, pebble scatter
         var count = 2 + ((h >>> 0) % 2);
+        // Ground pebble scatter
+        ctx.fillStyle = '#707070';
+        ctx.fillRect(dx - 2, dy + 12, 2, 1);
+        ctx.fillRect(dx + count * 7 + 2, dy + 10, 1, 1);
+        ctx.fillRect(dx + 4, dy + 14, 1, 1);
         for (var b = 0; b < count; b++) {
           var bx = dx + b * 7;
           var by = dy + ((h >>> (b * 4)) % 4);
@@ -2751,6 +3086,17 @@
           // Shadow
           ctx.fillStyle = 'rgba(0,0,0,0.2)';
           ctx.fillRect(bx + 1, by + sz - 1, sz - 1, 2);
+          ctx.fillRect(bx + sz - 1, by + 2, 2, sz - 3);
+          // Crack detail
+          if ((h >>> (b + 14)) % 3 === 0) {
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(bx + 3, by + 2, 1, sz - 4);
+          }
+          // Lichen
+          if ((h >>> (b + 18)) % 3 === 0) {
+            ctx.fillStyle = 'rgba(120,140,60,0.25)';
+            ctx.fillRect(bx + 1, by + 1, 2, 2);
+          }
         }
       } else if (type === 10) {
         // Fallen log — horizontal cylinder with ring detail
@@ -2782,17 +3128,30 @@
           ctx.fillRect(fx, fy + 2, 1, 2);
         }
       } else if (type === 12) {
-        // Lantern — post + glass housing (glow animated separately)
+        // Lantern — iron bracket, post, glass pane detail, ground shadow
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(dx - 2, dy + 12, 6, 2);
+        // Post
         ctx.fillStyle = '#5a3a1a';
         ctx.fillRect(dx, dy + 4, 2, 8);
+        // Iron bracket
+        ctx.fillStyle = '#555555';
+        ctx.fillRect(dx - 2, dy + 2, 6, 1);
+        ctx.fillRect(dx - 2, dy + 2, 1, 3);
+        ctx.fillRect(dx + 3, dy + 2, 1, 3);
         // Post cap
         ctx.fillStyle = '#4a2a10';
-        ctx.fillRect(dx - 1, dy + 2, 4, 3);
-        // Glass housing
+        ctx.fillRect(dx - 1, dy + 3, 4, 2);
+        // Glass housing with pane detail
         ctx.fillStyle = '#c0a040';
-        ctx.fillRect(dx - 1, dy, 4, 3);
+        ctx.fillRect(dx - 1, dy - 1, 4, 4);
         ctx.fillStyle = '#f0d060';
-        ctx.fillRect(dx, dy + 1, 2, 1);
+        ctx.fillRect(dx, dy, 2, 2);
+        // Glass pane cross
+        ctx.fillStyle = '#a08030';
+        ctx.fillRect(dx - 1, dy + 1, 4, 1);
+        ctx.fillRect(dx, dy - 1, 1, 4);
       } else if (type === 13) {
         // Hay bale — golden cylinder with straw texture
         ctx.fillStyle = '#b89840';
@@ -2820,6 +3179,50 @@
           ctx.fillStyle = '#5a4a30';
           ctx.fillRect(rx - 1, dy + 12 - rh - 2, 2, 3);
         }
+      } else if (type === 15) {
+        // Puddle — 6x3px reflective water
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(dx - 1, dy + 3, 8, 1);
+        ctx.fillStyle = '#3888c8';
+        ctx.fillRect(dx, dy, 6, 3);
+        ctx.fillStyle = '#4898d8';
+        ctx.fillRect(dx + 1, dy + 1, 4, 1);
+        // Reflection highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillRect(dx + 2, dy, 2, 1);
+      } else if (type === 16) {
+        // Cart tracks — parallel rut lines
+        ctx.fillStyle = 'rgba(80,60,30,0.2)';
+        ctx.fillRect(dx, dy, 12, 1);
+        ctx.fillRect(dx, dy + 3, 12, 1);
+        // Disturbed earth between ruts
+        ctx.fillStyle = 'rgba(100,80,40,0.1)';
+        ctx.fillRect(dx + 2, dy + 1, 8, 2);
+      } else if (type === 17) {
+        // Fallen leaves — 4-6 autumn-color 1x1px dots
+        var leafColors = ['#c06030','#d08040','#b05020','#d0a050','#a04020','#c07030'];
+        var leafCount = 4 + ((h >>> 0) % 3);
+        for (var fl = 0; fl < leafCount; fl++) {
+          var flx = dx + ((h >>> (fl * 3 + 2)) % 8);
+          var fly = dy + ((h >>> (fl * 3 + 4)) % 6);
+          ctx.fillStyle = leafColors[((h >>> (fl + 8)) % leafColors.length)];
+          ctx.fillRect(flx, fly, 1, 1);
+          // Occasional 2x1 leaf
+          if (fl % 3 === 0) ctx.fillRect(flx + 1, fly, 1, 1);
+        }
+      } else if (type === 18) {
+        // Stone scatter — 3-5 grey dots
+        var stoneCount = 3 + ((h >>> 0) % 3);
+        var stoneShades = ['#707070','#808080','#686868','#909090','#606060'];
+        for (var st = 0; st < stoneCount; st++) {
+          var stx = dx + ((h >>> (st * 3 + 2)) % 10);
+          var sty = dy + ((h >>> (st * 3 + 4)) % 6);
+          ctx.fillStyle = stoneShades[((h >>> (st + 12)) % stoneShades.length)];
+          ctx.fillRect(stx, sty, 2, 1);
+          // Highlight on top
+          ctx.fillStyle = 'rgba(255,255,255,0.1)';
+          ctx.fillRect(stx, sty, 1, 1);
+        }
       }
     }
   }
@@ -2838,45 +3241,82 @@
       var t = trees[i];
       var pal = canopyGreens[t.variant];
       var tx = t.x, ty = t.y;
+      var h = tileHash(tx, ty);
+      // Depth variation scale (0.8 - 1.2)
+      var scale = 0.8 + ((h >>> 0) % 5) * 0.1;
 
       // Ground shadow ellipse
       ctx.fillStyle = 'rgba(0,0,0,0.12)';
       ctx.beginPath();
-      ctx.ellipse(tx, ty + 32, 18, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(tx, ty + 32 * scale, 18 * scale, 5 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Trunk with bark texture
+      // Thicker trunk with bark texture + knot holes (8-10px wide)
+      var trunkW = Math.round((8 + ((h >>> 4) % 3)) * scale);
+      var trunkH = Math.round(18 * scale);
       ctx.fillStyle = '#4a2a10';
-      ctx.fillRect(tx - 3, ty + 14, 6, 18);
+      ctx.fillRect(tx - trunkW / 2, ty + 14 * scale, trunkW, trunkH);
       ctx.fillStyle = '#5a3a1a';
-      ctx.fillRect(tx - 2, ty + 14, 4, 18);
-      // Bark lines
+      ctx.fillRect(tx - trunkW / 2 + 1, ty + 14 * scale, trunkW - 2, trunkH);
+      // 4-5 bark texture lines
       ctx.fillStyle = '#3a1a08';
-      ctx.fillRect(tx - 2, ty + 17, 1, 3);
-      ctx.fillRect(tx + 1, ty + 22, 1, 4);
-      ctx.fillRect(tx - 1, ty + 26, 1, 3);
+      var barkLines = 4 + ((h >>> 8) % 2);
+      for (var bl = 0; bl < barkLines; bl++) {
+        var blY = ty + (15 + bl * 4) * scale;
+        var blX = tx - trunkW / 2 + 1 + ((h >>> (bl * 2 + 10)) % (trunkW - 2));
+        ctx.fillRect(blX, blY, 1, 2 + ((h >>> (bl + 16)) % 2));
+      }
+      // Knot hole on ~30% of trees
+      if ((h >>> 20) % 3 === 0) {
+        ctx.fillStyle = '#2a1008';
+        ctx.fillRect(tx - 1, ty + 22 * scale, 2, 2);
+      }
 
-      // Large round canopy — 4 layers from dark outer to bright inner
-      // Layer 4 (darkest, biggest)
-      ctx.fillStyle = pal[0];
-      ctx.beginPath();
-      ctx.ellipse(tx, ty + 6, 20, 16, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Layer 3
-      ctx.fillStyle = pal[1];
-      ctx.beginPath();
-      ctx.ellipse(tx, ty + 5, 16, 13, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Layer 2
-      ctx.fillStyle = pal[2];
-      ctx.beginPath();
-      ctx.ellipse(tx, ty + 4, 12, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Layer 1 (brightest highlight)
-      ctx.fillStyle = pal[3];
-      ctx.beginPath();
-      ctx.ellipse(tx - 2, ty + 2, 7, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
+      // Root protrusions at trunk base
+      ctx.fillStyle = '#4a2a10';
+      ctx.fillRect(tx - trunkW / 2 - 2, ty + (14 + trunkH - 2) * scale, 2, 2);
+      ctx.fillRect(tx + trunkW / 2, ty + (14 + trunkH - 2) * scale, 2, 2);
+
+      // Large round canopy — 4 layers
+      var cxr = [20, 16, 12, 7];
+      var cyr = [16, 13, 10, 6];
+      var cyOff = [6, 5, 4, 2];
+      var cxOff = [0, 0, 0, -2];
+      for (var layer = 0; layer < 4; layer++) {
+        ctx.fillStyle = pal[layer];
+        ctx.beginPath();
+        ctx.ellipse(tx + cxOff[layer] * scale, ty + cyOff[layer] * scale, cxr[layer] * scale, cyr[layer] * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Irregular canopy bumps (6-10 random rects around perimeter)
+      var bumpCount = 6 + ((h >>> 22) % 5);
+      for (var b = 0; b < bumpCount; b++) {
+        var angle = (b / bumpCount) * Math.PI * 2;
+        var bumpR = (18 + ((h >>> (b + 5)) % 4)) * scale;
+        var bx = tx + Math.cos(angle) * bumpR;
+        var by = ty + 6 * scale + Math.sin(angle) * bumpR * 0.8;
+        var bsz = Math.round((3 + ((h >>> (b * 2)) % 3)) * scale);
+        ctx.fillStyle = pal[((h >>> (b + 12)) % 2)];
+        ctx.fillRect(bx - bsz / 2, by - bsz / 2, bsz, bsz);
+      }
+
+      // Branch protrusions (1-2 per tree)
+      var branchCount = 1 + ((h >>> 24) % 2);
+      for (var br = 0; br < branchCount; br++) {
+        var brSide = (br === 0) ? -1 : 1;
+        var brY = ty + (8 + br * 6) * scale;
+        var brLen = Math.round((6 + ((h >>> (br + 26)) % 4)) * scale);
+        // Branch stub
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(tx + brSide * 16 * scale, brY, brLen * brSide, Math.round(2 * scale));
+        // Leaf cluster at end
+        ctx.fillStyle = pal[1];
+        var leafX = tx + brSide * (16 + brLen) * scale;
+        ctx.fillRect(leafX - 2 * scale, brY - 2 * scale, 4 * scale, 4 * scale);
+        ctx.fillStyle = pal[2];
+        ctx.fillRect(leafX - 1 * scale, brY - 1 * scale, 2 * scale, 2 * scale);
+      }
     }
   }
 
@@ -3000,6 +3440,33 @@
       ctx.fillRect(ox + 3, oy + 33, 4, 4);
       ctx.fillStyle = '#4aa040';
       ctx.fillRect(ox + 4, oy + 34, 2, 2);
+      // Flower box under left window
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 9, oy + 30, 14, 3);
+      ctx.fillStyle = '#5a3a1a';
+      ctx.fillRect(ox + 9, oy + 30, 14, 1);
+      // Flowers in box
+      ctx.fillStyle = '#e84060';
+      ctx.fillRect(ox + 10, oy + 28, 2, 2);
+      ctx.fillStyle = '#e8a040';
+      ctx.fillRect(ox + 14, oy + 28, 2, 2);
+      ctx.fillStyle = '#d050d0';
+      ctx.fillRect(ox + 18, oy + 28, 2, 2);
+      // Green stems
+      ctx.fillStyle = '#3a8030';
+      ctx.fillRect(ox + 11, oy + 30, 1, 1);
+      ctx.fillRect(ox + 15, oy + 30, 1, 1);
+      ctx.fillRect(ox + 19, oy + 30, 1, 1);
+      // Stepping stones at door
+      ctx.fillStyle = '#8a7a5a';
+      ctx.fillRect(ox + 34, oy + 44, 5, 3);
+      ctx.fillRect(ox + 36, oy + 47, 4, 2);
+      // Wood grain on wall (subtle lines)
+      ctx.fillStyle = 'rgba(90,60,20,0.08)';
+      ctx.fillRect(ox + 8, oy + 20, 18, 1);
+      ctx.fillRect(ox + 8, oy + 24, 18, 1);
+      ctx.fillRect(ox + 28, oy + 22, 22, 1);
+      ctx.fillRect(ox + 28, oy + 26, 22, 1);
     } else if (id === 'mine') {
       // ── Mining Camp — Mountain with rock strata (~52x44) ───
       // Gravel ground scatter
@@ -3075,6 +3542,28 @@
       ctx.fillRect(ox + 4, oy + 14, 6, 3);
       ctx.fillStyle = '#b8b8b8';
       ctx.fillRect(ox + 5, oy + 14, 4, 2);
+      // Stalactites in cave
+      ctx.fillStyle = '#484848';
+      ctx.fillRect(ox + 16, oy + 16, 2, 4);
+      ctx.fillRect(ox + 22, oy + 16, 1, 3);
+      ctx.fillRect(ox + 28, oy + 16, 2, 5);
+      ctx.fillRect(ox + 33, oy + 16, 1, 3);
+      // Depth shadow gradient inside cave
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(ox + 15, oy + 20, 22, 4);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(ox + 15, oy + 24, 22, 4);
+      // Crystal glint inside cave
+      ctx.fillStyle = '#60d0f0';
+      ctx.fillRect(ox + 18, oy + 28, 1, 1);
+      ctx.fillStyle = '#f0c040';
+      ctx.fillRect(ox + 32, oy + 30, 1, 1);
+      // Scattered rocks outside
+      ctx.fillStyle = '#707070';
+      ctx.fillRect(ox - 2, oy + 42, 3, 2);
+      ctx.fillRect(ox + 48, oy + 40, 2, 2);
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(ox + 4, oy + 44, 2, 1);
     } else if (id === 'dock') {
       // ── Fishing Dock — Wide plank dock (~52x40) ───
       // Wide planks with alternating shade + gap lines
@@ -3152,6 +3641,24 @@
       ctx.fillRect(ox + 36, oy + 24, 5, 3);
       ctx.fillStyle = '#a89458';
       ctx.fillRect(ox + 37, oy + 25, 3, 1);
+      // Wood grain on planks (subtle lines)
+      ctx.fillStyle = 'rgba(60,30,10,0.1)';
+      for (var wg = 0; wg < 5; wg++) {
+        ctx.fillRect(ox - 3 + wg * 10, oy + 14 + (wg % 2), 8, 1);
+        ctx.fillRect(ox - 2 + wg * 10, oy + 22 + (wg % 2), 6, 1);
+      }
+      // Seaweed on posts
+      ctx.fillStyle = '#1a5a20';
+      ctx.fillRect(postXs[0] + 1, oy + 30, 1, 4);
+      ctx.fillRect(postXs[0] + 2, oy + 32, 1, 3);
+      ctx.fillRect(postXs[3] + 1, oy + 28, 1, 5);
+      ctx.fillRect(postXs[3] + 2, oy + 30, 1, 4);
+      // Hanging fish
+      ctx.fillStyle = '#8090a0';
+      ctx.fillRect(ox + 32, oy + 20, 3, 1);
+      ctx.fillRect(ox + 33, oy + 21, 2, 1);
+      ctx.fillStyle = '#a0b0c0';
+      ctx.fillRect(ox + 33, oy + 19, 1, 1);
     } else if (id === 'forest') {
       // ── Lumber Forest — Two full canopy trees (~56x48) ───
       // Ground shadow
@@ -3348,6 +3855,23 @@
       ctx.fillRect(ox + 18, oy + 16, 6, 4);
       ctx.fillStyle = '#8b6e3b';
       ctx.fillRect(ox + 19, oy + 17, 4, 2);
+      // Better mortar lines between stones
+      ctx.fillStyle = 'rgba(40,36,30,0.15)';
+      for (var mr = 0; mr < 8; mr++) {
+        ctx.fillRect(ox + 4, oy + 14 + mr * 4 + 3, 48, 1);
+      }
+      // Hammer resting on outdoor anvil
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 54, oy + 22, 2, 6);
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(ox + 52, oy + 22, 6, 3);
+      ctx.fillStyle = '#909090';
+      ctx.fillRect(ox + 53, oy + 22, 4, 2);
+      // Heat shimmer lines above forge
+      ctx.fillStyle = 'rgba(255,128,32,0.06)';
+      ctx.fillRect(ox + 7, oy + 12, 10, 1);
+      ctx.fillRect(ox + 9, oy + 10, 8, 1);
+      ctx.fillRect(ox + 8, oy + 8, 6, 1);
     } else if (id === 'arena') {
       // ── Training Arena — Fenced ring (~52x44) ───
       // Worn dirt floor with drag marks
@@ -3423,12 +3947,29 @@
       ctx.fillRect(ox - 3, oy, 1, 2);
       ctx.fillRect(ox + 59, oy, 1, 3);
       ctx.fillRect(ox + 61, oy, 1, 2);
-      // Practice dummy (wooden T-shape)
+      // Practice dummy (wooden T-shape with armor + arrow)
       ctx.fillStyle = '#6b4e2b';
       ctx.fillRect(ox + 14, oy + 14, 3, 16);
       ctx.fillRect(ox + 10, oy + 14, 10, 3);
       ctx.fillStyle = '#8b6e3b';
       ctx.fillRect(ox + 15, oy + 15, 1, 14);
+      // Armor on dummy (breastplate)
+      ctx.fillStyle = '#8a8a8a';
+      ctx.fillRect(ox + 13, oy + 17, 5, 6);
+      ctx.fillStyle = '#9a9a9a';
+      ctx.fillRect(ox + 14, oy + 18, 3, 4);
+      // Arrow stuck in dummy
+      ctx.fillStyle = '#6b4e2b';
+      ctx.fillRect(ox + 19, oy + 19, 6, 1);
+      ctx.fillStyle = '#a0a0a0';
+      ctx.fillRect(ox + 19, oy + 19, 2, 1);
+      // Scattered equipment on floor
+      ctx.fillStyle = '#a0a0a0';
+      ctx.fillRect(ox + 30, oy + 34, 4, 1);
+      ctx.fillStyle = '#c0a040';
+      ctx.fillRect(ox + 30, oy + 33, 1, 1);
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(ox + 22, oy + 38, 3, 2);
       // Weapon stand
       ctx.fillStyle = '#5a3a1a';
       ctx.fillRect(ox + 38, oy + 16, 8, 2);
@@ -3481,19 +4022,20 @@
 
   // ── Animation Helpers ───────────────────────────
   function drawSmoke(ctx, x, y, frame, seed) {
-    var particles = 8;
-    ctx.globalAlpha = 0.4;
+    var particles = 14;
     for (var i = 0; i < particles; i++) {
-      var t = ((frame + seed * 17 + i * 10) % 80) / 80;
-      var py = y - t * 24;
-      var px = x + Math.sin(t * 4 + i) * 5;
-      var a = 0.35 * (1 - t);
+      var t = ((frame + seed * 17 + i * 7) % 80) / 80;
+      var py = y - t * 28;
+      // Rightward wind drift
+      var px = x + Math.sin(t * 4 + i) * 5 + t * 6;
+      var a = 0.3 * (1 - t);
       if (a <= 0) continue;
       ctx.globalAlpha = a;
       // Color gradient dark→light grey
       var grey = Math.floor(100 + t * 80);
       ctx.fillStyle = 'rgb(' + grey + ',' + grey + ',' + grey + ')';
-      var s = 2 + t * 3;
+      // Size variation
+      var s = (2 + t * 4) * (0.7 + ((i % 3) * 0.3));
       ctx.fillRect(px, py, s, s);
     }
     ctx.globalAlpha = 1;
@@ -3503,77 +4045,107 @@
     // Base
     ctx.fillStyle = '#6b4e2b';
     ctx.fillRect(x, y + 2, 2, 8);
-    // 3-layer flame
+    // Tapered flame shape (wide bottom, narrow jagged top)
     var flicker = ((frame + seed * 13) % 10);
     // Outer glow
     ctx.fillStyle = '#ff6020';
-    ctx.globalAlpha = 0.3;
-    ctx.fillRect(x - 4, y - 5, 10, 10);
+    ctx.globalAlpha = 0.25;
+    ctx.fillRect(x - 4, y - 6, 10, 10);
     ctx.globalAlpha = 1;
-    // Mid flame
+    // Wide bottom flame
     var midColors = ['#ff6020','#ffa040','#ff8030','#ffc040','#ff6020','#ff8030','#ffa040','#ff7020','#ffb050','#ff9030'];
     ctx.fillStyle = midColors[flicker];
-    ctx.fillRect(x - 2, y - 3, 6, 6);
+    ctx.fillRect(x - 2, y - 1, 6, 4);
+    // Mid flame (narrower)
+    ctx.fillStyle = midColors[(flicker + 3) % 10];
+    ctx.fillRect(x - 1, y - 4, 4, 4);
+    // Narrow top (jagged)
+    ctx.fillStyle = '#ffc040';
+    ctx.fillRect(x, y - 6, 2, 3);
+    var jagX = (flicker % 3) - 1;
+    ctx.fillRect(x + jagX, y - 7, 1, 2);
     // Bright core
     ctx.fillStyle = '#ffd060';
-    ctx.fillRect(x - 1, y - 2, 4, 4);
+    ctx.fillRect(x - 1, y - 2, 4, 3);
     ctx.fillStyle = '#fff0a0';
     ctx.fillRect(x, y - 1, 2, 2);
-    // Upward ember particles (2-3)
-    for (var e = 0; e < 3; e++) {
-      var et = ((frame + seed * 7 + e * 9) % 20) / 20;
-      if (et > 0.6) continue;
-      var ex = x + Math.sin(et * 5 + e) * 3;
-      var ey = y - 6 - et * 10;
+    // 5 upward ember particles
+    for (var e = 0; e < 5; e++) {
+      var et = ((frame + seed * 7 + e * 7) % 25) / 25;
+      if (et > 0.7) continue;
+      var ex = x + Math.sin(et * 5 + e) * 4 + et * 2;
+      var ey = y - 8 - et * 12;
       ctx.globalAlpha = 0.6 * (1 - et);
-      ctx.fillStyle = '#ffcc30';
+      ctx.fillStyle = et < 0.2 ? '#ffe060' : '#ffcc30';
       ctx.fillRect(ex, ey, 1, 1);
     }
     ctx.globalAlpha = 1;
   }
 
   function drawSparks(ctx, x, y, frame) {
-    var sparks = 8;
+    var sparks = 14;
     for (var i = 0; i < sparks; i++) {
-      var t = ((frame + i * 8) % 30) / 30;
-      if (t > 0.8) continue;
+      var t = ((frame + i * 6) % 30) / 30;
+      if (t > 0.85) continue;
       // Angular spread trajectories
       var angle = (i / sparks) * Math.PI + 0.3;
-      var px = x + Math.cos(angle) * t * 12;
-      var py = y - Math.sin(angle) * t * 16;
+      var px = x + Math.cos(angle) * t * 14;
+      // Gravity arc — parabolic fall
+      var py = y - Math.sin(angle) * t * 18 + t * t * 10;
       ctx.globalAlpha = 0.9 * (1 - t);
-      // White-hot spawn flash at start
+      // Color temperature gradient: white→yellow→orange
       if (t < 0.1) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(px, py, 2, 2);
-      } else {
-        var sparkColors = ['#ffcc30','#ffaa20','#ff8810','#ffdd50','#ffbb30','#ffcc40','#ff9920','#ffee60'];
-        ctx.fillStyle = sparkColors[i];
+      } else if (t < 0.35) {
+        ctx.fillStyle = '#ffee60';
         ctx.fillRect(px, py, 1, 1);
-        // 1px trail
-        ctx.globalAlpha *= 0.4;
-        ctx.fillRect(px - Math.cos(angle) * 2, py + Math.sin(angle) * 2, 1, 1);
+      } else {
+        ctx.fillStyle = '#ff8810';
+        ctx.fillRect(px, py, 1, 1);
       }
+      // 1px trail
+      ctx.globalAlpha *= 0.4;
+      ctx.fillRect(px - Math.cos(angle) * 2, py + Math.sin(angle) * 2, 1, 1);
     }
     ctx.globalAlpha = 1;
   }
 
-  // ── Animated Effects (butterflies, fireflies, forge glow, lanterns) ──
+  // ── Animated Effects (butterflies, fireflies, forge glow, lanterns, clouds, glint, wind) ──
   function drawAnimatedEffects(ctx) {
     var t = smokeFrame * 0.04;
 
-    // Butterflies (3, Lissajous flight)
+    // Cloud shadows — 4 large dark ellipses drifting slowly across map
+    for (var ci = 0; ci < 4; ci++) {
+      var cx = ((smokeFrame * 0.15 + ci * 280) % (MAP_W + 200)) - 100;
+      var cy = 100 + ci * 150 + Math.sin(t * 0.1 + ci * 1.5) * 30;
+      ctx.fillStyle = 'rgba(0,0,0,0.06)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 60 + ci * 10, 30 + ci * 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Butterflies (6, Lissajous flight with wing detail)
     for (var i = 0; i < butterflies.length; i++) {
       var b = butterflies[i];
       var bx = b.x + Math.sin(t * 0.8 + b.phase) * 40;
       var by = b.y + Math.sin(t * 1.2 + b.phase * 1.5) * 25;
+      // Occasional landing/resting
+      var restPhase = Math.sin(t * 0.15 + b.phase * 3);
+      if (restPhase > 0.9) { by = b.y + 20; } // resting on ground
       // Wing flap
       var wingPhase = Math.sin(t * 6 + b.phase);
       var wingW = 2 + Math.abs(wingPhase) * 2;
+      // Outer wing
       ctx.fillStyle = b.color;
       ctx.globalAlpha = 0.7;
       ctx.fillRect(bx - wingW, by, wingW, 2);
       ctx.fillRect(bx + 1, by, wingW, 2);
+      // Inner wing detail (lighter color)
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.2;
+      ctx.fillRect(bx - Math.floor(wingW / 2), by, Math.ceil(wingW / 2), 1);
+      ctx.fillRect(bx + 1, by, Math.ceil(wingW / 2), 1);
       // Body
       ctx.fillStyle = '#1a1a1a';
       ctx.globalAlpha = 0.8;
@@ -3581,19 +4153,23 @@
     }
     ctx.globalAlpha = 1;
 
-    // Fireflies (5, sine-wave alpha fade)
+    // Fireflies (10, independent blink timing, larger glow radius)
     for (var i = 0; i < fireflies.length; i++) {
       var f = fireflies[i];
       var fx = f.x + Math.sin(t * 0.3 + f.phase) * 20;
       var fy = f.y + Math.cos(t * 0.4 + f.phase * 0.7) * 15;
-      var alpha = 0.3 + Math.sin(t * 1.5 + f.phase * 2) * 0.3;
+      // Independent blink timing per firefly
+      var blinkSpeed = 1.2 + (f.phase % 1) * 1.6;
+      var alpha = 0.3 + Math.sin(t * blinkSpeed + f.phase * 2.7) * 0.35;
       if (alpha <= 0) continue;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = '#e0ff60';
       ctx.fillRect(fx, fy, 2, 2);
-      // Glow
-      ctx.globalAlpha = alpha * 0.3;
-      ctx.fillRect(fx - 1, fy - 1, 4, 4);
+      // Larger glow radius
+      ctx.globalAlpha = alpha * 0.2;
+      ctx.fillRect(fx - 2, fy - 2, 6, 6);
+      ctx.globalAlpha = alpha * 0.08;
+      ctx.fillRect(fx - 4, fy - 4, 10, 10);
     }
     ctx.globalAlpha = 1;
 
@@ -3606,16 +4182,56 @@
     ctx.fillRect(sx + 4, sy + 14, 16, 12);
     ctx.globalAlpha = 1;
 
-    // Lantern flicker (per type-12 deco)
+    // Lantern flicker (per type-12 deco, per-lantern phase offset, occasional bright flash)
     for (var i = 0; i < MAP_DECO.length; i++) {
       var d = MAP_DECO[i];
       if (d[2] !== 12) continue;
-      var la = 0.15 + Math.sin(t * 3 + i * 2.1) * 0.1;
+      var lPhase = i * 2.1 + (i % 3) * 0.7; // desync
+      var la = 0.15 + Math.sin(t * 3 + lPhase) * 0.1;
+      // Occasional bright flash
+      if (Math.sin(t * 0.5 + i * 4.3) > 0.95) la = 0.4;
       ctx.fillStyle = '#f0d060';
       ctx.globalAlpha = la;
-      ctx.fillRect(d[0] - 3, d[1] - 2, 8, 6);
+      ctx.fillRect(d[0] - 4, d[1] - 3, 10, 8);
       ctx.globalAlpha = 1;
     }
+
+    // Water sun glint — 4 white cross-shaped sparkles on river + dock water
+    for (var gi = 0; gi < 4; gi++) {
+      var glintPhase = Math.sin(t * 0.8 + gi * 2.5);
+      if (glintPhase < 0.6) continue;
+      var alpha = (glintPhase - 0.6) * 2;
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.fillStyle = '#ffffff';
+      var gx, gy;
+      if (gi < 2) {
+        // River glints
+        gy = 100 + gi * 250;
+        gx = getRiverX(gy) + ((tileHash(gi, 444) % 14) - 7);
+      } else {
+        // Dock water glints
+        gx = 860 + (gi - 2) * 50;
+        gy = 220 + (gi - 2) * 40;
+      }
+      // Cross shape
+      ctx.fillRect(gx, gy - 1, 1, 3);
+      ctx.fillRect(gx - 1, gy, 3, 1);
+    }
+    ctx.globalAlpha = 1;
+
+    // Wind on tall grass + reeds — sine-based sway overlay
+    var windT = Math.sin(t * 0.6);
+    for (var i = 0; i < MAP_DECO.length; i++) {
+      var d = MAP_DECO[i];
+      if (d[2] !== 8 && d[2] !== 14) continue;
+      var swayX = Math.sin(t * 1.2 + d[0] * 0.01 + d[1] * 0.02) * 2;
+      ctx.fillStyle = d[2] === 8 ? '#5ab050' : '#3a7a30';
+      ctx.globalAlpha = 0.4;
+      // Sway tip markers
+      ctx.fillRect(d[0] + swayX, d[1] - 2, 1, 2);
+      ctx.fillRect(d[0] + 3 + swayX * 0.8, d[1] - 1, 1, 2);
+    }
+    ctx.globalAlpha = 1;
   }
 
   // ── Location Labels ─────────────────────────────
