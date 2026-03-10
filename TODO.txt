@@ -410,12 +410,17 @@ Legacy battle.js UNTOUCHED.
 - [x] **Bug Fixes (Round 2)** — chatbox auto-scroll to bottom on new messages, pet re-renders after level-up ore/tree change, quest complete centered banner overlay
 - [x] **Auto Mode** — pet plays mini-game when docked. 0.6x XP rate, 2.5s tick, no combos. Pauses on tab hidden, stops on skill switch/unassign. Mining/fishing/woodcutting/smithing (smelting+forging). Pet sprite walks to each target before acting.
 - [x] **Bug Fixes (Round 3)** — dock + pet disappearing on level-up ore/tree change (__RPG_REINJECT_DOCK bridge), auto mode button not showing on init, RPG stationed pet bridge for canAutoMode(), correct CSS selectors for auto click targets, gatekeeper intro text trim
-- [ ] **Phase 2A: Arena + Equipment Integration** — wire Training Arena to rpg-combat 1v1 (showArenaSelect exists, not connected), equipment ATK/DEF buffs pets in combat, fix priority moves, fix level cap band-aid
-- [ ] **Phase 2B: Move System Overhaul** — expand 30→60 moves, persistent move learning on level-up, pet detail popup with move equip/unequip, per-pet auto/manual toggle
-- [ ] **Phase 2C: More Dungeons + Arena Polish** — expand 4→8 dungeons, arena streak rewards, dungeon-themed procedural backgrounds
-- [ ] **Phase 3: Evolution + Level Caps** — proper levelCap in petcatalog, evolution stones from dungeons, evolution UI + animation, level cap raises on evolve
-- [ ] **Phase 4: Spec Paths** — rpg-spec-trees.json, spec choice at Lv5/sub-spec Lv30, stat bonuses, spec-gated moves (rallyCry + lastStand already tagged)
-- [ ] **Phase 5: Battle Polish** — attack slide animations, screen shake, type popups, 2x speed, VFX layer, difficulty modes
+- [x] **Phase 2A: Arena + Equipment Integration** — wire Training Arena to rpg-combat 1v1, equipment ATK/DEF buffs pets in combat, fix priority moves, fix level cap
+- [x] **Phase 2B: Move System Overhaul** — expand 30→97 moves, persistent move learning on level-up, pet detail popup with move equip/unequip, per-pet auto/manual toggle
+- [x] **Phase 2C: More Dungeons + Arena Polish** — expand 4→8 dungeons, arena streak rewards, dungeon-themed procedural backgrounds
+- [x] **Phase 3: Evolution + Level Caps** — proper levelCap in petcatalog, evolution stones from dungeons, evolution UI + animation, level cap raises on evolve
+- [x] **Phase 4: Spec Paths** — rpg-spec-trees.json, spec choice at Lv5/sub-spec Lv30, stat bonuses, spec-gated moves
+- [x] **Phase 5: Battle Polish** — attack slide animations, screen shake, type popups, 2x speed, VFX layer, difficulty modes
+- [x] **Phase 5B: Quick Combat Fixes** — taunt enforcement, sub-spec specials, priority moves, run button, drain mechanic
+- [x] **Phase 6: Combat Depth** — boss mechanics/enrage, pet passives (6 types), multi-hit moves, conditional bonuses, team synergy
+- [x] **Phase 7: Content & Rewards** — dungeon drops, combat quests, dungeons 9-12, arena milestones, consumable items in combat
+- [x] **Phase 8: Quality of Life** — move tooltips, post-combat stats, bestiary, type chart, speed toggle persistence
+- [x] **Bug Fixes** — Wallet API (getBalance/deduct), old saves bestiary crash, AoE/bomb stats tracking, arena re-open after fight, XP bars on arena select
 
 ### RPG Phase 6: Town Hub Hotspot Implementations (priority order)
 - [x] **General Store** — buy/sell items, consumables, evolution stones. Shop inventory grid. Sell at fixed prices, buy potions. Prices in GP
