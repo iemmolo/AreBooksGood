@@ -9459,7 +9459,11 @@
     removeItem: function (key, count) {
       if (!state) return false;
       return removeItem(key, count || 1);
-    }
+    },
+
+    getCategories: function () { return ITEM_CATEGORIES; },
+
+    getItemIcon: function (key) { return ITEM_ICON_MAP[key] || null; }
   };
   window.addEventListener('rpg-skills-init', reinit);
 

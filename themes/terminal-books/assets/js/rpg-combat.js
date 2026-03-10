@@ -921,6 +921,9 @@
         }
         otherTargets[ot].hp = Math.max(0, otherTargets[ot].hp - finalDmg);
         if (otherTargets[ot].hp <= 0) otherTargets[ot].alive = false;
+        // Track AoE damage in combat stats (8-2)
+        if (user._stats && finalDmg > 0) user._stats.dmgDealt += finalDmg;
+        if (otherTargets[ot]._stats && finalDmg > 0) otherTargets[ot]._stats.dmgTaken += finalDmg;
         spawnFloatingText(otherTargets[ot], '-' + finalDmg, aoeDmg.isCrit);
         spawnVfx(otherTargets[ot], move.type || 'neutral');
       }
@@ -1943,7 +1946,7 @@
     if (!combatSave.stones) combatSave.stones = {};
     var stoneType = catalog.type;
     var hasStones = (combatSave.stones[stoneType] || 0) >= nextTier.stoneCost;
-    var hasGp = window.Wallet ? window.Wallet.get() >= nextTier.gpCost : false;
+    var hasGp = window.Wallet ? window.Wallet.getBalance() >= nextTier.gpCost : false;
 
     return {
       nextCap: nextTier.cap,
@@ -1972,7 +1975,7 @@
     combatSave.stones[evoInfo.stoneType] -= evoInfo.stoneCost;
     saveCombatState(combatSave);
 
-    if (window.Wallet) window.Wallet.subtract(evoInfo.gpCost);
+    if (window.Wallet) window.Wallet.deduct(evoInfo.gpCost);
 
     // Raise level cap, reset XP
     pet.levelCap = evoInfo.nextCap;
@@ -2997,10 +3000,12 @@
         if (!enemy.alive) continue;
         var finalDmg = Math.max(1, bombDmg - Math.floor(enemy.def * 0.3));
         enemy.hp = Math.max(0, enemy.hp - finalDmg);
+        if (fighter._stats) fighter._stats.dmgDealt += finalDmg;
         if (enemy.hp <= 0) {
           enemy.alive = false;
           bombKilled.push(enemy);
           battleState.kills++;
+          if (fighter._stats) fighter._stats.kills++;
           if (enemy.isBoss) battleState._bossKills = (battleState._bossKills || 0) + 1;
           trackBestiaryDefeat(enemy);
           addBattleLog(enemy.name + ' was defeated!');
@@ -3556,6 +3561,16 @@
         html += '<div class="rpg-team-pet-name">' + creature.name + ' Lv' + pet.level + '</div>';
         html += '<div class="rpg-team-pet-type">' + creature.type + '</div>';
         html += '<div class="rpg-team-pet-stats">HP:' + stats.hp + ' ATK:' + stats.atk + '</div>';
+        // XP bar
+        var petLevelCap = getPetLevelCap(pid);
+        var petAtCap = pet.level >= petLevelCap;
+        if (!petAtCap) {
+          var petXpNeeded = rpgPetXpForLevel(pet.level);
+          var petXpPct = Math.min(100, Math.floor(((pet.xp || 0) / petXpNeeded) * 100));
+          html += '<div class="rpg-team-pet-xpbar"><div class="rpg-team-pet-xpfill" style="width:' + petXpPct + '%"></div></div>';
+        } else {
+          html += '<div class="rpg-team-pet-cap">MAX</div>';
+        }
         if (isSelected) html += '<div class="rpg-team-pet-check">&#10003;</div>';
         html += '</div>';
       }
@@ -3826,7 +3841,7 @@
         html += '<div class="rpg-detail-evo">';
         var combatSave = loadCombatState();
         var stonesHeld = (combatSave.stones && combatSave.stones[evoInfo.stoneType]) || 0;
-        var gpHeld = window.Wallet ? window.Wallet.get() : 0;
+        var gpHeld = window.Wallet ? window.Wallet.getBalance() : 0;
         html += '<div class="rpg-detail-evo-cost">';
         html += '<span class="' + (evoInfo.hasStones ? 'evo-met' : 'evo-unmet') + '">' + evoInfo.stoneType + ' stone: ' + stonesHeld + '/' + evoInfo.stoneCost + '</span>';
         html += '<span class="' + (evoInfo.hasGp ? 'evo-met' : 'evo-unmet') + '">GP: ' + gpHeld + '/' + evoInfo.gpCost + '</span>';
@@ -4187,9 +4202,9 @@
     if (!pet.spec) return false;
 
     var cost = specData.respecCost || 1000;
-    if (!window.Wallet || window.Wallet.get() < cost) return false;
+    if (!window.Wallet || window.Wallet.getBalance() < cost) return false;
 
-    window.Wallet.subtract(cost);
+    window.Wallet.deduct(cost);
 
     // Remove spec-gated moves from equipped/learned
     if (pet.equippedMoves && moveData) {
@@ -4440,7 +4455,17 @@
     getSpecBonuses: getSpecBonuses,
     petHasSpecGate: petHasSpecGate,
     showBestiary: showBestiary,
-    showTypeChart: showTypeChart
+    showTypeChart: showTypeChart,
+    addStone: function (type) {
+      var cs = loadCombatState();
+      if (!cs.stones) cs.stones = { fire: 0, aqua: 0, nature: 0, tech: 0, shadow: 0, mystic: 0 };
+      cs.stones[type] = (cs.stones[type] || 0) + 1;
+      saveCombatState(cs);
+    },
+    getStones: function () {
+      var cs = loadCombatState();
+      return cs.stones || { fire: 0, aqua: 0, nature: 0, tech: 0, shadow: 0, mystic: 0 };
+    }
   };
 
 })();

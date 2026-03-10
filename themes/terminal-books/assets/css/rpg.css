@@ -1508,6 +1508,125 @@
   animation: rpgFadeIn 0.2s ease;
 }
 
+/* ── General Store ────────────────────────────── */
+.rpg-store-modal {
+  max-width: 520px;
+  width: 90%;
+}
+.rpg-store-balance {
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #ffd700;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+.rpg-store-tabs {
+  display: flex;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+.rpg-store-tab {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--foreground);
+  font-family: monospace;
+  font-size: 0.85em;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s;
+}
+.rpg-store-tab:hover { color: var(--accent); }
+.rpg-store-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.rpg-store-body {
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.rpg-store-category {
+  font-size: 0.75em;
+  font-weight: bold;
+  color: var(--accent);
+  margin: 10px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rpg-store-category:first-child { margin-top: 0; }
+.rpg-store-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.rpg-store-item:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.rpg-store-item-icon {
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+.rpg-store-item-info { flex: 1; min-width: 0; }
+.rpg-store-item-name { font-size: 0.8em; font-weight: bold; }
+.rpg-store-item-desc {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+.rpg-store-owned {
+  font-size: 0.65em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+.rpg-store-item-price {
+  font-size: 0.75em;
+  color: #ffd700;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.rpg-store-buy-btn, .rpg-store-sell-btn {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 0.72em;
+  font-family: monospace;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.rpg-store-buy-btn:hover:not(:disabled), .rpg-store-sell-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.rpg-store-buy-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.rpg-store-sell-all {
+  font-size: 0.65em;
+  padding: 2px 6px;
+}
+.rpg-store-empty {
+  text-align: center;
+  padding: 30px;
+  font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+.rpg-store-stone-fire    { border-left: 3px solid #ff6600; }
+.rpg-store-stone-aqua    { border-left: 3px solid #4488cc; }
+.rpg-store-stone-nature  { border-left: 3px solid #44aa44; }
+.rpg-store-stone-tech    { border-left: 3px solid #ccaa22; }
+.rpg-store-stone-shadow  { border-left: 3px solid #8844cc; }
+.rpg-store-stone-mystic  { border-left: 3px solid #cc44aa; }
+
 .rpg-petstore-modal {
   background: var(--background);
   border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
@@ -1966,6 +2085,9 @@
 
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 768px) {
+  .rpg-store-body { max-height: 300px; }
+  .rpg-store-item { gap: 4px; padding: 4px 6px; }
+
   .rpg-petstore-modal {
     width: 95vw;
     max-height: 85vh;

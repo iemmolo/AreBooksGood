@@ -418,12 +418,12 @@ Legacy battle.js UNTOUCHED.
 - [ ] **Phase 5: Battle Polish** — attack slide animations, screen shake, type popups, 2x speed, VFX layer, difficulty modes
 
 ### RPG Phase 6: Town Hub Hotspot Implementations (priority order)
-- [ ] **General Store** — buy/sell items, consumables, evolution stones. Shop inventory grid. Sell at fixed prices, buy potions/bait/dynamite. Prices in GP and JB
+- [x] **General Store** — buy/sell items, consumables, evolution stones. Shop inventory grid. Sell at fixed prices, buy potions. Prices in GP
 - [ ] **Tavern** — quest board UI (daily refresh), quest turn-ins, NPC bartender dialogue. Depends on Phase 3
 - [x] **Dungeon Gate** — RPG combat dungeon select. Depends on Phase 5
 - [ ] **Bank** — deposit/withdraw GP/JB, 1%/day interest (capped), item storage (doesn't count toward inventory cap)
-- [ ] **Library** — bestiary (enemy grid with stats/sprites), achievement tracker, lore entries, collection completion %
-- [ ] **Guard Barracks** — combat training dummy (practice moves), slayer task assignments (future), type chart reference
+- [x] **Library** — bestiary (enemy grid with stats/sprites, defeated count, click for detail)
+- [x] **Guard Barracks** — type chart reference (6x6 grid, super/neutral/resist color coded)
 - [ ] **Casino** — bridge to existing casino games (poker/blackjack/slots). Bridge RPG wallet ↔ casino wallet
 - [ ] **Arcade** — launch Flappy Bird / Doodle Jump from RPG. High scores per save slot, GP/renown milestones
 - [ ] **Chapel** — prayer skill location (blocked until Skills Phase 10)

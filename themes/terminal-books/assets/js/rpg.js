@@ -1038,6 +1038,52 @@
     petstore: 'Mysterious eggs sit in warm nests. A shopkeeper grins.'
   };
 
+  // ── General Store Data ──────────────────────────
+  var STORE_BUY_CATALOG = [
+    { key: 'Health Potion',  price: 50,   category: 'Consumables', desc: 'Heal 30% of max HP in combat' },
+    { key: 'Antidote',       price: 40,   category: 'Consumables', desc: 'Cure poison, burn, bleed' },
+    { key: 'Revive Potion',  price: 150,  category: 'Consumables', desc: 'Revive fainted ally at 20% HP' },
+    { key: 'Bomb',           price: 200,  category: 'Consumables', desc: 'AoE damage to all enemies' },
+    { key: 'Fire Stone',     price: 1500, category: 'Evolution Stones', stoneType: 'fire' },
+    { key: 'Aqua Stone',     price: 1500, category: 'Evolution Stones', stoneType: 'aqua' },
+    { key: 'Nature Stone',   price: 1500, category: 'Evolution Stones', stoneType: 'nature' },
+    { key: 'Tech Stone',     price: 1500, category: 'Evolution Stones', stoneType: 'tech' },
+    { key: 'Shadow Stone',   price: 1500, category: 'Evolution Stones', stoneType: 'shadow' },
+    { key: 'Mystic Stone',   price: 1500, category: 'Evolution Stones', stoneType: 'mystic' }
+  ];
+
+  var STORE_SELL_PRICES = {
+    'Copper Ore': 2, 'Crimson Ore': 3, 'Coal': 5, 'Iron Ore': 4, 'Gold Ore': 8, 'Silver Ore': 10,
+    'Astral Ore': 12, 'Shadow Ore': 8, 'Emerald Ore': 15, 'Slate Ore': 10, 'Mithril Ore': 20,
+    'Amethyst Ore': 25, 'Cobalt Ore': 30, 'Molten Ore': 40, 'Frost Ore': 55, 'Obsidian Ore': 75,
+    'Peridot': 10, 'Emerald': 15, 'Aquamarine': 20, 'Topaz': 25, 'Onyx': 35,
+    'Moonstone': 50, 'Diamond': 100, 'Opal': 60, 'Sapphire': 40, 'Ruby': 75,
+    'Pine Log': 2, 'Oak Log': 3, 'Birch Log': 5, 'Maple Log': 8, 'Walnut Log': 12,
+    'Mahogany Log': 18, 'Yew Log': 30, 'Elder Log': 50,
+    'Anchovy': 2, 'Goldfish': 3, 'Small Shark': 4, 'Koi': 5, 'Perch': 6, 'Clownfish': 7,
+    'Piranha': 8, 'Flying Fish': 10, 'Barracuda': 12, 'Dolphin Fish': 15, 'Betta': 18,
+    'Stingray': 22, 'Eye Fish': 25, 'Spook Boy': 30, 'Kingfish': 40, 'Crawfish': 35,
+    'Giant Crab': 45, 'Anglerfish': 55, 'Hammerhead': 70, 'Shark': 90,
+    'Copper Bar': 8, 'Bronze Bar': 15, 'Gold Bar': 30, 'Astral Bar': 45, 'Silver Bar': 55,
+    'Emerald Bar': 75, 'Mithril Bar': 100, 'Amethyst Bar': 130, 'Cobalt Bar': 170,
+    'Molten Bar': 220, 'Frost Bar': 280, 'Obsidian Bar': 360,
+    'Health Potion': 25, 'Antidote': 20, 'Revive Potion': 75, 'Bomb': 100
+  };
+
+  // Equipment sell: ~40% of crafting value derived from tier position
+  var EQUIP_SELL_TIERS = {
+    'Copper': 15, 'Bronze': 30, 'Gold': 60, 'Astral': 100, 'Silver': 160, 'Emerald': 240,
+    'Mithril': 340, 'Amethyst': 470, 'Cobalt': 620, 'Molten': 800, 'Frost': 1100, 'Obsidian': 1500
+  };
+
+  var STORE_KEEPER_LINES = [
+    'Everything is priced fairly. No haggling.',
+    'You break it, you bought it.',
+    'Business is business.',
+    'I sell. You buy. Simple.',
+    'The finest goods in all of ' + KINGDOM_NAME + '.'
+  ];
+
   // ── Town State ────────────────────────────────
   var townStaticBuffer = null, townStaticBufferCtx = null;
   var townAnimId = null;
@@ -1052,6 +1098,7 @@
   var townPlayerFrame = 0;
   var townPlayerAnimTimer = 0;
   var petStoreModalOpen = false;
+  var generalStoreOpen = false;
 
   // ── Helpers ───────────────────────────────────
   function $(id) { return document.getElementById(id); }
@@ -5219,6 +5266,10 @@
       openDungeonGate();
       return;
     }
+    if (locId === 'store') {
+      openGeneralStore();
+      return;
+    }
     if (locId === 'library') {
       if (window.RpgCombat && window.RpgCombat.showBestiary) {
         window.RpgCombat.showBestiary();
@@ -5918,13 +5969,18 @@
       window.RpgCombat.init(canvasEl, containerEl);
       window.RpgCombat.onComplete = function (result) {
         if (config.mode === 'arena') {
-          // Arena: return to map, then re-populate location tab with refreshed stats
+          // Arena: return to map, post message, then re-open arena select
           returnToMap(function () {
             renderLocationPane('arena', null);
             if (result.victory) {
               addGameMessage('Arena victory! Earned ' + result.gp + ' GP and ' + result.petXp + ' pet XP.', 'reward');
             } else {
               addGameMessage('Arena defeat. Better luck next time!', 'combat');
+            }
+            // Re-open arena select with fresh pet state
+            var freshPets = getRpgPetState();
+            if (freshPets && window.RpgCombat) {
+              window.RpgCombat.showArenaSelect(freshPets);
             }
           });
         } else {
@@ -6089,6 +6145,314 @@
     if (overlay && overlay.parentNode) {
       overlay.parentNode.removeChild(overlay);
     }
+  }
+
+  // ── General Store ────────────────────────────
+  function openGeneralStore() {
+    if (generalStoreOpen) return;
+    generalStoreOpen = true;
+
+    addGameMessage(STORE_KEEPER_LINES[Math.floor(Math.random() * STORE_KEEPER_LINES.length)], 'npc');
+
+    var overlay = document.createElement('div');
+    overlay.className = 'rpg-modal-overlay';
+    overlay.id = 'rpg-store-overlay';
+
+    var modal = document.createElement('div');
+    modal.className = 'rpg-modal rpg-store-modal';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'rpg-modal-header';
+    header.innerHTML = '<h3>General Store</h3>';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'rpg-modal-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', closeGeneralStore);
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
+    // Balance bar
+    var balBar = document.createElement('div');
+    balBar.className = 'rpg-store-balance';
+    balBar.id = 'rpg-store-balance';
+    modal.appendChild(balBar);
+
+    // Tab bar
+    var tabs = document.createElement('div');
+    tabs.className = 'rpg-store-tabs';
+    var buyTab = document.createElement('button');
+    buyTab.className = 'rpg-store-tab active';
+    buyTab.textContent = 'Buy';
+    buyTab.id = 'rpg-store-tab-buy';
+    var sellTab = document.createElement('button');
+    sellTab.className = 'rpg-store-tab';
+    sellTab.textContent = 'Sell';
+    sellTab.id = 'rpg-store-tab-sell';
+    tabs.appendChild(buyTab);
+    tabs.appendChild(sellTab);
+    modal.appendChild(tabs);
+
+    // Body
+    var body = document.createElement('div');
+    body.className = 'rpg-store-body';
+    body.id = 'rpg-store-body';
+    modal.appendChild(body);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeGeneralStore();
+    });
+    document.body.appendChild(overlay);
+    overlay.style.display = 'flex';
+
+    buyTab.addEventListener('click', function () {
+      buyTab.classList.add('active');
+      sellTab.classList.remove('active');
+      renderStoreBuyTab();
+    });
+    sellTab.addEventListener('click', function () {
+      sellTab.classList.add('active');
+      buyTab.classList.remove('active');
+      renderStoreSellTab();
+    });
+
+    updateStoreBalance();
+    renderStoreBuyTab();
+  }
+
+  function closeGeneralStore() {
+    generalStoreOpen = false;
+    var overlay = document.getElementById('rpg-store-overlay');
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+
+  function updateStoreBalance() {
+    var el = document.getElementById('rpg-store-balance');
+    if (el) el.textContent = (window.Wallet ? window.Wallet.getBalance() : 0) + ' GP';
+  }
+
+  function makeStoreSprite(iconData, size) {
+    if (!iconData) return null;
+    size = size || 32;
+    var el = document.createElement('div');
+    el.className = 'rpg-store-item-icon';
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.backgroundImage = 'url(' + ITEMS_SHEET_PATH + ')';
+    var scale = size / 16;
+    el.style.backgroundSize = (576 * scale) + 'px ' + (560 * scale) + 'px';
+    el.style.backgroundPosition = '-' + (iconData.x * scale) + 'px -' + (iconData.y * scale) + 'px';
+    el.style.imageRendering = 'pixelated';
+    return el;
+  }
+
+  function renderStoreBuyTab() {
+    var body = document.getElementById('rpg-store-body');
+    if (!body) return;
+    body.innerHTML = '';
+
+    var api = window.__RPG_SKILLS_API;
+    var stones = (window.RpgCombat && window.RpgCombat.getStones) ? window.RpgCombat.getStones() : {};
+    var balance = window.Wallet ? window.Wallet.getBalance() : 0;
+
+    var categories = {};
+    for (var i = 0; i < STORE_BUY_CATALOG.length; i++) {
+      var item = STORE_BUY_CATALOG[i];
+      if (!categories[item.category]) categories[item.category] = [];
+      categories[item.category].push(item);
+    }
+
+    var catOrder = Object.keys(categories);
+    for (var ci = 0; ci < catOrder.length; ci++) {
+      var catName = catOrder[ci];
+      var catItems = categories[catName];
+
+      var catHeader = document.createElement('div');
+      catHeader.className = 'rpg-store-category';
+      catHeader.textContent = catName;
+      body.appendChild(catHeader);
+
+      var stoneIconMap = { fire: { x: 160, y: 240 }, aqua: { x: 128, y: 240 }, nature: { x: 176, y: 240 },
+        tech: { x: 192, y: 240 }, shadow: { x: 208, y: 240 }, mystic: { x: 224, y: 240 } };
+      for (var ii = 0; ii < catItems.length; ii++) {
+        var def = catItems[ii];
+        var row = document.createElement('div');
+        row.className = 'rpg-store-item';
+
+        // Stone type accent
+        if (def.stoneType) row.classList.add('rpg-store-stone-' + def.stoneType);
+
+        // Sprite icon
+        var iconData = api ? api.getItemIcon(def.key) : null;
+        // Stones don't have inventory icons — use gem proxies
+        if (!iconData && def.stoneType) {
+          iconData = stoneIconMap[def.stoneType] ? { sheet: 'items_sheet', x: stoneIconMap[def.stoneType].x, y: stoneIconMap[def.stoneType].y } : null;
+        }
+        var sprite = makeStoreSprite(iconData, 32);
+        if (sprite) row.appendChild(sprite);
+
+        // Info
+        var info = document.createElement('div');
+        info.className = 'rpg-store-item-info';
+        info.innerHTML = '<div class="rpg-store-item-name">' + def.key + '</div>' +
+          (def.desc ? '<div class="rpg-store-item-desc">' + def.desc + '</div>' : '');
+
+        // Owned count
+        var owned = 0;
+        if (def.stoneType) {
+          owned = stones[def.stoneType] || 0;
+        } else if (api) {
+          owned = api.getItemCount(def.key);
+        }
+        info.innerHTML += '<div class="rpg-store-owned">Owned: ' + owned + '</div>';
+        row.appendChild(info);
+
+        // Price
+        var priceEl = document.createElement('div');
+        priceEl.className = 'rpg-store-item-price';
+        priceEl.textContent = def.price + ' GP';
+        row.appendChild(priceEl);
+
+        // Buy button
+        var btn = document.createElement('button');
+        btn.className = 'rpg-store-buy-btn';
+        btn.textContent = 'Buy';
+        var canBuy = balance >= def.price;
+        // Stack cap check for non-stone items
+        if (!def.stoneType && api && api.getItemCount(def.key) >= 999) canBuy = false;
+        btn.disabled = !canBuy;
+        btn.addEventListener('click', (function (d) {
+          return function () { buyStoreItem(d); };
+        })(def));
+        row.appendChild(btn);
+
+        body.appendChild(row);
+      }
+    }
+  }
+
+  function buyStoreItem(def) {
+    if (!window.Wallet || window.Wallet.getBalance() < def.price) return;
+
+    window.Wallet.deduct(def.price);
+
+    if (def.stoneType && window.RpgCombat && window.RpgCombat.addStone) {
+      window.RpgCombat.addStone(def.stoneType);
+    } else if (window.__RPG_SKILLS_API) {
+      window.__RPG_SKILLS_API.addItem(def.key, 1);
+    }
+
+    addGameMessage('Purchased ' + def.key + ' for ' + def.price + ' GP.', 'reward');
+    updateStoreBalance();
+    renderStoreBuyTab();
+  }
+
+  function renderStoreSellTab() {
+    var body = document.getElementById('rpg-store-body');
+    if (!body) return;
+    body.innerHTML = '';
+
+    var api = window.__RPG_SKILLS_API;
+    if (!api) { body.innerHTML = '<div class="rpg-store-empty">Inventory unavailable.</div>'; return; }
+
+    var categories = api.getCategories ? api.getCategories() : [];
+    var hasAnything = false;
+
+    for (var ci = 0; ci < categories.length; ci++) {
+      var cat = categories[ci];
+      // Skip Equipment for now — derive sell prices differently
+      var ownedItems = [];
+      for (var ii = 0; ii < cat.items.length; ii++) {
+        var key = cat.items[ii];
+        var qty = api.getItemCount(key);
+        if (qty <= 0) continue;
+        var price = getItemSellPrice(key, cat.label);
+        if (price <= 0) continue;
+        ownedItems.push({ key: key, qty: qty, price: price });
+      }
+      if (ownedItems.length === 0) continue;
+      hasAnything = true;
+
+      var catHeader = document.createElement('div');
+      catHeader.className = 'rpg-store-category';
+      catHeader.textContent = cat.label;
+      body.appendChild(catHeader);
+
+      for (var oi = 0; oi < ownedItems.length; oi++) {
+        var item = ownedItems[oi];
+        var row = document.createElement('div');
+        row.className = 'rpg-store-item';
+
+        var iconData = api.getItemIcon(item.key);
+        var sprite = makeStoreSprite(iconData, 32);
+        if (sprite) row.appendChild(sprite);
+
+        var info = document.createElement('div');
+        info.className = 'rpg-store-item-info';
+        info.innerHTML = '<div class="rpg-store-item-name">' + item.key + '</div>' +
+          '<div class="rpg-store-owned">x' + item.qty + ' | ' + item.price + ' GP each</div>';
+        row.appendChild(info);
+
+        var priceEl = document.createElement('div');
+        priceEl.className = 'rpg-store-item-price';
+        priceEl.textContent = (item.price * item.qty) + ' GP';
+        row.appendChild(priceEl);
+
+        // Sell x1
+        var sellBtn = document.createElement('button');
+        sellBtn.className = 'rpg-store-sell-btn';
+        sellBtn.textContent = 'Sell';
+        sellBtn.addEventListener('click', (function (k, p) {
+          return function () { sellStoreItem(k, 1, p); };
+        })(item.key, item.price));
+        row.appendChild(sellBtn);
+
+        // Sell All
+        if (item.qty > 1) {
+          var sellAllBtn = document.createElement('button');
+          sellAllBtn.className = 'rpg-store-sell-btn rpg-store-sell-all';
+          sellAllBtn.textContent = 'All';
+          sellAllBtn.addEventListener('click', (function (k, q, p) {
+            return function () { sellStoreItem(k, q, p); };
+          })(item.key, item.qty, item.price));
+          row.appendChild(sellAllBtn);
+        }
+
+        body.appendChild(row);
+      }
+    }
+
+    if (!hasAnything) {
+      body.innerHTML = '<div class="rpg-store-empty">You have nothing to sell. Go gather some resources!</div>';
+    }
+  }
+
+  function getItemSellPrice(key, catLabel) {
+    if (STORE_SELL_PRICES[key]) return STORE_SELL_PRICES[key];
+    // Equipment: derive from tier name
+    if (catLabel === 'Equipment') {
+      var tierKeys = Object.keys(EQUIP_SELL_TIERS);
+      for (var ti = 0; ti < tierKeys.length; ti++) {
+        if (key.indexOf(tierKeys[ti]) === 0) return EQUIP_SELL_TIERS[tierKeys[ti]];
+      }
+    }
+    return 0;
+  }
+
+  function sellStoreItem(key, quantity, priceEach) {
+    var api = window.__RPG_SKILLS_API;
+    if (!api) return;
+    var actual = Math.min(quantity, api.getItemCount(key));
+    if (actual <= 0) return;
+
+    api.removeItem(key, actual);
+
+    var totalGp = priceEach * actual;
+    if (window.Wallet) window.Wallet.add(totalGp);
+    addGameMessage('Sold ' + actual + 'x ' + key + ' for ' + totalGp + ' GP.', 'reward');
+    updateStoreBalance();
+    renderStoreSellTab();
   }
 
   function renderPetStoreContents() {
@@ -7550,6 +7914,7 @@
     // Escape: close pet popup → close pet store modal → exit town → return to map
     if (e.key === 'Escape') {
       if (activePetPopup) { closePetPopup(); return; }
+      if (generalStoreOpen) { closeGeneralStore(); return; }
       if (petStoreModalOpen) { closePetStoreModal(); return; }
       if (insideTown) { returnToWorldMap(); return; }
     }
