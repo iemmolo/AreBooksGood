@@ -759,7 +759,21 @@
     [220,560,17],[290,430,17],[350,490,17],[270,540,17],
     // Stone scatter (near mine/arena/paths)
     [200,240,18],[250,220,18],[180,300,18],[280,260,18],[160,250,18],
-    [500,580,18],[540,560,18],[620,580,18],[460,600,18],[570,600,18]
+    [500,580,18],[540,560,18],[620,580,18],[460,600,18],[570,600,18],
+    // Extra stones near arena/mine
+    [520,540,18],[600,560,18],[480,570,18],[220,280,18],[170,220,18],
+    // Extra puddles on paths + low areas
+    [500,200,15],[650,300,15],[400,400,15],[560,450,15],[720,350,15],
+    // Extra cart tracks on busy paths
+    [520,160,16],[600,400,16],[440,300,16],[500,480,16],
+    // Extra fallen leaves near forest
+    [200,520,17],[330,500,17],[270,480,17],[250,550,17],
+    // Extra wildflower patches (sparse midfield)
+    [500,350,11],[700,300,11],[400,200,11],[650,150,11],
+    // Extra bushes in empty midfield
+    [450,250,2],[600,350,2],[350,400,2],
+    // Extra rocks scattered
+    [500,100,1],[700,500,1],[400,550,1]
   ];
 
   // ── Biome Zones & Palettes ─────────────────────
@@ -774,10 +788,10 @@
   var BIOME_PALETTES = {
     grass:  { base: ['#3a7a32','#428a3a','#4a9442','#509e48'], detail: '#2d6628' },
     town:   { base: ['#4a8a40','#509044','#5a9a4c','#60a050'], detail: '#8a7a5a' },
-    mine:   { base: ['#4a7a3a','#507a40','#5a7a48','#4a7040'], detail: '#6a6a6a' },
+    mine:   { base: ['#3a6a2a','#4a7a3a','#5a8a4a','#4a7540'], detail: '#6a6a6a' },
     dock:   { base: ['#5a9848','#60a050','#68a858','#70b060'], detail: '#c8b478' },
     forest: { base: ['#2a6a22','#327a2a','#3a8a32','#429438'], detail: '#1e5518' },
-    smithy: { base: ['#4a7a38','#4e7a3c','#527a40','#4a7038'], detail: '#5a4a30' },
+    smithy: { base: ['#3a6a28','#4a7a38','#5a8a48','#4a7538'], detail: '#5a4a30' },
     arena:  { base: ['#5a8a42','#608840','#6a8a48','#5a8040'], detail: '#8a7a4a' }
   };
 
@@ -2430,6 +2444,23 @@
       }
     }
 
+    // Pass 3.7: Micro-vegetation — tiny dark green dots simulating individual grass tufts
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var h = tileHash(c + 2000, r + 2000);
+        if ((h >>> 0) % 4 !== 0) continue;
+        var biome = biomeIndexMap[r * cols + c] || 'grass';
+        if (biome !== 'grass' && biome !== 'forest' && biome !== 'dock') continue;
+        var tx = c * TILE, ty = r * TILE;
+        ctx.fillStyle = biome === 'forest' ? 'rgba(15,50,10,0.12)' : 'rgba(25,55,15,0.1)';
+        ctx.fillRect(tx + ((h >>> 4) % 6), ty + ((h >>> 8) % 6), 1, 2);
+        // Second tuft on some tiles
+        if ((h >>> 12) % 3 === 0) {
+          ctx.fillRect(tx + ((h >>> 14) % 5) + 2, ty + ((h >>> 16) % 5), 1, 1);
+        }
+      }
+    }
+
     // Pass 4: Soft edge vignette
     var grad;
     // Top
@@ -2456,6 +2487,25 @@
     grad.addColorStop(1, 'rgba(0,0,0,0.25)');
     ctx.fillStyle = grad;
     ctx.fillRect(MAP_W - 18, 0, 18, MAP_H);
+
+    // Corner darkening — corners slightly darker than edges for natural framing
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 40, 0, Math.PI / 2);
+    ctx.lineTo(0, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(MAP_W, 0, 40, Math.PI / 2, Math.PI);
+    ctx.lineTo(MAP_W, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, MAP_H, 40, -Math.PI / 2, 0);
+    ctx.lineTo(0, MAP_H);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(MAP_W, MAP_H, 40, Math.PI, Math.PI * 1.5);
+    ctx.lineTo(MAP_W, MAP_H);
+    ctx.fill();
 
     // Water body near Fishing Dock — deep outer
     ctx.fillStyle = '#1e5888';
@@ -2534,6 +2584,20 @@
         ctx.fillStyle = 'rgba(96,176,224,0.15)';
         var ripOff = ((h >>> 18) % 10) - 5;
         ctx.fillRect(rx + ripOff - 4, y, 8, 1);
+      }
+
+      // River bottom stones — visible through lighter water bands
+      if (y % 10 === 0 && (h >>> 24) % 3 === 0) {
+        ctx.fillStyle = 'rgba(100,90,70,0.08)';
+        var stoneOff = ((h >>> 20) % 16) - 8;
+        ctx.fillRect(rx + stoneOff, y, 2, 2);
+      }
+
+      // Current direction markers — faint angled dashes suggesting flow
+      if (y % 16 === 0) {
+        ctx.fillStyle = 'rgba(30,60,100,0.04)';
+        ctx.fillRect(rx - 4, y, 3, 1);
+        ctx.fillRect(rx - 3, y + 1, 3, 1);
       }
     }
 
@@ -2625,28 +2689,31 @@
     }
     ctx.globalAlpha = 1;
 
-    // Dock water ripples
+    // Dock water ripples (expanded to 15 with wave groups)
     ctx.fillStyle = '#4898d0';
     var ripples = [
       [860, 220, 24], [900, 250, 20], [870, 275, 18],
       [930, 235, 22], [950, 260, 16], [880, 295, 20],
-      [840, 240, 16], [920, 280, 18], [870, 310, 14], [950, 300, 20]
+      [840, 240, 16], [920, 280, 18], [870, 310, 14], [950, 300, 20],
+      [825, 195, 20], [960, 225, 14], [845, 265, 22], [910, 310, 16], [935, 285, 18]
     ];
     for (var i = 0; i < ripples.length; i++) {
       var r = ripples[i];
       var off = Math.sin(phase + i * 1.3) * 4;
-      ctx.fillRect(r[0] + off, r[1], r[2], 2);
+      // Every 3rd ripple slightly larger (wave groups)
+      var w = (i % 3 === 0) ? r[2] + 4 : r[2];
+      ctx.fillRect(r[0] + off, r[1], w, 2);
     }
 
-    // Light reflections on dock water
-    for (var i = 0; i < 5; i++) {
-      var alpha = 0.08 + Math.sin(phase * 0.7 + i * 1.8) * 0.06;
+    // Light reflections on dock water (expanded to 8)
+    for (var i = 0; i < 8; i++) {
+      var alpha = 0.08 + Math.sin(phase * 0.7 + i * 1.4) * 0.06;
       if (alpha <= 0) continue;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = '#ffffff';
-      var lx = 850 + i * 35 + Math.sin(phase + i) * 8;
-      var ly = 210 + (i % 3) * 30;
-      ctx.fillRect(lx, ly, 6, 3);
+      var lx = 830 + i * 28 + Math.sin(phase + i * 0.8) * 8;
+      var ly = 195 + (i % 4) * 28;
+      ctx.fillRect(lx, ly, 5 + (i % 2), 2);
     }
     ctx.globalAlpha = 1;
   }
@@ -3015,7 +3082,9 @@
           ctx.fillRect(dx + 1, dy + 2, 1, 1);
         }
       } else if (type === 5) {
-        // Stump (6x4px)
+        // Stump (6x4px) with shadow + moss
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(dx - 1, dy + 5, 8, 1);
         ctx.fillStyle = '#5a3a1a';
         ctx.fillRect(dx, dy + 2, 6, 3);
         ctx.fillStyle = '#8b6e3b';
@@ -3023,16 +3092,29 @@
         // Ring detail
         ctx.fillStyle = '#c8a878';
         ctx.fillRect(dx + 2, dy + 1, 2, 1);
+        // Moss growth ~40%
+        if ((h >>> 4) % 5 < 2) {
+          ctx.fillStyle = 'rgba(50,120,40,0.25)';
+          ctx.fillRect(dx, dy + 1, 2, 2);
+        }
       } else if (type === 6) {
-        // Signpost (4x10px)
+        // Signpost (4x10px) with shadow + weathering
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(dx - 1, dy + 11, 5, 1);
         ctx.fillStyle = '#5a3a1a';
         ctx.fillRect(dx + 1, dy + 3, 2, 8);
         ctx.fillStyle = '#8b6e3b';
         ctx.fillRect(dx - 1, dy, 6, 3);
         ctx.fillStyle = '#a08858';
         ctx.fillRect(dx, dy + 1, 4, 1);
+        // Weathering ~20%
+        if ((h >>> 4) % 5 === 0) {
+          ctx.fillStyle = 'rgba(40,25,10,0.2)';
+          ctx.fillRect(dx + 2, dy + 5, 1, 3);
+        }
       } else if (type === 7) {
-        // Fence segment (12x6px)
+        // Fence segment (12x6px) with weathering
         ctx.fillStyle = '#5a3a1a';
         ctx.fillRect(dx, dy + 1, 2, 6);
         ctx.fillRect(dx + 10, dy + 1, 2, 6);
@@ -3042,6 +3124,16 @@
         ctx.fillStyle = '#a08858';
         ctx.fillRect(dx + 1, dy, 1, 2);
         ctx.fillRect(dx + 11, dy, 1, 2);
+        // Weathering cracks ~20%
+        if ((h >>> 4) % 5 === 0) {
+          ctx.fillStyle = 'rgba(30,15,5,0.2)';
+          ctx.fillRect(dx + 5, dy + 2, 1, 2);
+        }
+        // Moss at base ~30%
+        if ((h >>> 8) % 3 === 0) {
+          ctx.fillStyle = 'rgba(50,100,40,0.2)';
+          ctx.fillRect(dx, dy + 6, 3, 1);
+        }
       } else if (type === 8) {
         // Tall grass — 5-6 blades, variable heights 4-8px, seed heads, curved tips
         var blades = 5 + ((h >>> 0) % 2);
@@ -3467,6 +3559,16 @@
       ctx.fillRect(ox + 8, oy + 24, 18, 1);
       ctx.fillRect(ox + 28, oy + 22, 22, 1);
       ctx.fillRect(ox + 28, oy + 26, 22, 1);
+      // Door frame shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.fillRect(ox + 33, oy + 25, 1, 12);
+      ctx.fillRect(ox + 43, oy + 25, 1, 12);
+      // Window sill shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(ox + 11, oy + 29, 10, 1);
+      // Roof eave shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.08)';
+      ctx.fillRect(ox - 2, oy + 16, 60, 1);
     } else if (id === 'mine') {
       // ── Mining Camp — Mountain with rock strata (~52x44) ───
       // Gravel ground scatter
@@ -3999,18 +4101,51 @@
       var ox = loc.x - 28, oy = loc.y - 32;
 
       if (id === 'town') {
-        // Chimney smoke (8 particles)
+        // Chimney smoke
         drawSmoke(ctx, ox + 42, oy - 12, smokeFrame, 0);
       } else if (id === 'mine') {
+        // Torch glow auras
+        drawTorchGlow(ctx, ox + 10, oy + 16);
+        drawTorchGlow(ctx, ox + 40, oy + 16);
         // Two torches flanking cave entrance
         drawTorch(ctx, ox + 10, oy + 16, smokeFrame, 0);
         drawTorch(ctx, ox + 40, oy + 16, smokeFrame, 7);
+        // Ore crystal glints inside cave
+        var gt = smokeFrame * 0.04;
+        var ga = 0.2 + Math.sin(gt * 2.5) * 0.15;
+        ctx.globalAlpha = ga;
+        ctx.fillStyle = '#60d0f0';
+        ctx.fillRect(ox + 20, oy + 26, 1, 1);
+        ctx.fillStyle = '#f0c040';
+        ctx.fillRect(ox + 30, oy + 28, 1, 1);
+        ctx.fillStyle = '#60d0f0';
+        ctx.fillRect(ox + 25, oy + 32, 1, 1);
+        ctx.globalAlpha = 1;
       } else if (id === 'smithy') {
         // Chimney smoke
         drawSmoke(ctx, ox + 8, oy - 14, smokeFrame, 3);
         // Sparks from anvil
         drawSparks(ctx, ox + 55, oy + 22, smokeFrame);
+        // Enhanced forge glow — larger, more dynamic
+        var ft = smokeFrame * 0.04;
+        var fa1 = 0.08 + Math.sin(ft * 1.5) * 0.12;
+        ctx.fillStyle = '#ff6020';
+        ctx.globalAlpha = fa1;
+        ctx.fillRect(ox + 2, oy + 12, 20, 14);
+        ctx.globalAlpha = fa1 * 0.4;
+        ctx.fillRect(ox - 2, oy + 8, 28, 20);
+        // Rare bright flash (5% chance simulating sparks)
+        if (Math.sin(ft * 7.3 + 0.5) > 0.9) {
+          ctx.globalAlpha = 0.35;
+          ctx.fillRect(ox + 4, oy + 14, 16, 10);
+        }
+        ctx.globalAlpha = 1;
       } else if (id === 'arena') {
+        // Torch glow auras
+        drawTorchGlow(ctx, ox + 18, oy - 2);
+        drawTorchGlow(ctx, ox + 35, oy - 2);
+        drawTorchGlow(ctx, ox + 3, oy + 14);
+        drawTorchGlow(ctx, ox + 51, oy + 14);
         // Torches at gate + sconces
         drawTorch(ctx, ox + 18, oy - 2, smokeFrame, 5);
         drawTorch(ctx, ox + 35, oy - 2, smokeFrame, 9);
@@ -4021,6 +4156,24 @@
   }
 
   // ── Animation Helpers ───────────────────────────
+  function drawTorchGlow(ctx, x, y) {
+    // 3-layer expanding glow circle around torch
+    ctx.fillStyle = '#ff8030';
+    ctx.globalAlpha = 0.04;
+    ctx.beginPath();
+    ctx.arc(x + 1, y, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.07;
+    ctx.beginPath();
+    ctx.arc(x + 1, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.1;
+    ctx.beginPath();
+    ctx.arc(x + 1, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
   function drawSmoke(ctx, x, y, frame, seed) {
     var particles = 14;
     for (var i = 0; i < particles; i++) {
@@ -4220,7 +4373,6 @@
     ctx.globalAlpha = 1;
 
     // Wind on tall grass + reeds — sine-based sway overlay
-    var windT = Math.sin(t * 0.6);
     for (var i = 0; i < MAP_DECO.length; i++) {
       var d = MAP_DECO[i];
       if (d[2] !== 8 && d[2] !== 14) continue;
@@ -4230,6 +4382,16 @@
       // Sway tip markers
       ctx.fillRect(d[0] + swayX, d[1] - 2, 1, 2);
       ctx.fillRect(d[0] + 3 + swayX * 0.8, d[1] - 1, 1, 2);
+    }
+    ctx.globalAlpha = 1;
+
+    // Dust/pollen particles — slow-drifting beige specks near ground
+    for (var di = 0; di < 6; di++) {
+      var dx = ((smokeFrame * 0.3 + di * 180) % (MAP_W + 40)) - 20;
+      var dy = 200 + di * 70 + Math.sin(t * 0.4 + di * 1.8) * 15;
+      ctx.fillStyle = '#d8c898';
+      ctx.globalAlpha = 0.06 + Math.sin(t * 0.6 + di * 2.3) * 0.03;
+      if (ctx.globalAlpha > 0) ctx.fillRect(dx, dy, 1, 1);
     }
     ctx.globalAlpha = 1;
   }
