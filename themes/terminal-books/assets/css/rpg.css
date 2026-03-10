@@ -1054,6 +1054,23 @@
   font-style: italic;
 }
 
+/* Arena location pane */
+.rpg-arena-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 0.9em;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+.rpg-arena-stat-streak span:last-child { color: var(--accent); font-weight: bold; }
+.rpg-arena-stat-best span:last-child { color: var(--accent); }
+.rpg-arena-wins { color: color-mix(in srgb, #4c4 80%, var(--foreground)); }
+.rpg-arena-milestone {
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  padding: 2px 0;
+}
+
 /* ── Responsive ──────────────────────────────── */
 
 @media (max-width: 768px) {

@@ -36,8 +36,8 @@ Currently: Training Arena on world map enters old skills.js click-mini-game.
 Goal: Arena should open rpg-combat.js 1v1 arena mode (showArenaSelect already exists).
 
 - [x] In rpg.js `enterSkillLocation()`: detect if loc.id === 'arena', call `RpgCombat.showArenaSelect(rpgPets)` instead of loading skills combat
-- [ ] Show arena stats in chatbox location tab (wins, streak, best streak)
-- [ ] Add "Enter Arena" button to location pane for re-entry without walking back to map
+- [x] Show arena stats in chatbox location tab (wins, streak, best streak)
+- [x] Add "Enter Arena" button to location pane for re-entry without walking back to map
 - [x] Keep old combat click-mini-game accessible from standalone /pets/skills/ page (non-RPG mode only)
 
 ### 2A-2: Equipment Stats in Combat
@@ -59,10 +59,10 @@ NOTE: Full priority system requires move-selection-first-then-resolve architectu
 ### 2A-4: Fix Level Cap Band-Aid
 Currently: `distributePetXp()` line 1058 hardcodes `if (maxLevel <= 3) maxLevel = 30`.
 
-- [ ] Add `levelCap` field to petcatalog.json: common=30, rare=50, legendary=50
+- [x] Add `levelCap` field to petcatalog.json: common=30, rare=25, legendary=50
 - [x] Update `distributePetXp()` to use tier-based defaults instead of hardcoded `if <= 3` check
 - [x] maxLevel stays as evolution stage indicator (1/2/3), levelCap read from catalog or per-pet override
-- [ ] State migration: existing pets keep their levels
+- [x] State migration: existing pets keep their levels (migratePetLevelCaps on slot load)
 
 ## Phase 2B: Move System Overhaul (DONE)
 
@@ -155,7 +155,7 @@ Currently: 67 moves (9-10 per type + 13 neutral).
 - [x] Screen shake on crits
 - [x] Type effectiveness popups ("Super effective!", "Not very effective...") — colored floating text
 - [x] 2x speed toggle button during combat
-- [ ] VFX layer using battle_vfx.png sprite sheet
+- [x] VFX layer using battle_vfx.png sprite sheet
 - [x] Death animation (fade out + collapse)
 - [x] Difficulty system (Normal/Hard/Brutal with stat multipliers)
 

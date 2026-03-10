@@ -296,6 +296,39 @@
     saveMeta();
   }
 
+  // Evolution tiers (must match rpg-combat.js EVOLUTION_TIERS)
+  var PET_EVO_TIERS = {
+    common:    [30, 50],
+    rare:      [25, 50, 75],
+    legendary: [50, 75]
+  };
+
+  function migratePetLevelCaps(rpgPets) {
+    if (!petCatalog || !rpgPets || !rpgPets.owned) return;
+    var dirty = false;
+    var ids = Object.keys(rpgPets.owned);
+    for (var i = 0; i < ids.length; i++) {
+      var pet = rpgPets.owned[ids[i]];
+      if (!pet || pet.levelCap) continue; // already has explicit cap, skip
+      var catalog = petCatalog.creatures[ids[i]];
+      if (!catalog) continue;
+      var tiers = PET_EVO_TIERS[catalog.tier] || PET_EVO_TIERS.common;
+      var startCap = tiers[0];
+      if (pet.level > startCap) {
+        // Pet leveled past starting cap — find smallest cap >= current level
+        pet.levelCap = tiers[tiers.length - 1]; // fallback to max
+        for (var t = 0; t < tiers.length; t++) {
+          if (pet.level <= tiers[t]) {
+            pet.levelCap = tiers[t];
+            break;
+          }
+        }
+        dirty = true;
+      }
+    }
+    if (dirty) saveRpgPetState(rpgPets);
+  }
+
   function getPetStatus(petId) {
     var rp = getRpgPetState();
     if (rp.follower === petId) return 'following';
@@ -1915,6 +1948,10 @@
 
     // Preload pet sprites from per-slot state
     var rpgPetsEntry = getRpgPetState();
+
+    // State migration: ensure pets above starting cap have correct levelCap
+    migratePetLevelCaps(rpgPetsEntry);
+
     if (rpgPetsEntry.follower && rpgPetsEntry.owned[rpgPetsEntry.follower]) {
       loadFollowerSprite(rpgPetsEntry.follower);
     } else {
@@ -4716,6 +4753,12 @@
     var resC = $('rpg-loc-resources');
     if (!perksC) return;
 
+    // Arena: show stats + re-entry button instead of skills API
+    if (locId === 'arena') {
+      renderArenaLocationPane(perksC, resC);
+      return;
+    }
+
     // Delegate to skills API
     var api = window.__RPG_SKILLS_API;
     if (!api || !skill) {
@@ -4725,6 +4768,53 @@
     }
     api.renderPerksInto(perksC, skill);
     api.renderResourcesInto(resC, skill);
+  }
+
+  function renderArenaLocationPane(perksC, resC) {
+    var stats = { fights: 0, wins: 0, bestStreak: 0, currentStreak: 0 };
+    if (window.RpgCombat && window.RpgCombat.loadCombatState) {
+      var cs = window.RpgCombat.loadCombatState();
+      if (cs && cs.arenaStats) stats = cs.arenaStats;
+    }
+    var losses = (stats.fights || 0) - (stats.wins || 0);
+    var winRate = stats.fights > 0 ? Math.round((stats.wins / stats.fights) * 100) : 0;
+
+    perksC.innerHTML =
+      '<div class="rpg-loc-col-header">Arena Record</div>' +
+      '<div class="rpg-arena-stat-row"><span>Fights</span><span>' + (stats.fights || 0) + '</span></div>' +
+      '<div class="rpg-arena-stat-row"><span>Wins</span><span class="rpg-arena-wins">' + (stats.wins || 0) + '</span></div>' +
+      '<div class="rpg-arena-stat-row"><span>Losses</span><span>' + losses + '</span></div>' +
+      '<div class="rpg-arena-stat-row"><span>Win Rate</span><span>' + winRate + '%</span></div>' +
+      '<div class="rpg-arena-stat-row rpg-arena-stat-streak"><span>Streak</span><span>' + (stats.currentStreak || 0) + '</span></div>' +
+      '<div class="rpg-arena-stat-row rpg-arena-stat-best"><span>Best Streak</span><span>' + (stats.bestStreak || 0) + '</span></div>';
+
+    var nextMilestone = '';
+    var cs2 = stats.currentStreak || 0;
+    if (cs2 < 5) nextMilestone = '5 streak = +100 GP';
+    else if (cs2 < 10) nextMilestone = '10 streak = +250 GP';
+    else if (cs2 < 25) nextMilestone = '25 streak = +500 GP';
+    else if (cs2 < 50) nextMilestone = '50 streak = +1000 GP';
+    else nextMilestone = 'Every 50 = +1000 GP';
+
+    resC.innerHTML =
+      '<div class="rpg-loc-col-header">Streak Rewards</div>' +
+      '<div class="rpg-arena-milestone">' + nextMilestone + '</div>' +
+      '<div style="margin-top:12px">' +
+      '<button class="rpg-btn" id="rpg-arena-enter-btn">Enter Arena</button>' +
+      '</div>';
+
+    var enterBtn = $('rpg-arena-enter-btn');
+    if (enterBtn) {
+      enterBtn.addEventListener('click', function () {
+        var rpgPetsState = getRpgPetState();
+        var ownedIds = Object.keys(rpgPetsState.owned);
+        if (ownedIds.length === 0) {
+          addGameMessage('You need at least one pet to enter the arena! Visit the Pet Store first.', 'system');
+          return;
+        }
+        if (window.RpgCombat) window.RpgCombat.showArenaSelect(rpgPetsState);
+      });
+    }
   }
 
   function clearLocationPane() {
@@ -4746,7 +4836,8 @@
   function enterSkillLocation(loc) {
     // Arena intercept — launch 1v1 combat modal instead of skill mini-game
     if (loc.id === 'arena' && window.RpgCombat) {
-      currentLocationId = 'arena';
+      renderLocationPane('arena', null);
+      switchChatTab('location');
       var rpgPetsState = getRpgPetState();
       var ownedIds = Object.keys(rpgPetsState.owned);
       if (ownedIds.length === 0) {
@@ -4784,7 +4875,7 @@
     });
   }
 
-  function returnToMap() {
+  function returnToMap(onAfterFade) {
     // Cleanup the active game in skills.js
     if (typeof window.__RPG_SKILLS_CLEANUP === 'function') {
       window.__RPG_SKILLS_CLEANUP();
@@ -4804,6 +4895,7 @@
       startMapLoop();
       updateTopbar();
       updateCharInfo();
+      if (typeof onAfterFade === 'function') onAfterFade();
     });
   }
 
@@ -5813,12 +5905,25 @@
     if (window.RpgCombat) {
       window.RpgCombat.init(canvasEl, containerEl);
       window.RpgCombat.onComplete = function (result) {
-        // Full return-to-map cleanup (clears insideLocation, restarts map loop, etc.)
-        returnToMap();
-        if (result.victory) {
-          addGameMessage('Dungeon cleared! Earned ' + result.gp + ' GP and ' + result.petXp + ' pet XP.', 'reward');
+        if (config.mode === 'arena') {
+          // Arena: return to map, then re-populate location tab with refreshed stats
+          returnToMap(function () {
+            renderLocationPane('arena', null);
+            if (result.victory) {
+              addGameMessage('Arena victory! Earned ' + result.gp + ' GP and ' + result.petXp + ' pet XP.', 'reward');
+            } else {
+              addGameMessage('Arena defeat. Better luck next time!', 'combat');
+            }
+          });
         } else {
-          addGameMessage('Your team was defeated. ' + result.wavesCleared + ' waves cleared.', 'combat');
+          // Dungeon: full return-to-map cleanup
+          returnToMap(function () {
+            if (result.victory) {
+              addGameMessage('Dungeon cleared! Earned ' + result.gp + ' GP and ' + result.petXp + ' pet XP.', 'reward');
+            } else {
+              addGameMessage('Your team was defeated. ' + result.wavesCleared + ' waves cleared.', 'combat');
+            }
+          });
         }
       };
       showCenterContent('combat');

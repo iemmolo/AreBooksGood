@@ -60,9 +60,27 @@
   var animFrame = null;
   var turnTimer = null;
   var floatingTexts = [];
+  var activeVfx = [];
   var preloadedImages = {};
   var bgCache = {}; // theme -> Image
+  var vfxImage = null; // battle_vfx.png sprite sheet
   var speedMult = 1; // 1 = normal, 2 = fast
+
+  // VFX sprite sheet: 7 cols x 22 rows, 48x48 cells (336x1056)
+  var VFX_CELL = 48;
+  var VFX_COLS = 7;
+  // Maps move type → { row, frames, scale } in battle_vfx.png
+  var VFX_MAP = {
+    fire:    { row: 12, frames: 6, scale: 1.6 },
+    aqua:    { row: 15, frames: 5, scale: 1.4 },
+    nature:  { row: 11, frames: 6, scale: 1.4 },
+    tech:    { row: 19, frames: 5, scale: 1.5 },
+    shadow:  { row: 21, frames: 5, scale: 1.3 },
+    mystic:  { row: 16, frames: 5, scale: 1.5 },
+    neutral: { row: 2,  frames: 5, scale: 1.4 },
+    heal:    { row: 18, frames: 5, scale: 1.3 },
+    buff:    { row: 7,  frames: 6, scale: 1.3 }
+  };
 
   // ── Helpers ────────────────────────────────────────
   function $(id) { return document.getElementById(id); }
@@ -114,6 +132,11 @@
       xhr5.send();
       if (xhr5.status === 200) petSpriteData = JSON.parse(xhr5.responseText);
     } catch (e) { console.warn('rpg-combat: failed to load petsprites', e); }
+    // Preload VFX sprite sheet (async, non-blocking)
+    if (!vfxImage) {
+      vfxImage = new Image();
+      vfxImage.src = '/images/pets/battle_vfx.png';
+    }
   }
 
   // ── Storage (per-slot) ─────────────────────────────
@@ -688,6 +711,7 @@
         otherTargets[ot].hp = Math.max(0, otherTargets[ot].hp - finalDmg);
         if (otherTargets[ot].hp <= 0) otherTargets[ot].alive = false;
         spawnFloatingText(otherTargets[ot], '-' + finalDmg, aoeDmg.isCrit);
+        spawnVfx(otherTargets[ot], move.type || 'neutral');
       }
     }
 
@@ -951,12 +975,17 @@
   }
 
   function showMoveResult(fighter, target, moveId, result) {
+    // Determine VFX type from move data
+    var move = moveData ? moveData[moveId] : null;
+    var vfxType = move ? (move.type || 'neutral') : 'neutral';
+
     if (result.missed) {
       addBattleLog(fighter.name + ' used ' + result.moveName + ' - MISS!');
       spawnFloatingText(target, 'MISS', false, '#aaaaaa');
     } else if (result.reflected) {
       addBattleLog(fighter.name + ' used ' + result.moveName + ' - REFLECTED for ' + result.damage + '!');
       spawnFloatingText(fighter, '-' + result.damage, result.isCrit);
+      spawnVfx(fighter, vfxType);
     } else if (result.damage > 0) {
       var logMsg = fighter.name + ' used ' + result.moveName + ' on ' + target.name + ' for ' + result.damage;
       if (result.isCrit) logMsg += ' (CRIT!)';
@@ -964,12 +993,17 @@
       else if (result.typeMult < 1) logMsg += ' Not very effective...';
       addBattleLog(logMsg);
       spawnFloatingText(target, '-' + result.damage, result.isCrit);
+      spawnVfx(target, vfxType);
       if (result.typeMult > 1) spawnFloatingText(target, 'Super effective!', false, '#44ff88');
       else if (result.typeMult < 1) spawnFloatingText(target, 'Not very effective...', false, '#888888');
     } else if (result.statusApplied) {
       addBattleLog(fighter.name + ' used ' + result.moveName + '! (' + result.statusApplied + ')');
       var statusTarget = moveData[moveId].selfTarget ? fighter : target;
       spawnFloatingText(statusTarget, result.statusApplied.toUpperCase(), false, '#88ccff');
+      spawnVfx(statusTarget, move && move.selfTarget ? 'buff' : vfxType);
+    } else if (move && (move.effect === 'heal' || move.effect === 'teamHeal')) {
+      addBattleLog(fighter.name + ' used ' + result.moveName + '.');
+      spawnVfx(move.selfTarget ? fighter : target, 'heal');
     } else {
       addBattleLog(fighter.name + ' used ' + result.moveName + '.');
     }
@@ -1500,6 +1534,55 @@
     });
   }
 
+  // ── Battle VFX ───────────────────────────────────
+  function spawnVfx(fighter, moveType) {
+    if (!vfxImage || !vfxImage.complete) return;
+    var vfxDef = VFX_MAP[moveType] || VFX_MAP.neutral;
+    // Find fighter position
+    var team = fighter.isPlayer ? battleState.playerTeam : battleState.enemyTeam;
+    var idx = team.indexOf(fighter);
+    var pos = getFighterPosition(fighter, idx, team);
+
+    activeVfx.push({
+      row: vfxDef.row,
+      frames: vfxDef.frames,
+      scale: vfxDef.scale || 1.4,
+      x: pos.x + (fighter.animOffsetX || 0),
+      y: pos.y + (fighter.animOffsetY || 0),
+      startTime: Date.now(),
+      duration: getDelay(400),
+      alpha: 0.9
+    });
+  }
+
+  function drawVfx() {
+    if (!vfxImage || !vfxImage.complete || activeVfx.length === 0) return;
+    var now = Date.now();
+    for (var i = activeVfx.length - 1; i >= 0; i--) {
+      var v = activeVfx[i];
+      var elapsed = now - v.startTime;
+      if (elapsed >= v.duration) {
+        activeVfx.splice(i, 1);
+        continue;
+      }
+      var progress = elapsed / v.duration;
+      var frameIdx = Math.min(Math.floor(progress * v.frames), v.frames - 1);
+      var sx = frameIdx * VFX_CELL;
+      var sy = v.row * VFX_CELL;
+      var drawSize = VFX_CELL * v.scale;
+      // Fade in quickly then fade out
+      var alpha = v.alpha;
+      if (progress < 0.15) alpha *= progress / 0.15;
+      else if (progress > 0.7) alpha *= (1 - progress) / 0.3;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(vfxImage, sx, sy, VFX_CELL, VFX_CELL,
+        v.x - drawSize / 2, v.y - drawSize / 2, drawSize, drawSize);
+      ctx.restore();
+    }
+  }
+
   // ── Animation Tweens ──────────────────────────────
   function setFighterTween(fighter, tweens, dur, onDone) {
     var now = Date.now();
@@ -1600,6 +1683,9 @@
 
     // Fighters
     drawFighters();
+
+    // Battle VFX (on top of fighters, below text)
+    drawVfx();
 
     // Floating texts
     drawFloatingTexts();
@@ -2855,6 +2941,7 @@
     }
     battleState = null;
     floatingTexts = [];
+    activeVfx = [];
     speedMult = 1;
     var overlay = $('rpg-combat-results');
     if (overlay) overlay.style.display = 'none';
