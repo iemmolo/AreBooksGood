@@ -158,6 +158,10 @@
       {{- $rpgHoldem := . | minify | fingerprint -}}
       <script src="{{ $rpgHoldem.RelPermalink }}"></script>
     {{- end -}}
+    {{- with resources.Get "js/rpg-sitandgo.js" -}}
+      {{- $rpgSng := . | minify | fingerprint -}}
+      <script src="{{ $rpgSng.RelPermalink }}"></script>
+    {{- end -}}
     {{- with resources.Get "js/skills.js" -}}
       {{- $skills := . | minify | fingerprint -}}
       <script src="{{ $skills.RelPermalink }}"></script>
