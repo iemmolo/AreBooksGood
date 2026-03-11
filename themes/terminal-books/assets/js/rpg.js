@@ -1660,6 +1660,10 @@
     sidePanel.style.display = '';
     switchChatTab('game');
     switchSideTab('skills');
+    // Start side panel collapsed so world map / pet store are visible
+    sidePanel.classList.add('collapsed');
+    var spToggle = $('osrs-side-panel-toggle');
+    if (spToggle) spToggle.innerHTML = '&#9650;';
     updateLocationTab(null);
     osrsPanelSetUp = true;
   }
