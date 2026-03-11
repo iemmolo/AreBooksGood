@@ -1102,6 +1102,222 @@
   var generalStoreOpen = false;
   var tavernOpen = false;
 
+  // ── Town Light & NPC State ──────────────────────
+  var townLightPoolBuffer = null, townLightPoolBufferCtx = null;
+  var townNpcStates = [];
+  var townActiveBubbles = []; // max 3
+  var townDustParticles = [];
+  var townHazeClouds = [
+    { x: 250, y: 220, w: 200, h: 50, speed: 0.03 },
+    { x: 700, y: 440, w: 180, h: 45, speed: -0.025 }
+  ];
+
+  // ── Town Path Network ───────────────────────────
+  var TOWN_PATH_NODES = {
+    'top-left':    { x: 200, y: 170 },
+    'top-center':  { x: 530, y: 170 },
+    'top-right':   { x: 860, y: 170 },
+    'mid-left':    { x: 200, y: 360 },
+    'mid-center':  { x: 530, y: 360 },
+    'mid-right':   { x: 860, y: 360 },
+    'bot-chapel':  { x: 120, y: 550 },
+    'bot-dungeon': { x: 290, y: 550 },
+    'bot-library': { x: 480, y: 550 },
+    'bot-barracks':{ x: 670, y: 550 },
+    'bot-petstore':{ x: 870, y: 550 },
+    'gate':        { x: 530, y: 600 }
+  };
+  var TOWN_PATH_EDGES = [
+    ['top-left','top-center'],['top-center','top-right'],
+    ['mid-left','mid-center'],['mid-center','mid-right'],
+    ['bot-chapel','bot-dungeon'],['bot-dungeon','bot-library'],
+    ['bot-library','bot-barracks'],['bot-barracks','bot-petstore'],
+    ['top-left','mid-left'],['top-right','mid-right'],
+    ['top-center','mid-center'],['mid-center','bot-library'],
+    ['mid-center','gate'],['mid-left','bot-dungeon'],['mid-right','bot-barracks']
+  ];
+  var BUILDING_NODE = {
+    tavern:'top-left', store:'top-center', bank:'top-right',
+    casino:'mid-left', fountain:'mid-center', arcade:'mid-right',
+    chapel:'bot-chapel', dungeon:'bot-dungeon', library:'bot-library',
+    barracks:'bot-barracks', petstore:'bot-petstore'
+  };
+
+  // ── Town NPC Definitions ────────────────────────
+  var TOWN_NPCS = [
+    { id:'grog', name:'Grog', body:'#6b4e2b', skin:'#d4a574', hair:'#5a3a1a', hat:null, accessory:null,
+      scale:1, alpha:1, speed:18, wobble:true, route:['tavern','fountain'],
+      dwellMin:12000, dwellMax:25000, idleAnim:'sway', special:'stumble', specialChance:0.05,
+      lines:['*hic* The ale is... medicinal.','I swear the fountain moved.','Who put stairs in the floor?','Is it raining or is that me?'],
+      playerLines:['Hey... you\'re my best friend.','Buy me a drink and I\'ll tell you a secret...','Which one of you three is the real one?','I used to be an adventurer. Now I\'m just thirsty.'] },
+    { id:'maeve', name:'Maeve', body:'#804060', skin:'#f1c27d', hair:'#cc4422', hat:null, accessory:null,
+      scale:1, alpha:1, speed:22, wobble:false, route:['store','library','petstore'],
+      dwellMin:10000, dwellMax:20000, idleAnim:null, special:null, specialChance:0,
+      lines:['Father says we\'re out of pickled herring.','Returning a book I definitely didn\'t read.','I\'m NOT buying another egg. ...okay maybe one.','The librarian judged me again.'],
+      playerLines:['Did you hear about the dungeon?','New in town? Everyone\'s talking about you.','Don\'t trust the banker. He counts weird.','I saw the Chapel ghost again last night!'] },
+    { id:'aldric', name:'Br. Aldric', body:'#4a3a2a', skin:'#c68642', hair:null, hat:'#c8c0b0',accessory:null,
+      scale:1, alpha:1, speed:14, wobble:false, route:['chapel','fountain','library'],
+      dwellMin:15000, dwellMax:28000, idleAnim:null, special:null, specialChance:0,
+      lines:['May the light guide you. Or the torchlight.','I see wisdom in these waters. And coins.','Borrowing the sacred texts. Again.','Patience is a virtue. 47 years and counting.'],
+      playerLines:['Blessings upon you, traveler.','The chapel is open to all. Even you.','Have you considered quiet contemplation? No? I can tell.','I pray for this town. Someone has to.'] },
+    { id:'hilda', name:'Cpt. Hilda', body:'#4a4a30', skin:'#8d5524', hair:'#2a2a2a', hat:'#606068',accessory:null,
+      scale:1, alpha:1, speed:25, wobble:false, route:['barracks','dungeon','casino','gate'],
+      dwellMin:10000, dwellMax:18000, idleAnim:null, special:null, specialChance:0,
+      lines:['Shift change in... never.','All clear down there. Mostly.','Nobody\'s cheating. I checked. Lost 40 GP checking.','No monsters today. Just merchants and drunks.'],
+      playerLines:['Keep your weapons sheathed in town.','I\'ve got my eye on you. Both of them.','Move along, citizen.','Report any suspicious activity. Not including Grog.'] },
+    { id:'pocket', name:'Pocket', body:'#c07830', skin:null, hair:null, hat:null, accessory:'cat',
+      scale:0.5, alpha:1, speed:35, wobble:false, route:['random'],
+      dwellMin:8000, dwellMax:18000, idleAnim:'tailflick', special:'flee', specialChance:1,
+      lines:['...','*mrrow*','*stares judgmentally*','*knocks coin off ledge*'],
+      playerLines:[] },
+    { id:'barnaby', name:'Barnaby', body:'#5a4a30', skin:'#d4a574', hair:'#aaaaaa', hat:null,accessory:null,
+      scale:1, alpha:1, speed:20, wobble:false, route:['library','chapel','barracks'],
+      dwellMin:12000, dwellMax:22000, idleAnim:null, special:'sprint', specialChance:0.08,
+      lines:['They MOVED the books again!','The fountain is WATCHING US.','The guards know something. They ALL know.','I\'ve been tracking that cat. It reports to someone.'],
+      playerLines:['The General Store? Front for the Illuminati.','That fountain isn\'t what it seems. It\'s a PORTAL.','You seem trustworthy. The Bank moves 3px every full moon.','The bartender waters down ale with MIND CONTROL SERUM.'] },
+    { id:'pip', name:'Pip', body:'#6080a0', skin:'#f1c27d', hair:'#8a4020', hat:null,accessory:'stick',
+      scale:0.75, alpha:1, speed:24, wobble:false, route:['dungeon','barracks','store'],
+      dwellMin:10000, dwellMax:18000, idleAnim:'bounce', special:'airfight', specialChance:0.04,
+      lines:['One day I\'ll go down there. Probably.','Can I join? No? Same time tomorrow?','My sword is just resting. *holds stick*'],
+      playerLines:['Are you a REAL adventurer?!','Can I come with you? I can carry stuff!','I\'ve been training! Watch! *trips*','When I grow up I want to be you. Or a dragon.'] },
+    { id:'vault', name:'Mr. Vault', body:'#2a2a2a', skin:'#c68642', hair:null, hat:null,accessory:'tophat',
+      scale:1, alpha:1, speed:16, wobble:false, route:['bank','store'],
+      dwellMin:18000, dwellMax:30000, idleAnim:null, special:'coindrop', specialChance:0.03,
+      lines:['Counting... counting... still counting...','These prices are... optimistic.','Interest accrues daily. At a rate I decide.'],
+      playerLines:['Your account balance is... adequate.','Gold doesn\'t grow on trees. It grows in banks.','I\'ve seen your spending habits. We need to talk.'] },
+    { id:'briar', name:'Briar', body:'#603060', skin:'#f1c27d', hair:'#6a3a20', hat:null,accessory:null,
+      scale:1, alpha:1, speed:20, wobble:false, route:['petstore','fountain','arcade'],
+      dwellMin:12000, dwellMax:22000, idleAnim:null, special:null, specialChance:0,
+      lines:['Hello, my darlings! Mama\'s here!','Has anyone adopted the fire one? NO? GOOD.','This is where I reflect on which egg to buy next.'],
+      playerLines:['How many pets do you have? Not enough.','I can SMELL a legendary egg. Smells like destiny.','If you ever hurt a pet I will END you. :)'] },
+    { id:'marcus', name:'Marcus', body:'#405060', skin:'#d4a574', hair:'#2a2a2a', hat:null,accessory:null,
+      scale:1, alpha:1, speed:22, wobble:false, route:['arcade','casino','tavern'],
+      dwellMin:14000, dwellMax:25000, idleAnim:null, special:null, specialChance:0,
+      lines:['New high score. Again. Yawn.','Slots are just arcades for old people.','One meat pie. For the grind.'],
+      playerLines:['GG.','Nice build. I\'d rate it a 6.','No-life energy. I respect it.','What\'s your APM? Jk, I can tell.'] },
+    { id:'ghost', name:'???', body:'#808088', skin:'#c0c0c8', hair:null, hat:null,accessory:null,
+      scale:1, alpha:0.35, speed:12, wobble:false, route:['chapel','fountain'],
+      dwellMin:18000, dwellMax:30000, idleAnim:'float', special:'fade', specialChance:1,
+      lines:['...still haunting. Day 4,382.','I liked this fountain when it was new. 800 years ago.','I filed a haunting complaint 200 years ago. Still pending.'],
+      playerLines:['Boo. ...sorry, force of habit.','I\'m not scary. I\'m just dead. There\'s a difference.','You can see me? Most people walk right through me.','The chapel used to be bigger. I built it.'] }
+  ];
+
+  var PAIRED_DIALOGUES = {
+    'grog+aldric': [
+      { a: '*hic* Brother! Bless this ale.', b: 'The gods don\'t bless ale, Grog.' },
+      { a: 'Pray for me, Brother.', b: 'I already do. Twice daily.' }
+    ],
+    'grog+hilda': [
+      { a: 'I\'m not drunk, I\'m calibrating.', b: 'Calibrating what? Your blood alcohol?' },
+      { a: 'This IS my home.', b: 'Go home, Grog.' }
+    ],
+    'maeve+barnaby': [
+      { a: 'Any new theories today?', b: 'The BAKER is in on it now.' }
+    ],
+    'maeve+briar': [
+      { a: 'How many pets this week?', b: 'We don\'t talk about this week.' }
+    ],
+    'hilda+barnaby': [
+      { a: 'The walls are LISTENING!', b: 'Barnaby. The walls are stone.' }
+    ],
+    'hilda+pip': [
+      { a: 'Can I hold your sword?', b: 'No.' }
+    ],
+    'marcus+pip': [
+      { a: 'Wanna play swords?', b: 'I only play ranked.' }
+    ],
+    'vault+maeve': [
+      { a: 'Your father\'s account is overdue.', b: 'Tell him, not me. I just shop here.' }
+    ],
+    'marcus+grog': [
+      { a: 'You\'re literally an NPC.', b: '...what\'s an NPC?' }
+    ],
+    'aldric+briar': [
+      { a: 'Do animals have souls, Brother?', b: 'The cat certainly doesn\'t.' }
+    ]
+  };
+
+  var NPC_UNLOCK = {
+    grog: null, maeve: null, aldric: null, hilda: null, pocket: null, barnaby: null,
+    pip: function() { return window.QuestSystem && window.QuestSystem.getCompletedCount && window.QuestSystem.getCompletedCount() >= 3; },
+    vault: function() { return meta.slots[activeSlot] && meta.slots[activeSlot].visitedBank; },
+    briar: function() { var p = getRpgPetState(); return p && Object.keys(p.owned).length >= 1; },
+    marcus: null,
+    ghost: function() { return meta.slots[activeSlot] && meta.slots[activeSlot].visitedChapel; }
+  };
+
+  // ── NPC Conversation Groups (static clusters) ──
+  var TOWN_NPC_GROUPS = [
+    {
+      id: 'casino-smokers',
+      pos: { x: 170, y: 385 }, // outside casino, to the right
+      npcs: [
+        { id: 'vex', name: 'Vex', body: '#5a5040', skin: '#d4a574', hair: '#4a3a20', hat: null, accessory: null, scale: 1, offset: { x: -12, y: 0 }, facing: 'right' },
+        { id: 'doyle', name: 'Doyle', body: '#3a4a3a', skin: '#c68642', hair: '#2a2a2a', hat: null, accessory: null, scale: 1.05, offset: { x: 12, y: 0 }, facing: 'left' }
+      ],
+      exchanges: [
+        { a: "I'm telling you, give me one spoon and I'd clear the first three floors of that dungeon.", b: "You lost 200 gold to a card game last night. Against yourself." },
+        { a: "That's CARDS. Spoon combat is completely different. It's about instinct.", b: "You don't have instincts. You have debts." },
+        { a: "Alright, smartarse \u2014 what would YOU do with a spoon in the dungeon?", b: "Eat soup. I'd bring soup." },
+        { a: "You can't bring soup! The hypothetical clearly states one spoon, nothing else.", b: "Then I'm not going into the dungeon." },
+        { a: "That's not how hypotheticals WORK, Doyle.", b: "Sure it is. I hypothetically decline." },
+        { a: "Fine. Floor one, I'd sharpen the spoon on the wall. Fashion a blade.", b: "You once cut yourself opening a letter." },
+        { a: "The LETTER was the dangerous part. Monsters are predictable.", b: "Name one monster." },
+        { a: "...the big ones. The slimy ones. You know what I mean.", b: "You've never been in the dungeon, have you?" },
+        { a: "I've been NEAR the dungeon. That's recon. That's phase one.", b: "Phase one of what? Dying?" },
+        { a: "I have a twelve-phase plan, Doyle. On a napkin. You wouldn't understand it.", b: "I saw that napkin. It says 'Get spoon' and then it's just gravy stains." },
+        { a: "That's TACTICAL NOTATION. The gravy is coded.", b: "The gravy is from Tuesday's meat pie." },
+        { a: "When I clear that dungeon with a spoon, I'm not sharing the loot.", b: "Bold of a man who owes the bartender six tabs to talk about sharing." }
+      ]
+    },
+    {
+      id: 'fountain-watchers',
+      pos: { x: 575, y: 345 }, // on the bench by the fountain
+      npcs: [
+        { id: 'thatch', name: 'Thatch', body: '#6a5a3a', skin: '#d4a574', hair: '#808080', hat: null, accessory: null, scale: 1, offset: { x: -10, y: 0 }, facing: 'right' },
+        { id: 'oona', name: 'Oona', body: '#3a5a4a', skin: '#f1c27d', hair: '#5a7a5a', hat: null, accessory: null, scale: 0.95, offset: { x: 10, y: 0 }, facing: 'left' }
+      ],
+      exchanges: [
+        { a: "You ever notice how the fountain water goes up and then comes back down?", b: "That's just gravity, Thatch." },
+        { a: "Yeah, but WHY though. What if one day it just... doesn't come back down?", b: "Then we'd have bigger problems than your question." },
+        { a: "I counted the coins in that fountain once. 847. Someone threw in a button.", b: "Every wish costs something. Some people are just cheap about it." },
+        { a: "What did YOU wish for?", b: "Quiet. Hasn't worked yet." },
+        { a: "See that adventurer? Walking around like they own the place.", b: "Everyone walks like that when they're new. Give it a week." },
+        { a: "I used to walk like that. Chest out. Purpose. Direction.", b: "Now you sit on a bench and watch water fall." },
+        { a: "I'm OBSERVING. There's a difference between sitting and observing.", b: "What's the difference?" },
+        { a: "...intent.", b: "Mmhm." },
+        { a: "You think the ghost knows it's a ghost?", b: "I think the ghost has been dead long enough to stop caring about categories." },
+        { a: "Deep. That's deep, Oona.", b: "I was just thinking about lunch, but sure." },
+        { a: "What's the point of a fountain in a town this small? Who's it for?", b: "Us, apparently." },
+        { a: "Best seat in town. Free water sounds. No cover charge.", b: "The bench is free. The quiet costs me every time you open your mouth." }
+      ]
+    },
+    {
+      id: 'gate-gossips',
+      pos: { x: 440, y: 590 }, // near the southern gate
+      npcs: [
+        { id: 'marge', name: 'Marge', body: '#6a4040', skin: '#d4a574', hair: '#c0c0c0', hat: null, accessory: null, scale: 1, offset: { x: -12, y: 0 }, facing: 'right' },
+        { id: 'dotty', name: 'Dotty', body: '#4a4060', skin: '#f1c27d', hair: '#c8c8c8', hat: null, accessory: null, scale: 0.95, offset: { x: 12, y: 0 }, facing: 'left' }
+      ],
+      exchanges: [
+        { a: "Another adventurer just walked in. Shiny armor. Brand new boots.", b: "Give it a day. The dungeon'll sort that out." },
+        { a: "Did you see what Briar was carrying yesterday? ANOTHER egg.", b: "That woman's got more pets than sense. And she started with very little sense." },
+        { a: "The banker walked by without saying hello. TWICE.", b: "He's always counting. I don't trust a man who counts that much." },
+        { a: "Grog's heading to the tavern early today.", b: "Early? That implies he left." },
+        { a: "Brother Aldric blessed my bread yesterday. It still went stale.", b: "The gods have priorities, Marge. Your sourdough isn't one of them." },
+        { a: "That conspiracy fellow was running again. Full sprint. Middle of the day.", b: "He told me the fountain is a portal. I told him to drink less." },
+        { a: "Young Pip asked to borrow my rolling pin. Said it was a 'mace.'", b: "At least he's got ambition. More than I can say for his father." },
+        { a: "Captain Hilda confiscated someone's sword at the gate last week. The man cried.", b: "Good. If you cry about a sword, you shouldn't have one." },
+        { a: "I heard someone lost 500 gold at the casino in one sitting.", b: "Only 500? Amateur. My cousin lost his HOUSE." },
+        { a: "You ever think about going into the dungeon yourself, Dotty?", b: "I'm 63. The scariest thing in that dungeon would be ME." },
+        { a: "That cat stole a fish right off Marcus's plate yesterday.", b: "That cat answers to no one. I respect it. Only honest creature in this town." },
+        { a: "Another quiet day at the gate.", b: "Give it time. Something stupid always happens." }
+      ]
+    }
+  ];
+
+  var townGroupStates = [];
+
   // ── Tavern Constants ──────────────────────────
   var BARTENDER_GREETINGS = [
     'Welcome to The Rusty Tankard. Try not to break anything.',
@@ -5089,6 +5305,11 @@
     townSmokeFrame = 0;
     townLastTimestamp = 0;
     townStaticBuffer = null; // force re-render
+    townLightPoolBuffer = null;
+
+    // Init NPCs and atmosphere
+    initTownNpcs();
+    initTownDustParticles();
 
     // Init follower position in town
     followerPos.x = 530;
@@ -5110,6 +5331,7 @@
   function returnToWorldMap() {
     stopTownMapLoop();
     closePetStoreModal();
+    cleanupTownNpcs();
     insideTown = false;
 
     // Clear town from save
@@ -5244,6 +5466,7 @@
     townSmokeFrame++;
     updateTownPlayer(dt);
     updateTownFollowerPosition(dt);
+    updateTownNpcs(dt);
     drawTownMap();
     townAnimId = requestAnimationFrame(townMapLoop);
   }
@@ -5456,33 +5679,69 @@
       var loc = TOWN_LOCATIONS[id];
       drawTownBuilding(ctx, id, loc.x, loc.y);
     }
+
+    // Render light pool buffer
+    renderTownLightPoolBuffer();
   }
 
   function drawTownGround(ctx) {
-    // Warm dirt/cobblestone base
-    var TILE = 8;
-    var cols = Math.ceil(TOWN_W / TILE);
-    var rows = Math.ceil(TOWN_H / TILE);
-    var dirtColors = ['#c4a06a','#bfa068','#c8a870','#c0a064','#b89860','#caac72'];
-
+    // Flagstone courtyard floor
+    var FS_W = 16, FS_H = 12;
+    var cols = Math.ceil(TOWN_W / FS_W) + 1;
+    var rows = Math.ceil(TOWN_H / FS_H);
+    var stoneColors = ['#b89868','#c4a472','#a89060','#d0b080','#a0946c','#b8a878'];
+    // Mortar fill
+    ctx.fillStyle = '#8a7a5a';
+    ctx.fillRect(0, 0, TOWN_W, TOWN_H);
     for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        var h = tileHash(c + 1000, r + 1000);
-        ctx.fillStyle = dirtColors[(h >>> 0) % dirtColors.length];
-        ctx.fillRect(c * TILE, r * TILE, TILE, TILE);
-        // Occasional detail pebble
-        if ((h >>> 8) % 12 === 0) {
-          ctx.fillStyle = 'rgba(0,0,0,0.08)';
-          ctx.fillRect(c * TILE + (h >>> 4) % 5, r * TILE + (h >>> 6) % 5, 2, 2);
+      var rowOff = (r % 2) * (FS_W / 2);
+      for (var c = -1; c < cols; c++) {
+        var sx = c * FS_W + rowOff;
+        var sy = r * FS_H;
+        var h = tileHash(c + 500, r + 500);
+        ctx.fillStyle = stoneColors[(h >>> 0) % stoneColors.length];
+        ctx.fillRect(sx + 1, sy + 1, FS_W - 2, FS_H - 2);
+        // Top-left highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(sx + 1, sy + 1, FS_W - 2, 1);
+        ctx.fillRect(sx + 1, sy + 1, 1, FS_H - 2);
+        // Bottom-right shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(sx + 1, sy + FS_H - 2, FS_W - 2, 1);
+        ctx.fillRect(sx + FS_W - 2, sy + 1, 1, FS_H - 2);
+        // Grass tufts (20%, not under walls)
+        if ((h >>> 8) % 5 === 0 && sx > TOWN_WALL + 8 && sx < TOWN_W - TOWN_WALL - 8 &&
+            sy > TOWN_WALL + 8 && sy < TOWN_H - TOWN_WALL - 8) {
+          var gc = ['#4a7a3a','#5a8a4a','#3a6a2a'];
+          for (var gi = 0; gi < 3; gi++) {
+            ctx.fillStyle = gc[gi];
+            ctx.fillRect(sx + 3 + (h >>> (12 + gi)) % 8, sy + FS_H - 4 - gi, 1, 3);
+          }
+        }
+        // Scattered debris (8%)
+        if ((h >>> 16) % 12 === 0) {
+          ctx.fillStyle = 'rgba(80,50,20,0.2)';
+          ctx.fillRect(sx + (h >>> 4) % (FS_W - 4) + 2, sy + (h >>> 6) % (FS_H - 3) + 1, 2, 1);
         }
       }
+    }
+    // Pre-placed puddles
+    var puddles = [{x:350,y:200},{x:700,y:450},{x:180,y:400}];
+    for (var pi = 0; pi < puddles.length; pi++) {
+      ctx.fillStyle = 'rgba(100,140,180,0.12)';
+      ctx.beginPath();
+      ctx.ellipse(puddles[pi].x, puddles[pi].y, 16, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(140,180,220,0.06)';
+      ctx.beginPath();
+      ctx.ellipse(puddles[pi].x - 3, puddles[pi].y - 2, 8, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
   function drawTownWalls(ctx) {
     var W = TOWN_WALL;
     var stoneColors = ['#6a6a70','#606068','#707078','#5a5a62','#68686e'];
-
     // Draw all 4 walls
     var walls = [
       [0, 0, TOWN_W, W],          // top
@@ -5492,471 +5751,1624 @@
     ];
     for (var wi = 0; wi < walls.length; wi++) {
       var wx = walls[wi][0], wy = walls[wi][1], ww = walls[wi][2], wh = walls[wi][3];
-      // Stone fill
       for (var sy = wy; sy < wy + wh; sy += 8) {
-        for (var sx = wx; sx < wx + ww; sx += 12) {
+        var rowOff = ((sy / 8) % 2) * 6; // running bond
+        for (var sx = wx - rowOff; sx < wx + ww; sx += 12) {
+          var drawX = Math.max(wx, sx), drawW = Math.min(sx + 12, wx + ww) - drawX;
+          if (drawW <= 0) continue;
           var h = tileHash(sx + 2000, sy + 2000);
           ctx.fillStyle = stoneColors[(h >>> 0) % stoneColors.length];
-          ctx.fillRect(sx, sy, 12, 8);
-          // Mortar lines
+          ctx.fillRect(drawX, sy, drawW, 8);
+          // Mortar
           ctx.fillStyle = 'rgba(0,0,0,0.15)';
-          ctx.fillRect(sx, sy + 7, 12, 1);
-          ctx.fillRect(sx + 11, sy, 1, 8);
+          ctx.fillRect(drawX, sy + 7, drawW, 1);
+          if (sx + 11 >= wx && sx + 11 < wx + ww) ctx.fillRect(sx + 11, sy, 1, 8);
+          // Top highlight per brick
+          ctx.fillStyle = 'rgba(255,255,255,0.04)';
+          ctx.fillRect(drawX, sy, drawW, 1);
+          // Moss (15% of bricks)
+          if ((h >>> 8) % 7 === 0) {
+            ctx.fillStyle = 'rgba(60,100,40,0.25)';
+            ctx.fillRect(drawX + (h >>> 4) % 6, sy + (h >>> 12) % 4, 4, 3);
+          }
         }
       }
-      // Darker edge
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      // Inner edge shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
       if (wi === 0) ctx.fillRect(wx, wy + wh - 2, ww, 2);
       if (wi === 1) ctx.fillRect(wx, wy, ww, 2);
       if (wi === 2) ctx.fillRect(wx + ww - 2, wy, 2, wh);
       if (wi === 3) ctx.fillRect(wx, wy, 2, wh);
     }
-
+    // Inward shadow gradients
+    var shadTop = ctx.createLinearGradient(0, W, 0, W + 30);
+    shadTop.addColorStop(0, 'rgba(0,0,0,0.2)');
+    shadTop.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = shadTop;
+    ctx.fillRect(W, W, TOWN_W - W * 2, 30);
+    var shadLeft = ctx.createLinearGradient(W, 0, W + 20, 0);
+    shadLeft.addColorStop(0, 'rgba(0,0,0,0.15)');
+    shadLeft.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = shadLeft;
+    ctx.fillRect(W, W, 20, TOWN_H - W * 2);
+    var shadRight = ctx.createLinearGradient(TOWN_W - W, 0, TOWN_W - W - 20, 0);
+    shadRight.addColorStop(0, 'rgba(0,0,0,0.15)');
+    shadRight.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = shadRight;
+    ctx.fillRect(TOWN_W - W - 20, W, 20, TOWN_H - W * 2);
     // Crenellations on top wall
     for (var cx = W; cx < TOWN_W - W; cx += 24) {
       ctx.fillStyle = '#5a5a62';
-      ctx.fillRect(cx, 0, 12, 6);
+      ctx.fillRect(cx, 0, 12, 8);
       ctx.fillStyle = '#707078';
-      ctx.fillRect(cx + 1, 1, 10, 4);
+      ctx.fillRect(cx + 1, 1, 10, 5);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(cx + 1, 1, 10, 1);
     }
-
-    // Corner towers (8 darker squares)
-    var towerSize = 24;
+    // Corner towers (28px, with flags on top two)
+    var towerSize = 28;
     var corners = [[0,0],[TOWN_W - towerSize,0],[0,TOWN_H - towerSize],[TOWN_W - towerSize,TOWN_H - towerSize]];
     for (var ti = 0; ti < corners.length; ti++) {
+      var tx = corners[ti][0], ty = corners[ti][1];
       ctx.fillStyle = '#4a4a52';
-      ctx.fillRect(corners[ti][0], corners[ti][1], towerSize, towerSize);
+      ctx.fillRect(tx, ty, towerSize, towerSize);
       ctx.fillStyle = '#5a5a62';
-      ctx.fillRect(corners[ti][0] + 2, corners[ti][1] + 2, towerSize - 4, towerSize - 4);
-      // Tower top
+      ctx.fillRect(tx + 2, ty + 2, towerSize - 4, towerSize - 4);
+      // Tower crenellations
+      for (var m = 0; m < 3; m++) {
+        ctx.fillStyle = '#4a4a52';
+        ctx.fillRect(tx + 2 + m * 10, ty, 6, 4);
+        ctx.fillStyle = '#5e5e66';
+        ctx.fillRect(tx + 3 + m * 10, ty + 1, 4, 2);
+      }
+      // Window hole
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(tx + 11, ty + 12, 6, 6);
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(tx + 12, ty + 13, 4, 4);
+      // Flags on top two towers
+      if (ti < 2) {
+        var fx = tx + towerSize - 4, fy = ty - 10;
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(fx, fy, 2, 14);
+        ctx.fillStyle = '#cc3333';
+        ctx.fillRect(fx + 2, fy + 1, 8, 5);
+        ctx.fillRect(fx + 2, fy + 3, 6, 3);
+        ctx.fillRect(fx + 2, fy + 5, 4, 2);
+        ctx.fillStyle = '#e04040';
+        ctx.fillRect(fx + 3, fy + 2, 4, 3);
+      }
+    }
+    // Wall torch sconce brackets (static part — flames drawn in animated pass)
+    var wallTorchPositions = [
+      {x: 200, y: W - 4}, {x: 400, y: W - 4}, {x: 660, y: W - 4}, {x: 860, y: W - 4},
+      {x: W - 4, y: 250}, {x: W - 4, y: 420},
+      {x: TOWN_W - W, y: 250}, {x: TOWN_W - W, y: 420}
+    ];
+    for (var wti = 0; wti < wallTorchPositions.length; wti++) {
+      var wt = wallTorchPositions[wti];
       ctx.fillStyle = '#3a3a42';
-      ctx.fillRect(corners[ti][0], corners[ti][1], towerSize, 3);
-      ctx.fillRect(corners[ti][0], corners[ti][1], 3, towerSize);
+      ctx.fillRect(wt.x - 2, wt.y, 6, 4);
+      ctx.fillStyle = '#4a4a52';
+      ctx.fillRect(wt.x - 1, wt.y + 1, 4, 2);
     }
   }
 
   function drawTownGate(ctx) {
-    // South wall opening
-    var gx = TOWN_W / 2 - 30;
+    var gx = TOWN_W / 2 - 35;
     var gy = TOWN_H - TOWN_WALL;
-    // Clear gate area
-    ctx.fillStyle = '#c4a06a';
-    ctx.fillRect(gx, gy, 60, TOWN_WALL);
-    // Portcullis arch
+    var gw = 70;
+    // Clear gate area with ground color
+    ctx.fillStyle = '#b89868';
+    ctx.fillRect(gx, gy, gw, TOWN_WALL);
+    // Stone pillars flanking gate
     ctx.fillStyle = '#4a4a52';
-    ctx.fillRect(gx - 4, gy, 4, TOWN_WALL);
-    ctx.fillRect(gx + 60, gy, 4, TOWN_WALL);
+    ctx.fillRect(gx - 6, gy, 8, TOWN_WALL);
+    ctx.fillRect(gx + gw - 2, gy, 8, TOWN_WALL);
+    ctx.fillStyle = '#5a5a62';
+    ctx.fillRect(gx - 5, gy + 1, 6, TOWN_WALL - 2);
+    ctx.fillRect(gx + gw - 1, gy + 1, 6, TOWN_WALL - 2);
     // Arch top
     ctx.beginPath();
-    ctx.arc(gx + 30, gy + 4, 30, Math.PI, 0);
+    ctx.arc(gx + gw / 2, gy + 4, gw / 2, Math.PI, 0);
     ctx.fillStyle = '#4a4a52';
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(gx + 30, gy + 4, 26, Math.PI, 0);
-    ctx.fillStyle = '#c4a06a';
+    ctx.arc(gx + gw / 2, gy + 4, gw / 2 - 4, Math.PI, 0);
+    ctx.fillStyle = '#b89868';
     ctx.fill();
-    // Portcullis bars
-    ctx.fillStyle = 'rgba(60,60,60,0.3)';
+    // Keystone at arch apex
+    ctx.fillStyle = '#c0a040';
+    ctx.fillRect(gx + gw / 2 - 4, gy - 2, 8, 6);
+    ctx.fillStyle = '#d4b050';
+    ctx.fillRect(gx + gw / 2 - 3, gy - 1, 6, 4);
+    // Iron portcullis bars (partly raised)
+    ctx.fillStyle = 'rgba(60,60,60,0.35)';
     for (var bi = 0; bi < 5; bi++) {
-      ctx.fillRect(gx + 6 + bi * 12, gy, 1, TOWN_WALL);
+      ctx.fillRect(gx + 8 + bi * 13, gy, 2, TOWN_WALL);
     }
+    // Horizontal bar across top
+    ctx.fillStyle = 'rgba(60,60,60,0.3)';
+    ctx.fillRect(gx + 4, gy + 6, gw - 8, 2);
+    // Iron studs on pillars
+    ctx.fillStyle = '#606068';
+    ctx.fillRect(gx - 3, gy + 8, 2, 2);
+    ctx.fillRect(gx - 3, gy + 22, 2, 2);
+    ctx.fillRect(gx + gw + 1, gy + 8, 2, 2);
+    ctx.fillRect(gx + gw + 1, gy + 22, 2, 2);
+    // Steps leading in (3 ascending)
+    ctx.fillStyle = '#a89060';
+    ctx.fillRect(gx + 4, gy + TOWN_WALL - 6, gw - 8, 2);
+    ctx.fillStyle = '#b8a070';
+    ctx.fillRect(gx + 8, gy + TOWN_WALL - 4, gw - 16, 2);
+    ctx.fillStyle = '#c4a878';
+    ctx.fillRect(gx + 12, gy + TOWN_WALL - 2, gw - 24, 2);
+    // Torch brackets on each side (flames drawn in animated pass)
+    ctx.fillStyle = '#3a3a42';
+    ctx.fillRect(gx - 10, gy + 8, 5, 4);
+    ctx.fillRect(gx + gw + 5, gy + 8, 5, 4);
   }
 
   function drawTownPaths(ctx) {
-    // Cobblestone paths connecting hotspots to center
-    var pathColor = '#a89060';
-    var pathDark = '#988050';
     var centerX = 530, centerY = 330;
-
-    // Horizontal path through middle row
-    ctx.fillStyle = pathColor;
-    ctx.fillRect(TOWN_WALL, centerY - 12, TOWN_W - TOWN_WALL * 2, 24);
-    // Vertical path from gate to center
-    ctx.fillRect(centerX - 12, centerY, 24, TOWN_H - TOWN_WALL - centerY);
-    // Vertical path from center to top row
-    ctx.fillRect(centerX - 12, TOWN_WALL, 24, centerY - TOWN_WALL);
-
-    // Cross paths to top-row buildings
-    ctx.fillRect(TOWN_WALL, 140 - 12, TOWN_W - TOWN_WALL * 2, 24);
-    // Cross path to bottom-row buildings
-    ctx.fillRect(TOWN_WALL, 520 - 12, TOWN_W - TOWN_WALL * 2, 24);
-    // Verticals to bottom row
-    ctx.fillRect(centerX - 12, centerY, 24, 520 - centerY);
-
-    // Cobblestone detail
-    ctx.fillStyle = pathDark;
-    var pathAreas = [
-      [TOWN_WALL, centerY - 12, TOWN_W - TOWN_WALL * 2, 24],
-      [centerX - 12, TOWN_WALL, 24, TOWN_H - TOWN_WALL * 2],
-      [TOWN_WALL, 128, TOWN_W - TOWN_WALL * 2, 24],
-      [TOWN_WALL, 508, TOWN_W - TOWN_WALL * 2, 24]
+    var CS_W = 7, CS_H = 5;
+    var stoneColors = ['#a89060','#b09868','#a08858','#b8a070','#a8986a'];
+    var borderColor = '#8a7048';
+    // Define path rectangles
+    var pathRects = [
+      [TOWN_WALL, centerY - 14, TOWN_W - TOWN_WALL * 2, 28],
+      [TOWN_WALL, 126, TOWN_W - TOWN_WALL * 2, 28],
+      [TOWN_WALL, 506, TOWN_W - TOWN_WALL * 2, 28],
+      [centerX - 14, TOWN_WALL, 28, TOWN_H - TOWN_WALL * 2]
     ];
-    for (var pi = 0; pi < pathAreas.length; pi++) {
-      var pa = pathAreas[pi];
-      for (var pj = 0; pj < 30; pj++) {
-        var ph = tileHash(pj + 3000, pi + 3000);
-        ctx.fillRect(pa[0] + (ph >>> 0) % pa[2], pa[1] + (ph >>> 8) % pa[3], 3, 2);
+    for (var pi = 0; pi < pathRects.length; pi++) {
+      var pr = pathRects[pi];
+      var px = pr[0], py = pr[1], pw = pr[2], ph = pr[3];
+      // Dark border
+      ctx.fillStyle = borderColor;
+      ctx.fillRect(px, py, pw, ph);
+      // Cobblestones
+      var pCols = Math.ceil(pw / CS_W) + 1;
+      var pRows = Math.ceil(ph / CS_H) + 1;
+      for (var pr2 = 0; pr2 < pRows; pr2++) {
+        var rowOff = (pr2 % 2) * 3;
+        for (var pc = 0; pc < pCols; pc++) {
+          var csx = px + pc * CS_W + rowOff;
+          var csy = py + pr2 * CS_H;
+          if (csx >= px + pw || csy >= py + ph) continue;
+          var cw = Math.min(CS_W - 1, px + pw - csx - 1);
+          var ch2 = Math.min(CS_H - 1, py + ph - csy - 1);
+          if (cw < 1 || ch2 < 1) continue;
+          var h = tileHash(csx + 3000, csy + 3000);
+          // Worn center (lighter where people walk most)
+          var distFromCenter;
+          if (pw > ph) {
+            distFromCenter = Math.abs((csy + CS_H / 2) - (py + ph / 2));
+          } else {
+            distFromCenter = Math.abs((csx + CS_W / 2) - (px + pw / 2));
+          }
+          ctx.fillStyle = distFromCenter < 6 ? '#c0a870' : stoneColors[(h >>> 0) % stoneColors.length];
+          ctx.fillRect(csx, csy, cw, ch2);
+          // Top highlight
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          ctx.fillRect(csx, csy, cw, 1);
+        }
+      }
+      // Edge highlights
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      if (pw > ph) {
+        ctx.fillRect(px, py, pw, 1);
+      } else {
+        ctx.fillRect(px, py, 1, ph);
       }
     }
   }
 
   function drawTownBuilding(ctx, id, bx, by) {
-    // Each building drawn as a ~60x50 pixel art sprite centered on (bx, by)
-    var ox = bx - 30, oy = by - 25;
+    var ox = bx - 35, oy = by - 30;
+    // Ground shadow for every building
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(bx, by + 28, 34, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     switch (id) {
       case 'tavern':
-        // Wooden walls with sign
+        // Wooden tavern with timber frame detail
         ctx.fillStyle = '#8b6b3a';
-        ctx.fillRect(ox, oy, 60, 50);
-        ctx.fillStyle = '#7a5c30';
-        ctx.fillRect(ox, oy, 60, 4); // roof
+        ctx.fillRect(ox, oy, 70, 55);
+        // Timber beams
         ctx.fillStyle = '#5c3a1a';
-        ctx.fillRect(ox - 4, oy - 8, 68, 12); // peaked roof
+        ctx.fillRect(ox, oy + 18, 70, 2);
+        ctx.fillRect(ox, oy + 36, 70, 2);
+        ctx.fillRect(ox + 34, oy, 2, 55);
+        // Roof
+        ctx.fillStyle = '#5c3a1a';
+        ctx.fillRect(ox - 4, oy - 8, 78, 12);
         ctx.fillStyle = '#4a2a10';
-        ctx.fillRect(ox + 14, oy - 12, 32, 6); // roof peak
-        // Door
-        ctx.fillStyle = '#4a2a10';
-        ctx.fillRect(ox + 22, oy + 32, 16, 18);
-        // Windows
-        ctx.fillStyle = '#ffd080';
-        ctx.fillRect(ox + 6, oy + 14, 10, 10);
-        ctx.fillRect(ox + 44, oy + 14, 10, 10);
-        // Sign
-        ctx.fillStyle = '#c0a040';
-        ctx.fillRect(ox + 48, oy + 6, 14, 10);
-        ctx.fillStyle = '#8b6b3a';
-        ctx.fillRect(ox + 50, oy + 8, 10, 6);
+        ctx.fillRect(ox + 10, oy - 12, 50, 6);
+        ctx.fillRect(ox + 20, oy - 15, 30, 5);
+        // Roof highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox - 4, oy - 8, 78, 1);
         // Chimney
         ctx.fillStyle = '#6a4a2a';
-        ctx.fillRect(ox + 50, oy - 18, 8, 12);
-        // Barrel
-        ctx.fillStyle = '#6b4e2b';
-        ctx.fillRect(ox + 2, oy + 40, 10, 10);
+        ctx.fillRect(ox + 55, oy - 22, 10, 14);
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(ox + 55, oy - 22, 10, 2);
+        // Door
+        ctx.fillStyle = '#4a2a10';
+        ctx.fillRect(ox + 28, oy + 34, 14, 21);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 39, oy + 44, 2, 2);
+        // Doorstep
+        ctx.fillStyle = '#9b7b4a';
+        ctx.fillRect(ox + 26, oy + 53, 18, 2);
+        // Windows with warm glow
+        ctx.fillStyle = '#ffd080';
+        ctx.fillRect(ox + 6, oy + 10, 12, 10);
+        ctx.fillRect(ox + 52, oy + 10, 12, 10);
+        // Window panes
+        ctx.fillStyle = '#5c3a1a';
+        ctx.fillRect(ox + 11, oy + 10, 2, 10);
+        ctx.fillRect(ox + 6, oy + 14, 12, 2);
+        ctx.fillRect(ox + 57, oy + 10, 2, 10);
+        ctx.fillRect(ox + 52, oy + 14, 12, 2);
+        // Hanging sign (chain + board)
+        ctx.fillStyle = '#4a4a52';
+        ctx.fillRect(ox + 63, oy - 2, 1, 6);
+        ctx.fillRect(ox + 71, oy - 2, 1, 6);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 62, oy + 4, 12, 8);
         ctx.fillStyle = '#8b6b3a';
-        ctx.fillRect(ox + 3, oy + 43, 8, 2);
+        ctx.fillRect(ox + 64, oy + 6, 8, 4);
+        // Barrels (2)
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(ox + 2, oy + 42, 10, 12);
+        ctx.fillRect(ox + 13, oy + 44, 8, 10);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 3, oy + 46, 8, 2);
+        ctx.fillRect(ox + 14, oy + 48, 6, 2);
+        // Top-left highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox, oy, 1, 55);
         break;
 
       case 'store':
-        // Awning and crates
         ctx.fillStyle = '#b89060';
-        ctx.fillRect(ox, oy, 60, 50);
-        // Striped awning
-        for (var ai = 0; ai < 6; ai++) {
-          ctx.fillStyle = ai % 2 === 0 ? '#cc4444' : '#ffffff';
-          ctx.fillRect(ox + ai * 10, oy - 6, 10, 8);
+        ctx.fillRect(ox, oy, 70, 55);
+        // Striped awning with scalloped edge
+        for (var ai = 0; ai < 7; ai++) {
+          ctx.fillStyle = ai % 2 === 0 ? '#cc4444' : '#eeeeee';
+          ctx.fillRect(ox + ai * 10, oy - 8, 10, 10);
+        }
+        // Scalloped edge
+        for (var si = 0; si < 14; si++) {
+          ctx.fillStyle = si % 2 === 0 ? '#cc4444' : '#eeeeee';
+          ctx.fillRect(ox + si * 5, oy + 2, 5, 2);
         }
         // Door
         ctx.fillStyle = '#6a4a2a';
-        ctx.fillRect(ox + 22, oy + 30, 16, 20);
-        // Windows
+        ctx.fillRect(ox + 27, oy + 32, 16, 23);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 40, oy + 44, 2, 2);
+        // Windows with display items
         ctx.fillStyle = '#c8e0ff';
-        ctx.fillRect(ox + 6, oy + 12, 12, 12);
-        ctx.fillRect(ox + 42, oy + 12, 12, 12);
-        // Window panes
+        ctx.fillRect(ox + 6, oy + 12, 14, 14);
+        ctx.fillRect(ox + 50, oy + 12, 14, 14);
         ctx.fillStyle = '#8a7050';
-        ctx.fillRect(ox + 11, oy + 12, 2, 12);
-        ctx.fillRect(ox + 47, oy + 12, 2, 12);
-        // Crates
+        ctx.fillRect(ox + 12, oy + 12, 2, 14);
+        ctx.fillRect(ox + 56, oy + 12, 2, 14);
+        ctx.fillRect(ox + 6, oy + 18, 14, 2);
+        ctx.fillRect(ox + 50, oy + 18, 14, 2);
+        // Display items in left window (potions)
+        ctx.fillStyle = '#cc3333';
+        ctx.fillRect(ox + 8, oy + 21, 3, 4);
+        ctx.fillStyle = '#3366cc';
+        ctx.fillRect(ox + 14, oy + 21, 3, 4);
+        // Crate stacks
         ctx.fillStyle = '#a08050';
-        ctx.fillRect(ox + 48, oy + 38, 12, 12);
-        ctx.fillStyle = '#8b6b3a';
-        ctx.fillRect(ox + 49, oy + 43, 10, 2);
+        ctx.fillRect(ox + 55, oy + 40, 12, 12);
+        ctx.fillStyle = '#907040';
+        ctx.fillRect(ox + 57, oy + 36, 10, 10);
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 55, oy + 45, 12, 1);
+        ctx.fillRect(ox + 60, oy + 40, 1, 12);
+        // OPEN sign on door
+        ctx.fillStyle = '#2a6a2a';
+        ctx.fillRect(ox + 29, oy + 34, 12, 6);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '5px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('OPEN', ox + 35, oy + 39);
+        // Potted plant
+        ctx.fillStyle = '#6a4a2a';
+        ctx.fillRect(ox + 2, oy + 48, 6, 6);
+        ctx.fillStyle = '#4a7a3a';
+        ctx.fillRect(ox + 1, oy + 44, 8, 5);
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox, oy, 1, 55);
         break;
 
       case 'bank':
-        // Reinforced stone
         ctx.fillStyle = '#808088';
-        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillRect(ox, oy, 70, 55);
         ctx.fillStyle = '#70707a';
-        ctx.fillRect(ox, oy, 60, 6); // ledge
-        // Iron door
-        ctx.fillStyle = '#404048';
-        ctx.fillRect(ox + 20, oy + 28, 20, 22);
-        ctx.fillStyle = '#c0a040'; // gold handle
-        ctx.fillRect(ox + 36, oy + 38, 3, 3);
-        // Gold trim
-        ctx.fillStyle = '#c0a040';
-        ctx.fillRect(ox, oy + 6, 60, 2);
-        ctx.fillRect(ox, oy + 48, 60, 2);
+        ctx.fillRect(ox, oy, 70, 6);
         // Columns
         ctx.fillStyle = '#90909a';
-        ctx.fillRect(ox + 4, oy + 8, 6, 40);
-        ctx.fillRect(ox + 50, oy + 8, 6, 40);
-        // $ sign
+        ctx.fillRect(ox + 4, oy + 6, 8, 49);
+        ctx.fillRect(ox + 58, oy + 6, 8, 49);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox + 4, oy + 6, 2, 49);
+        ctx.fillRect(ox + 58, oy + 6, 2, 49);
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(ox + 10, oy + 6, 2, 49);
+        ctx.fillRect(ox + 64, oy + 6, 2, 49);
+        // Column capitals
+        ctx.fillStyle = '#a0a0a8';
+        ctx.fillRect(ox + 2, oy + 6, 12, 3);
+        ctx.fillRect(ox + 56, oy + 6, 12, 3);
+        // Iron vault door
+        ctx.fillStyle = '#404048';
+        ctx.fillRect(ox + 22, oy + 24, 26, 31);
+        // Door rivets
+        ctx.fillStyle = '#606068';
+        ctx.fillRect(ox + 25, oy + 28, 2, 2);
+        ctx.fillRect(ox + 43, oy + 28, 2, 2);
+        ctx.fillRect(ox + 25, oy + 48, 2, 2);
+        ctx.fillRect(ox + 43, oy + 48, 2, 2);
+        // Gold handle
         ctx.fillStyle = '#c0a040';
-        ctx.font = 'bold 12px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('$', bx, oy + 22);
+        ctx.fillRect(ox + 44, oy + 38, 3, 4);
+        // Gold trim
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox, oy + 6, 70, 2);
+        ctx.fillRect(ox, oy + 53, 70, 2);
+        // Coin emblem above door
+        ctx.fillStyle = '#c0a040';
+        ctx.beginPath();
+        ctx.arc(bx, oy + 16, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#d4b050';
+        ctx.beginPath();
+        ctx.arc(bx, oy + 16, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#a08030';
+        ctx.fillRect(bx - 1, oy + 14, 2, 4);
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox, oy, 1, 55);
         break;
 
       case 'casino':
-        // Flashy facade
         ctx.fillStyle = '#8a2040';
-        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillRect(ox, oy, 70, 55);
         ctx.fillStyle = '#b03050';
-        ctx.fillRect(ox + 2, oy + 2, 56, 46);
-        // Door
+        ctx.fillRect(ox + 2, oy + 2, 66, 51);
+        // Gold border
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(ox, oy, 70, 2);
+        ctx.fillRect(ox, oy + 53, 70, 2);
+        ctx.fillRect(ox, oy, 2, 55);
+        ctx.fillRect(ox + 68, oy, 2, 55);
+        // Door (open archway)
         ctx.fillStyle = '#4a1020';
-        ctx.fillRect(ox + 20, oy + 30, 20, 20);
-        // Card suits
+        ctx.fillRect(ox + 24, oy + 30, 22, 25);
+        // Red carpet to door
+        ctx.fillStyle = '#8a2040';
+        ctx.fillRect(ox + 28, oy + 52, 14, 6);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 28, oy + 52, 1, 6);
+        ctx.fillRect(ox + 41, oy + 52, 1, 6);
+        // Card suit emblems
         ctx.fillStyle = '#ffd700';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('\u2660', bx - 12, oy + 18);
-        ctx.fillText('\u2665', bx, oy + 18);
-        ctx.fillText('\u2666', bx + 12, oy + 18);
-        // Sign border
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(ox, oy, 60, 2);
-        ctx.fillRect(ox, oy + 48, 60, 2);
+        ctx.fillText('\u2660', bx - 16, oy + 18);
+        ctx.fillText('\u2665', bx - 4, oy + 18);
+        ctx.fillText('\u2666', bx + 8, oy + 18);
+        ctx.fillText('\u2663', bx + 20, oy + 18);
+        // Marquee light dots (static; animated will redraw)
+        var mColors = ['#ff4444','#ffd700','#44ff44','#ffd700','#ff4444','#ffd700','#44ff44','#ffd700'];
+        for (var mi = 0; mi < 8; mi++) {
+          ctx.fillStyle = mColors[mi];
+          ctx.fillRect(ox + 5 + mi * 8, oy + 22, 4, 3);
+        }
+        // Velvet rope pillars
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 18, oy + 48, 3, 8);
+        ctx.fillRect(ox + 49, oy + 48, 3, 8);
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox + 2, oy + 2, 66, 1);
         break;
 
       case 'fountain':
-        // 3-tier stone basin
-        // Bottom pool
-        ctx.fillStyle = '#6090c0';
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
         ctx.beginPath();
-        ctx.ellipse(bx, by + 12, 28, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx, by + 18, 38, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Bottom pool
+        ctx.fillStyle = '#5080a8';
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 14, 34, 18, 0, 0, Math.PI * 2);
         ctx.fill();
         // Pool rim
-        ctx.fillStyle = '#909098';
+        ctx.strokeStyle = '#808090';
+        ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.ellipse(bx, by + 12, 28, 14, 0, 0, Math.PI * 2);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#909098';
+        ctx.ellipse(bx, by + 14, 34, 18, 0, 0, Math.PI * 2);
         ctx.stroke();
-        // Middle tier
+        // Rim highlight
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 13, 33, 17, 0, Math.PI * 0.8, Math.PI * 1.8);
+        ctx.stroke();
+        // 4 decorative posts around pool
+        var postAngles = [0, Math.PI * 0.5, Math.PI, Math.PI * 1.5];
+        for (var poi = 0; poi < 4; poi++) {
+          var ppx = bx + Math.cos(postAngles[poi]) * 30;
+          var ppy = by + 14 + Math.sin(postAngles[poi]) * 14;
+          ctx.fillStyle = '#808090';
+          ctx.fillRect(ppx - 2, ppy - 8, 4, 8);
+          ctx.fillStyle = '#90909a';
+          ctx.fillRect(ppx - 2, ppy - 8, 4, 2);
+        }
+        // Middle column
         ctx.fillStyle = '#a0a0a8';
-        ctx.fillRect(bx - 8, by - 4, 16, 16);
-        // Top tier
+        ctx.fillRect(bx - 6, by - 2, 12, 16);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(bx - 6, by - 2, 2, 16);
+        // Upper bowl
+        ctx.fillStyle = '#5888b0';
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2, 10, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#90909a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2, 10, 5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Top spire
         ctx.fillStyle = '#b0b0b8';
-        ctx.fillRect(bx - 4, by - 14, 8, 12);
+        ctx.fillRect(bx - 3, by - 14, 6, 14);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillRect(bx - 3, by - 14, 1, 14);
         // Top cap
         ctx.fillStyle = '#c0c0c8';
-        ctx.fillRect(bx - 6, by - 16, 12, 4);
+        ctx.fillRect(bx - 5, by - 16, 10, 3);
+        // Gold orb
+        ctx.fillStyle = '#c0a040';
+        ctx.beginPath();
+        ctx.arc(bx, by - 18, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e0c060';
+        ctx.fillRect(bx - 1, by - 19, 1, 1);
+        // Bench nearby
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(bx + 42, by + 8, 18, 4);
+        ctx.fillRect(bx + 44, by + 12, 2, 4);
+        ctx.fillRect(bx + 56, by + 12, 2, 4);
         break;
 
       case 'arcade':
-        // Colorful building
         ctx.fillStyle = '#4060a0';
-        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillRect(ox, oy, 70, 55);
         ctx.fillStyle = '#5070b0';
-        ctx.fillRect(ox + 2, oy + 2, 56, 46);
-        // GAMES sign
+        ctx.fillRect(ox + 2, oy + 2, 66, 51);
+        // GAMES sign with border
+        ctx.fillStyle = '#222244';
+        ctx.fillRect(ox + 6, oy + 2, 58, 16);
         ctx.fillStyle = '#ff4444';
-        ctx.fillRect(ox + 8, oy + 4, 44, 14);
+        ctx.fillRect(ox + 8, oy + 4, 54, 12);
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 9px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('GAMES', bx, oy + 14);
+        ctx.fillText('GAMES', bx, oy + 13);
+        // PLAY sub-sign
+        ctx.fillStyle = '#44ff44';
+        ctx.font = '6px monospace';
+        ctx.fillText('PLAY', bx, oy + 23);
         // Door
         ctx.fillStyle = '#203060';
-        ctx.fillRect(ox + 22, oy + 30, 16, 20);
+        ctx.fillRect(ox + 27, oy + 32, 16, 23);
+        // Game screen in door
+        ctx.fillStyle = '#114422';
+        ctx.fillRect(ox + 29, oy + 34, 12, 10);
         // Colored lights
-        var arcadeColors = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
-        for (var li = 0; li < 5; li++) {
-          ctx.fillStyle = arcadeColors[li];
-          ctx.fillRect(ox + 6 + li * 10, oy + 22, 6, 4);
+        var arcadeColors2 = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
+        for (var li2 = 0; li2 < 5; li2++) {
+          ctx.fillStyle = arcadeColors2[li2];
+          ctx.fillRect(ox + 8 + li2 * 12, oy + 26, 6, 4);
         }
+        // Coin slot detail
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 46, oy + 44, 3, 5);
+        ctx.fillStyle = '#303050';
+        ctx.fillRect(ox + 47, oy + 45, 1, 3);
+        // Joystick icon on facade
+        ctx.fillStyle = '#ff4444';
+        ctx.fillRect(ox + 10, oy + 36, 2, 6);
+        ctx.fillRect(ox + 9, oy + 34, 4, 2);
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox + 2, oy + 2, 66, 1);
         break;
 
       case 'chapel':
-        // Peaked roof with cross
+        // Main body
         ctx.fillStyle = '#c8c0b0';
-        ctx.fillRect(ox, oy + 8, 50, 42);
+        ctx.fillRect(ox, oy + 8, 55, 47);
         // Peaked roof
         ctx.fillStyle = '#8b4040';
-        ctx.fillRect(ox - 2, oy + 4, 54, 8);
-        // Roof triangle
+        ctx.fillRect(ox - 2, oy + 4, 59, 8);
         ctx.fillStyle = '#7a3030';
-        ctx.fillRect(ox + 8, oy, 34, 6);
-        ctx.fillRect(ox + 14, oy - 4, 22, 6);
+        ctx.fillRect(ox + 6, oy, 42, 6);
+        ctx.fillRect(ox + 12, oy - 4, 30, 6);
+        ctx.fillRect(ox + 18, oy - 7, 18, 5);
+        // Roof highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox - 2, oy + 4, 59, 1);
         // Cross
         ctx.fillStyle = '#c0a040';
-        ctx.fillRect(ox + 22, oy - 14, 6, 14);
-        ctx.fillRect(ox + 18, oy - 10, 14, 4);
-        // Door
+        ctx.fillRect(ox + 24, oy - 17, 6, 14);
+        ctx.fillRect(ox + 20, oy - 13, 14, 4);
+        ctx.fillStyle = '#d4b050';
+        ctx.fillRect(ox + 25, oy - 16, 4, 12);
+        ctx.fillRect(ox + 21, oy - 12, 12, 2);
+        // Door (arched)
         ctx.fillStyle = '#6a4a2a';
-        ctx.fillRect(ox + 16, oy + 32, 18, 18);
-        // Stained glass
+        ctx.fillRect(ox + 17, oy + 34, 20, 21);
+        ctx.fillStyle = '#c8c0b0';
+        ctx.beginPath();
+        ctx.arc(ox + 27, oy + 34, 10, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#6a4a2a';
+        ctx.beginPath();
+        ctx.arc(ox + 27, oy + 34, 8, Math.PI, 0);
+        ctx.fill();
+        // Stained glass (4 panes)
         ctx.fillStyle = '#6080c0';
-        ctx.fillRect(ox + 18, oy + 14, 14, 12);
+        ctx.fillRect(ox + 18, oy + 14, 7, 14);
         ctx.fillStyle = '#c06040';
-        ctx.fillRect(ox + 22, oy + 14, 6, 12);
+        ctx.fillRect(ox + 25, oy + 14, 7, 14);
+        ctx.fillStyle = '#40a060';
+        ctx.fillRect(ox + 18, oy + 21, 7, 7);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 25, oy + 21, 7, 7);
+        // Window frame
+        ctx.fillStyle = '#8a7a68';
+        ctx.fillRect(ox + 24, oy + 14, 2, 14);
+        ctx.fillRect(ox + 18, oy + 20, 14, 2);
         // Bell tower
         ctx.fillStyle = '#b0a898';
-        ctx.fillRect(ox + 40, oy - 6, 12, 20);
+        ctx.fillRect(ox + 44, oy - 8, 14, 22);
         ctx.fillStyle = '#c0a040';
-        ctx.fillRect(ox + 43, oy, 6, 6);
+        ctx.fillRect(ox + 47, oy - 2, 8, 6);
+        ctx.fillStyle = '#d4b050';
+        ctx.fillRect(ox + 49, oy, 4, 3);
+        // Mini graveyard (3 tombstones right of building)
+        ctx.fillStyle = '#707078';
+        ctx.fillRect(ox + 58, oy + 44, 4, 6);
+        ctx.fillRect(ox + 64, oy + 46, 3, 5);
+        ctx.fillRect(ox + 70, oy + 45, 4, 5);
+        ctx.fillStyle = '#808088';
+        ctx.fillRect(ox + 58, oy + 44, 4, 1);
+        ctx.fillRect(ox + 64, oy + 46, 3, 1);
+        ctx.fillRect(ox + 70, oy + 45, 4, 1);
+        // Rose bush
+        ctx.fillStyle = '#3a6a2a';
+        ctx.fillRect(ox - 6, oy + 46, 8, 5);
+        ctx.fillStyle = '#cc3030';
+        ctx.fillRect(ox - 4, oy + 46, 2, 2);
+        ctx.fillRect(ox - 1, oy + 48, 2, 2);
         break;
 
       case 'dungeon':
-        // Iron portcullis with descending steps
+        // Heavy stone gatehouse
         ctx.fillStyle = '#4a4a52';
-        ctx.fillRect(ox, oy, 50, 50);
+        ctx.fillRect(ox, oy, 55, 55);
         ctx.fillStyle = '#3a3a42';
-        ctx.fillRect(ox + 2, oy + 2, 46, 46);
+        ctx.fillRect(ox + 2, oy + 2, 51, 51);
         // Gate arch
         ctx.fillStyle = '#5a5a62';
-        ctx.fillRect(ox + 10, oy + 14, 30, 36);
+        ctx.fillRect(ox + 10, oy + 12, 35, 43);
         ctx.fillStyle = '#1a1a22';
-        ctx.fillRect(ox + 14, oy + 18, 22, 32);
+        ctx.fillRect(ox + 14, oy + 16, 27, 39);
         // Portcullis bars
         ctx.fillStyle = '#606068';
-        for (var bi = 0; bi < 4; bi++) {
-          ctx.fillRect(ox + 16 + bi * 6, oy + 18, 2, 32);
+        for (var dbi = 0; dbi < 5; dbi++) {
+          ctx.fillRect(ox + 16 + dbi * 6, oy + 16, 2, 39);
         }
-        // Descending steps
+        ctx.fillRect(ox + 14, oy + 22, 27, 2);
+        ctx.fillRect(ox + 14, oy + 32, 27, 2);
+        // Descending stairs
         ctx.fillStyle = '#2a2a32';
-        ctx.fillRect(ox + 16, oy + 38, 18, 4);
+        ctx.fillRect(ox + 16, oy + 40, 23, 4);
         ctx.fillStyle = '#222228';
-        ctx.fillRect(ox + 18, oy + 42, 14, 4);
-        // Skull
-        ctx.fillStyle = '#d0d0c0';
-        ctx.fillRect(ox + 20, oy + 6, 10, 8);
+        ctx.fillRect(ox + 18, oy + 44, 19, 4);
         ctx.fillStyle = '#1a1a22';
-        ctx.fillRect(ox + 22, oy + 8, 2, 2);
-        ctx.fillRect(ox + 26, oy + 8, 2, 2);
+        ctx.fillRect(ox + 20, oy + 48, 15, 4);
+        // Green glow from below (static part)
+        ctx.fillStyle = 'rgba(80,255,80,0.04)';
+        ctx.fillRect(ox + 14, oy + 30, 27, 25);
+        // Skulls on pillars
+        ctx.fillStyle = '#d0d0c0';
+        ctx.fillRect(ox + 2, oy + 4, 8, 6);
+        ctx.fillStyle = '#1a1a22';
+        ctx.fillRect(ox + 3, oy + 5, 2, 2);
+        ctx.fillRect(ox + 7, oy + 5, 2, 2);
+        ctx.fillStyle = '#d0d0c0';
+        ctx.fillRect(ox + 45, oy + 4, 8, 6);
+        ctx.fillStyle = '#1a1a22';
+        ctx.fillRect(ox + 46, oy + 5, 2, 2);
+        ctx.fillRect(ox + 50, oy + 5, 2, 2);
+        // Chain detail
+        ctx.fillStyle = '#606068';
+        for (var ci = 0; ci < 5; ci++) {
+          ctx.fillRect(ox + 6, oy + 14 + ci * 6, 2, 3);
+          ctx.fillRect(ox + 47, oy + 14 + ci * 6, 2, 3);
+        }
+        // Wanted poster
+        ctx.fillStyle = '#d8c8a0';
+        ctx.fillRect(ox + 40, oy + 14, 8, 10);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(ox + 42, oy + 16, 4, 1);
+        ctx.fillRect(ox + 41, oy + 19, 6, 1);
+        ctx.fillRect(ox + 42, oy + 21, 3, 1);
         break;
 
       case 'library':
-        // Tall arched windows
         ctx.fillStyle = '#b0a088';
-        ctx.fillRect(ox, oy, 55, 50);
+        ctx.fillRect(ox, oy, 65, 55);
         ctx.fillStyle = '#a09078';
-        ctx.fillRect(ox, oy, 55, 6); // top ledge
-        // Arched windows
-        ctx.fillStyle = '#c8e0ff';
-        ctx.fillRect(ox + 6, oy + 10, 8, 20);
-        ctx.fillRect(ox + 22, oy + 10, 8, 20);
-        ctx.fillRect(ox + 38, oy + 10, 8, 20);
-        // Window arches
-        ctx.fillStyle = '#a09078';
-        ctx.fillRect(ox + 6, oy + 8, 8, 3);
-        ctx.fillRect(ox + 22, oy + 8, 8, 3);
-        ctx.fillRect(ox + 38, oy + 8, 8, 3);
+        ctx.fillRect(ox, oy, 65, 6);
+        // Arched windows with book spines visible
+        var winXs = [ox + 6, ox + 24, ox + 42];
+        for (var wi = 0; wi < 3; wi++) {
+          // Window
+          ctx.fillStyle = '#c8e0ff';
+          ctx.fillRect(winXs[wi], oy + 10, 10, 22);
+          // Arch top
+          ctx.fillStyle = '#a09078';
+          ctx.fillRect(winXs[wi], oy + 8, 10, 3);
+          ctx.fillRect(winXs[wi] + 1, oy + 7, 8, 2);
+          // Book spines visible through glass
+          var bookColors = ['#8a3030','#3030a0','#308030','#6b4e2b'];
+          for (var bi2 = 0; bi2 < 4; bi2++) {
+            ctx.fillStyle = bookColors[(wi + bi2) % 4];
+            ctx.fillRect(winXs[wi] + 1 + bi2 * 2, oy + 22, 2, 8);
+          }
+        }
         // Door
         ctx.fillStyle = '#6a4a2a';
-        ctx.fillRect(ox + 20, oy + 34, 14, 16);
-        // Book motif on sign
+        ctx.fillRect(ox + 24, oy + 36, 16, 19);
         ctx.fillStyle = '#c0a040';
-        ctx.fillRect(ox + 44, oy + 10, 8, 10);
-        ctx.fillStyle = '#8b6b3a';
-        ctx.fillRect(ox + 46, oy + 12, 4, 6);
+        ctx.fillRect(ox + 37, oy + 46, 2, 2);
+        // Scroll motif
+        ctx.fillStyle = '#d8c8a0';
+        ctx.fillRect(ox + 54, oy + 10, 8, 12);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(ox + 56, oy + 13, 4, 1);
+        ctx.fillRect(ox + 55, oy + 16, 6, 1);
+        ctx.fillRect(ox + 56, oy + 19, 3, 1);
+        // Lantern by door
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 20, oy + 36, 3, 5);
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox, oy, 1, 55);
         break;
 
       case 'barracks':
-        // Weapon rack and shield
         ctx.fillStyle = '#7a7a60';
-        ctx.fillRect(ox, oy, 55, 50);
+        ctx.fillRect(ox, oy, 65, 55);
         ctx.fillStyle = '#6a6a50';
-        ctx.fillRect(ox, oy, 55, 6); // roof
-        // Door
+        ctx.fillRect(ox, oy, 65, 6);
+        // Door (iron-banded)
         ctx.fillStyle = '#4a4a30';
-        ctx.fillRect(ox + 18, oy + 30, 18, 20);
-        // Shield emblem
+        ctx.fillRect(ox + 22, oy + 30, 20, 25);
+        ctx.fillStyle = '#404048';
+        ctx.fillRect(ox + 22, oy + 34, 20, 2);
+        ctx.fillRect(ox + 22, oy + 44, 20, 2);
+        // Shield emblem (centered, larger)
         ctx.fillStyle = '#c0a040';
-        ctx.fillRect(ox + 22, oy + 8, 10, 12);
+        ctx.fillRect(ox + 26, oy + 8, 12, 16);
         ctx.fillStyle = '#8b2020';
-        ctx.fillRect(ox + 24, oy + 10, 6, 8);
-        // Weapon rack
+        ctx.fillRect(ox + 28, oy + 10, 8, 12);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 31, oy + 12, 2, 8);
+        ctx.fillRect(ox + 28, oy + 15, 8, 2);
+        // Weapon rack (enhanced)
         ctx.fillStyle = '#5a3a1a';
-        ctx.fillRect(ox + 44, oy + 12, 8, 30);
+        ctx.fillRect(ox + 50, oy + 10, 10, 38);
         ctx.fillStyle = '#a0a0a0';
-        ctx.fillRect(ox + 46, oy + 14, 2, 16); // sword blade
-        ctx.fillRect(ox + 50, oy + 18, 2, 12); // spear shaft
+        ctx.fillRect(ox + 52, oy + 12, 2, 18); // sword
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(ox + 56, oy + 14, 2, 20); // spear shaft
+        ctx.fillStyle = '#a0a0a0';
+        ctx.fillRect(ox + 55, oy + 14, 4, 3); // spear tip
+        // Axe shape
+        ctx.fillStyle = '#a0a0a0';
+        ctx.fillRect(ox + 52, oy + 32, 4, 3);
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(ox + 53, oy + 35, 2, 8);
+        // Banner/flag
+        ctx.fillStyle = '#8b2020';
+        ctx.fillRect(ox + 4, oy + 8, 8, 18);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 4, oy + 8, 8, 2);
+        ctx.fillRect(ox + 6, oy + 14, 4, 4);
+        // Training dummy in front
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(ox + 10, oy + 38, 2, 16);
+        ctx.fillRect(ox + 6, oy + 42, 10, 2);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.beginPath();
+        ctx.arc(ox + 11, oy + 36, 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Arrow target
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(ox + 60, oy + 52, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#cc3030';
+        ctx.beginPath();
+        ctx.arc(ox + 60, oy + 52, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(ox + 59, oy + 51, 2, 2);
         break;
 
       case 'petstore':
-        // Egg display window, paw print sign
         ctx.fillStyle = '#c09060';
-        ctx.fillRect(ox, oy, 60, 50);
+        ctx.fillRect(ox, oy, 70, 55);
         ctx.fillStyle = '#b08050';
-        ctx.fillRect(ox, oy, 60, 6); // roof
+        ctx.fillRect(ox, oy, 70, 6);
         ctx.fillStyle = '#a07040';
-        ctx.fillRect(ox - 2, oy - 4, 64, 8); // overhang
-        // Egg display window
+        ctx.fillRect(ox - 2, oy - 4, 74, 8);
+        // Roof highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox - 2, oy - 4, 74, 1);
+        // Egg display window (3 eggs in nests)
         ctx.fillStyle = '#fff8e0';
-        ctx.fillRect(ox + 6, oy + 12, 20, 16);
-        // Eggs in window
+        ctx.fillRect(ox + 4, oy + 12, 30, 18);
+        // Nests
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 5, oy + 24, 8, 4);
+        ctx.fillRect(ox + 15, oy + 24, 8, 4);
+        ctx.fillRect(ox + 25, oy + 24, 8, 4);
+        // Eggs
         ctx.fillStyle = '#ff9090';
         ctx.beginPath();
-        ctx.ellipse(ox + 12, oy + 24, 4, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(ox + 9, oy + 22, 3, 4, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#90c0ff';
         ctx.beginPath();
-        ctx.ellipse(ox + 22, oy + 24, 4, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(ox + 19, oy + 22, 3, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#c090ff';
+        ctx.beginPath();
+        ctx.ellipse(ox + 29, oy + 22, 3, 4, 0, 0, Math.PI * 2);
         ctx.fill();
         // Door
         ctx.fillStyle = '#6a4a2a';
-        ctx.fillRect(ox + 34, oy + 28, 16, 22);
+        ctx.fillRect(ox + 40, oy + 28, 18, 27);
+        ctx.fillStyle = '#c0a040';
+        ctx.fillRect(ox + 55, oy + 42, 2, 2);
         // Paw print sign
         ctx.fillStyle = '#ffd080';
-        ctx.fillRect(ox + 34, oy + 8, 18, 14);
-        // Paw print (simple)
+        ctx.fillRect(ox + 40, oy + 8, 22, 16);
         ctx.fillStyle = '#6a4a2a';
-        ctx.fillRect(ox + 40, oy + 14, 3, 3); // pad
-        ctx.fillRect(ox + 38, oy + 11, 2, 2); // toe
-        ctx.fillRect(ox + 42, oy + 11, 2, 2); // toe
-        ctx.fillRect(ox + 44, oy + 13, 2, 2); // toe
+        ctx.fillRect(ox + 48, oy + 16, 4, 4);
+        ctx.fillRect(ox + 46, oy + 13, 2, 2);
+        ctx.fillRect(ox + 50, oy + 13, 2, 2);
+        ctx.fillRect(ox + 53, oy + 15, 2, 2);
+        // ADOPT banner
+        ctx.fillStyle = '#ff6060';
+        ctx.fillRect(ox + 4, oy + 34, 28, 8);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '6px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('ADOPT!', ox + 18, oy + 40);
+        // Food bowl by door
+        ctx.fillStyle = '#6b4e2b';
+        ctx.fillRect(ox + 62, oy + 50, 6, 3);
+        ctx.fillStyle = '#8b6b3a';
+        ctx.fillRect(ox + 63, oy + 49, 4, 2);
+        // Hay on floor
+        ctx.fillStyle = '#c8b060';
+        ctx.fillRect(ox + 36, oy + 50, 3, 1);
+        ctx.fillRect(ox + 40, oy + 52, 2, 1);
+        ctx.fillRect(ox + 34, oy + 53, 2, 1);
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(ox, oy, 1, 55);
         break;
     }
   }
 
   // ── Town Animated Parts ───────────────────────
+  // ── Town Light Pool Buffer ──────────────────────
+  function renderTownLightPoolBuffer() {
+    if (!townLightPoolBuffer) {
+      townLightPoolBuffer = document.createElement('canvas');
+      townLightPoolBuffer.width = TOWN_W;
+      townLightPoolBuffer.height = TOWN_H;
+      townLightPoolBufferCtx = townLightPoolBuffer.getContext('2d');
+    }
+    var lc = townLightPoolBufferCtx;
+    lc.clearRect(0, 0, TOWN_W, TOWN_H);
+    // Wall torch glow pools
+    var torchPositions = [
+      {x:200,y:TOWN_WALL+10},{x:400,y:TOWN_WALL+10},{x:660,y:TOWN_WALL+10},{x:860,y:TOWN_WALL+10},
+      {x:TOWN_WALL+10,y:250},{x:TOWN_WALL+10,y:420},
+      {x:TOWN_W-TOWN_WALL-10,y:250},{x:TOWN_W-TOWN_WALL-10,y:420}
+    ];
+    for (var ti = 0; ti < torchPositions.length; ti++) {
+      var tp = torchPositions[ti];
+      var tg = lc.createRadialGradient(tp.x, tp.y, 0, tp.x, tp.y, 50);
+      tg.addColorStop(0, 'rgba(255,160,60,0.10)');
+      tg.addColorStop(1, 'rgba(255,160,60,0)');
+      lc.fillStyle = tg;
+      lc.fillRect(tp.x - 50, tp.y - 50, 100, 100);
+    }
+    // Fountain ambient glow
+    var fg = lc.createRadialGradient(530, 330, 0, 530, 330, 80);
+    fg.addColorStop(0, 'rgba(100,160,220,0.06)');
+    fg.addColorStop(1, 'rgba(100,160,220,0)');
+    lc.fillStyle = fg;
+    lc.fillRect(450, 250, 160, 160);
+    // Gate torch glow
+    var gg = lc.createRadialGradient(530, TOWN_H - TOWN_WALL, 0, 530, TOWN_H - TOWN_WALL, 60);
+    gg.addColorStop(0, 'rgba(255,140,40,0.08)');
+    gg.addColorStop(1, 'rgba(255,140,40,0)');
+    lc.fillStyle = gg;
+    lc.fillRect(470, TOWN_H - TOWN_WALL - 60, 120, 120);
+  }
+
+  // ── Town Dust / Pollen ─────────────────────────
+  function initTownDustParticles() {
+    townDustParticles = [];
+    for (var i = 0; i < 18; i++) {
+      townDustParticles.push({
+        x: TOWN_WALL + 20 + Math.random() * (TOWN_W - TOWN_WALL * 2 - 40),
+        y: Math.random() * TOWN_H,
+        speed: 1.5 + Math.random() * 3,
+        alpha: 0.08 + Math.random() * 0.15,
+        size: 1 + Math.random(),
+        seed: Math.random() * 1000
+      });
+    }
+  }
+
+  // ── NPC Pathfinding (BFS) ──────────────────────
+  function buildPathAdjacency() {
+    var adj = {};
+    var nodeIds = Object.keys(TOWN_PATH_NODES);
+    for (var i = 0; i < nodeIds.length; i++) adj[nodeIds[i]] = [];
+    for (var e = 0; e < TOWN_PATH_EDGES.length; e++) {
+      var a = TOWN_PATH_EDGES[e][0], b = TOWN_PATH_EDGES[e][1];
+      if (adj[a].indexOf(b) === -1) adj[a].push(b);
+      if (adj[b].indexOf(a) === -1) adj[b].push(a);
+    }
+    return adj;
+  }
+  var townPathAdj = buildPathAdjacency();
+
+  function findNpcPath(fromNode, toNode) {
+    if (fromNode === toNode) return [];
+    var queue = [[fromNode]], visited = {};
+    visited[fromNode] = true;
+    while (queue.length > 0) {
+      var path = queue.shift();
+      var current = path[path.length - 1];
+      var neighbors = townPathAdj[current] || [];
+      for (var i = 0; i < neighbors.length; i++) {
+        var n = neighbors[i];
+        if (visited[n]) continue;
+        var newPath = path.concat(n);
+        if (n === toNode) {
+          var waypoints = [];
+          for (var j = 1; j < newPath.length; j++) waypoints.push(TOWN_PATH_NODES[newPath[j]]);
+          return waypoints;
+        }
+        visited[n] = true;
+        queue.push(newPath);
+      }
+    }
+    return [TOWN_PATH_NODES[toNode]]; // fallback direct
+  }
+
+  // ── NPC Init / Cleanup ─────────────────────────
+  function initTownNpcs() {
+    townNpcStates = [];
+    townActiveBubbles = [];
+    for (var i = 0; i < TOWN_NPCS.length; i++) {
+      var npc = TOWN_NPCS[i];
+      var unlock = NPC_UNLOCK[npc.id];
+      if (unlock && !unlock()) continue;
+      var startBuilding = npc.route[0] === 'random' ? TOWN_LOC_ORDER[Math.floor(Math.random() * TOWN_LOC_ORDER.length)] : npc.route[0];
+      var startNode = BUILDING_NODE[startBuilding] || 'mid-center';
+      var startPos = TOWN_PATH_NODES[startNode] || {x: 530, y: 360};
+      townNpcStates.push({
+        npcIdx: i,
+        active: true,
+        pos: { x: startPos.x, y: startPos.y + 20 },
+        dir: 'down',
+        routeIdx: 0,
+        phase: 'dwell',
+        dwellTimer: 1000 + Math.random() * 3000,
+        waypoints: [],
+        waypointIdx: 0,
+        animFrame: 0,
+        animTimer: 0,
+        speechBubble: null,
+        playerCooldown: 5000 + Math.random() * 5000,
+        interactCooldown: 0,
+        ghostAlpha: npc.alpha,
+        ghostFadeTimer: Math.random() * 200
+      });
+    }
+    initTownGroups();
+  }
+  function cleanupTownNpcs() { townNpcStates = []; townActiveBubbles = []; cleanupTownGroups(); }
+
+  // ── NPC Update ─────────────────────────────────
+  function updateTownNpcs(dt) {
+    var dtMs = dt * 1000;
+    for (var si = 0; si < townNpcStates.length; si++) {
+      var s = townNpcStates[si];
+      var npc = TOWN_NPCS[s.npcIdx];
+      if (!s.active) continue;
+
+      // Cooldowns
+      if (s.playerCooldown > 0) s.playerCooldown -= dtMs;
+      if (s.interactCooldown > 0) s.interactCooldown -= dtMs;
+
+      // Ghost fade cycle
+      if (npc.special === 'fade') {
+        s.ghostFadeTimer += dt;
+        var fadePhase = (s.ghostFadeTimer % 30);
+        if (fadePhase < 2) s.ghostAlpha = Math.min(npc.alpha, fadePhase / 2 * npc.alpha);
+        else if (fadePhase > 22) s.ghostAlpha = Math.max(0, (30 - fadePhase) / 8 * npc.alpha);
+        else s.ghostAlpha = npc.alpha;
+      }
+
+      // Speech bubble timer
+      if (s.speechBubble) {
+        s.speechBubble.timer -= dtMs;
+        if (s.speechBubble.timer <= 0) s.speechBubble = null;
+      }
+
+      if (s.phase === 'dwell') {
+        s.dwellTimer -= dtMs;
+        // Idle speech (random chance during dwell)
+        if (!s.speechBubble && npc.lines.length > 0 && Math.random() < 0.001) {
+          s.speechBubble = { text: npc.lines[Math.floor(Math.random() * npc.lines.length)], timer: 3500 };
+        }
+        if (s.dwellTimer <= 0) {
+          // Pick next destination
+          var nextBuilding;
+          if (npc.route[0] === 'random') {
+            nextBuilding = TOWN_LOC_ORDER[Math.floor(Math.random() * TOWN_LOC_ORDER.length)];
+          } else {
+            s.routeIdx = (s.routeIdx + 1) % npc.route.length;
+            nextBuilding = npc.route[s.routeIdx];
+          }
+          var destNode;
+          if (nextBuilding === 'gate') {
+            destNode = 'gate';
+          } else {
+            destNode = BUILDING_NODE[nextBuilding];
+          }
+          // Find current closest node
+          var closestNode = null, closestDist = Infinity;
+          var nodeIds = Object.keys(TOWN_PATH_NODES);
+          for (var ni = 0; ni < nodeIds.length; ni++) {
+            var nd = TOWN_PATH_NODES[nodeIds[ni]];
+            var dd = Math.abs(s.pos.x - nd.x) + Math.abs(s.pos.y - nd.y);
+            if (dd < closestDist) { closestDist = dd; closestNode = nodeIds[ni]; }
+          }
+          s.waypoints = findNpcPath(closestNode, destNode);
+          s.waypointIdx = 0;
+          s.phase = 'walk';
+          // Special behavior check
+          if (npc.special === 'stumble' && Math.random() < npc.specialChance) {
+            s.phase = 'special';
+            s.specialTimer = 2500;
+            s.speechBubble = { text: '*trips and falls flat*', timer: 2500 };
+          } else if (npc.special === 'sprint' && Math.random() < npc.specialChance) {
+            // Barnaby sprint — just increase speed temporarily handled in walk
+            s.sprinting = true;
+            s.speechBubble = { text: 'They almost saw me!', timer: 2000 };
+          }
+        }
+      } else if (s.phase === 'walk') {
+        if (s.waypoints.length === 0 || s.waypointIdx >= s.waypoints.length) {
+          s.phase = 'dwell';
+          s.dwellTimer = npc.dwellMin + Math.random() * (npc.dwellMax - npc.dwellMin);
+          s.sprinting = false;
+          // Show arrival speech
+          if (npc.lines.length > 0 && Math.random() < 0.4) {
+            s.speechBubble = { text: npc.lines[Math.floor(Math.random() * npc.lines.length)], timer: 3500 };
+          }
+          continue;
+        }
+        var wp = s.waypoints[s.waypointIdx];
+        var dx = wp.x - s.pos.x;
+        var dy = wp.y - s.pos.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 3) {
+          s.pos.x = wp.x;
+          s.pos.y = wp.y;
+          s.waypointIdx++;
+          continue;
+        }
+        var spd = s.sprinting ? npc.speed * 3 : npc.speed;
+        var step = spd * dt;
+        if (step > dist) step = dist;
+        var wobbleOff = npc.wobble ? Math.sin(townSmokeFrame * 0.03 + si * 7) * 1.5 : 0;
+        var moveX = (dx / dist) * step + (Math.abs(dy) > Math.abs(dx) ? wobbleOff * dt * 4 : 0);
+        var moveY = (dy / dist) * step;
+        // Fountain collision avoidance (center 530,330, radius ~42)
+        var nextX = s.pos.x + moveX;
+        var nextY = s.pos.y + moveY;
+        var fountDx = nextX - 530, fountDy = nextY - 330;
+        var fountDist = Math.sqrt(fountDx * fountDx + fountDy * fountDy);
+        if (fountDist < 42) {
+          // Push away from fountain center
+          var pushAngle = Math.atan2(fountDy, fountDx);
+          nextX = 530 + Math.cos(pushAngle) * 43;
+          nextY = 330 + Math.sin(pushAngle) * 43;
+        }
+        s.pos.x = nextX;
+        s.pos.y = nextY;
+        // Clamp
+        s.pos.x = Math.max(TOWN_WALL + 10, Math.min(TOWN_W - TOWN_WALL - 10, s.pos.x));
+        s.pos.y = Math.max(TOWN_WALL + 10, Math.min(TOWN_H - TOWN_WALL - 10, s.pos.y));
+        // Direction
+        if (Math.abs(dx) > Math.abs(dy)) s.dir = dx > 0 ? 'right' : 'left';
+        else s.dir = dy > 0 ? 'down' : 'up';
+        // Walk anim
+        s.animTimer += dt;
+        if (s.animTimer > 0.3) { s.animTimer = 0; s.animFrame = (s.animFrame + 1) % 4; }
+      } else if (s.phase === 'interact') {
+        s.interactTimer -= dtMs;
+        if (s.interactTimer <= 0) {
+          s.phase = 'dwell';
+          s.dwellTimer = 1000;
+          s.interactCooldown = 30000;
+        }
+      } else if (s.phase === 'special') {
+        s.specialTimer -= dtMs;
+        if (s.specialTimer <= 0) {
+          s.phase = 'dwell';
+          s.dwellTimer = 2000;
+        }
+      }
+
+      // Player proximity speech
+      if (s.playerCooldown <= 0 && npc.playerLines.length > 0 && s.phase !== 'interact') {
+        var pdx = townPlayerPos.x - s.pos.x;
+        var pdy = townPlayerPos.y - s.pos.y;
+        if (Math.sqrt(pdx * pdx + pdy * pdy) < 45) {
+          s.speechBubble = { text: npc.playerLines[Math.floor(Math.random() * npc.playerLines.length)], timer: 4500 };
+          s.playerCooldown = 12000;
+        }
+      }
+    }
+    // NPC-NPC proximity interactions
+    checkNpcNpcProximity();
+    // Update conversation groups
+    updateTownGroups(dt);
+  }
+
+  function checkNpcNpcProximity() {
+    for (var i = 0; i < townNpcStates.length; i++) {
+      var sa = townNpcStates[i];
+      var na = TOWN_NPCS[sa.npcIdx];
+      if (sa.phase === 'interact' || sa.interactCooldown > 0) continue;
+      for (var j = i + 1; j < townNpcStates.length; j++) {
+        var sb = townNpcStates[j];
+        var nb = TOWN_NPCS[sb.npcIdx];
+        if (sb.phase === 'interact' || sb.interactCooldown > 0) continue;
+        var dx = sa.pos.x - sb.pos.x, dy = sa.pos.y - sb.pos.y;
+        if (Math.sqrt(dx * dx + dy * dy) > 25) continue;
+        // Check for paired dialogue
+        var key1 = na.id + '+' + nb.id, key2 = nb.id + '+' + na.id;
+        var dialogue = PAIRED_DIALOGUES[key1] || PAIRED_DIALOGUES[key2];
+        if (!dialogue || Math.random() > 0.3) continue;
+        var pair = dialogue[Math.floor(Math.random() * dialogue.length)];
+        var isReversed = !!PAIRED_DIALOGUES[key2] && !PAIRED_DIALOGUES[key1];
+        sa.phase = 'interact'; sa.interactTimer = 5000; sa.interactCooldown = 30000;
+        sb.phase = 'interact'; sb.interactTimer = 5000; sb.interactCooldown = 30000;
+        sa.speechBubble = { text: isReversed ? pair.b : pair.a, timer: 4500 };
+        setTimeout(function(sbb, txt) { return function() { sbb.speechBubble = { text: txt, timer: 4000 }; }; }(sb, isReversed ? pair.a : pair.b), 1500);
+        break;
+      }
+    }
+  }
+
+  // ── NPC Drawing ────────────────────────────────
+  function drawTownNpcs(ctx) {
+    for (var i = 0; i < townNpcStates.length; i++) {
+      var s = townNpcStates[i];
+      var npc = TOWN_NPCS[s.npcIdx];
+      if (!s.active) continue;
+      var alpha = npc.special === 'fade' ? s.ghostAlpha : npc.alpha;
+      if (alpha <= 0.01) continue;
+      ctx.globalAlpha = alpha;
+      drawSingleTownNpc(ctx, npc, s);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawSingleTownNpc(ctx, npc, state) {
+    var x = Math.round(state.pos.x);
+    var y = Math.round(state.pos.y);
+    var sc = npc.scale;
+
+    // Idle animation offset
+    var idleOff = 0;
+    if (state.phase !== 'walk') {
+      if (npc.idleAnim === 'sway') idleOff = Math.sin(townSmokeFrame * 0.025 + state.npcIdx) * 1.5;
+      else if (npc.idleAnim === 'bounce') idleOff = -Math.abs(Math.sin(townSmokeFrame * 0.04 + state.npcIdx)) * 1.5;
+      else if (npc.idleAnim === 'float') idleOff = Math.sin(townSmokeFrame * 0.018 + state.npcIdx) * 2.5;
+    }
+
+    // Special: cat
+    if (npc.accessory === 'cat') {
+      drawTownCat(ctx, x, y + idleOff, state);
+      return;
+    }
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 8 * sc, 5 * sc, 2 * sc, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stumble special (lying down)
+    if (state.phase === 'special' && npc.special === 'stumble') {
+      ctx.fillStyle = npc.body;
+      ctx.fillRect(x - 7, y + 2, 14, 5);
+      ctx.fillStyle = npc.skin;
+      ctx.beginPath();
+      ctx.arc(x - 9, y + 4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+
+    // Walk bob
+    var walkBob = state.phase === 'walk' ? Math.sin(state.animFrame * Math.PI / 2) * 1.5 : 0;
+
+    // Body
+    ctx.fillStyle = npc.body;
+    ctx.beginPath();
+    ctx.ellipse(x, y + idleOff - walkBob, 5 * sc, 7 * sc, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = npc.skin;
+    ctx.beginPath();
+    ctx.arc(x, y - 8 * sc + idleOff - walkBob, 3.5 * sc, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hair
+    if (npc.hair) {
+      ctx.fillStyle = npc.hair;
+      ctx.fillRect(x - 3.5 * sc, y - 12 * sc + idleOff - walkBob, 7 * sc, 3 * sc);
+    }
+
+    // Hat (helmet for Hilda, bald cap for Aldric)
+    if (npc.hat) {
+      ctx.fillStyle = npc.hat;
+      ctx.fillRect(x - 4 * sc, y - 13 * sc + idleOff - walkBob, 8 * sc, 3.5 * sc);
+    }
+
+    // Top hat (Mr. Vault)
+    if (npc.accessory === 'tophat') {
+      ctx.fillStyle = '#222222';
+      ctx.fillRect(x - 3 * sc, y - 20 * sc + idleOff - walkBob, 6 * sc, 9 * sc);
+      ctx.fillRect(x - 4.5 * sc, y - 12 * sc + idleOff - walkBob, 9 * sc, 2 * sc);
+    }
+
+    // Stick (Pip)
+    if (npc.accessory === 'stick') {
+      ctx.fillStyle = '#6b4e2b';
+      ctx.save();
+      ctx.translate(x + 4 * sc, y + idleOff - walkBob);
+      var stickAngle = state.phase === 'special' ? Math.sin(townSmokeFrame * 0.12) * 0.8 : 0.3;
+      ctx.rotate(stickAngle);
+      ctx.fillRect(0, -8 * sc, 1.5, 10 * sc);
+      ctx.restore();
+    }
+
+    // Coin drop (Mr. Vault special)
+    if (npc.special === 'coindrop' && state.phase === 'walk' && townSmokeFrame % 90 < 2) {
+      ctx.fillStyle = 'rgba(255,215,0,0.5)';
+      ctx.beginPath();
+      ctx.arc(x - 2, y + 10, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawTownCat(ctx, x, y, state) {
+    // 8x6 pixel cat with tail
+    ctx.fillStyle = '#c07830';
+    // Body
+    ctx.fillRect(x - 3, y, 6, 4);
+    // Head
+    ctx.fillRect(x + 3, y - 2, 4, 4);
+    // Ears
+    ctx.fillRect(x + 3, y - 3, 2, 2);
+    ctx.fillRect(x + 5, y - 3, 2, 2);
+    // Eyes
+    ctx.fillStyle = '#40cc40';
+    ctx.fillRect(x + 4, y - 1, 1, 1);
+    ctx.fillRect(x + 6, y - 1, 1, 1);
+    // Tail (flicks)
+    ctx.fillStyle = '#c07830';
+    var tailDir = (townSmokeFrame % 180 < 90) ? -1 : 1;
+    if (state.phase === 'dwell') {
+      ctx.fillRect(x - 4, y + 1, 1, 3);
+      ctx.fillRect(x - 5, y + tailDir, 1, 2);
+    } else {
+      ctx.fillRect(x - 4, y, 1, 2);
+    }
+    // Legs (only when walking)
+    ctx.fillStyle = '#a06020';
+    if (state.phase === 'walk') {
+      var legFrame = state.animFrame % 2;
+      ctx.fillRect(x - 2, y + 4, 1, 2 + legFrame);
+      ctx.fillRect(x + 1, y + 4, 1, 2 + (1 - legFrame));
+    } else {
+      ctx.fillRect(x - 2, y + 4, 1, 2);
+      ctx.fillRect(x + 1, y + 4, 1, 2);
+    }
+  }
+
+  // ── NPC Speech Bubbles ─────────────────────────
+  function drawTownNpcBubbles(ctx) {
+    for (var i = 0; i < townNpcStates.length; i++) {
+      var s = townNpcStates[i];
+      if (!s.speechBubble || !s.active) continue;
+      var npc = TOWN_NPCS[s.npcIdx];
+      var alpha = npc.special === 'fade' ? s.ghostAlpha : npc.alpha;
+      if (alpha <= 0.05) continue;
+      ctx.globalAlpha = Math.min(1, alpha + 0.3);
+      drawNpcBubble(ctx, s.pos.x, s.pos.y - 18 * npc.scale, s.speechBubble.text, npc.name);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawNpcBubble(ctx, x, y, text, name) {
+    // Word wrap at 22 chars
+    var words = text.split(' ');
+    var lines = [], line = '';
+    for (var w = 0; w < words.length; w++) {
+      var test = line ? line + ' ' + words[w] : words[w];
+      if (test.length > 22 && line) { lines.push(line); line = words[w]; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    var lineH = 12;
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'center';
+    var maxW = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var lw = ctx.measureText(lines[i]).width;
+      if (lw > maxW) maxW = lw;
+    }
+    var nameW = ctx.measureText(name).width;
+    if (nameW > maxW) maxW = nameW;
+    var bw = maxW + 14, bh = lines.length * lineH + 18;
+    var bx = Math.max(5, Math.min(TOWN_W - bw - 5, x - bw / 2));
+    var by = y - 16 - bh;
+    // Bg
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = '#c0a040';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, bw, bh);
+    // Pointer triangle
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
+    ctx.beginPath();
+    ctx.moveTo(x - 3, by + bh);
+    ctx.lineTo(x, by + bh + 5);
+    ctx.lineTo(x + 3, by + bh);
+    ctx.fill();
+    // Name
+    ctx.fillStyle = '#c0a040';
+    ctx.font = 'bold 8px monospace';
+    ctx.fillText(name, bx + bw / 2, by + 10);
+    // Text
+    ctx.fillStyle = '#e0d0a0';
+    ctx.font = '9px monospace';
+    for (var i2 = 0; i2 < lines.length; i2++) {
+      ctx.fillText(lines[i2], bx + bw / 2, by + 22 + i2 * lineH);
+    }
+  }
+
+  // ── NPC Conversation Groups ──────────────────────
+  function initTownGroups() {
+    townGroupStates = [];
+    for (var gi = 0; gi < TOWN_NPC_GROUPS.length; gi++) {
+      var grp = TOWN_NPC_GROUPS[gi];
+      townGroupStates.push({
+        groupIdx: gi,
+        exchangeIdx: Math.floor(Math.random() * grp.exchanges.length),
+        timer: 8000 + gi * 15000 + Math.random() * 10000, // stagger groups heavily
+        phase: 'idle', // idle → showA → showB → pause → idle
+        bubbleA: null,
+        bubbleB: null,
+        idleAnimTimer: Math.random() * 1000
+      });
+    }
+  }
+
+  function cleanupTownGroups() { townGroupStates = []; }
+
+  function updateTownGroups(dt) {
+    var dtMs = dt * 1000;
+    for (var gi = 0; gi < townGroupStates.length; gi++) {
+      var gs = townGroupStates[gi];
+      var grp = TOWN_NPC_GROUPS[gs.groupIdx];
+
+      gs.idleAnimTimer += dt;
+
+      // Bubble timers
+      if (gs.bubbleA) { gs.bubbleA.timer -= dtMs; if (gs.bubbleA.timer <= 0) gs.bubbleA = null; }
+      if (gs.bubbleB) { gs.bubbleB.timer -= dtMs; if (gs.bubbleB.timer <= 0) gs.bubbleB = null; }
+
+      gs.timer -= dtMs;
+      if (gs.timer <= 0) {
+        if (gs.phase === 'idle') {
+          // Show speaker A
+          var ex = grp.exchanges[gs.exchangeIdx];
+          gs.bubbleA = { text: ex.a, timer: 5000 };
+          gs.bubbleB = null;
+          gs.phase = 'showA';
+          gs.timer = 4000; // delay before B responds
+        } else if (gs.phase === 'showA') {
+          // Show speaker B
+          var ex2 = grp.exchanges[gs.exchangeIdx];
+          gs.bubbleB = { text: ex2.b, timer: 5000 };
+          gs.phase = 'showB';
+          gs.timer = 6000; // both visible, then pause
+        } else if (gs.phase === 'showB') {
+          // Pause between exchanges
+          gs.bubbleA = null;
+          gs.bubbleB = null;
+          gs.phase = 'idle';
+          gs.exchangeIdx = (gs.exchangeIdx + 1) % grp.exchanges.length;
+          gs.timer = 20000 + Math.random() * 15000; // 20-35s gap between exchanges
+        }
+      }
+    }
+  }
+
+  function drawTownGroups(ctx) {
+    for (var gi = 0; gi < townGroupStates.length; gi++) {
+      var gs = townGroupStates[gi];
+      var grp = TOWN_NPC_GROUPS[gs.groupIdx];
+      for (var ni = 0; ni < grp.npcs.length; ni++) {
+        var nDef = grp.npcs[ni];
+        var x = Math.round(grp.pos.x + nDef.offset.x);
+        var y = Math.round(grp.pos.y + nDef.offset.y);
+        var sc = nDef.scale;
+        // Gentle idle sway
+        var idleOff = Math.sin(gs.idleAnimTimer * 0.8 + ni * 3.5) * 1;
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 8 * sc, 5 * sc, 2 * sc, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Body
+        ctx.fillStyle = nDef.body;
+        ctx.beginPath();
+        ctx.ellipse(x, y + idleOff, 5 * sc, 7 * sc, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Head
+        ctx.fillStyle = nDef.skin;
+        ctx.beginPath();
+        ctx.arc(x, y - 8 * sc + idleOff, 3.5 * sc, 0, Math.PI * 2);
+        ctx.fill();
+        // Hair
+        if (nDef.hair) {
+          ctx.fillStyle = nDef.hair;
+          ctx.fillRect(x - 3.5 * sc, y - 12 * sc + idleOff, 7 * sc, 3 * sc);
+        }
+      }
+    }
+  }
+
+  function drawTownGroupBubbles(ctx) {
+    for (var gi = 0; gi < townGroupStates.length; gi++) {
+      var gs = townGroupStates[gi];
+      var grp = TOWN_NPC_GROUPS[gs.groupIdx];
+      // Speaker A bubble
+      if (gs.bubbleA) {
+        var nA = grp.npcs[0];
+        var ax = grp.pos.x + nA.offset.x;
+        var ay = grp.pos.y + nA.offset.y - 18 * nA.scale;
+        drawNpcBubble(ctx, ax, ay, gs.bubbleA.text, nA.name);
+      }
+      // Speaker B bubble
+      if (gs.bubbleB) {
+        var nB = grp.npcs[1];
+        var bx2 = grp.pos.x + nB.offset.x;
+        var by2 = grp.pos.y + nB.offset.y - 18 * nB.scale;
+        // Offset B bubble higher if A is also showing to avoid overlap
+        var bOff = gs.bubbleA ? -40 : 0;
+        drawNpcBubble(ctx, bx2, by2 + bOff, gs.bubbleB.text, nB.name);
+      }
+    }
+  }
+
+  // ── Town Animated Parts (Enhanced) ─────────────
   function drawTownAnimatedParts(ctx) {
-    // Fountain water particles
+    // Light pool buffer blit with pulsing alpha
+    if (townLightPoolBuffer) {
+      ctx.globalAlpha = 0.5 + Math.sin(townSmokeFrame * 0.01) * 0.15;
+      ctx.drawImage(townLightPoolBuffer, 0, 0);
+      ctx.globalAlpha = 1;
+    }
+
+    // Fountain water particles (enhanced — 16 particles)
     var ft = TOWN_LOCATIONS.fountain;
     var t = townSmokeFrame * 0.05;
-    ctx.globalAlpha = 0.6;
-    for (var i = 0; i < 12; i++) {
-      var angle = (i / 12) * Math.PI * 2 + t;
-      var r = 6 + Math.sin(t * 2 + i) * 2;
-      var fy = ft.y - 10 - Math.abs(Math.sin(angle + t)) * 12;
+    for (var fi = 0; fi < 16; fi++) {
+      var angle = (fi / 16) * Math.PI * 2 + t;
+      var r = 6 + Math.sin(t * 2 + fi) * 2;
+      var fy = ft.y - 10 - Math.abs(Math.sin(angle + t)) * 14;
       var fx = ft.x + Math.cos(angle) * r;
-      var splash = Math.sin(townSmokeFrame * 0.1 + i) * 0.3 + 0.4;
-      ctx.globalAlpha = splash;
+      ctx.globalAlpha = Math.sin(townSmokeFrame * 0.1 + fi) * 0.3 + 0.4;
       ctx.fillStyle = '#80c0ff';
       ctx.fillRect(fx, fy, 2, 2);
     }
-    // Splash ring
+    // Cascade streams
+    for (var ci = 0; ci < 4; ci++) {
+      var ca = (ci / 4) * Math.PI * 2 + t * 0.5;
+      var cfx = ft.x + Math.cos(ca) * 4;
+      var cfy = ft.y + 2 + Math.sin(townSmokeFrame * 0.15 + ci) * 2;
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#80c0ff';
+      ctx.fillRect(cfx, cfy, 1, 4);
+    }
+    // Splash rings (2 concentric)
     ctx.globalAlpha = 0.2 + Math.sin(t * 3) * 0.1;
     ctx.strokeStyle = '#80c0ff';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(ft.x, ft.y + 12, 24 + Math.sin(t * 2) * 2, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(ft.x, ft.y + 14, 30 + Math.sin(t * 2) * 2, 14, 0, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.globalAlpha = 0.1 + Math.sin(t * 3 + 1) * 0.05;
+    ctx.beginPath();
+    ctx.ellipse(ft.x, ft.y + 14, 22 + Math.sin(t * 2 + 2) * 2, 10, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Coin glints in pool
+    ctx.globalAlpha = 0.3 + Math.sin(townSmokeFrame * 0.08) * 0.2;
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(ft.x - 8 + Math.sin(t * 0.7) * 3, ft.y + 10, 2, 1);
+    ctx.fillRect(ft.x + 12, ft.y + 16 + Math.sin(t * 0.5) * 2, 1, 1);
+    ctx.fillRect(ft.x - 16, ft.y + 12, 1, 1);
     ctx.globalAlpha = 1;
 
     // Chimney smoke on tavern
-    drawSmoke(ctx, TOWN_LOCATIONS.tavern.x + 20, TOWN_LOCATIONS.tavern.y - 40, townSmokeFrame, 100);
+    drawSmoke(ctx, TOWN_LOCATIONS.tavern.x + 22, TOWN_LOCATIONS.tavern.y - 45, townSmokeFrame, 100);
 
-    // Torches on dungeon gate
-    drawTorch(ctx, TOWN_LOCATIONS.dungeon.x - 28, TOWN_LOCATIONS.dungeon.y - 10, townSmokeFrame, 200);
-    drawTorch(ctx, TOWN_LOCATIONS.dungeon.x + 22, TOWN_LOCATIONS.dungeon.y - 10, townSmokeFrame, 201);
+    // Wall torches (6 on top wall, 2 on sides)
+    var wallTorches = [
+      {x:200, y:TOWN_WALL}, {x:400, y:TOWN_WALL}, {x:660, y:TOWN_WALL}, {x:860, y:TOWN_WALL},
+      {x:TOWN_WALL, y:250}, {x:TOWN_WALL, y:420},
+      {x:TOWN_W - TOWN_WALL - 2, y:250}, {x:TOWN_W - TOWN_WALL - 2, y:420}
+    ];
+    for (var wti = 0; wti < wallTorches.length; wti++) {
+      drawTorch(ctx, wallTorches[wti].x - 1, wallTorches[wti].y - 8, townSmokeFrame, 300 + wti);
+    }
 
-    // Torches on barracks
-    drawTorch(ctx, TOWN_LOCATIONS.barracks.x - 24, TOWN_LOCATIONS.barracks.y, townSmokeFrame, 210);
+    // Dungeon torches
+    drawTorch(ctx, TOWN_LOCATIONS.dungeon.x - 30, TOWN_LOCATIONS.dungeon.y - 12, townSmokeFrame, 200);
+    drawTorch(ctx, TOWN_LOCATIONS.dungeon.x + 24, TOWN_LOCATIONS.dungeon.y - 12, townSmokeFrame, 201);
 
-    // Lantern flicker on casino
+    // Gate torches
+    drawTorch(ctx, TOWN_W / 2 - 42, TOWN_H - TOWN_WALL - 4, townSmokeFrame, 220);
+    drawTorch(ctx, TOWN_W / 2 + 40, TOWN_H - TOWN_WALL - 4, townSmokeFrame, 221);
+
+    // Casino marquee lights (cycling)
     var casinoLoc = TOWN_LOCATIONS.casino;
-    var flicker = 0.5 + Math.sin(townSmokeFrame * 0.15) * 0.3;
-    ctx.fillStyle = '#ffd700';
-    ctx.globalAlpha = flicker;
-    ctx.fillRect(casinoLoc.x - 28, casinoLoc.y - 20, 56, 3);
-    ctx.globalAlpha = 1;
-
-    // Arcade light animation
-    var arcadeLoc = TOWN_LOCATIONS.arcade;
-    var aColors = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
-    for (var ai = 0; ai < 5; ai++) {
-      var ci = (ai + Math.floor(townSmokeFrame / 8)) % 5;
-      ctx.fillStyle = aColors[ci];
-      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.2 + ai) * 0.3;
-      ctx.fillRect(arcadeLoc.x - 24 + ai * 10, arcadeLoc.y - 3, 6, 4);
+    var mColors2 = ['#ff4444','#ffd700','#44ff44','#ffd700','#ff4444','#ffd700','#44ff44','#ffd700'];
+    for (var mi2 = 0; mi2 < 8; mi2++) {
+      var mci = (mi2 + Math.floor(townSmokeFrame / 6)) % 8;
+      ctx.fillStyle = mColors2[mci];
+      ctx.globalAlpha = 0.5 + Math.sin(townSmokeFrame * 0.2 + mi2) * 0.4;
+      ctx.fillRect(casinoLoc.x - 30 + mi2 * 8, casinoLoc.y - 3, 4, 3);
     }
     ctx.globalAlpha = 1;
+
+    // Arcade lights (cycling colors)
+    var arcadeLoc = TOWN_LOCATIONS.arcade;
+    var aColors2 = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
+    for (var ai2 = 0; ai2 < 5; ai2++) {
+      var aci = (ai2 + Math.floor(townSmokeFrame / 8)) % 5;
+      ctx.fillStyle = aColors2[aci];
+      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.2 + ai2) * 0.3;
+      ctx.fillRect(arcadeLoc.x - 27 + ai2 * 12, arcadeLoc.y - 3, 6, 4);
+    }
+    // Arcade game screen flicker
+    ctx.fillStyle = aColors2[Math.floor(townSmokeFrame / 4) % 5];
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(arcadeLoc.x - 6, arcadeLoc.y + 4, 12, 8);
+    ctx.globalAlpha = 1;
+
+    // Chapel window candle flicker
+    var chapelLoc = TOWN_LOCATIONS.chapel;
+    var candleAlpha = 0.4 + Math.sin(townSmokeFrame * 0.12) * 0.2;
+    ctx.fillStyle = '#ffd060';
+    ctx.globalAlpha = candleAlpha;
+    ctx.fillRect(chapelLoc.x - 12, chapelLoc.y - 14, 2, 2);
+    ctx.fillRect(chapelLoc.x - 4, chapelLoc.y - 14, 2, 2);
+    ctx.globalAlpha = 1;
+
+    // Tavern window glow pulse
+    var tavernLoc = TOWN_LOCATIONS.tavern;
+    ctx.fillStyle = '#ffd080';
+    ctx.globalAlpha = 0.15 + Math.sin(townSmokeFrame * 0.04) * 0.08;
+    ctx.fillRect(tavernLoc.x - 29, tavernLoc.y - 20, 12, 10);
+    ctx.fillRect(tavernLoc.x + 17, tavernLoc.y - 20, 12, 10);
+    ctx.globalAlpha = 1;
+
+    // Pet store egg sparkle
+    if (townSmokeFrame % 40 < 3) {
+      var petLoc = TOWN_LOCATIONS.petstore;
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.7;
+      ctx.fillRect(petLoc.x - 26 + (tileHash(townSmokeFrame, 77) % 20), petLoc.y - 8, 1, 1);
+      ctx.globalAlpha = 1;
+    }
+
+    // Puddle shimmer
+    var puddles = [{x:350,y:200},{x:700,y:450},{x:180,y:400}];
+    for (var psi = 0; psi < puddles.length; psi++) {
+      ctx.fillStyle = 'rgba(180,210,240,0.08)';
+      ctx.globalAlpha = 0.3 + Math.sin(townSmokeFrame * 0.03 + psi * 2) * 0.15;
+      ctx.beginPath();
+      ctx.ellipse(puddles[psi].x + Math.sin(t * 0.5 + psi) * 2, puddles[psi].y, 10, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Dust / pollen particles
+    for (var di = 0; di < townDustParticles.length; di++) {
+      var dp = townDustParticles[di];
+      dp.y -= dp.speed * 0.016;
+      dp.x += Math.sin(townSmokeFrame * 0.008 + dp.seed) * 0.3;
+      if (dp.y < -5) {
+        dp.y = TOWN_H + 5;
+        dp.x = TOWN_WALL + 20 + Math.random() * (TOWN_W - TOWN_WALL * 2 - 40);
+      }
+      ctx.fillStyle = 'rgba(200,180,120,' + dp.alpha + ')';
+      ctx.fillRect(dp.x, dp.y, dp.size, dp.size);
+    }
+
+    // Smoke haze clouds
+    for (var hi = 0; hi < townHazeClouds.length; hi++) {
+      var hc = townHazeClouds[hi];
+      hc.x += hc.speed;
+      if (hc.x > TOWN_W + 50) hc.x = -hc.w;
+      if (hc.x < -hc.w - 50) hc.x = TOWN_W;
+      ctx.fillStyle = 'rgba(180,170,150,0.015)';
+      ctx.beginPath();
+      ctx.ellipse(hc.x, hc.y, hc.w / 2, hc.h / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // ── Town Labels ───────────────────────────────
@@ -6069,6 +7481,10 @@
 
     // Animated parts
     drawTownAnimatedParts(ctx);
+    drawTownNpcs(ctx);
+    drawTownGroups(ctx);
+    drawTownNpcBubbles(ctx);
+    drawTownGroupBubbles(ctx);
     drawTownFollower(ctx);
     drawTownPlayer(ctx);
     drawTownLabels(ctx);
