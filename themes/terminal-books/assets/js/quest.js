@@ -405,6 +405,17 @@
     getState: function () { return questState; },
     getDefs: function () { return questDefs; },
 
+    getBoardState: function () {
+      if (!questState) return {};
+      return questState.board || {};
+    },
+
+    setBoardState: function (obj) {
+      if (!questState) return;
+      questState.board = obj;
+      saveState();
+    },
+
     cleanup: function () {
       questState = null;
       slotIdx = -1;

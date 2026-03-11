@@ -1100,6 +1100,28 @@
   var townPlayerAnimTimer = 0;
   var petStoreModalOpen = false;
   var generalStoreOpen = false;
+  var tavernOpen = false;
+
+  // ── Tavern Constants ──────────────────────────
+  var BARTENDER_GREETINGS = [
+    'Welcome to The Rusty Tankard. Try not to break anything.',
+    'Oh look, another adventurer. How original.',
+    'Ale\'s warm, food\'s questionable, and the board\'s over there.',
+    'You look like you could use a drink. Or a quest. Or both.',
+    'Don\'t touch the tankard on the wall. It\'s load-bearing.',
+    'Back again? The board\'s refreshed. Your liver hasn\'t.',
+    'Sit down, shut up, and check the quest board.',
+    'The Rusty Tankard: where dreams come to get a paycheck.',
+    'Another day, another adventurer who thinks they\'re special.',
+    'I\'ve seen tougher-looking bar stools. Quest board\'s to your left.'
+  ];
+  var BARTENDER_ACCEPT = [
+    'Bold choice. Try not to die.',
+    'Alright, it\'s yours. Don\'t come crying to me.',
+    'Noted. I\'ll pour one out if you don\'t come back.',
+    'Good luck. You\'ll need it. Probably.',
+    'Quest accepted. The tab is non-refundable.'
+  ];
 
   // ── Helpers ───────────────────────────────────
   function $(id) { return document.getElementById(id); }
@@ -4981,6 +5003,7 @@
     stopTownMapLoop();
     closePetStoreModal();
     closePetPopup();
+    closeTavern();
 
     // Clear pet sprite refs
     followerSpriteSheet = null;
@@ -5402,6 +5425,10 @@
     }
     if (locId === 'casino') {
       enterCasino();
+      return;
+    }
+    if (locId === 'tavern') {
+      openTavern();
       return;
     }
     // placeholder
@@ -6347,6 +6374,315 @@
     generalStoreOpen = false;
     var overlay = document.getElementById('rpg-store-overlay');
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+
+  // ── Tavern: The Rusty Tankard ──────────────────
+
+  function getDailyDateString() {
+    var d = new Date();
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+  }
+
+  function simpleHash(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) {
+      h = ((h << 5) - h) + str.charCodeAt(i);
+      h = h & h;
+    }
+    return Math.abs(h);
+  }
+
+  function seededShuffle(arr, seed) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      seed = (seed * 16807 + 0) % 2147483647;
+      var j = seed % (i + 1);
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function generateDailyBoard() {
+    var QS = window.QuestSystem;
+    if (!QS) return { date: '', quests: [] };
+    var defs = QS.getDefs();
+    if (!defs) return { date: '', quests: [] };
+
+    var today = getDailyDateString();
+    var board = QS.getBoardState();
+    if (board && board.date === today && board.quests && board.quests.length > 0) return board;
+
+    // Collect board pool quests
+    var fetchPool = [];
+    var combatPool = [];
+    var hardPool = [];
+    for (var qid in defs) {
+      if (!defs.hasOwnProperty(qid)) continue;
+      var def = defs[qid];
+      if (!def.boardPool) continue;
+      // Check prerequisites
+      if (def.requirements && def.requirements.quests) {
+        var allMet = true;
+        for (var r = 0; r < def.requirements.quests.length; r++) {
+          if (!QS.isCompleted(def.requirements.quests[r])) { allMet = false; break; }
+        }
+        if (!allMet) continue;
+      }
+
+      if (def.difficulty === 'hard' || def.difficulty === 'ultra_nightmare') {
+        hardPool.push(qid);
+      } else {
+        // Sort by objective type
+        var isCombat = false;
+        for (var o = 0; o < def.objectives.length; o++) {
+          var t = def.objectives[o].type;
+          if (t === 'kill_enemies' || t === 'arena_wins' || t === 'arena_streak' || t === 'defeat_boss' || t === 'clear_dungeon') {
+            isCombat = true; break;
+          }
+        }
+        if (isCombat) combatPool.push(qid);
+        else fetchPool.push(qid);
+      }
+    }
+
+    var seed = simpleHash(today + '-tavern-board');
+    fetchPool = seededShuffle(fetchPool, seed);
+    combatPool = seededShuffle(combatPool, seed + 1);
+    hardPool = seededShuffle(hardPool, seed + 2);
+
+    var picked = [];
+    // Pick 3 fetch
+    var fc = 0;
+    for (var i = 0; i < fetchPool.length && fc < 3; i++) {
+      picked.push(fetchPool[i]); fc++;
+    }
+    // Pick 2 combat
+    var cc = 0;
+    for (var i = 0; i < combatPool.length && cc < 2; i++) {
+      picked.push(combatPool[i]); cc++;
+    }
+    // Fill remaining from hard pool if slots available
+    if (fc < 3 || cc < 2) {
+      var remaining = (3 - fc) + (2 - cc);
+      for (var i = 0; i < hardPool.length && remaining > 0; i++) {
+        picked.push(hardPool[i]); remaining--;
+      }
+    }
+    // Always try to include at least one hard/ultra if we have room
+    if (hardPool.length > 0 && picked.length >= 5) {
+      // Swap last easy/medium with a hard quest
+      var alreadyHasHard = false;
+      for (var i = 0; i < picked.length; i++) {
+        var d = defs[picked[i]].difficulty;
+        if (d === 'hard' || d === 'ultra_nightmare') { alreadyHasHard = true; break; }
+      }
+      if (!alreadyHasHard) {
+        picked[picked.length - 1] = hardPool[0];
+      }
+    }
+
+    board = { date: today, quests: picked };
+    QS.setBoardState(board);
+    return board;
+  }
+
+  function openTavern() {
+    if (tavernOpen) return;
+    tavernOpen = true;
+
+    addGameMessage(BARTENDER_GREETINGS[Math.floor(Math.random() * BARTENDER_GREETINGS.length)], 'npc');
+
+    var overlay = document.createElement('div');
+    overlay.className = 'rpg-modal-overlay';
+    overlay.id = 'rpg-tavern-overlay';
+
+    var modal = document.createElement('div');
+    modal.className = 'rpg-modal rpg-tavern-modal';
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'rpg-modal-header';
+    header.innerHTML = '<h3>The Rusty Tankard</h3>';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'rpg-modal-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', closeTavern);
+    header.appendChild(closeBtn);
+    modal.appendChild(header);
+
+    // Balance bar
+    var balBar = document.createElement('div');
+    balBar.className = 'rpg-store-balance';
+    balBar.id = 'rpg-tavern-balance';
+    balBar.textContent = (window.Wallet ? window.Wallet.getBalance() : 0) + ' GP';
+    modal.appendChild(balBar);
+
+    // Tabs
+    var tabs = document.createElement('div');
+    tabs.className = 'rpg-store-tabs';
+    var boardTab = document.createElement('button');
+    boardTab.className = 'rpg-store-tab active';
+    boardTab.textContent = 'Quest Board';
+    boardTab.id = 'rpg-tavern-tab-board';
+    var chatTab = document.createElement('button');
+    chatTab.className = 'rpg-store-tab';
+    chatTab.textContent = 'Chat';
+    chatTab.id = 'rpg-tavern-tab-chat';
+    tabs.appendChild(boardTab);
+    tabs.appendChild(chatTab);
+    modal.appendChild(tabs);
+
+    // Date header
+    var dateEl = document.createElement('div');
+    dateEl.className = 'rpg-tavern-date';
+    dateEl.textContent = 'Daily Board — ' + getDailyDateString();
+    modal.appendChild(dateEl);
+
+    // Body
+    var body = document.createElement('div');
+    body.className = 'rpg-store-body';
+    body.id = 'rpg-tavern-body';
+    modal.appendChild(body);
+
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeTavern();
+    });
+    document.body.appendChild(overlay);
+    overlay.style.display = 'flex';
+
+    boardTab.addEventListener('click', function () {
+      boardTab.classList.add('active');
+      chatTab.classList.remove('active');
+      dateEl.style.display = '';
+      renderTavernBoard();
+    });
+    chatTab.addEventListener('click', function () {
+      chatTab.classList.add('active');
+      boardTab.classList.remove('active');
+      dateEl.style.display = 'none';
+      renderTavernChat();
+    });
+
+    renderTavernBoard();
+  }
+
+  function closeTavern() {
+    tavernOpen = false;
+    var overlay = document.getElementById('rpg-tavern-overlay');
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+
+  function renderTavernBoard() {
+    var body = document.getElementById('rpg-tavern-body');
+    if (!body) return;
+    var QS = window.QuestSystem;
+    if (!QS) { body.innerHTML = '<div class="rpg-tavern-empty">Quest system unavailable.</div>'; return; }
+    var defs = QS.getDefs();
+    if (!defs) { body.innerHTML = '<div class="rpg-tavern-empty">Loading...</div>'; return; }
+
+    var board = generateDailyBoard();
+    if (!board.quests || board.quests.length === 0) {
+      body.innerHTML = '<div class="rpg-tavern-empty">No quests available today. Check back tomorrow.</div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < board.quests.length; i++) {
+      var qid = board.quests[i];
+      var def = defs[qid];
+      if (!def) continue;
+
+      var isActive = QS.isActive(qid);
+      var isCompleted = QS.isCompleted(qid);
+      var cardClass = 'rpg-tavern-quest-card';
+      if (isCompleted) cardClass += ' rpg-tavern-quest--completed';
+
+      html += '<div class="' + cardClass + '">';
+      html += '<div class="rpg-tavern-quest-header">';
+      html += '<span class="rpg-tavern-quest-name">' + def.name + '</span>';
+      html += '<span class="quest-badge quest-badge--' + def.difficulty + '">' + (def.difficulty === 'ultra_nightmare' ? 'ULTRA' : def.difficulty) + '</span>';
+      html += '</div>';
+      html += '<div class="rpg-tavern-quest-desc">' + def.description + '</div>';
+
+      // Objectives
+      html += '<div class="rpg-tavern-quest-objectives">';
+      for (var j = 0; j < def.objectives.length; j++) {
+        html += '<div>' + def.objectives[j].description + '</div>';
+      }
+      html += '</div>';
+
+      // Rewards
+      var rParts = [];
+      if (def.rewards.gp) rParts.push(def.rewards.gp + ' GP');
+      if (def.rewards.renown) rParts.push(def.rewards.renown + ' Renown');
+      html += '<div class="rpg-tavern-quest-rewards">' + rParts.join(' · ') + '</div>';
+
+      // Button
+      if (isCompleted) {
+        html += '<button class="rpg-tavern-quest-btn rpg-tavern-quest-btn--done" disabled>Completed</button>';
+      } else if (isActive) {
+        html += '<button class="rpg-tavern-quest-btn rpg-tavern-quest-btn--active" disabled>In Progress</button>';
+      } else {
+        html += '<button class="rpg-tavern-quest-btn rpg-tavern-quest-btn--accept" data-qid="' + qid + '">Accept</button>';
+      }
+
+      html += '</div>';
+    }
+
+    body.innerHTML = html;
+
+    // Bind accept buttons
+    var btns = body.querySelectorAll('.rpg-tavern-quest-btn--accept');
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener('click', function () {
+        var qid = this.getAttribute('data-qid');
+        acceptBoardQuest(qid);
+      });
+    }
+  }
+
+  function acceptBoardQuest(questId) {
+    var QS = window.QuestSystem;
+    if (!QS) return;
+    var started = QS.startQuest(questId);
+    if (started) {
+      addGameMessage(BARTENDER_ACCEPT[Math.floor(Math.random() * BARTENDER_ACCEPT.length)], 'npc');
+      renderTavernBoard();
+      // Update balance display
+      var bal = document.getElementById('rpg-tavern-balance');
+      if (bal) bal.textContent = (window.Wallet ? window.Wallet.getBalance() : 0) + ' GP';
+    }
+  }
+
+  function renderTavernChat() {
+    var body = document.getElementById('rpg-tavern-body');
+    if (!body) return;
+
+    var quote = BARTENDER_GREETINGS[Math.floor(Math.random() * BARTENDER_GREETINGS.length)];
+
+    var html = '<div class="rpg-tavern-chat-bubble">';
+    html += '<div class="rpg-tavern-chat-label">Bartender</div>';
+    html += '<div class="rpg-tavern-chat-text">"' + quote + '"</div>';
+    html += '</div>';
+    html += '<button class="rpg-tavern-ale-btn" id="rpg-tavern-ale-btn">Buy Ale (10 GP)</button>';
+
+    body.innerHTML = html;
+
+    document.getElementById('rpg-tavern-ale-btn').addEventListener('click', function () {
+      if (window.Wallet && window.Wallet.getBalance() >= 10) {
+        window.Wallet.deduct(10);
+        addGameMessage('You bought an ale. It tastes like regret and copper.', 'system');
+        var bal = document.getElementById('rpg-tavern-balance');
+        if (bal) bal.textContent = window.Wallet.getBalance() + ' GP';
+        this.textContent = 'Cheers!';
+        this.disabled = true;
+        var btn = this;
+        setTimeout(function () { btn.textContent = 'Buy Ale (10 GP)'; btn.disabled = false; }, 2000);
+      } else {
+        addGameMessage('You can\'t afford ale. The bartender gives you a pitying look.', 'system');
+      }
+    });
   }
 
   function updateStoreBalance() {
@@ -8036,6 +8372,7 @@
     // Escape: close pet popup → close store → close pet store → exit casino → exit town → return to map
     if (e.key === 'Escape') {
       if (activePetPopup) { closePetPopup(); return; }
+      if (tavernOpen) { closeTavern(); return; }
       if (generalStoreOpen) { closeGeneralStore(); return; }
       if (petStoreModalOpen) { closePetStoreModal(); return; }
       if (insideCasino && window.RpgCasino) { window.RpgCasino.handleEscape(); return; }

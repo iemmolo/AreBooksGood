@@ -1631,6 +1631,154 @@
 .rpg-store-stone-shadow  { border-left: 3px solid #8844cc; }
 .rpg-store-stone-mystic  { border-left: 3px solid #cc44aa; }
 
+/* ── Tavern: The Rusty Tankard ─────────────────── */
+.rpg-tavern-modal {
+  max-width: 560px;
+  width: 90%;
+}
+.rpg-tavern-date {
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 0.7em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  letter-spacing: 0.5px;
+}
+.rpg-tavern-quest-card {
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.rpg-tavern-quest-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.rpg-tavern-quest--completed {
+  opacity: 0.45;
+}
+.rpg-tavern-quest--completed:hover {
+  border-color: color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: none;
+}
+.rpg-tavern-quest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.rpg-tavern-quest-name {
+  font-weight: bold;
+  font-size: 0.85em;
+  color: #ffd700;
+}
+.rpg-tavern-quest-desc {
+  font-size: 0.72em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+  margin-bottom: 6px;
+}
+.rpg-tavern-quest-objectives {
+  font-size: 0.68em;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  margin-bottom: 6px;
+  padding-left: 8px;
+}
+.rpg-tavern-quest-objectives div::before {
+  content: '- ';
+}
+.rpg-tavern-quest-rewards {
+  font-size: 0.72em;
+  color: #ffd700;
+  margin-bottom: 8px;
+}
+.rpg-tavern-quest-btn {
+  display: block;
+  width: 100%;
+  padding: 5px 12px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.72em;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background 0.15s;
+}
+.rpg-tavern-quest-btn--accept {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rpg-tavern-quest-btn--accept:hover {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.rpg-tavern-quest-btn--active {
+  background: color-mix(in srgb, #ffd700 10%, transparent);
+  border-color: color-mix(in srgb, #ffd700 40%, transparent);
+  color: #ffd700;
+  cursor: default;
+}
+.rpg-tavern-quest-btn--done {
+  background: color-mix(in srgb, #44aa44 10%, transparent);
+  border-color: color-mix(in srgb, #44aa44 40%, transparent);
+  color: #44aa44;
+  cursor: default;
+}
+.quest-badge--ultra_nightmare {
+  background: #cc2222;
+  color: #fff;
+  animation: ultraPulse 1.5s ease-in-out infinite;
+}
+@keyframes ultraPulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(204, 34, 34, 0.4); }
+  50% { box-shadow: 0 0 12px rgba(204, 34, 34, 0.8); }
+}
+.rpg-tavern-chat-bubble {
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.rpg-tavern-chat-label {
+  font-size: 0.7em;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rpg-tavern-chat-text {
+  font-size: 0.85em;
+  color: var(--foreground);
+  font-style: italic;
+}
+.rpg-tavern-ale-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  background: color-mix(in srgb, #ffd700 12%, transparent);
+  border: 1px solid color-mix(in srgb, #ffd700 40%, transparent);
+  color: #ffd700;
+  font-family: monospace;
+  font-size: 0.8em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.rpg-tavern-ale-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, #ffd700 25%, transparent);
+}
+.rpg-tavern-ale-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.rpg-tavern-empty {
+  text-align: center;
+  padding: 30px;
+  font-size: 0.8em;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
 .rpg-petstore-modal {
   background: var(--background);
   border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);

@@ -421,5 +421,411 @@
     },
     "chain": null,
     "autoStart": true
+  },
+
+  "board-f01": {
+    "id": "board-f01",
+    "name": "Copper Run",
+    "description": "The bartender needs copper for... plumbing, apparently.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "Copper Ore", "count": 15, "description": "Gather 15 Copper Ore" }
+    ],
+    "rewards": { "gp": 250, "renown": 5 },
+    "dialogue": {
+      "start": "Don't ask what the copper's for. Just get it.",
+      "progress": "{current}/{total} copper ore. Chop chop.",
+      "complete": "Good. The pipes will live another day."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f02": {
+    "id": "board-f02",
+    "name": "Fish Fry Friday",
+    "description": "The kitchen is running low. Every day is Fish Fry Friday here.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "fish", "count": 20, "description": "Catch 20 fish" }
+    ],
+    "rewards": { "gp": 300, "renown": 5 },
+    "dialogue": {
+      "start": "We need fish. The regulars get violent without their fish stew.",
+      "progress": "{current}/{total} fish. The fryer's already hot.",
+      "complete": "That should keep 'em fed. Barely."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f03": {
+    "id": "board-f03",
+    "name": "Firewood Detail",
+    "description": "The hearth won't feed itself. Chop some logs.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "log", "count": 20, "description": "Chop 20 logs" }
+    ],
+    "rewards": { "gp": 300, "renown": 5 },
+    "dialogue": {
+      "start": "Fireplace is dying. Get me some wood before the patrons freeze.",
+      "progress": "{current}/{total} logs. Almost there.",
+      "complete": "Finally, some warmth. Take your coin."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f04": {
+    "id": "board-f04",
+    "name": "Ore Haul",
+    "description": "A merchant left a standing order for raw ore. Any type.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "ore", "count": 25, "description": "Mine 25 ores" }
+    ],
+    "rewards": { "gp": 350, "renown": 8 },
+    "dialogue": {
+      "start": "Some merchant wants ore. Don't care what kind. Just get 25.",
+      "progress": "{current}/{total} ores. Keep at it.",
+      "complete": "Merchant's happy. You're paid. Everyone wins."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f05": {
+    "id": "board-f05",
+    "name": "Crimson Request",
+    "description": "A regular patron insists on Crimson Ore for her 'art project.'",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "Crimson Ore", "count": 15, "description": "Gather 15 Crimson Ore" }
+    ],
+    "rewards": { "gp": 300, "renown": 5 },
+    "dialogue": {
+      "start": "Lady in the corner wants crimson ore. Something about pigments. Sure.",
+      "progress": "{current}/{total} crimson ore. She's waiting.",
+      "complete": "She seems delighted. Artists, am I right?"
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f06": {
+    "id": "board-f06",
+    "name": "The Big Catch",
+    "description": "A travelling chef needs a massive haul of fish.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "fish", "count": 30, "description": "Catch 30 fish" }
+    ],
+    "rewards": { "gp": 400, "renown": 8 },
+    "dialogue": {
+      "start": "Chef's in town. Wants thirty fish. I don't question it.",
+      "progress": "{current}/{total} fish. The chef's knife is already out.",
+      "complete": "The chef's ecstatic. Here's your share."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f07": {
+    "id": "board-f07",
+    "name": "Lumber Surplus",
+    "description": "The carpenter's apprentice lost a shipment. Replace it.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "log", "count": 30, "description": "Chop 30 logs" }
+    ],
+    "rewards": { "gp": 400, "renown": 8 },
+    "dialogue": {
+      "start": "Apprentice lost the lumber. Classic. Replace it before the master notices.",
+      "progress": "{current}/{total} logs. Hurry up.",
+      "complete": "Crisis averted. The apprentice owes you one."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f08": {
+    "id": "board-f08",
+    "name": "Gold Rush",
+    "description": "A jeweler needs Gold Ore for a special commission.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "Gold Ore", "count": 20, "description": "Gather 20 Gold Ore" }
+    ],
+    "rewards": { "gp": 500, "renown": 10 },
+    "dialogue": {
+      "start": "Jeweler wants gold ore. Twenty pieces. Pay's decent.",
+      "progress": "{current}/{total} gold ore. The jeweler's getting anxious.",
+      "complete": "Shiny. The jeweler's already drooling. Here's your cut."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f09": {
+    "id": "board-f09",
+    "name": "Stockpile",
+    "description": "The tavern cellar needs restocking. Ore, fish, AND logs.",
+    "category": "board",
+    "difficulty": "medium",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "ore", "count": 40, "description": "Mine 40 ores" },
+      { "type": "gather_resource", "resource": "fish", "count": 30, "description": "Catch 30 fish" }
+    ],
+    "rewards": { "gp": 800, "renown": 15 },
+    "dialogue": {
+      "start": "Cellar's barren. We need ore AND fish. Big order, big pay.",
+      "progress": "Still working? The cellar's not gonna fill itself.",
+      "complete": "Cellar's stocked. The Rusty Tankard lives another week."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f10": {
+    "id": "board-f10",
+    "name": "Smelter's Dozen",
+    "description": "The smithy's forge has gone cold. Deliver bars to reignite production.",
+    "category": "board",
+    "difficulty": "medium",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "craft_item", "resource": "bar", "count": 12, "description": "Smelt 12 bars" }
+    ],
+    "rewards": { "gp": 700, "renown": 12 },
+    "dialogue": {
+      "start": "Smithy needs bars. Twelve of 'em. Any kind. Make it happen.",
+      "progress": "{current}/{total} bars smelted.",
+      "complete": "The forge burns bright again. Good work."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f11": {
+    "id": "board-f11",
+    "name": "Deep Vein Extraction",
+    "description": "The mining guild wants rare ores from deeper deposits.",
+    "category": "board",
+    "difficulty": "medium",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "ore", "count": 60, "description": "Mine 60 ores" }
+    ],
+    "rewards": { "gp": 900, "renown": 15 },
+    "dialogue": {
+      "start": "Mining guild's offering a bounty for serious excavation. Sixty ores.",
+      "progress": "{current}/{total} ores. Dig deeper.",
+      "complete": "Sixty ores! The guild tips their helmets to you."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-f12": {
+    "id": "board-f12",
+    "name": "Feast Preparation",
+    "description": "A noble's banquet requires fish and logs for the outdoor grill.",
+    "category": "board",
+    "difficulty": "medium",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "fish", "count": 40, "description": "Catch 40 fish" },
+      { "type": "gather_resource", "resource": "log", "count": 40, "description": "Chop 40 logs" }
+    ],
+    "rewards": { "gp": 1000, "renown": 18 },
+    "dialogue": {
+      "start": "Some noble wants a feast. Fish, wood — the works. Pay's royal.",
+      "progress": "The banquet won't prep itself. Keep going.",
+      "complete": "The noble is pleased. You may never eat this well yourself, but hey — coin."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-c01": {
+    "id": "board-c01",
+    "name": "Pest Control",
+    "description": "Clear vermin from the tunnels beneath the tavern.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "kill_enemies", "count": 20, "description": "Defeat 20 enemies" }
+    ],
+    "rewards": { "gp": 400, "renown": 8 },
+    "dialogue": {
+      "start": "Something's living under the floorboards. Kill twenty of whatever it is.",
+      "progress": "{current}/{total} pests squashed.",
+      "complete": "The scratching stopped. I owe you a drink. Figuratively."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-c02": {
+    "id": "board-c02",
+    "name": "Arena Warm-Up",
+    "description": "The arena master wants fresh blood. Win some fights.",
+    "category": "board",
+    "difficulty": "easy",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "arena_wins", "count": 10, "description": "Win 10 arena fights" }
+    ],
+    "rewards": { "gp": 500, "renown": 10 },
+    "dialogue": {
+      "start": "Arena's quiet today. Go win ten fights, liven things up.",
+      "progress": "{current}/{total} arena victories.",
+      "complete": "The crowd roars! Here, the arena master sent your cut."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-c03": {
+    "id": "board-c03",
+    "name": "Dungeon Patrol",
+    "description": "The guard captain wants the caves swept. Slay 50 creatures.",
+    "category": "board",
+    "difficulty": "medium",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "kill_enemies", "count": 50, "description": "Defeat 50 enemies" }
+    ],
+    "rewards": { "gp": 800, "renown": 15 },
+    "dialogue": {
+      "start": "Captain wants the dungeon thinned out. Fifty kills oughta do it.",
+      "progress": "{current}/{total} enemies slain. The dungeons are still crawling.",
+      "complete": "Fifty down. The captain nods approvingly. Rare for him."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-c04": {
+    "id": "board-c04",
+    "name": "Boss Bounty",
+    "description": "A bounty's been posted for dungeon bosses. Collect their heads.",
+    "category": "board",
+    "difficulty": "medium",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "defeat_boss", "count": 3, "description": "Defeat 3 bosses" }
+    ],
+    "rewards": { "gp": 1200, "renown": 20 },
+    "dialogue": {
+      "start": "Bounty board says three boss heads. Pays well if you survive.",
+      "progress": "{current}/{total} bosses toppled.",
+      "complete": "Three heads! I'm both impressed and slightly disturbed."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-h01": {
+    "id": "board-h01",
+    "name": "The Long Haul",
+    "description": "A serious commission: massive resource gathering across all skills.",
+    "category": "board",
+    "difficulty": "hard",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "gather_resource", "resource": "ore", "count": 80, "description": "Mine 80 ores" },
+      { "type": "gather_resource", "resource": "fish", "count": 60, "description": "Catch 60 fish" },
+      { "type": "gather_resource", "resource": "log", "count": 60, "description": "Chop 60 logs" }
+    ],
+    "rewards": { "gp": 2500, "renown": 35 },
+    "dialogue": {
+      "start": "Big contract. Three resources, big quantities. Only serious adventurers.",
+      "progress": "This is a marathon, not a sprint. Keep grinding.",
+      "complete": "Incredible. You actually finished. I underestimated you."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-h02": {
+    "id": "board-h02",
+    "name": "Slaughter Order",
+    "description": "An anonymous client wants 100 dungeon creatures eliminated.",
+    "category": "board",
+    "difficulty": "hard",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "kill_enemies", "count": 100, "description": "Defeat 100 enemies" },
+      { "type": "defeat_boss", "count": 5, "description": "Defeat 5 bosses" }
+    ],
+    "rewards": { "gp": 3000, "renown": 40 },
+    "dialogue": {
+      "start": "Anonymous note on the board: 100 kills + 5 bosses. Big money. Suspicious? Yes.",
+      "progress": "The anonymous client is watching. Somehow.",
+      "complete": "Contract fulfilled. The coin appeared overnight. Don't ask."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-u01": {
+    "id": "board-u01",
+    "name": "Unbreakable",
+    "description": "Win 25 arena fights in a row without a single loss.",
+    "category": "board",
+    "difficulty": "ultra_nightmare",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "arena_streak", "count": 25, "description": "Reach a 25-win arena streak" }
+    ],
+    "rewards": { "gp": 10000, "renown": 100 },
+    "dialogue": {
+      "start": "Twenty-five consecutive wins. I've never seen anyone do it. Prove me wrong.",
+      "progress": "One loss and it's over. No pressure.",
+      "complete": "You absolute madlad. TWENTY-FIVE. Drinks are on the house. Just this once."
+    },
+    "chain": null,
+    "autoStart": false
+  },
+  "board-u02": {
+    "id": "board-u02",
+    "name": "The Crucible Challenge",
+    "description": "Clear The Crucible dungeon. Ten waves. Every element. No mercy.",
+    "category": "board",
+    "difficulty": "ultra_nightmare",
+    "boardPool": true,
+    "requirements": { "quests": ["intro-003"] },
+    "objectives": [
+      { "type": "clear_dungeon", "target": "rpg-12", "count": 1, "description": "Clear The Crucible" }
+    ],
+    "rewards": { "gp": 10000, "renown": 100 },
+    "dialogue": {
+      "start": "The Crucible. The hardest dungeon known to exist. You won't survive.",
+      "progress": "Still standing? I'm genuinely surprised.",
+      "complete": "You... cleared The Crucible?! I need to sit down. Here's everything I've got."
+    },
+    "chain": null,
+    "autoStart": false
   }
 }
