@@ -3460,7 +3460,6 @@
 
     $('rpg-dungeon-close').addEventListener('click', function () {
       modal.style.display = 'none';
-      if (window.__RPG_RETURN_TO_MAP) window.__RPG_RETURN_TO_MAP();
     });
 
     // Difficulty button clicks
@@ -3479,9 +3478,7 @@
     }
 
     // Close on overlay click (use stored handler to prevent accumulation)
-    attachModalOverlayClose(modal, function () {
-      if (window.__RPG_RETURN_TO_MAP) window.__RPG_RETURN_TO_MAP();
-    });
+    attachModalOverlayClose(modal);
   }
 
   // ── Team Builder ───────────────────────────────────
@@ -3568,7 +3565,6 @@
       // Bind events
       $('rpg-team-close').addEventListener('click', function () {
         modal.style.display = 'none';
-        if (window.__RPG_RETURN_TO_MAP) window.__RPG_RETURN_TO_MAP();
       });
 
       // Moves buttons — open pet detail, stop propagation to avoid toggling selection
@@ -3643,9 +3639,7 @@
         });
       }
 
-      attachModalOverlayClose(modal, function () {
-        if (window.__RPG_RETURN_TO_MAP) window.__RPG_RETURN_TO_MAP();
-      });
+      attachModalOverlayClose(modal);
     }
 
     render();
