@@ -116,8 +116,8 @@
     roundRect(c, x, y, w, h, r);
     c.fillStyle = '#f5f0e0';
     c.fill();
-    c.strokeStyle = '#888';
-    c.lineWidth = 1;
+    c.strokeStyle = '#555';
+    c.lineWidth = 1.5;
     c.stroke();
 
     var suitColor = card.suit.color;
@@ -149,7 +149,7 @@
 
     // Face card letter indicator
     if (rankStr === 'J' || rankStr === 'Q' || rankStr === 'K') {
-      c.fillStyle = 'rgba(0,0,0,0.06)';
+      c.fillStyle = 'rgba(0,0,0,0.12)';
       c.font = 'bold ' + Math.round(28 * s) + 'px serif';
       c.textAlign = 'center';
       c.fillText(rankStr, x + w / 2, y + h / 2 + 2 * s);

@@ -11,7 +11,7 @@
   // ── Constants ─────────────────────────────────────
   var NUM_SEATS = 6;
   var PLAYER_SEAT = 0;
-  var CARD_SCALE = 0.9;
+  var CARD_SCALE = 1.2;
   var CARD_W = Cards.CARD_W * CARD_SCALE;
   var CARD_H = Cards.CARD_H * CARD_SCALE;
   var DEAL_DELAY = 150;
@@ -911,8 +911,8 @@
       var pos = SEAT_POS[i];
 
       // Position hole cards relative to seat
-      var cardY = pos.y - 65;
-      if (i === 0) cardY = pos.y - 75; // player cards a bit higher
+      var cardY = pos.y - 83;
+      if (i === 0) cardY = pos.y - 93; // player cards a bit higher
       if (i === 3) cardY = pos.y + 40; // top center: below seat
       var cardX = pos.x - CARD_W - 2;
 
