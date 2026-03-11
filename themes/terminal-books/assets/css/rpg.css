@@ -488,6 +488,10 @@
   color: #f0d060;
 }
 
+.osrs-game-msg--npc {
+  color: #d0c0a0;
+}
+
 .osrs-chatbox-empty {
   color: #7a6a4a;
   font-size: 0.85em;

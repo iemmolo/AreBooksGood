@@ -134,9 +134,21 @@
       {{- $rpgCombat := . | minify | fingerprint -}}
       <script src="{{ $rpgCombat.RelPermalink }}"></script>
     {{- end -}}
+    {{- with resources.Get "js/rpg-cards.js" -}}
+      {{- $rpgCards := . | minify | fingerprint -}}
+      <script src="{{ $rpgCards.RelPermalink }}"></script>
+    {{- end -}}
     {{- with resources.Get "js/rpg-casino.js" -}}
       {{- $rpgCasino := . | minify | fingerprint -}}
       <script src="{{ $rpgCasino.RelPermalink }}"></script>
+    {{- end -}}
+    {{- with resources.Get "js/rpg-blackjack.js" -}}
+      {{- $rpgBJ := . | minify | fingerprint -}}
+      <script src="{{ $rpgBJ.RelPermalink }}"></script>
+    {{- end -}}
+    {{- with resources.Get "js/rpg-casino-wars.js" -}}
+      {{- $rpgCW := . | minify | fingerprint -}}
+      <script src="{{ $rpgCW.RelPermalink }}"></script>
     {{- end -}}
     {{- with resources.Get "js/skills.js" -}}
       {{- $skills := . | minify | fingerprint -}}

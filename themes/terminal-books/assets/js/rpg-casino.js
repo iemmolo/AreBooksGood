@@ -30,6 +30,411 @@
     '"Winners drink free. Losers... drink more."'
   ];
 
+  // ── Bar NPC Conversation System ─────────────────
+  // Names & colors for the 3 bar NPCs
+  var BAR_NPC_NAMES = {
+    frank: { name: 'Frank', color: '#e8a060' },   // bar patron stool 0
+    eddie: { name: 'Eddie', color: '#80b8e0' },   // bar patron stool 2
+    gloria: { name: 'Gloria', color: '#d0a0d0' }  // bartender
+  };
+
+  // The Great Bee Movie Debate — long, multi-angle, conversational
+  var BAR_CONVERSATION = [
+    { who: 'frank', line: "You ever seen that Bee Movie?" },
+    { who: 'eddie', line: "The one with Seinfeld? Yeah, ages ago." },
+    { who: 'frank', line: "I rewatched it last night. I have thoughts." },
+    { who: 'gloria', line: "Oh no. Here we go." },
+    { who: 'frank', line: "No, listen. That movie raises genuine societal questions." },
+    { who: 'eddie', line: "It's a cartoon about a talking bee, Frank." },
+    { who: 'frank', line: "A talking bee who DATES A HUMAN WOMAN. That's not nothing." },
+    { who: 'gloria', line: "He's got a point there." },
+    { who: 'eddie', line: "Does he though? It's a kids' movie." },
+    { who: 'frank', line: "Kids' movies shape how people think! That's the whole point." },
+    { who: 'eddie', line: "So you're saying Bee Movie shaped society." },
+    { who: 'frank', line: "I'm saying it REFLECTS something about society. Think about it." },
+    { who: 'gloria', line: "What exactly does a bee dating a florist reflect?" },
+    { who: 'frank', line: "The breakdown of boundaries. Natural order. The whole thing." },
+    { who: 'eddie', line: "You sound like my uncle at Christmas." },
+    { who: 'gloria', line: "Let him finish, Eddie. This is the most entertainment I've had all shift." },
+    { who: 'frank', line: "Thank you, Gloria. So. Barry the bee meets Vanessa." },
+    { who: 'frank', line: "She saves his life. Fine. Normal. You save a bug, you move on." },
+    { who: 'eddie', line: "But she doesn't move on." },
+    { who: 'frank', line: "EXACTLY. She starts having full conversations with a bee." },
+    { who: 'gloria', line: "To be fair, if a bee started talking to me, I'd probably talk back." },
+    { who: 'eddie', line: "Would you though? Or would you call someone?" },
+    { who: 'gloria', line: "...depends on how charming the bee was." },
+    { who: 'frank', line: "And that's the thing! Barry IS charming. He's witty, he's got confidence." },
+    { who: 'eddie', line: "He's also two centimetres tall." },
+    { who: 'frank', line: "Size shouldn't matter, Eddie." },
+    { who: 'eddie', line: "We're talking about a BEE." },
+    { who: 'gloria', line: "Boys. Focus. What's the actual societal impact you're getting at?" },
+    { who: 'frank', line: "Right. So Barry discovers that humans sell honey. He's outraged." },
+    { who: 'frank', line: "He sues the entire human race. And he WINS." },
+    { who: 'eddie', line: "Which makes no legal sense whatsoever." },
+    { who: 'frank', line: "But think about what it represents. A marginalized group standing up." },
+    { who: 'eddie', line: "Bees aren't marginalized, Frank. They're insects." },
+    { who: 'gloria', line: "Well, we do kind of exploit them for honey..." },
+    { who: 'eddie', line: "Gloria, don't encourage him." },
+    { who: 'gloria', line: "I'm just saying, from the bees' perspective, it IS theft." },
+    { who: 'frank', line: "THANK you. That's what I've been saying. Honey is bee labour." },
+    { who: 'eddie', line: "They don't have a concept of labour. They operate on instinct." },
+    { who: 'frank', line: "In the MOVIE they do. In the movie they have jobs and commutes." },
+    { who: 'eddie', line: "It's a fictional universe with talking bees! You can't extrapolate!" },
+    { who: 'gloria', line: "Can I get either of you another drink or are you powered by outrage?" },
+    { who: 'frank', line: "Same again. Anyway. So the bees stop working." },
+    { who: 'eddie', line: "Because they won the lawsuit and don't have to make honey anymore." },
+    { who: 'frank', line: "Right. And what happens? All the flowers start dying." },
+    { who: 'gloria', line: "No pollination. Ecosystem collapse." },
+    { who: 'frank', line: "Exactly! The movie literally shows societal collapse from labour withdrawal." },
+    { who: 'eddie', line: "It's a metaphor at BEST. And a clumsy one." },
+    { who: 'frank', line: "Is it though? Think about any essential workforce going on strike." },
+    { who: 'eddie', line: "Essential workers are people, Frank. With rights." },
+    { who: 'frank', line: "And in the movie, bees are people with rights! That's the whole premise!" },
+    { who: 'gloria', line: "He's consistent, I'll give him that." },
+    { who: 'eddie', line: "Consistently wrong is still consistent, I suppose." },
+    { who: 'frank', line: "Now let's talk about Vanessa and Barry's relationship." },
+    { who: 'eddie', line: "Let's not." },
+    { who: 'frank', line: "She LEAVES HER BOYFRIEND for a bee. A human man gets dumped for a bee." },
+    { who: 'gloria', line: "Ken. The boyfriend's name was Ken." },
+    { who: 'eddie', line: "How do you know that?" },
+    { who: 'gloria', line: "I pay attention." },
+    { who: 'frank', line: "Poor Ken. Imagine explaining that to your mates." },
+    { who: 'eddie', line: "\"Yeah, she left me for a bee.\" \"A what?\" \"A bee. Yellow and black. Stinger.\"" },
+    { who: 'gloria', line: "To be fair, Ken was kind of aggressive. He tried to kill Barry." },
+    { who: 'frank', line: "Can you blame him? His girlfriend was emotionally involved with an insect." },
+    { who: 'eddie', line: "I'd have questions too, to be honest." },
+    { who: 'gloria', line: "Violence isn't the answer though." },
+    { who: 'frank', line: "But that's the thing! The movie frames Ken as the villain." },
+    { who: 'frank', line: "The man who's reasonably upset his girlfriend likes a bee — HE'S the bad guy." },
+    { who: 'eddie', line: "That IS kind of messed up when you put it like that." },
+    { who: 'frank', line: "The whole moral framework is inverted." },
+    { who: 'gloria', line: "You're overthinking a Jerry Seinfeld animated movie." },
+    { who: 'frank', line: "Am I? Or is everyone else underthinking it?" },
+    { who: 'eddie', line: "It's the first one, mate." },
+    { who: 'frank', line: "Think about the implications for cross-species relationships." },
+    { who: 'eddie', line: "There ARE no implications because it's NOT REAL." },
+    { who: 'frank', line: "Art reflects reality, Eddie. Every story is a mirror." },
+    { who: 'gloria', line: "That's actually not a bad point." },
+    { who: 'eddie', line: "Don't side with him!" },
+    { who: 'gloria', line: "I'm not siding. I'm bartending. I agree with whoever's buying." },
+    { who: 'frank', line: "Another round then. So where was I?" },
+    { who: 'eddie', line: "Ruining a children's movie with your amateur philosophy." },
+    { who: 'frank', line: "The IMPLICATIONS. What does Vanessa see in Barry?" },
+    { who: 'gloria', line: "He's funny. He's driven. He cares about his community." },
+    { who: 'eddie', line: "He's a BEE." },
+    { who: 'frank', line: "Maybe that's the point. Maybe the movie is saying personality matters more than species." },
+    { who: 'eddie', line: "That is DEFINITELY not the message of Bee Movie." },
+    { who: 'gloria', line: "What IS the message then?" },
+    { who: 'eddie', line: "I dunno. Don't sue humanity? Bees are important? Wear yellow?" },
+    { who: 'frank', line: "See, you can't even articulate it! The movie is deeper than you think." },
+    { who: 'eddie', line: "Or it's just poorly written." },
+    { who: 'gloria', line: "Ooh, shots fired." },
+    { who: 'frank', line: "Poorly written things can still have meaning, Eddie." },
+    { who: 'eddie', line: "You know what, fine. Let's say Barry and Vanessa are in a real relationship." },
+    { who: 'eddie', line: "How does that even work? Practically speaking." },
+    { who: 'frank', line: "The movie doesn't address that." },
+    { who: 'eddie', line: "BECAUSE IT DOESN'T MAKE SENSE." },
+    { who: 'gloria', line: "They go to movies together. He sits on her shoulder." },
+    { who: 'eddie', line: "That's not a relationship. That's an exotic pet." },
+    { who: 'frank', line: "Barry would be deeply offended by that comparison." },
+    { who: 'eddie', line: "Barry is fictional, Frank." },
+    { who: 'frank', line: "To you maybe." },
+    { who: 'gloria', line: "Okay, I think Frank's had enough." },
+    { who: 'frank', line: "I'm fine. I'm perfectly fine. I just think about bees a lot." },
+    { who: 'eddie', line: "That's... concerning." },
+    { who: 'frank', line: "You know what the real kicker is? At the end, Barry goes BACK to making honey." },
+    { who: 'eddie', line: "After causing a global ecological disaster. Yeah." },
+    { who: 'frank', line: "So the message is that workers should just... accept their role?" },
+    { who: 'gloria', line: "Or that striking has consequences and you need a balance." },
+    { who: 'eddie', line: "Or that bees should pollinate because that's literally their biological function." },
+    { who: 'frank', line: "But in a world where bees have consciousness and free will—" },
+    { who: 'eddie', line: "They DON'T, Frank. That's ONLY in the movie." },
+    { who: 'frank', line: "WE'RE TALKING ABOUT THE MOVIE." },
+    { who: 'gloria', line: "Easy, easy. Voices down. Other patrons." },
+    { who: 'frank', line: "Sorry. But it's frustrating." },
+    { who: 'eddie', line: "What's frustrating is that I came here to play poker and instead I'm debating bee ethics." },
+    { who: 'frank', line: "There are worse ways to spend an evening." },
+    { who: 'eddie', line: "Name one." },
+    { who: 'gloria', line: "Watching Bee Movie 2, if they ever make one." },
+    { who: 'frank', line: "I would watch that immediately." },
+    { who: 'eddie', line: "Of course you would." },
+    { who: 'frank', line: "But seriously. The interspecies relationship angle. It's groundbreaking." },
+    { who: 'eddie', line: "It's a cartoon bee flirting with a cartoon woman. Nothing broke ground." },
+    { who: 'frank', line: "Vanessa chose Barry over Ken. A bee over a man. That says something about modern relationships." },
+    { who: 'eddie', line: "It says the writers were on something." },
+    { who: 'gloria', line: "Or that emotional connection transcends physical form." },
+    { who: 'frank', line: "GLORIA GETS IT." },
+    { who: 'eddie', line: "Gloria is being polite because we tip well." },
+    { who: 'gloria', line: "Both things can be true." },
+    { who: 'frank', line: "Think about what the world looked like when all the flowers died." },
+    { who: 'frank', line: "Grey. Lifeless. No colour anywhere. Central Park was a wasteland." },
+    { who: 'eddie', line: "Yes, the environmental message was pretty heavy-handed." },
+    { who: 'frank', line: "Heavy-handed or prophetic? Look at the state of actual bee populations." },
+    { who: 'gloria', line: "Colony collapse disorder is real. He's not wrong about that." },
+    { who: 'eddie', line: "Sure, but that's not because bees went on strike. It's pesticides and habitat loss." },
+    { who: 'frank', line: "The MOVIE uses a strike as a metaphor for what happens when pollinators disappear." },
+    { who: 'eddie', line: "I'll give you that one. That bit was actually decent." },
+    { who: 'frank', line: "Was that... was that agreement? Gloria, did Eddie just agree with me?" },
+    { who: 'gloria', line: "I heard it. Marking the calendar." },
+    { who: 'eddie', line: "I agreed with ONE point. The environmental bit. Everything else is madness." },
+    { who: 'frank', line: "Progress is progress. Now, about the honey industry—" },
+    { who: 'eddie', line: "Oh god, no." },
+    { who: 'gloria', line: "I'm actually curious. Go on, Frank." },
+    { who: 'frank', line: "The movie shows honey corporations as these massive operations. Honey farms." },
+    { who: 'frank', line: "The bees had no idea their honey was being sold. They thought it was being eaten." },
+    { who: 'eddie', line: "Because they're bees. They don't think about supply chains." },
+    { who: 'frank', line: "In the movie they DO. And the betrayal they feel is genuine." },
+    { who: 'gloria', line: "It's like finding out your employer's been reselling your work without telling you." },
+    { who: 'frank', line: "Exactly! Wage theft! Exploitation of labour!" },
+    { who: 'eddie', line: "Vanessa gives Barry a drop of honey at one point and he's horrified." },
+    { who: 'frank', line: "Because from his perspective, she's casually consuming the product of slave labour." },
+    { who: 'eddie', line: "He's a bee who lives in a hive that looks like a corporate office. The logic doesn't hold." },
+    { who: 'gloria', line: "Internal consistency was never Bee Movie's strong suit." },
+    { who: 'frank', line: "But the THEMES are consistent. Exploitation. Agency. Love across boundaries." },
+    { who: 'eddie', line: "Love. You're calling it love now." },
+    { who: 'frank', line: "What else would you call it? They go on dates. They finish each other's sentences." },
+    { who: 'eddie', line: "Stockholm syndrome. She saved him, he imprinted." },
+    { who: 'gloria', line: "That's birds, not bees." },
+    { who: 'eddie', line: "Ha." },
+    { who: 'frank', line: "That was genuinely funny, Gloria." },
+    { who: 'gloria', line: "I try." },
+    { who: 'frank', line: "But think about it from Vanessa's side. She's a florist." },
+    { who: 'frank', line: "Her entire livelihood depends on bees. Then she falls for one." },
+    { who: 'eddie', line: "That's a conflict of interest at best." },
+    { who: 'gloria', line: "Or a beautiful irony. The woman who profits from bee labour falls in love with a bee." },
+    { who: 'frank', line: "See? The movie is LAYERED." },
+    { who: 'eddie', line: "It's a kids' movie that made a billion memes. It's not layered." },
+    { who: 'frank', line: "The memes prove my point! People can't stop thinking about it!" },
+    { who: 'eddie', line: "People make memes about everything. That's not depth, that's the internet." },
+    { who: 'gloria', line: "He's right. I saw a meme about a potato yesterday that had me in tears." },
+    { who: 'frank', line: "Was the potato dating a human woman?" },
+    { who: 'eddie', line: "Please don't start on potatoes." },
+    { who: 'gloria', line: "Closing time eventually, boys. Better wrap up the bee discourse." },
+    { who: 'frank', line: "Final point then. The movie ends with Barry flying through a plane windshield." },
+    { who: 'frank', line: "He lands the plane. A BEE. Lands a commercial aircraft." },
+    { who: 'eddie', line: "Which is the most unrealistic part of a deeply unrealistic movie." },
+    { who: 'frank', line: "But what does it symbolize? Rising above. Literally." },
+    { who: 'gloria', line: "Or that the writers needed a big ending and went for spectacle." },
+    { who: 'eddie', line: "I'm going with Gloria on that one." },
+    { who: 'frank', line: "You're both wrong. It's about proving that size doesn't determine capability." },
+    { who: 'eddie', line: "A bee cannot fly a plane, Frank." },
+    { who: 'frank', line: "A bee can't talk either, but here we are, two hours into this conversation." },
+    { who: 'gloria', line: "He got you there, Eddie." },
+    { who: 'eddie', line: "I need another drink." },
+    { who: 'frank', line: "Same. And you know what? Despite everything..." },
+    { who: 'eddie', line: "What?" },
+    { who: 'frank', line: "I think Barry and Vanessa were good together." },
+    { who: 'eddie', line: "You're hopeless." },
+    { who: 'gloria', line: "He's a romantic. Nothing wrong with that." },
+    { who: 'frank', line: "To Barry and Vanessa." },
+    { who: 'eddie', line: "I'm not toasting a fictional bee." },
+    { who: 'gloria', line: "Come on, Eddie. Humour the man." },
+    { who: 'eddie', line: "...fine. To Barry and Vanessa. And to never having this conversation again." },
+    { who: 'frank', line: "No promises. Have you seen Ratatouille? Because I have THOUGHTS—" },
+    { who: 'eddie', line: "CHECK PLEASE." },
+    { who: 'gloria', line: "And that's last call, gentlemen." },
+    // Loop filler — ambient bar chatter to replay after the main conversation
+    { who: 'gloria', line: "Another quiet night at the casino." },
+    { who: 'eddie', line: "Quiet? Frank just talked my ear off about bees for two hours." },
+    { who: 'frank', line: "It was a spirited intellectual exchange." },
+    { who: 'gloria', line: "It was something, alright." },
+    { who: 'eddie', line: "I need to find a different bar." },
+    { who: 'frank', line: "You'd miss me." },
+    { who: 'eddie', line: "I absolutely would not." },
+    { who: 'gloria', line: "You'd miss each other. I've seen this before." },
+    { who: 'frank', line: "Did you know bees can recognise human faces?" },
+    { who: 'eddie', line: "NOT AGAIN." },
+    { who: 'gloria', line: "Here we go, round two..." }
+  ];
+
+  // Dialogue state
+  var CONVO_STORAGE_KEY = 'arebooksgood-casino-barconvo';
+  var CONVO_INTERVAL = 10000; // ms between lines (10 seconds)
+  var CONVO_BUBBLE_DURATION = 8000; // how long speech bubble stays (8 seconds)
+  var convoState = {
+    lineIndex: 0,
+    timer: 0,
+    activeBubble: null, // { who, line, startTime }
+    loaded: false
+  };
+
+  function loadConvoProgress() {
+    try {
+      var saved = localStorage.getItem(CONVO_STORAGE_KEY);
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        if (typeof parsed.lineIndex === 'number') {
+          convoState.lineIndex = Math.min(parsed.lineIndex, BAR_CONVERSATION.length - 1);
+        }
+      }
+    } catch (e) { /* ignore */ }
+    convoState.loaded = true;
+  }
+
+  function saveConvoProgress() {
+    try {
+      localStorage.setItem(CONVO_STORAGE_KEY, JSON.stringify({ lineIndex: convoState.lineIndex }));
+    } catch (e) { /* ignore */ }
+  }
+
+  function advanceConversation() {
+    if (convoState.lineIndex >= BAR_CONVERSATION.length) {
+      // Loop the filler section at the end (last 10 lines, or start if < 10)
+      convoState.lineIndex = Math.max(0, BAR_CONVERSATION.length - 10);
+    }
+    var entry = BAR_CONVERSATION[convoState.lineIndex];
+    var npcData = BAR_NPC_NAMES[entry.who];
+    var chatText = npcData.name + ': "' + entry.line + '"';
+    if (bridge && bridge.addChatMessage) {
+      bridge.addChatMessage(chatText, 'npc');
+    } else {
+      msg(chatText, 'npc');
+    }
+
+    convoState.activeBubble = {
+      who: entry.who,
+      line: entry.line,
+      startTime: Date.now()
+    };
+
+    convoState.lineIndex++;
+    saveConvoProgress();
+  }
+
+  function updateConversation(dt) {
+    if (!convoState.loaded) return;
+    convoState.timer += dt * 1000;
+    if (convoState.timer >= CONVO_INTERVAL) {
+      convoState.timer = 0;
+      advanceConversation();
+    }
+    // Clear expired bubble
+    if (convoState.activeBubble) {
+      if (Date.now() - convoState.activeBubble.startTime > CONVO_BUBBLE_DURATION) {
+        convoState.activeBubble = null;
+      }
+    }
+  }
+
+  function getNpcBubblePos(who) {
+    var t = TABLES.bar;
+    if (who === 'frank') {
+      var pos = getBarStoolPos(0);
+      return { x: pos.x, y: pos.y - 24 };
+    } else if (who === 'eddie') {
+      var pos2 = getBarStoolPos(2);
+      return { x: pos2.x, y: pos2.y - 24 };
+    } else { // gloria (bartender)
+      return { x: t.x, y: t.y - 26 };
+    }
+  }
+
+  function drawBarSpeechBubble(c) {
+    var b = convoState.activeBubble;
+    if (!b) return;
+
+    var elapsed = Date.now() - b.startTime;
+    var npcData = BAR_NPC_NAMES[b.who];
+    var pos = getNpcBubblePos(b.who);
+
+    // Typewriter effect — 30 chars/sec
+    var visibleChars = Math.min(Math.floor(elapsed * 0.03), b.line.length);
+    var displayText = b.line.substring(0, visibleChars);
+    if (displayText.length === 0) return;
+
+    // Fade out in last 1.5s
+    var fadeAlpha = 1;
+    var remaining = CONVO_BUBBLE_DURATION - elapsed;
+    if (remaining < 1500) fadeAlpha = Math.max(0, remaining / 1500);
+
+    c.save();
+    c.globalAlpha = fadeAlpha;
+    c.font = '11px monospace';
+    c.textAlign = 'center';
+
+    // Word wrap at 28 chars
+    var maxWidth = 28;
+    var words = displayText.split(' ');
+    var lines = [];
+    var currentLine = '';
+    for (var i = 0; i < words.length; i++) {
+      var test = currentLine ? currentLine + ' ' + words[i] : words[i];
+      if (test.length > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = words[i];
+      } else {
+        currentLine = test;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    var lineHeight = 13;
+    var textH = lines.length * lineHeight;
+    var nameH = 15;
+    var padX = 8, padY = 5;
+
+    // Measure max text width
+    var maxTW = 0;
+    for (var li = 0; li < lines.length; li++) {
+      var tw = c.measureText(lines[li]).width;
+      if (tw > maxTW) maxTW = tw;
+    }
+    var nameTW = c.measureText(npcData.name).width;
+    if (nameTW > maxTW) maxTW = nameTW;
+
+    var bubbleW = maxTW + padX * 2;
+    var bubbleH = nameH + textH + padY * 2;
+    var bx = pos.x - bubbleW / 2;
+    var by = pos.y - bubbleH - 6;
+
+    // Clamp to canvas edges
+    if (bx < 4) bx = 4;
+    if (bx + bubbleW > CW - 4) bx = CW - 4 - bubbleW;
+
+    // Shadow
+    c.fillStyle = 'rgba(0,0,0,0.4)';
+    c.fillRect(bx + 2, by + 2, bubbleW, bubbleH);
+
+    // Background
+    c.fillStyle = 'rgba(0,0,0,0.85)';
+    c.fillRect(bx, by, bubbleW, bubbleH);
+
+    // Border in NPC's color
+    c.strokeStyle = npcData.color;
+    c.lineWidth = 1;
+    c.strokeRect(bx, by, bubbleW, bubbleH);
+
+    // Tail triangle pointing down
+    var tailX = pos.x;
+    c.fillStyle = 'rgba(0,0,0,0.85)';
+    c.beginPath();
+    c.moveTo(tailX - 5, by + bubbleH);
+    c.lineTo(tailX + 5, by + bubbleH);
+    c.lineTo(tailX, by + bubbleH + 7);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = npcData.color;
+    c.beginPath();
+    c.moveTo(tailX - 5, by + bubbleH);
+    c.lineTo(tailX, by + bubbleH + 7);
+    c.lineTo(tailX + 5, by + bubbleH);
+    c.stroke();
+
+    // Name
+    c.fillStyle = npcData.color;
+    c.font = 'bold 11px monospace';
+    c.fillText(npcData.name, pos.x, by + padY + 11);
+
+    // Text lines
+    c.fillStyle = '#e0d0a0';
+    c.font = '11px monospace';
+    for (var tli = 0; tli < lines.length; tli++) {
+      c.fillText(lines[tli], pos.x, by + padY + nameH + tli * lineHeight + 9);
+    }
+
+    c.restore();
+  }
+
   // ── NPC Definitions ─────────────────────────────
   var DEALERS = [
     { table: 'holdem',    vest: '#8a2020', hat: '#222',    skin: '#d4a574', seed: 10 },
@@ -90,6 +495,11 @@
   var playerAnimTimer = 0;
   var playerAtTable = null;
   var enterPromptVisible = false;
+
+  // Game delegation state
+  var activeGame = null;        // tableId of active game, or null
+  var savedCasinoState = null;  // casino floor state to restore on game exit
+  var leavingCasino = false;    // true while leaveCasino() is running (suppresses returnFromGame)
 
   // Gold dust particles (25 with varied shapes)
   var dustParticles = [];
@@ -292,7 +702,7 @@
       c.beginPath(); c.arc(medX + Math.cos(fa) * 71, medY + Math.sin(fa) * 51, 2, 0, Math.PI * 2); c.fill();
     }
     // Card suit symbols inside medallion
-    c.font = '28px serif';
+    c.font = '32px serif';
     c.textAlign = 'center';
     c.fillStyle = 'rgba(192,160,64,0.08)';
     c.fillText('\u2660', medX - 30, medY + 8);
@@ -399,10 +809,10 @@
     c.fillRect(archX - 2, CH - WALL - 2, archW + 4, 2);
 
     // "JACKTOWN CASINO" sign above entrance (inside, on back wall top)
-    c.font = 'bold 16px monospace';
+    c.font = 'bold 18px monospace';
     c.textAlign = 'center';
     c.fillStyle = '#ffd700';
-    c.fillText('JACKTOWN CASINO', CW / 2, 22);
+    c.fillText('JACKTOWN CASINO', CW / 2, 24);
     c.textAlign = 'left';
 
     // Wall sconces (6 along top wall)
@@ -517,9 +927,9 @@
     c.arc(cx + 38, cy - 8, 5, 0, Math.PI * 2);
     c.fill();
     c.fillStyle = '#222';
-    c.font = 'bold 6px monospace';
+    c.font = 'bold 8px monospace';
     c.textAlign = 'center';
-    c.fillText('D', cx + 38, cy - 6);
+    c.fillText('D', cx + 38, cy - 5);
     c.textAlign = 'left';
   }
 
@@ -555,7 +965,7 @@
     var placeColors = ['#ffd700', '#c0c0c0', '#cd7f32'];
     var placeLabels = ['1st', '2nd', '3rd'];
     var placePos = [[-30, -22], [30, -22], [0, 24]];
-    c.font = 'bold 6px monospace';
+    c.font = 'bold 8px monospace';
     c.textAlign = 'center';
     for (var pi = 0; pi < 3; pi++) {
       var ppx = cx + placePos[pi][0];
@@ -590,7 +1000,7 @@
     c.fillStyle = 'rgba(192,160,64,0.25)';
     c.fillRect(cx - 50, cy - 44, 100, 8);
     c.fillStyle = '#ffd700';
-    c.font = 'bold 5px monospace';
+    c.font = 'bold 7px monospace';
     c.textAlign = 'center';
     c.fillText('TOURNAMENT', cx, cy - 38);
     c.textAlign = 'left';
@@ -650,9 +1060,9 @@
     c.stroke();
     c.setLineDash([]);
     // "INSURANCE" label
-    c.font = '5px monospace';
+    c.font = '7px monospace';
     c.textAlign = 'center';
-    c.fillStyle = 'rgba(255,255,255,0.12)';
+    c.fillStyle = 'rgba(255,255,255,0.15)';
     c.fillText('INSURANCE', cx, cy + 28);
 
     // Dealer's straight edge
@@ -734,7 +1144,7 @@
       c.fillStyle = '#c0a040';
       c.fillRect(mx + 6, my - 8, 20, 6);
       c.fillStyle = '#cc2222';
-      c.font = 'bold 5px monospace';
+      c.font = 'bold 7px monospace';
       c.textAlign = 'center';
       c.fillText('777', mx + 16, my - 3);
       c.textAlign = 'left';
@@ -767,7 +1177,7 @@
       c.fillStyle = '#1a1a2a';
       c.fillRect(mx + 8, my + 20, 16, 4);
       c.fillStyle = '#ffd700';
-      c.font = '3px monospace';
+      c.font = '5px monospace';
       c.textAlign = 'center';
       c.fillText('100', mx + 16, my + 23);
       c.textAlign = 'left';
@@ -818,14 +1228,14 @@
     c.stroke();
 
     // "WAR" text in red at center dividing line
-    c.font = 'bold 8px monospace';
+    c.font = 'bold 10px monospace';
     c.textAlign = 'center';
     c.fillStyle = '#8a2040';
     c.fillText('WAR', cx, cy - 20);
 
     // Labels
-    c.font = 'bold 7px monospace';
-    c.fillStyle = 'rgba(255,255,255,0.2)';
+    c.font = 'bold 8px monospace';
+    c.fillStyle = 'rgba(255,255,255,0.25)';
     c.fillText('PLAYER', cx - 24, cy + 2);
     c.fillText('DEALER', cx + 24, cy + 2);
     c.textAlign = 'left';
@@ -847,7 +1257,7 @@
     c.fill();
     // Suit on player card
     c.fillStyle = 'rgba(255,255,255,0.06)';
-    c.font = '8px serif';
+    c.font = '10px serif';
     c.textAlign = 'center';
     c.fillText('\u2665', cx - 25, cy + 2);
 
@@ -1169,22 +1579,22 @@
 
   // ── Labels (gold-bordered nameplates with icons) ──
   function drawLabels(c) {
-    c.font = 'bold 11px monospace';
+    c.font = 'bold 14px monospace';
     c.textAlign = 'center';
 
     for (var i = 0; i < TABLE_ORDER.length; i++) {
       var id = TABLE_ORDER[i];
       var t = TABLES[id];
-      var labelY = t.y + (t.h / 2) + 24;
-      if (id === 'bar') labelY = t.y + 52;
-      if (id === 'slots') labelY = t.y + 100;
+      var labelY = t.y + (t.h / 2) + 28;
+      if (id === 'bar') labelY = t.y + 56;
+      if (id === 'slots') labelY = t.y + 104;
 
       var icon = LABEL_ICONS[id] || '';
       var displayName = icon ? icon + ' ' + t.name : t.name;
-      c.font = 'bold 11px monospace';
+      c.font = 'bold 14px monospace';
       var nameW = c.measureText(displayName).width;
-      var bgW = nameW + 14, bgH = 16;
-      var bgX = t.x - bgW / 2, bgY = labelY - 11;
+      var bgW = nameW + 18, bgH = 22;
+      var bgX = t.x - bgW / 2, bgY = labelY - 15;
 
       // Outer gold border
       c.strokeStyle = '#c0a040';
@@ -1414,10 +1824,10 @@
       var ns = NEON_SIGNS[ni];
       var nAlpha = 0.3 + Math.sin(frameCount * 0.025 + ns.seed * 7) * 0.2;
       c.globalAlpha = nAlpha;
-      c.font = 'bold 9px monospace';
+      c.font = 'bold 13px monospace';
       c.textAlign = 'center';
       c.shadowColor = ns.color;
-      c.shadowBlur = 8;
+      c.shadowBlur = 10;
       c.fillStyle = ns.color;
       c.fillText(ns.text, ns.x, ns.y);
       c.fillText(ns.text, ns.x, ns.y); // double pass for stronger glow
@@ -1447,7 +1857,7 @@
             break;
           case 1: // 7 — gold text
             c.fillStyle = '#ffd700';
-            c.font = 'bold 7px monospace';
+            c.font = 'bold 9px monospace';
             c.textAlign = 'center';
             c.fillText('7', rx + 3, ry + 8);
             c.textAlign = 'left';
@@ -1456,7 +1866,7 @@
             c.fillStyle = '#c0a040';
             c.fillRect(rx, ry + 3, 6, 4);
             c.fillStyle = '#1a1a2a';
-            c.font = '3px monospace';
+            c.font = '5px monospace';
             c.textAlign = 'center';
             c.fillText('BAR', rx + 3, ry + 7);
             c.textAlign = 'left';
@@ -1588,13 +1998,13 @@
     if (!t) return;
 
     var label = t.desc === null ? 'Sit at ' + t.name : 'Play ' + t.name;
-    c.font = 'bold 11px monospace';
+    c.font = 'bold 14px monospace';
     c.textAlign = 'center';
     var tw = c.measureText(label).width;
     var px = playerPos.x;
-    var py = playerPos.y - 40;
-    var bw = tw + 20, bh = 22;
-    var bx = px - bw / 2, by = py - 12;
+    var py = playerPos.y - 44;
+    var bw = tw + 24, bh = 26;
+    var bx = px - bw / 2, by = py - 14;
 
     c.fillStyle = 'rgba(0,0,0,0.3)';
     c.fillRect(bx + 2, by + 2, bw, bh);
@@ -1620,11 +2030,11 @@
   // ── Return Button ─────────────────────────────────
   function drawReturnButton(c) {
     var text = '\u2190 Leave Casino';
-    c.font = 'bold 12px monospace';
+    c.font = 'bold 15px monospace';
     c.textAlign = 'left';
     var tw = c.measureText(text).width;
     var bx = WALL + 6, by = WALL + 4;
-    var bw = tw + 18, bh = 22;
+    var bw = tw + 22, bh = 26;
 
     c.fillStyle = 'rgba(0,0,0,0.4)';
     c.fillRect(bx + 2, by + 2, bw, bh);
@@ -1637,7 +2047,7 @@
     c.lineWidth = 1;
     c.strokeRect(bx + 2, by + 2, bw - 4, bh - 4);
     c.fillStyle = '#ffdd44';
-    c.fillText(text, bx + 9, by + 15);
+    c.fillText(text, bx + 10, by + 18);
   }
 
   // ── Player Movement ───────────────────────────────
@@ -1713,7 +2123,7 @@
 
   // ── Click Handler ─────────────────────────────────
   function onClick(e) {
-    if (!canvas) return;
+    if (!canvas || activeGame) return; // game handles its own clicks
     var rect = canvas.getBoundingClientRect();
     var scaleX = CW / rect.width;
     var scaleY = CH / rect.height;
@@ -1773,21 +2183,99 @@
     }
   }
 
-  // ── Table Interaction ─────────────────────────────
+  // ── Table Interaction & Game Delegation ──────────
+
+  // Map table IDs to their game modules (added as games are built)
+  function getGameModule(tableId) {
+    var map = {
+      holdem:    window.RpgHoldem,
+      sitandgo:  window.RpgSitAndGo,
+      blackjack: window.RpgBlackjack,
+      wars:      window.RpgCasinoWars,
+      slots:     window.RpgSlots
+    };
+    return map[tableId] || null;
+  }
+
   function onTableInteract(tableId) {
     if (tableId === 'bar') {
       msg(BAR_LINES[hash(Date.now(), 456) % BAR_LINES.length], 'system');
       return;
     }
-    // Show coming soon modal
-    showTableModal(tableId);
+
+    var GameModule = getGameModule(tableId);
+    if (GameModule) {
+      enterGame(tableId, GameModule);
+    } else {
+      showTableModal(tableId);
+    }
   }
 
+  function enterGame(tableId, GameModule) {
+    // Save casino floor state so we can restore on return
+    savedCasinoState = {
+      playerPos: { x: playerPos.x, y: playerPos.y },
+      playerDir: playerDir,
+      playerAtTable: playerAtTable,
+      enterPromptVisible: enterPromptVisible,
+      convoTimer: convoState.timer
+    };
+
+    // Stop casino floor
+    stopLoop();
+    if (canvas) canvas.removeEventListener('click', onClick);
+    activeGame = tableId;
+
+    // Build the game bridge — forwards parent bridge + adds casino-level helpers
+    var gameBridge = {
+      drawPlayer: bridge ? bridge.drawPlayer : null,
+      drawFollower: bridge ? bridge.drawFollower : null,
+      updateFollower: bridge ? bridge.updateFollower : null,
+      addMessage: function (text, type) { msg(text, type); },
+      addChatMessage: function (text, type) {
+        if (bridge && bridge.addChatMessage) bridge.addChatMessage(text, type);
+        else msg(text, type);
+      },
+      getTableInfo: function () { return TABLES[tableId]; },
+      onLeave: function () { returnFromGame(); }
+    };
+
+    GameModule.enter(canvas, gameBridge);
+    msg('You sit down at the ' + TABLES[tableId].name + '.', 'enter');
+  }
+
+  function returnFromGame() {
+    // If the casino itself is shutting down, skip restoration — leaveCasino handles cleanup
+    if (leavingCasino) return;
+    activeGame = null;
+
+    // Restore casino floor state
+    if (savedCasinoState) {
+      playerPos.x = savedCasinoState.playerPos.x;
+      playerPos.y = savedCasinoState.playerPos.y;
+      playerDir = savedCasinoState.playerDir;
+      playerAtTable = savedCasinoState.playerAtTable;
+      enterPromptVisible = savedCasinoState.enterPromptVisible;
+      convoState.timer = savedCasinoState.convoTimer || 0;
+      savedCasinoState = null;
+    }
+
+    playerTarget = null;
+    staticBuffer = null; // force re-render
+    lightPoolBuffer = null;
+    lastTimestamp = 0;
+
+    canvas.removeEventListener('click', onClick); // prevent duplicates
+    canvas.addEventListener('click', onClick);
+    startLoop();
+    msg('You step away from the table.', 'return');
+  }
+
+  // Fallback modal for games not yet built
   function showTableModal(tableId) {
     var t = TABLES[tableId];
     if (!t) return;
 
-    // Remove existing
     var existing = document.getElementById('rpg-casino-table-modal');
     if (existing) existing.remove();
 
@@ -1800,10 +2288,7 @@
     html += '<div class="rpg-modal-header"><h3>' + t.name + '</h3>';
     html += '<button class="rpg-modal-close" id="rpg-casino-modal-close">&times;</button></div>';
     html += '<div class="rpg-casino-modal-body">';
-
-    // Mini canvas preview of the table
     html += '<canvas class="rpg-casino-table-art" id="rpg-casino-preview" width="200" height="120"></canvas>';
-
     html += '<div class="rpg-casino-game-desc">' + t.desc + '</div>';
     html += '<div class="rpg-casino-coming-soon">Coming Soon</div>';
     html += '</div></div>';
@@ -1811,15 +2296,12 @@
     overlay.innerHTML = html;
     document.body.appendChild(overlay);
 
-    // Draw table preview
     setTimeout(function () {
       var prev = document.getElementById('rpg-casino-preview');
       if (prev) {
         var pc = prev.getContext('2d');
-        // Dark bg
         pc.fillStyle = '#2a0a14';
         pc.fillRect(0, 0, 200, 120);
-        // Draw the specific table centered
         pc.save();
         pc.translate(100 - t.x, 60 - t.y);
         if (tableId === 'holdem') drawHoldemTable(pc);
@@ -1834,7 +2316,6 @@
       }
     }, 10);
 
-    // Close handlers
     document.getElementById('rpg-casino-modal-close').addEventListener('click', closeTableModal);
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) closeTableModal();
@@ -1856,9 +2337,8 @@
     ctx.drawImage(staticBuffer, 0, 0);
     drawAnimated(ctx);
 
-    // Draw follower (via bridge)
+    // Draw follower (via bridge) — update happens in loop(), just draw here
     if (bridge && bridge.drawFollower) {
-      bridge.updateFollower(playerPos, playerDir);
       bridge.drawFollower(ctx);
     }
 
@@ -1870,6 +2350,7 @@
 
     drawReturnButton(ctx);
     if (enterPromptVisible) drawEnterPrompt(ctx);
+    drawBarSpeechBubble(ctx);
 
     ctx.restore();
   }
@@ -1881,6 +2362,7 @@
     lastTimestamp = ts;
     frameCount++;
     updatePlayer(dt);
+    updateConversation(dt);
     if (bridge && bridge.updateFollower) {
       bridge.updateFollower(playerPos, playerDir, dt);
     }
@@ -1920,12 +2402,26 @@
     staticBuffer = null; // force re-render
     lightPoolBuffer = null;
 
+    // Load bar conversation progress
+    loadConvoProgress();
+    convoState.timer = -3000; // 3 second delay before first line after entering
+
     canvas.addEventListener('click', onClick);
     startLoop();
     msg('You push through the velvet curtains into the casino. Smoke and gold light fill the air.', 'enter');
   }
 
   function leaveCasino() {
+    // If a game is active, leave it first.
+    // Set leavingCasino flag so the game's bridge.onLeave → returnFromGame() is suppressed.
+    if (activeGame) {
+      leavingCasino = true;
+      var GameModule = getGameModule(activeGame);
+      if (GameModule && GameModule.leave) GameModule.leave();
+      activeGame = null;
+      savedCasinoState = null;
+      leavingCasino = false;
+    }
     stopLoop();
     closeTableModal();
     if (canvas) canvas.removeEventListener('click', onClick);
@@ -1933,6 +2429,19 @@
   }
 
   function handleEscape() {
+    // Cascade to active game first
+    if (activeGame) {
+      var GameModule = getGameModule(activeGame);
+      if (GameModule && GameModule.handleEscape) {
+        var handled = GameModule.handleEscape();
+        // Game must return true to signal it handled escape.
+        // If it returns false/undefined, we force-exit back to casino floor.
+        if (handled) return true;
+      }
+      // Fallback: force return if no module or module didn't handle it
+      returnFromGame();
+      return true;
+    }
     var modal = document.getElementById('rpg-casino-table-modal');
     if (modal) {
       closeTableModal();
@@ -1943,7 +2452,7 @@
   }
 
   function isActive() {
-    return !!animId;
+    return !!animId || !!activeGame;
   }
 
   // ── Public API ────────────────────────────────────

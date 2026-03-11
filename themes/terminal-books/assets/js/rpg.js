@@ -1276,6 +1276,24 @@
     }
   }
 
+  function addChatMessage(text, type) {
+    var pane = $('osrs-chat-chat');
+    if (!pane) return;
+    var msg = document.createElement('div');
+    msg.className = 'osrs-game-msg osrs-game-msg--' + (type || 'npc');
+    msg.textContent = text;
+    pane.appendChild(msg);
+    var msgs = pane.querySelectorAll('.osrs-game-msg');
+    while (msgs.length > 80) {
+      msgs[0].parentNode.removeChild(msgs[0]);
+      msgs = pane.querySelectorAll('.osrs-game-msg');
+    }
+    var body = $('osrs-chatbox-body');
+    if (body) body.scrollTop = body.scrollHeight;
+    // Mark chat tab unread if not active
+    markTabUnread('chat');
+  }
+
   // ── Fade Transition Helper ───────────────────
   function fadeTransition(callback) {
     var panel = document.querySelector('.rpg-page .skills-game-panel');
@@ -1904,8 +1922,8 @@
         }
         if (line) lines.push(line);
 
-        var fontSize = 10;
-        var lineHeight = 13;
+        var fontSize = 13;
+        var lineHeight = 16;
         ctx.font = fontSize + 'px monospace';
         ctx.textAlign = 'center';
         var maxW = 0;
@@ -1913,26 +1931,26 @@
           var lw = ctx.measureText(lines[li]).width;
           if (lw > maxW) maxW = lw;
         }
-        var bw = maxW + 16, bh = lines.length * lineHeight + 10;
+        var bw = maxW + 20, bh = lines.length * lineHeight + 14;
         var bx = n.pos.x - bw / 2, by = n.pos.y - CHAR_DRAW_SIZE - bh;
 
         ctx.fillStyle = 'rgba(0,0,0,0.9)';
         ctx.fillRect(bx, by, bw, bh);
         ctx.strokeStyle = '#c0a040';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.strokeRect(bx, by, bw, bh);
 
         // Tail
         ctx.fillStyle = 'rgba(0,0,0,0.9)';
         ctx.beginPath();
-        ctx.moveTo(n.pos.x - 4, by + bh);
-        ctx.lineTo(n.pos.x, by + bh + 6);
-        ctx.lineTo(n.pos.x + 4, by + bh);
+        ctx.moveTo(n.pos.x - 5, by + bh);
+        ctx.lineTo(n.pos.x, by + bh + 8);
+        ctx.lineTo(n.pos.x + 5, by + bh);
         ctx.fill();
 
         ctx.fillStyle = '#e0d0a0';
         for (var li = 0; li < lines.length; li++) {
-          ctx.fillText(lines[li], n.pos.x, by + 13 + li * lineHeight);
+          ctx.fillText(lines[li], n.pos.x, by + 16 + li * lineHeight);
         }
       }
     }
@@ -5135,6 +5153,9 @@
       },
       addMessage: function (text, type) {
         addGameMessage(text, type);
+      },
+      addChatMessage: function (text, type) {
+        addChatMessage(text, type);
       },
       onLeave: function () {
         returnFromCasino();
