@@ -236,6 +236,7 @@
       resultText = 'TIE!';
       resultColor = '#ffd700';
       statusText = 'Go to War or Surrender?';
+      stats.hands++;
       stats.ties++;
       phase = 'war-prompt';
     }
@@ -306,10 +307,8 @@
     var pv = cardValue(warPlayerCard);
     var dv = cardValue(warDealerCard);
 
-    if (pv >= dv) {
-      // Player wins war — gets original bet + war bet back, plus 1:1 on original
-      // Standard casino war rules: win pays even money on the raise only,
-      // original bet pushes. So total return = original bet + 2x war bet = 3x bet.
+    if (pv > dv) {
+      // Player wins war — original bet pushes, war bet pays 1:1
       var winnings = currentBet * 3;
       walletAdd(winnings);
       lastWinAmount = currentBet;
@@ -319,6 +318,17 @@
       stats.hands++;
       stats.wins++;
       msg('Won the War! +' + currentBet + ' GP.', 'reward');
+    } else if (pv === dv) {
+      // War tie — player wins (house rule: ties in war favor the player)
+      var warTieWin = currentBet * 3;
+      walletAdd(warTieWin);
+      lastWinAmount = currentBet;
+      resultText = 'WAR TIE — YOU WIN!';
+      resultColor = '#ffd700';
+      statusText = 'Tied again! +' + currentBet + ' GP';
+      stats.hands++;
+      stats.wins++;
+      msg('War tied again — you win! +' + currentBet + ' GP.', 'reward');
     } else {
       // Dealer wins war — player loses both bets
       lastWinAmount = 0;
@@ -354,9 +364,9 @@
       var startX = cx - totalW / 2;
       var canBet = getBalance() >= BET_STEPS[0];
 
-      btns.push({ x: startX, y: y, w: btnW, h: btnH, label: '- Bet', action: 'bet-down', disabled: !canBet });
+      btns.push({ x: startX, y: y, w: btnW, h: btnH, label: '- Bet', action: 'bet-down', disabled: !canBet || betStepIndex <= 0 });
       btns.push({ x: startX + btnW + gap, y: y, w: btnW, h: btnH, label: currentBet + ' GP', action: null, disabled: true });
-      btns.push({ x: startX + (btnW + gap) * 2, y: y, w: btnW, h: btnH, label: '+ Bet', action: 'bet-up', disabled: !canBet });
+      btns.push({ x: startX + (btnW + gap) * 2, y: y, w: btnW, h: btnH, label: '+ Bet', action: 'bet-up', disabled: !canBet || betStepIndex >= BET_STEPS.length - 1 });
       btns.push({ x: startX + (btnW + gap) * 3, y: y, w: btnW, h: btnH, label: 'DEAL', action: 'deal', disabled: !canBet || getBalance() < currentBet });
 
     } else if (phase === 'war-prompt') {

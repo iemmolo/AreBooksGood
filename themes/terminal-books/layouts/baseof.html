@@ -150,6 +150,14 @@
       {{- $rpgCW := . | minify | fingerprint -}}
       <script src="{{ $rpgCW.RelPermalink }}"></script>
     {{- end -}}
+    {{- with resources.Get "js/rpg-slots.js" -}}
+      {{- $rpgSlots := . | minify | fingerprint -}}
+      <script src="{{ $rpgSlots.RelPermalink }}"></script>
+    {{- end -}}
+    {{- with resources.Get "js/rpg-holdem.js" -}}
+      {{- $rpgHoldem := . | minify | fingerprint -}}
+      <script src="{{ $rpgHoldem.RelPermalink }}"></script>
+    {{- end -}}
     {{- with resources.Get "js/skills.js" -}}
       {{- $skills := . | minify | fingerprint -}}
       <script src="{{ $skills.RelPermalink }}"></script>
