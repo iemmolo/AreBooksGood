@@ -7286,9 +7286,9 @@
     var casinoLoc = TOWN_LOCATIONS.casino;
     var mColors2 = ['#ff4444','#ffd700','#44ff44','#ffd700','#ff4444','#ffd700','#44ff44','#ffd700'];
     for (var mi2 = 0; mi2 < 8; mi2++) {
-      var mci = (mi2 + Math.floor(townSmokeFrame / 6)) % 8;
+      var mci = (mi2 + Math.floor(townSmokeFrame / 24)) % 8;
       ctx.fillStyle = mColors2[mci];
-      ctx.globalAlpha = 0.5 + Math.sin(townSmokeFrame * 0.2 + mi2) * 0.4;
+      ctx.globalAlpha = 0.5 + Math.sin(townSmokeFrame * 0.04 + mi2) * 0.3;
       ctx.fillRect(casinoLoc.x - 30 + mi2 * 8, casinoLoc.y - 3, 4, 3);
     }
     ctx.globalAlpha = 1;
@@ -7297,13 +7297,13 @@
     var arcadeLoc = TOWN_LOCATIONS.arcade;
     var aColors2 = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
     for (var ai2 = 0; ai2 < 5; ai2++) {
-      var aci = (ai2 + Math.floor(townSmokeFrame / 8)) % 5;
+      var aci = (ai2 + Math.floor(townSmokeFrame / 30)) % 5;
       ctx.fillStyle = aColors2[aci];
-      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.2 + ai2) * 0.3;
+      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.04 + ai2) * 0.25;
       ctx.fillRect(arcadeLoc.x - 27 + ai2 * 12, arcadeLoc.y - 3, 6, 4);
     }
     // Arcade game screen flicker
-    ctx.fillStyle = aColors2[Math.floor(townSmokeFrame / 4) % 5];
+    ctx.fillStyle = aColors2[Math.floor(townSmokeFrame / 18) % 5];
     ctx.globalAlpha = 0.3;
     ctx.fillRect(arcadeLoc.x - 6, arcadeLoc.y + 4, 12, 8);
     ctx.globalAlpha = 1;
