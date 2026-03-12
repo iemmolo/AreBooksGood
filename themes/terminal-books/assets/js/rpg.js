@@ -6162,18 +6162,17 @@
         ctx.fillStyle = '#c0a040';
         ctx.fillRect(ox + 28, oy + 52, 1, 6);
         ctx.fillRect(ox + 41, oy + 52, 1, 6);
-        // Card suit emblems
-        ctx.fillStyle = '#ffd700';
+        // Card suit emblems (static base; animated overlay adds glow)
+        ctx.fillStyle = '#8a6020';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
         ctx.fillText('\u2660', bx - 16, oy + 18);
         ctx.fillText('\u2665', bx - 4, oy + 18);
         ctx.fillText('\u2666', bx + 8, oy + 18);
         ctx.fillText('\u2663', bx + 20, oy + 18);
-        // Marquee light dots (static; animated will redraw)
-        var mColors = ['#ff4444','#ffd700','#44ff44','#ffd700','#ff4444','#ffd700','#44ff44','#ffd700'];
+        // Marquee light sockets (dark base — animated overlay draws the lit bulbs)
         for (var mi = 0; mi < 8; mi++) {
-          ctx.fillStyle = mColors[mi];
+          ctx.fillStyle = '#3a1020';
           ctx.fillRect(ox + 5 + mi * 8, oy + 22, 4, 3);
         }
         // Velvet rope pillars
@@ -6279,10 +6278,9 @@
         // Game screen in door
         ctx.fillStyle = '#114422';
         ctx.fillRect(ox + 29, oy + 34, 12, 10);
-        // Colored lights
-        var arcadeColors2 = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
+        // Light sockets (dark base — animated overlay draws the cycling lights)
         for (var li2 = 0; li2 < 5; li2++) {
-          ctx.fillStyle = arcadeColors2[li2];
+          ctx.fillStyle = '#1a2040';
           ctx.fillRect(ox + 8 + li2 * 12, oy + 26, 6, 4);
         }
         // Coin slot detail
@@ -7282,30 +7280,60 @@
     drawTorch(ctx, TOWN_W / 2 - 42, TOWN_H - TOWN_WALL - 4, townSmokeFrame, 220);
     drawTorch(ctx, TOWN_W / 2 + 40, TOWN_H - TOWN_WALL - 4, townSmokeFrame, 221);
 
-    // Casino marquee lights (cycling)
+    // Casino marquee lights (cycling, matched to static socket positions)
     var casinoLoc = TOWN_LOCATIONS.casino;
     var mColors2 = ['#ff4444','#ffd700','#44ff44','#ffd700','#ff4444','#ffd700','#44ff44','#ffd700'];
     for (var mi2 = 0; mi2 < 8; mi2++) {
-      var mci = (mi2 + Math.floor(townSmokeFrame / 24)) % 8;
+      var mci = (mi2 + Math.floor(townSmokeFrame / 45)) % 8;
       ctx.fillStyle = mColors2[mci];
-      ctx.globalAlpha = 0.5 + Math.sin(townSmokeFrame * 0.04 + mi2) * 0.3;
-      ctx.fillRect(casinoLoc.x - 30 + mi2 * 8, casinoLoc.y - 3, 4, 3);
+      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.02 + mi2 * 0.8) * 0.3;
+      ctx.fillRect(casinoLoc.x - 30 + mi2 * 8, casinoLoc.y - 8, 4, 3);
     }
+    // Casino marquee glow halo (warm light spill beneath the bulbs)
+    ctx.globalAlpha = 0.12 + Math.sin(townSmokeFrame * 0.03) * 0.05;
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(casinoLoc.x - 32, casinoLoc.y - 5, 64, 2);
+    // Casino card suit glow (pulsing gold shimmer)
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    var suitAlpha = 0.5 + Math.sin(townSmokeFrame * 0.015) * 0.3;
+    ctx.globalAlpha = suitAlpha;
+    ctx.fillText('\u2660', casinoLoc.x - 16, casinoLoc.y - 12);
+    ctx.fillText('\u2665', casinoLoc.x - 4, casinoLoc.y - 12);
+    ctx.fillText('\u2666', casinoLoc.x + 8, casinoLoc.y - 12);
+    ctx.fillText('\u2663', casinoLoc.x + 20, casinoLoc.y - 12);
+    // Casino warm doorway glow
+    ctx.globalAlpha = 0.15 + Math.sin(townSmokeFrame * 0.04) * 0.08;
+    ctx.fillStyle = '#ff8040';
+    ctx.fillRect(casinoLoc.x - 11, casinoLoc.y, 22, 25);
+    ctx.globalAlpha = 0.06 + Math.sin(townSmokeFrame * 0.03) * 0.03;
+    ctx.beginPath();
+    ctx.ellipse(casinoLoc.x, casinoLoc.y + 26, 18, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.globalAlpha = 1;
 
-    // Arcade lights (cycling colors)
+    // Arcade lights (cycling colors, matched to static socket positions)
     var arcadeLoc = TOWN_LOCATIONS.arcade;
     var aColors2 = ['#ff4444','#44ff44','#4444ff','#ffff44','#ff44ff'];
     for (var ai2 = 0; ai2 < 5; ai2++) {
-      var aci = (ai2 + Math.floor(townSmokeFrame / 30)) % 5;
+      var aci = (ai2 + Math.floor(townSmokeFrame / 50)) % 5;
       ctx.fillStyle = aColors2[aci];
-      ctx.globalAlpha = 0.6 + Math.sin(townSmokeFrame * 0.04 + ai2) * 0.25;
-      ctx.fillRect(arcadeLoc.x - 27 + ai2 * 12, arcadeLoc.y - 3, 6, 4);
+      ctx.globalAlpha = 0.65 + Math.sin(townSmokeFrame * 0.02 + ai2 * 1.2) * 0.25;
+      ctx.fillRect(arcadeLoc.x - 27 + ai2 * 12, arcadeLoc.y - 4, 6, 4);
     }
     // Arcade game screen flicker
-    ctx.fillStyle = aColors2[Math.floor(townSmokeFrame / 18) % 5];
-    ctx.globalAlpha = 0.3;
-    ctx.fillRect(arcadeLoc.x - 6, arcadeLoc.y + 4, 12, 8);
+    ctx.fillStyle = aColors2[Math.floor(townSmokeFrame / 40) % 5];
+    ctx.globalAlpha = 0.35;
+    ctx.fillRect(arcadeLoc.x - 6, arcadeLoc.y + 4, 12, 10);
+    // Arcade cool screen glow (blue spill from screens/door)
+    ctx.globalAlpha = 0.1 + Math.sin(townSmokeFrame * 0.05 + 1.0) * 0.06;
+    ctx.fillStyle = '#4488ff';
+    ctx.fillRect(arcadeLoc.x - 8, arcadeLoc.y + 2, 16, 20);
+    ctx.globalAlpha = 0.05 + Math.sin(townSmokeFrame * 0.04) * 0.03;
+    ctx.beginPath();
+    ctx.ellipse(arcadeLoc.x, arcadeLoc.y + 26, 16, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.globalAlpha = 1;
 
     // Chapel window candle flicker
