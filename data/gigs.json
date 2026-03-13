@@ -1,8 +1,23 @@
 {
-  "fetched_at": "2026-03-12T12:04:44+00:00",
+  "fetched_at": "2026-03-13T00:06:55+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
+    {
+      "id": 398589,
+      "name": "Melville Ability Dance Class",
+      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
+      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "address": "",
+      "category": "Dance Classes",
+      "datetime_start": "2026-02-27 10:30:00",
+      "datetime_end": "2026-12-18 11:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
     {
       "id": 397868,
       "name": "Art Exhibition: Emergent Curiosities",
@@ -64,51 +79,6 @@
       "status": "active"
     },
     {
-      "id": 398851,
-      "name": "Music Makers Just for Minis (Bibra Lake Location)",
-      "description": "Music Makers Just for Minis is an engaging craft and music play-based experience for children aged 2- to 5- years old. \n\nIf you know Curate, you know we just adore crafting and music. But do you know what is even better? ...",
-      "venue": "Bibra Lake Community Centre, Bibra Lake, Western Australia",
-      "address": "",
-      "category": "Education",
-      "datetime_start": "2026-03-05 13:10:00",
-      "datetime_end": "2026-06-18 13:50:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "Family Friendly",
-      "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
-      "status": "active"
-    },
-    {
-      "id": 398589,
-      "name": "Melville Ability Dance Class",
-      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
-      "venue": "Applecross Guild Hall, Applecross, Western Australia",
-      "address": "",
-      "category": "Dance Classes",
-      "datetime_start": "2026-02-27 10:30:00",
-      "datetime_end": "2026-12-18 11:30:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
-    {
-      "id": 398371,
-      "name": "Comedy Warehouse",
-      "description": "A fabulous night of fun and frivolity based on audience suggestions. \n \nOur talented cast is coming to Fremantle to spin out funny, fully improvised stories based on audience suggestions that will exist for that night ...",
-      "venue": "Hybrid Warehouse, Fremantle, Western Australia",
-      "address": "",
-      "category": "Comedy",
-      "datetime_start": "2026-03-12 19:00:00",
-      "datetime_end": "2026-03-12 20:45:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/comedy-warehouse/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 398597,
       "name": "Forever 18 Mini-Fest \u2013 Live Music Fundraiser",
       "description": "Clancy&rsquo;s Fish Pub Fremantle comes alive on Sunday, March 15, as Amby&rsquo;s Army presents the Forever 18 Mini-Fest &ndash; an unforgettable night of live music supporting youth mental health. \n \nFeaturing an ...",
@@ -151,6 +121,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/perth-caravan-camping-show/perth/claremont",
+      "status": "active"
+    },
+    {
+      "id": 398851,
+      "name": "Music Makers Just for Minis (Bibra Lake Location)",
+      "description": "Music Makers Just for Minis is an engaging craft and music play-based experience for children aged 2- to 5- years old. \n\nIf you know Curate, you know we just adore crafting and music. But do you know what is even better? ...",
+      "venue": "Bibra Lake Community Centre, Bibra Lake, Western Australia",
+      "address": "",
+      "category": "Education",
+      "datetime_start": "2026-03-05 13:10:00",
+      "datetime_end": "2026-06-18 13:50:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "Family Friendly",
+      "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
       "status": "active"
     },
     {
