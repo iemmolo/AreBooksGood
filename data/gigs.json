@@ -1,21 +1,21 @@
 {
-  "fetched_at": "2026-03-14T00:07:54+00:00",
+  "fetched_at": "2026-03-14T12:02:57+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
     {
-      "id": 398589,
-      "name": "Melville Ability Dance Class",
-      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
-      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "id": 398597,
+      "name": "Forever 18 Mini-Fest \u2013 Live Music Fundraiser",
+      "description": "Clancy&rsquo;s Fish Pub Fremantle comes alive on Sunday, March 15, as Amby&rsquo;s Army presents the Forever 18 Mini-Fest &ndash; an unforgettable night of live music supporting youth mental health. \n \nFeaturing an ...",
+      "venue": "Clancy's Fish Pub Fremantle, Fremantle, Western Australia",
       "address": "",
-      "category": "Dance Classes",
-      "datetime_start": "2026-02-27 10:30:00",
-      "datetime_end": "2026-12-18 11:30:00",
+      "category": "Rock & Pop",
+      "datetime_start": "2026-03-15 17:00:00",
+      "datetime_end": "2026-03-15 21:00:00",
       "is_free": false,
       "price": "",
       "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "url": "https://www.eventfinda.com.au/2026/forever-18-mini-fest-live-music-fundraiser/perth/fremantle",
       "status": "active"
     },
     {
@@ -79,21 +79,6 @@
       "status": "active"
     },
     {
-      "id": 398597,
-      "name": "Forever 18 Mini-Fest \u2013 Live Music Fundraiser",
-      "description": "Clancy&rsquo;s Fish Pub Fremantle comes alive on Sunday, March 15, as Amby&rsquo;s Army presents the Forever 18 Mini-Fest &ndash; an unforgettable night of live music supporting youth mental health. \n \nFeaturing an ...",
-      "venue": "Clancy's Fish Pub Fremantle, Fremantle, Western Australia",
-      "address": "",
-      "category": "Rock & Pop",
-      "datetime_start": "2026-03-15 17:00:00",
-      "datetime_end": "2026-03-15 21:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/forever-18-mini-fest-live-music-fundraiser/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 397553,
       "name": "Mountainfilm on Tour 2026",
       "description": "Screening this March, Mountainfilm on Tour Presented by Osprey brings the inspiring spirit of Telluride&rsquo;s legendary festival to cinemas across Australia. Showcasing a powerful selection of documentaries on ...",
@@ -136,6 +121,21 @@
       "price": "",
       "age_restriction": "Family Friendly",
       "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
+      "status": "active"
+    },
+    {
+      "id": 398589,
+      "name": "Melville Ability Dance Class",
+      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
+      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "address": "",
+      "category": "Dance Classes",
+      "datetime_start": "2026-02-27 10:30:00",
+      "datetime_end": "2026-12-18 11:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
       "status": "active"
     },
     {
