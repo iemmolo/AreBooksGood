@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-22T12:02:47+00:00",
+  "fetched_at": "2026-03-23T00:08:58+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,36 +16,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
-    {
-      "id": 398376,
-      "name": "Perth Caravan & Camping Show",
-      "description": "Everything you need to explore WA! \n \nWhether you&rsquo;re looking to upgrade your current setup or just starting out, WA&rsquo;s biggest caravan and camping showcase has everything you could possibly need for your next ...",
-      "venue": "Claremont Showground, Claremont, Western Australia",
-      "address": "",
-      "category": "Expos",
-      "datetime_start": "2026-03-19 09:00:00",
-      "datetime_end": "2026-03-22 16:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/perth-caravan-camping-show/perth/claremont",
-      "status": "active"
-    },
-    {
-      "id": 398331,
-      "name": "From the Desert",
-      "description": "Japingka gallery presents an exhibition of works by leading senior artists of the Western and Central Desert art movement. Bringing together painters from multiple language groups&mdash;including Pintupi, Warlpiri, ...",
-      "venue": "Japingka Gallery, Fremantle, Western Australia",
-      "address": "",
-      "category": "Contemporary",
-      "datetime_start": "2026-02-20 10:00:00",
-      "datetime_end": "2026-03-22 17:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/from-the-desert/perth/fremantle",
       "status": "active"
     },
     {
