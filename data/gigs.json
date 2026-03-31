@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-03-30T12:12:43+00:00",
+  "fetched_at": "2026-03-31T00:10:18+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -61,6 +61,21 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/fremantle-international-street-arts-festival-2026/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 398850,
+      "name": "Youth Holiday Song Program",
+      "description": "Join us in developing your core singing skills during the April School Holidays! \n \nJoin Curate for a bespoke vocal artistry Youth Holiday Song Program this April School Holidays, from Tues, 14 Apr to Fri, 17 Apr 2026 ...",
+      "venue": "Zenith Music, Claremont, Western Australia",
+      "address": "",
+      "category": "Choir, Vocal Music",
+      "datetime_start": "2026-04-14 10:30:00",
+      "datetime_end": "2026-04-17 12:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "Family Friendly",
+      "url": "https://www.eventfinda.com.au/2026/youth-holiday-song-program/perth",
       "status": "active"
     }
   ],
