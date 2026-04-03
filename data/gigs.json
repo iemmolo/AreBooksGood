@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-02T12:12:37+00:00",
+  "fetched_at": "2026-04-03T00:10:08+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,21 +16,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/perth-festival-brad-rimmer-loom-of-the-land/perth",
-      "status": "active"
-    },
-    {
-      "id": 398851,
-      "name": "Music Makers Just for Minis (Bibra Lake Location)",
-      "description": "Music Makers Just for Minis is an engaging craft and music play-based experience for children aged 2- to 5- years old. \n\nIf you know Curate, you know we just adore crafting and music. But do you know what is even better? ...",
-      "venue": "Bibra Lake Community Centre, Bibra Lake, Western Australia",
-      "address": "",
-      "category": "Education",
-      "datetime_start": "2026-03-05 13:10:00",
-      "datetime_end": "2026-06-18 13:50:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "Family Friendly",
-      "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
       "status": "active"
     },
     {
