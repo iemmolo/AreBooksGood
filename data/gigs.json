@@ -1,8 +1,23 @@
 {
-  "fetched_at": "2026-04-03T12:07:30+00:00",
+  "fetched_at": "2026-04-04T00:08:35+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
+    {
+      "id": 397093,
+      "name": "Fremantle International Street Arts Festival 2026",
+      "description": "Mark your calendars, street artists from across the globe are set to take over Fremantle&rsquo;s historic streets and shores for the Fremantle International Street Arts Festival, returning for one spectacular long ...",
+      "venue": "Fremantle Town Hall, Fremantle, Western Australia",
+      "address": "",
+      "category": "Family Entertainment",
+      "datetime_start": "2026-04-03 12:00:00",
+      "datetime_end": "2026-04-06 19:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/fremantle-international-street-arts-festival-2026/perth/fremantle",
+      "status": "active"
+    },
     {
       "id": 398093,
       "name": "Perth Festival: Brad Rimmer | Loom of the Land",
@@ -34,21 +49,6 @@
       "status": "active"
     },
     {
-      "id": 397093,
-      "name": "Fremantle International Street Arts Festival 2026",
-      "description": "Mark your calendars, street artists from across the globe are set to take over Fremantle&rsquo;s historic streets and shores for the Fremantle International Street Arts Festival, returning for one spectacular long ...",
-      "venue": "Fremantle Town Hall, Fremantle, Western Australia",
-      "address": "",
-      "category": "Family Entertainment",
-      "datetime_start": "2026-04-03 12:00:00",
-      "datetime_end": "2026-04-06 19:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/fremantle-international-street-arts-festival-2026/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 398850,
       "name": "Youth Holiday Song Program",
       "description": "Join us in developing your core singing skills during the April School Holidays! \n \nJoin Curate for a bespoke vocal artistry Youth Holiday Song Program this April School Holidays, from Tues, 14 Apr to Fri, 17 Apr 2026 ...",
@@ -61,6 +61,21 @@
       "price": "",
       "age_restriction": "Family Friendly",
       "url": "https://www.eventfinda.com.au/2026/youth-holiday-song-program/perth",
+      "status": "active"
+    },
+    {
+      "id": 398166,
+      "name": "Retro Overload - Live!",
+      "description": "RETRO OVERLOAD &ndash; Live! brings the ultimate 80s party mix to PORT BEACH BREWERY in NORTH FREMANTLE on SATURDAY 18 APRIL with a flashback feast of live tributes to 80s music icons! \n \nStep back in time and celebrate ...",
+      "venue": "Port Beach Garden Bar, Fremantle, Western Australia",
+      "address": "",
+      "category": "Covers, Tribute Bands",
+      "datetime_start": "2026-04-18 15:00:00",
+      "datetime_end": "2026-04-18 23:55:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/retro-overload-live-fremantle/perth/fremantle",
       "status": "active"
     }
   ],
