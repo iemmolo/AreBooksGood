@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-06T00:10:15+00:00",
+  "fetched_at": "2026-04-06T12:11:49+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 399626,
+      "name": "East Fremantle WA Lecture: A Path to Restoring Body, Mind & Spirit",
+      "description": "A Natural Connection with the Life Force. Bruno Groening left behind the knowledge of how to absorb a natural restorative power. \n \nWith the growing awareness of holistic and complementary approaches to personal balance ...",
+      "venue": "The Glyde-In Centre, East Fremantle, Western Australia",
+      "address": "",
+      "category": "Mind & Body",
+      "datetime_start": "2026-04-12 11:00:00",
+      "datetime_end": "2026-04-12 12:30:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/east-fremantle-wa-lecture-path-to-restoring-body-mind-spirit/perth/east-fremantle",
       "status": "active"
     },
     {
