@@ -1,23 +1,8 @@
 {
-  "fetched_at": "2026-04-06T12:11:49+00:00",
+  "fetched_at": "2026-04-07T00:10:59+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
-    {
-      "id": 397093,
-      "name": "Fremantle International Street Arts Festival 2026",
-      "description": "Mark your calendars, street artists from across the globe are set to take over Fremantle&rsquo;s historic streets and shores for the Fremantle International Street Arts Festival, returning for one spectacular long ...",
-      "venue": "Fremantle Town Hall, Fremantle, Western Australia",
-      "address": "",
-      "category": "Family Entertainment",
-      "datetime_start": "2026-04-03 12:00:00",
-      "datetime_end": "2026-04-06 19:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/fremantle-international-street-arts-festival-2026/perth/fremantle",
-      "status": "active"
-    },
     {
       "id": 398093,
       "name": "Perth Festival: Brad Rimmer | Loom of the Land",
