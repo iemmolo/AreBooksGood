@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-10T00:11:43+00:00",
+  "fetched_at": "2026-04-10T12:12:02+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,6 +76,21 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/retro-overload-live-fremantle/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 399748,
+      "name": "Steve Sedergreen Trio & guests",
+      "description": "Steve Sedergreen Trio with special guest vocalists \nBridgette Allen &amp; Mark Zanotti\r\nBack by popular demand!\r\nAfter his sensational shows over the last 2 years with his father, jazz great Bob Sedergreen, Steve ...",
+      "venue": "Duke Of George Jazz Club, Fremantle, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-04-24 19:30:00",
+      "datetime_end": "2026-04-24 22:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages Licensed",
+      "url": "https://www.eventfinda.com.au/2026/steve-sedergreen-trio-guests/perth",
       "status": "active"
     }
   ],
