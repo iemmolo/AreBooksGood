@@ -1,23 +1,8 @@
 {
-  "fetched_at": "2026-04-11T00:10:06+00:00",
+  "fetched_at": "2026-04-11T12:05:45+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
-    {
-      "id": 398589,
-      "name": "Melville Ability Dance Class",
-      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
-      "venue": "Applecross Guild Hall, Applecross, Western Australia",
-      "address": "",
-      "category": "Dance Classes",
-      "datetime_start": "2026-02-27 10:30:00",
-      "datetime_end": "2026-12-18 11:30:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
     {
       "id": 398093,
       "name": "Perth Festival: Brad Rimmer | Loom of the Land",
@@ -61,6 +46,21 @@
       "price": "",
       "age_restriction": "Family Friendly",
       "url": "https://www.eventfinda.com.au/2026/youth-holiday-song-program/perth",
+      "status": "active"
+    },
+    {
+      "id": 398589,
+      "name": "Melville Ability Dance Class",
+      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
+      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "address": "",
+      "category": "Dance Classes",
+      "datetime_start": "2026-02-27 10:30:00",
+      "datetime_end": "2026-12-18 11:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
       "status": "active"
     },
     {
