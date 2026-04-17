@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-16T12:16:20+00:00",
+  "fetched_at": "2026-04-17T00:14:11+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,6 +76,21 @@
       "price": "",
       "age_restriction": "All Ages Licensed",
       "url": "https://www.eventfinda.com.au/2026/steve-sedergreen-trio-guests/perth",
+      "status": "active"
+    },
+    {
+      "id": 396375,
+      "name": "Eskimo Joe",
+      "description": "Two decades after the release of one of Australia&rsquo;s most defining rock records, Eskimo Joe are hitting the road once again to celebrate Black Fingernails Red Wine, the album that shaped a generation, topped charts, ...",
+      "venue": "Freo.Social, Fremantle, Western Australia",
+      "address": "",
+      "category": "Rock & Pop",
+      "datetime_start": "2026-05-01 19:30:00",
+      "datetime_end": "2026-05-02 23:59:59",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/eskimo-joe/perth/fremantle",
       "status": "active"
     }
   ],
