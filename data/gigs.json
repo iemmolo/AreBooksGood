@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-18T12:06:39+00:00",
+  "fetched_at": "2026-04-19T00:11:37+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,21 +31,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
-    {
-      "id": 398166,
-      "name": "Retro Overload - Live!",
-      "description": "RETRO OVERLOAD &ndash; Live! brings the ultimate 80s party mix to PORT BEACH BREWERY in NORTH FREMANTLE on SATURDAY 18 APRIL with a flashback feast of live tributes to 80s music icons! \n \nStep back in time and celebrate ...",
-      "venue": "Port Beach Garden Bar, Fremantle, Western Australia",
-      "address": "",
-      "category": "Covers, Tribute Bands",
-      "datetime_start": "2026-04-18 15:00:00",
-      "datetime_end": "2026-04-18 23:55:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/retro-overload-live-fremantle/perth/fremantle",
       "status": "active"
     },
     {
