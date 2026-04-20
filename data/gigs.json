@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-20T00:12:52+00:00",
+  "fetched_at": "2026-04-20T12:17:58+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -34,21 +34,6 @@
       "status": "active"
     },
     {
-      "id": 399938,
-      "name": "Sonya Edney - Healing Through Country",
-      "description": "Yinggarda artist Sonya Edney returns with a new body of work following her last solo exhibition at Japingka in September 2024. This is her seventh solo exhibition with the gallery, and the latest paintings bring a ...",
-      "venue": "Japingka Gallery, Fremantle, Western Australia",
-      "address": "",
-      "category": "Contemporary",
-      "datetime_start": "2026-04-24 12:00:00",
-      "datetime_end": "2026-05-17 17:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/sonya-edney-healing-through-country/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 399748,
       "name": "Steve Sedergreen Trio & guests",
       "description": "Steve Sedergreen Trio with special guest vocalists \nBridgette Allen &amp; Mark Zanotti\r\nBack by popular demand!\r\nAfter his sensational shows over the last 2 years with his father, jazz great Bob Sedergreen, Steve ...",
@@ -61,6 +46,21 @@
       "price": "",
       "age_restriction": "All Ages Licensed",
       "url": "https://www.eventfinda.com.au/2026/steve-sedergreen-trio-guests/perth",
+      "status": "active"
+    },
+    {
+      "id": 399938,
+      "name": "Sonya Edney - Healing Through Country",
+      "description": "Yinggarda artist Sonya Edney returns with a new body of work following her last solo exhibition at Japingka in September 2024. This is her seventh solo exhibition with the gallery, and the latest paintings bring a ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-04-24 12:00:00",
+      "datetime_end": "2026-05-17 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/sonya-edney-healing-through-country/perth/fremantle",
       "status": "active"
     },
     {
