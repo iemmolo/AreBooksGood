@@ -1,8 +1,23 @@
 {
-  "fetched_at": "2026-04-24T12:15:12+00:00",
+  "fetched_at": "2026-04-25T00:13:53+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
+    {
+      "id": 399938,
+      "name": "Sonya Edney - Healing Through Country",
+      "description": "Yinggarda artist Sonya Edney returns with a new body of work following her last solo exhibition at Japingka in September 2024. This is her seventh solo exhibition with the gallery, and the latest paintings bring a ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-04-24 12:00:00",
+      "datetime_end": "2026-05-17 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/sonya-edney-healing-through-country/perth/fremantle",
+      "status": "active"
+    },
     {
       "id": 398093,
       "name": "Perth Festival: Brad Rimmer | Loom of the Land",
@@ -34,36 +49,6 @@
       "status": "active"
     },
     {
-      "id": 399748,
-      "name": "Steve Sedergreen Trio & guests",
-      "description": "Steve Sedergreen Trio with special guest vocalists \nBridgette Allen &amp; Mark Zanotti\r\nBack by popular demand!\r\nAfter his sensational shows over the last 2 years with his father, jazz great Bob Sedergreen, Steve ...",
-      "venue": "Duke Of George Jazz Club, Fremantle, Western Australia",
-      "address": "",
-      "category": "Jazz",
-      "datetime_start": "2026-04-24 19:30:00",
-      "datetime_end": "2026-04-24 22:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages Licensed",
-      "url": "https://www.eventfinda.com.au/2026/steve-sedergreen-trio-guests/perth",
-      "status": "active"
-    },
-    {
-      "id": 399938,
-      "name": "Sonya Edney - Healing Through Country",
-      "description": "Yinggarda artist Sonya Edney returns with a new body of work following her last solo exhibition at Japingka in September 2024. This is her seventh solo exhibition with the gallery, and the latest paintings bring a ...",
-      "venue": "Japingka Gallery, Fremantle, Western Australia",
-      "address": "",
-      "category": "Contemporary",
-      "datetime_start": "2026-04-24 12:00:00",
-      "datetime_end": "2026-05-17 17:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/sonya-edney-healing-through-country/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 396375,
       "name": "Eskimo Joe",
       "description": "Two decades after the release of one of Australia&rsquo;s most defining rock records, Eskimo Joe are hitting the road once again to celebrate Black Fingernails Red Wine, the album that shaped a generation, topped charts, ...",
@@ -76,21 +61,6 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/eskimo-joe/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 400039,
-      "name": "OCEAN - Celebrating the 100th Birthday of Sir David Attenbor",
-      "description": "OCEAN: Celebrating Sir David Attenborough at 100 \nPresented by Freo.Social | Friday 8 May 2026 \n \nA one-night-only fusion of film, science, and music. \n \nStart with a free screening of Ocean with David Attenborough, ...",
-      "venue": "Freo.Social, Fremantle, Western Australia",
-      "address": "",
-      "category": "Film",
-      "datetime_start": "2026-05-08 17:00:00",
-      "datetime_end": "2026-05-08 23:59:59",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/ocean-celebrating-the-100th-birthday-of-sir-david-attenborough/perth",
       "status": "active"
     },
     {
@@ -121,6 +91,21 @@
       "price": "",
       "age_restriction": "Family Friendly",
       "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
+      "status": "active"
+    },
+    {
+      "id": 400039,
+      "name": "OCEAN - Celebrating the 100th Birthday of Sir David Attenborough",
+      "description": "OCEAN: Celebrating Sir David Attenborough at 100 \nPresented by Freo.Social | Friday 8 May 2026 \n \nA one-night-only fusion of film, science, and music. \n \nStart with a free screening of Ocean with David Attenborough, ...",
+      "venue": "Freo.Social, Fremantle, Western Australia",
+      "address": "",
+      "category": "Film",
+      "datetime_start": "2026-05-08 17:00:00",
+      "datetime_end": "2026-05-08 23:59:59",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/ocean-celebrating-the-100th-birthday-of-sir-david-attenborough/perth",
       "status": "active"
     }
   ],
