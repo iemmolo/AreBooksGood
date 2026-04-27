@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-26T12:09:33+00:00",
+  "fetched_at": "2026-04-27T00:14:39+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,21 +16,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/sonya-edney-healing-through-country/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 398093,
-      "name": "Perth Festival: Brad Rimmer | Loom of the Land",
-      "description": "Loom of the Land brings together three interconnected bodies of work from artist Brad Rimmer&rsquo;s Wheatbelt trilogy in a major survey exhibition. Silence (2009), Nature Boy (2019), and Nowhere Near (2023) have been ...",
-      "venue": "Fremantle Arts Centre, Fremantle, Western Australia",
-      "address": "",
-      "category": "Photography",
-      "datetime_start": "2026-02-07 10:00:00",
-      "datetime_end": "2026-04-26 17:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/perth-festival-brad-rimmer-loom-of-the-land/perth",
       "status": "active"
     },
     {
