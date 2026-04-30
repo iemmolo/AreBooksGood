@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-04-29T12:25:32+00:00",
+  "fetched_at": "2026-04-30T00:19:13+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -91,6 +91,21 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/ocean-celebrating-the-100th-birthday-of-sir-david-attenborough/perth",
+      "status": "active"
+    },
+    {
+      "id": 395961,
+      "name": "Beethoven's Ghost",
+      "description": "Australian pianist and storyteller Aura Go has worked with Finnish/Australian-based cellist Timo-Veikko (Tipi) Valve for many years, performing nationally and internationally as a duo. She&rsquo;s also toured extensively ...",
+      "venue": "Winthrop Hall - University of WA, Crawley, Western Australia",
+      "address": "",
+      "category": "Chamber Music",
+      "datetime_start": "2026-05-14 19:30:00",
+      "datetime_end": "2026-05-14 21:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/beethovens-ghost/perth/crawley",
       "status": "active"
     }
   ],
