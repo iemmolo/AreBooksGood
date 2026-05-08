@@ -1,8 +1,23 @@
 {
-  "fetched_at": "2026-05-08T00:19:05+00:00",
+  "fetched_at": "2026-05-08T12:22:15+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
+    {
+      "id": 400039,
+      "name": "OCEAN - Celebrating the 100th Birthday of Sir David Attenborough",
+      "description": "OCEAN: Celebrating Sir David Attenborough at 100 \nPresented by Freo.Social | Friday 8 May 2026 \n \nA one-night-only fusion of film, science, and music. \n \nStart with a free screening of Ocean with David Attenborough, ...",
+      "venue": "Freo.Social, Fremantle, Western Australia",
+      "address": "",
+      "category": "Film",
+      "datetime_start": "2026-05-08 17:00:00",
+      "datetime_end": "2026-05-08 23:59:59",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/ocean-celebrating-the-100th-birthday-of-sir-david-attenborough/perth",
+      "status": "active"
+    },
     {
       "id": 399938,
       "name": "Sonya Edney - Healing Through Country",
@@ -46,21 +61,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
-    {
-      "id": 400039,
-      "name": "OCEAN - Celebrating the 100th Birthday of Sir David Attenborough",
-      "description": "OCEAN: Celebrating Sir David Attenborough at 100 \nPresented by Freo.Social | Friday 8 May 2026 \n \nA one-night-only fusion of film, science, and music. \n \nStart with a free screening of Ocean with David Attenborough, ...",
-      "venue": "Freo.Social, Fremantle, Western Australia",
-      "address": "",
-      "category": "Film",
-      "datetime_start": "2026-05-08 17:00:00",
-      "datetime_end": "2026-05-08 23:59:59",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/ocean-celebrating-the-100th-birthday-of-sir-david-attenborough/perth",
       "status": "active"
     },
     {
