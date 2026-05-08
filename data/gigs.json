@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-07T12:31:04+00:00",
+  "fetched_at": "2026-05-08T00:19:05+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,21 +16,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/sonya-edney-healing-through-country/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 398951,
-      "name": "Ambition and The Aftermath Panel",
-      "description": "Shakespeare, power and ambition: a special event at UWA \n \nPower-hungry politicians. Scheming masterminds. Pursuers of greatness. Shakespeare&rsquo;s plays are filled with characters chasing power and influence. But what ...",
-      "venue": "Murdoch Lecture Theatre - UWA, Crawley, Western Australia",
-      "address": "",
-      "category": "Creative",
-      "datetime_start": "2026-05-07 18:30:00",
-      "datetime_end": "2026-05-07 20:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "15+",
-      "url": "https://www.eventfinda.com.au/2026/ambition-and-the-aftermath-panel/perth/crawley",
       "status": "active"
     },
     {
