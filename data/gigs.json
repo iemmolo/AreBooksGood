@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-15T12:31:16+00:00",
+  "fetched_at": "2026-05-16T00:19:16+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "",
       "age_restriction": "Family Friendly",
       "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
+      "status": "active"
+    },
+    {
+      "id": 399637,
+      "name": "East Fremantle WA Lecture: A Path to A Healthy Body and Soul",
+      "description": "A Natural Connection with the Life Force. Bruno Groening left behind the knowledge of how to absorb a natural restorative power. \n \nWith the growing awareness of holistic and complementary approaches to personal balance ...",
+      "venue": "The Glyde-In Centre, East Fremantle, Western Australia",
+      "address": "",
+      "category": "Mind & Body",
+      "datetime_start": "2026-05-30 11:00:00",
+      "datetime_end": "2026-05-30 12:30:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/east-fremantle-wa-lecture-path-to-healthy-body-and-soul/perth/east-fremantle",
       "status": "active"
     }
   ],
