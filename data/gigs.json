@@ -1,23 +1,8 @@
 {
-  "fetched_at": "2026-05-24T12:17:34+00:00",
+  "fetched_at": "2026-05-25T00:23:09+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
-    {
-      "id": 398589,
-      "name": "Melville Ability Dance Class",
-      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
-      "venue": "Applecross Guild Hall, Applecross, Western Australia",
-      "address": "",
-      "category": "Dance Classes",
-      "datetime_start": "2026-02-27 10:30:00",
-      "datetime_end": "2026-12-18 11:30:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
     {
       "id": 398851,
       "name": "Music Makers Just for Minis (Bibra Lake Location)",
@@ -34,6 +19,21 @@
       "status": "active"
     },
     {
+      "id": 398589,
+      "name": "Melville Ability Dance Class",
+      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
+      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "address": "",
+      "category": "Dance Classes",
+      "datetime_start": "2026-02-27 10:30:00",
+      "datetime_end": "2026-12-18 11:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
       "id": 399637,
       "name": "East Fremantle WA Lecture: A Path to A Healthy Body and Soul",
       "description": "A Natural Connection with the Life Force. Bruno Groening left behind the knowledge of how to absorb a natural restorative power. \n \nWith the growing awareness of holistic and complementary approaches to personal balance ...",
@@ -46,6 +46,36 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/east-fremantle-wa-lecture-path-to-healthy-body-and-soul/perth/east-fremantle",
+      "status": "active"
+    },
+    {
+      "id": 400495,
+      "name": "Jef Neve & Teus Nobel",
+      "description": "International Jazz Masters Jef Neve &amp; Teus Nobel Bring Intimate European Duo Performance to Perth \nThe Perth International Jazz Festival will present acclaimed Belgian pianist Jef Neve and celebrated Dutch trumpeter ...",
+      "venue": "Camelot Arts, Peppermint Grove, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-06-08 19:00:00",
+      "datetime_end": "2026-06-08 21:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/jef-neve-teus-nobel/perth",
+      "status": "active"
+    },
+    {
+      "id": 400349,
+      "name": "WA World Ocean Day",
+      "description": "Presented by The Jock Clough Marine Foundation, WA's official World Ocean Day event brings together two panel discussions on science, conservation and community - accessible, engaging, and built for everyday West ...",
+      "venue": "Gage Roads Freo Brewery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Family & Lifestyle",
+      "datetime_start": "2026-06-08 17:00:00",
+      "datetime_end": "2026-06-08 21:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/wa-world-ocean-day/perth",
       "status": "active"
     }
   ],
