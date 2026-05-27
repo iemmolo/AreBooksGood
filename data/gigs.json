@@ -1,8 +1,23 @@
 {
-  "fetched_at": "2026-05-27T00:24:53+00:00",
+  "fetched_at": "2026-05-27T12:59:32+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
+    {
+      "id": 400895,
+      "name": "Sing Like Julie Andrews! (Adult Session)",
+      "description": "Join us in developing your core singing skills during the WA Day Long Weekend!",
+      "venue": "St Philips Anglican Church, Cottesloe, Western Australia",
+      "address": "",
+      "category": "Creative",
+      "datetime_start": "2026-05-30 15:00:00",
+      "datetime_end": "2026-05-30 16:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/sing-like-julie-andrews-adult-session/perth",
+      "status": "active"
+    },
     {
       "id": 398851,
       "name": "Music Makers Just for Minis (Bibra Lake Location)",
@@ -31,6 +46,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 400897,
+      "name": "Choir Quiz Night",
+      "description": "Join the Curate Choirs for a fun-packed QUIZ NIGHT at Grill'd Claremont on Sunday, 31 May 2026 from 5.30pm!\n \nEVENT INFO \n \nJoin Perth Gospel Choir, The Christmas Choir &amp; The Cantata Choir for a night of ...",
+      "venue": "Grill'd Claremont, Claremont, Western Australia",
+      "address": "",
+      "category": "Food, Gourmet, Wine",
+      "datetime_start": "2026-05-31 17:30:00",
+      "datetime_end": "2026-05-31 19:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/choir-quiz-night-grilld-claremont-quarter/perth/claremont",
       "status": "active"
     },
     {
