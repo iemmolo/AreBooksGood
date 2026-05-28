@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-27T12:59:32+00:00",
+  "fetched_at": "2026-05-28T00:22:34+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -121,6 +121,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/warren-millers-sno-ciety/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 399287,
+      "name": "4th International Watercolour Exhibition",
+      "description": "Fremantle will host a spectacular exhibition of contemporary watercolour paintings by International and Australian artists for the 4th International Watercolour Exhibition. \n \nRunning from 11 to 23 June 2026, the 4th ...",
+      "venue": "Old Customs House, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-06-11 09:30:00",
+      "datetime_end": "2026-06-23 16:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/4th-international-watercolour-exhibition/perth/fremantle",
       "status": "active"
     }
   ],
