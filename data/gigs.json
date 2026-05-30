@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-29T12:55:50+00:00",
+  "fetched_at": "2026-05-30T00:24:14+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -151,6 +151,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/4th-international-watercolour-exhibition/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 400327,
+      "name": "Festa Italiana",
+      "description": "Be transported to 17th-century Italy as HIP Company explores music for dancing and celebrating by some of Italy's great early composers. Set in Fremantle's historic Victoria Hall, experience a veritable feast of glorious ...",
+      "venue": "Victoria Hall Fremantle, Fremantle, Western Australia",
+      "address": "",
+      "category": "Classical Music",
+      "datetime_start": "2026-06-13 19:00:00",
+      "datetime_end": "2026-06-13 20:15:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/festa-italiana/perth",
       "status": "active"
     }
   ],
