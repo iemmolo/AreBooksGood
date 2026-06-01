@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-01T00:24:33+00:00",
+  "fetched_at": "2026-06-01T13:51:56+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/unruly-wa-protest-makes-progress/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 401066,
+      "name": "Ochre Paintings - Lorraine Daylight",
+      "description": "Lorraine Daylight paints the Country of her family through the rich ochres of the East Kimberley. Guided by senior Warmun artists Jack Britten, Hector Jandany, and her father Gordon Barney, Lorraine continues the ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-06-12 10:00:00",
+      "datetime_end": "2026-07-09 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/ochre-paintings-lorraine-daylight/perth/fremantle",
       "status": "active"
     },
     {
