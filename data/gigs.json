@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-04T12:54:47+00:00",
+  "fetched_at": "2026-06-05T00:26:49+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,21 +31,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
-    {
-      "id": 401017,
-      "name": "Unruly WA: Protest Makes Progress",
-      "description": "A multimedia exhibition celebrating and defending our right to protest. Tuesday 4 June exhibition opening and soundscape by Measures of Distance. Wednesday, 3 June Unruly Voices: Seminar &amp; Panel Discussion; and ...",
-      "venue": "Kidogo Art House, Fremantle, Western Australia",
-      "address": "",
-      "category": "Social & Political History",
-      "datetime_start": "2026-06-02 18:30:00",
-      "datetime_end": "2026-06-04 22:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/unruly-wa-protest-makes-progress/perth/fremantle",
       "status": "active"
     },
     {
