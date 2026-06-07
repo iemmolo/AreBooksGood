@@ -1,7 +1,184 @@
 {
-  "fetched_at": "2026-06-07T00:25:29+00:00",
+  "fetched_at": "2026-06-07T12:26:59+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
-  "events": [],
-  "categories": []
+  "events": [
+    {
+      "id": 398851,
+      "name": "Music Makers Just for Minis (Bibra Lake Location)",
+      "description": "Music Makers Just for Minis is an engaging craft and music play-based experience for children aged 2- to 5- years old. \n\nIf you know Curate, you know we just adore crafting and music. But do you know what is even better? ...",
+      "venue": "Bibra Lake Community Centre, Bibra Lake, Western Australia",
+      "address": "",
+      "category": "Education",
+      "datetime_start": "2026-03-05 13:10:00",
+      "datetime_end": "2026-06-18 13:50:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "Family Friendly",
+      "url": "https://www.eventfinda.com.au/2026/music-makers-just-for-minis-bibra-lake-location/perth",
+      "status": "active"
+    },
+    {
+      "id": 398589,
+      "name": "Melville Ability Dance Class",
+      "description": "The Ability dance class at the Applecross Guide Hall is on Fridays from 10.30 am-11.30 am. Dance is self-expression. Our Ability Dance Perth classes encourage our dancers to express themselves to music in a fun and ...",
+      "venue": "Applecross Guild Hall, Applecross, Western Australia",
+      "address": "",
+      "category": "Dance Classes",
+      "datetime_start": "2026-02-27 10:30:00",
+      "datetime_end": "2026-12-18 11:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 401066,
+      "name": "Ochre Paintings - Lorraine Daylight",
+      "description": "Lorraine Daylight paints the Country of her family through the rich ochres of the East Kimberley. Guided by senior Warmun artists Jack Britten, Hector Jandany, and her father Gordon Barney, Lorraine continues the ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-06-12 10:00:00",
+      "datetime_end": "2026-07-09 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/ochre-paintings-lorraine-daylight/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 400495,
+      "name": "Jef Neve & Teus Nobel",
+      "description": "International Jazz Masters Jef Neve &amp; Teus Nobel Bring Intimate European Duo Performance to Perth \nThe Perth International Jazz Festival will present acclaimed Belgian pianist Jef Neve and celebrated Dutch trumpeter ...",
+      "venue": "Camelot Arts, Peppermint Grove, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-06-08 19:00:00",
+      "datetime_end": "2026-06-08 21:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/jef-neve-teus-nobel/perth",
+      "status": "active"
+    },
+    {
+      "id": 400349,
+      "name": "WA World Ocean Day",
+      "description": "Presented by The Jock Clough Marine Foundation, WA's official World Ocean Day event brings together two panel discussions on science, conservation and community - accessible, engaging, and built for everyday West ...",
+      "venue": "Gage Roads Freo Brewery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Family & Lifestyle",
+      "datetime_start": "2026-06-08 17:00:00",
+      "datetime_end": "2026-06-08 21:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/wa-world-ocean-day/perth",
+      "status": "active"
+    },
+    {
+      "id": 399342,
+      "name": "Warren Miller's SNO-CIETY",
+      "description": "CELEBRATE WARREN MILLER&rsquo;S 76TH ANNUAL SKI FILM \n&ldquo;SNO-CIETY,&rdquo; celebrates the community and culture of snowsports, proving winter is more than just snow. \n \nFrom the Scottish Highlands and the streets of ...",
+      "venue": "Luna on SX, Fremantle, Western Australia",
+      "address": "",
+      "category": "Film",
+      "datetime_start": "2026-06-10 18:30:00",
+      "datetime_end": "2026-06-10 20:45:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/warren-millers-sno-ciety/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 399287,
+      "name": "4th International Watercolour Exhibition",
+      "description": "Fremantle will host a spectacular exhibition of contemporary watercolour paintings by International and Australian artists for the 4th International Watercolour Exhibition. \n \nRunning from 11 to 23 June 2026, the 4th ...",
+      "venue": "Old Customs House, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-06-11 09:30:00",
+      "datetime_end": "2026-06-23 16:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/4th-international-watercolour-exhibition/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 400327,
+      "name": "Festa Italiana",
+      "description": "Be transported to 17th-century Italy as HIP Company explores music for dancing and celebrating by some of Italy's great early composers. Set in Fremantle's historic Victoria Hall, experience a veritable feast of glorious ...",
+      "venue": "Victoria Hall Fremantle, Fremantle, Western Australia",
+      "address": "",
+      "category": "Classical Music",
+      "datetime_start": "2026-06-13 19:00:00",
+      "datetime_end": "2026-06-13 20:15:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/festa-italiana/perth",
+      "status": "active"
+    },
+    {
+      "id": 400612,
+      "name": "Fremantle Symphony Orchestra Winter Warmer No.1: Idyll",
+      "description": "Back for another year, we are pleased to present FSO&rsquo;s 2026 Winter Warmer concert season! First in the series is &lsquo;Idyll&rsquo;&hellip;\r\nSnuggle-up and sit back for an evening of atmospheric music that ...",
+      "venue": "John Leckie Pavillion, Nedlands, Western Australia",
+      "address": "",
+      "category": "Classical Music",
+      "datetime_start": "2026-06-14 17:00:00",
+      "datetime_end": "2026-06-14 18:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/fremantle-symphony-orchestra-winter-warmer-no-1-idyll/perth/nedlands",
+      "status": "active"
+    }
+  ],
+  "categories": [
+    {
+      "id": "All Events",
+      "name": "All Events"
+    },
+    {
+      "id": "Concerts & Gig Guide",
+      "name": "Concerts & Gig Guide"
+    },
+    {
+      "id": "Performing Arts",
+      "name": "Performing Arts"
+    },
+    {
+      "id": "Sports & Outdoors",
+      "name": "Sports & Outdoors"
+    },
+    {
+      "id": "Festivals & Lifestyle",
+      "name": "Festivals & Lifestyle"
+    },
+    {
+      "id": "Music Festivals",
+      "name": "Music Festivals"
+    },
+    {
+      "id": "Exhibitions",
+      "name": "Exhibitions"
+    },
+    {
+      "id": "Workshops, Conferences & Classes",
+      "name": "Workshops, Conferences & Classes"
+    },
+    {
+      "id": "Quiz, Karaoke",
+      "name": "Quiz, Karaoke"
+    },
+    {
+      "id": "Alternative, Indie",
+      "name": "Alternative, Indie"
+    }
+  ]
 }
