@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-08T13:20:25+00:00",
+  "fetched_at": "2026-06-09T00:22:36+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,36 +46,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/ochre-paintings-lorraine-daylight/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 400495,
-      "name": "Jef Neve & Teus Nobel",
-      "description": "International Jazz Masters Jef Neve &amp; Teus Nobel Bring Intimate European Duo Performance to Perth \nThe Perth International Jazz Festival will present acclaimed Belgian pianist Jef Neve and celebrated Dutch trumpeter ...",
-      "venue": "Camelot Arts, Peppermint Grove, Western Australia",
-      "address": "",
-      "category": "Jazz",
-      "datetime_start": "2026-06-08 19:00:00",
-      "datetime_end": "2026-06-08 21:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/jef-neve-teus-nobel/perth",
-      "status": "active"
-    },
-    {
-      "id": 400349,
-      "name": "WA World Ocean Day",
-      "description": "Presented by The Jock Clough Marine Foundation, WA's official World Ocean Day event brings together two panel discussions on science, conservation and community - accessible, engaging, and built for everyday West ...",
-      "venue": "Gage Roads Freo Brewery, Fremantle, Western Australia",
-      "address": "",
-      "category": "Family & Lifestyle",
-      "datetime_start": "2026-06-08 17:00:00",
-      "datetime_end": "2026-06-08 21:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/wa-world-ocean-day/perth",
       "status": "active"
     },
     {
