@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-10T13:00:23+00:00",
+  "fetched_at": "2026-06-11T00:30:37+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,21 +46,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/ochre-paintings-lorraine-daylight/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 399342,
-      "name": "Warren Miller's SNO-CIETY",
-      "description": "CELEBRATE WARREN MILLER&rsquo;S 76TH ANNUAL SKI FILM \n&ldquo;SNO-CIETY,&rdquo; celebrates the community and culture of snowsports, proving winter is more than just snow. \n \nFrom the Scottish Highlands and the streets of ...",
-      "venue": "Luna on SX, Fremantle, Western Australia",
-      "address": "",
-      "category": "Film",
-      "datetime_start": "2026-06-10 18:30:00",
-      "datetime_end": "2026-06-10 20:45:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/warren-millers-sno-ciety/perth/fremantle",
       "status": "active"
     },
     {
