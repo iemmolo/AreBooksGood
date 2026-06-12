@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-11T13:08:26+00:00",
+  "fetched_at": "2026-06-12T00:30:27+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -91,6 +91,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/fremantle-symphony-orchestra-winter-warmer-no-1-idyll/perth/nedlands",
+      "status": "active"
+    },
+    {
+      "id": 395195,
+      "name": "Bon But Not Forgotten celebrate AC/DC - The Final Ride",
+      "description": "The thunder is about to roll one last time. Bon But Not Forgotten, the world\u2011class AC/DC tribute celebrating Bon Scott, is hitting the road for its final Australian tour &ndash; celebrating over half a century of ...",
+      "venue": "Freo.Social, Fremantle, Western Australia",
+      "address": "",
+      "category": "Hard Rock",
+      "datetime_start": "2026-06-26 20:00:00",
+      "datetime_end": "2026-06-26 23:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/bon-but-not-forgotten-celebrate-ac-dc-the-final-ride/perth/fremantle",
       "status": "active"
     }
   ],
