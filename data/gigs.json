@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-12T13:00:18+00:00",
+  "fetched_at": "2026-06-13T00:30:40+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -106,6 +106,21 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/bon-but-not-forgotten-celebrate-ac-dc-the-final-ride/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 400304,
+      "name": "East Fremantle Part 1: The Phenomenon Bruno Groening Film/Info Session",
+      "description": "In 1949, one name dominated the headlines: Bruno Groening. Newspapers printed special editions. Radio and newsreels covered the phenomenon. Wherever he appeared, thousands gathered in the hope of finding help. At the ...",
+      "venue": "The Glyde-In Centre, East Fremantle, Western Australia",
+      "address": "",
+      "category": "Mind & Body",
+      "datetime_start": "2026-06-27 13:00:00",
+      "datetime_end": "2026-06-27 16:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/east-fremantle-part-1-the-phenomenon-bruno-groening-film-info-session/perth/east-frem",
       "status": "active"
     }
   ],
