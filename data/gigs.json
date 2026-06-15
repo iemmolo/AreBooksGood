@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-14T12:32:57+00:00",
+  "fetched_at": "2026-06-15T00:28:25+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -61,21 +61,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/4th-international-watercolour-exhibition/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 400612,
-      "name": "Fremantle Symphony Orchestra Winter Warmer No.1: Idyll",
-      "description": "Back for another year, we are pleased to present FSO&rsquo;s 2026 Winter Warmer concert season! First in the series is &lsquo;Idyll&rsquo;&hellip;\r\nSnuggle-up and sit back for an evening of atmospheric music that ...",
-      "venue": "John Leckie Pavillion, Nedlands, Western Australia",
-      "address": "",
-      "category": "Classical Music",
-      "datetime_start": "2026-06-14 17:00:00",
-      "datetime_end": "2026-06-14 18:30:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/fremantle-symphony-orchestra-winter-warmer-no-1-idyll/perth/nedlands",
       "status": "active"
     },
     {
