@@ -1,8 +1,23 @@
 {
-  "fetched_at": "2026-06-19T00:34:16+00:00",
+  "fetched_at": "2026-06-19T13:04:32+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
+    {
+      "id": 401569,
+      "name": "Debbie Beasley & Daisy Peterson",
+      "description": "Welcome to this delightful exhibition of new works by Debbie Beasley &amp; Daisy Peterson, presented in association with Barkly Regional Arts.\r\nTwo artists from Central Australia present paintings of their homelands. ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Fine Art",
+      "datetime_start": "2026-06-18 10:00:00",
+      "datetime_end": "2026-07-12 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/debbie-beasley-daisy-peterson/perth/fremantle",
+      "status": "active"
+    },
     {
       "id": 398589,
       "name": "Melville Ability Dance Class",
