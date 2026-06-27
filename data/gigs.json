@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-06-27T00:25:43+00:00",
+  "fetched_at": "2026-06-27T12:21:31+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -61,6 +61,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/east-fremantle-part-1-the-phenomenon-bruno-groening-film-info-session/perth/east-frem",
+      "status": "active"
+    },
+    {
+      "id": 401710,
+      "name": "Exclusive Truffle Experience",
+      "description": "As part of the Fremantle Truffle Festival, The Loft by Creatures &amp; Co. will host an exclusive three-course Truffle Experience from Friday 10 July to Sunday 12 July at Little Creatures Fremantle. \n \nDesigned for ...",
+      "venue": "Little Creatures Brewing, Fremantle, Western Australia",
+      "address": "",
+      "category": "Food, Gourmet, Wine",
+      "datetime_start": "2026-07-10 11:00:00",
+      "datetime_end": "2026-07-12 22:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages Licensed",
+      "url": "https://www.eventfinda.com.au/2026/exclusive-truffle-experience-at-the-loft-by-creatures-co/perth",
       "status": "active"
     }
   ],
