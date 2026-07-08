@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-07T14:02:44+00:00",
+  "fetched_at": "2026-07-08T01:25:17+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/ochre-paintings-lorraine-daylight/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 401976,
+      "name": "Jodi Martin - Never Say Die! Fremantle",
+      "description": "South Australia&rsquo;s beloved Jodi Martin&rsquo;s Never Say Die! Tour 2025 brings heart, humour, and soulful storytelling to the stage. Featuring playlisted songs like \"Country Mile\" and #1 AMRAP chart hits \"Tommy the ...",
+      "venue": "The Fremantle Fibonacci Centre, Fremantle, Western Australia",
+      "address": "",
+      "category": "Folk",
+      "datetime_start": "2026-07-11 19:00:00",
+      "datetime_end": "2026-07-11 21:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/jodi-martin-never-say-die-fremantle/perth/fremantle",
       "status": "active"
     },
     {
