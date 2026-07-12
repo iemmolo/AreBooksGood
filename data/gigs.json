@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-11T12:49:49+00:00",
+  "fetched_at": "2026-07-12T01:26:15+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -34,21 +34,6 @@
       "status": "active"
     },
     {
-      "id": 401976,
-      "name": "Jodi Martin - Never Say Die! Fremantle",
-      "description": "South Australia&rsquo;s beloved Jodi Martin&rsquo;s Never Say Die! Tour 2025 brings heart, humour, and soulful storytelling to the stage. Featuring playlisted songs like \"Country Mile\" and #1 AMRAP chart hits \"Tommy the ...",
-      "venue": "The Fremantle Fibonacci Centre, Fremantle, Western Australia",
-      "address": "",
-      "category": "Folk",
-      "datetime_start": "2026-07-11 19:00:00",
-      "datetime_end": "2026-07-11 21:30:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/jodi-martin-never-say-die-fremantle/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 401710,
       "name": "Exclusive Truffle Experience",
       "description": "As part of the Fremantle Truffle Festival, The Loft by Creatures &amp; Co. will host an exclusive three-course Truffle Experience from Friday 10 July to Sunday 12 July at Little Creatures Fremantle. \n \nDesigned for ...",
@@ -61,6 +46,36 @@
       "price": "",
       "age_restriction": "All Ages Licensed",
       "url": "https://www.eventfinda.com.au/2026/exclusive-truffle-experience-at-the-loft-by-creatures-co/perth",
+      "status": "active"
+    },
+    {
+      "id": 401711,
+      "name": "R&B by the Sea",
+      "description": "On Sunday 26 July, The Loft by Creatures &amp; Co. brings you throwback tunes with R&amp;B by the Sea at Little Creatures Fremantle - a relaxed yet refined long lunch boasting the best sparkling water views in Freo. \n ...",
+      "venue": "Little Creatures Brewing, Fremantle, Western Australia",
+      "address": "",
+      "category": "Food, Gourmet, Wine",
+      "datetime_start": "2026-07-26 12:00:00",
+      "datetime_end": "2026-07-26 15:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/r-b-by-the-sea-the-loft-by-creatures-co/perth",
+      "status": "active"
+    },
+    {
+      "id": 400904,
+      "name": "Christmas in July! Concert",
+      "description": "Join The Cantata Chorale, Perth Gospel Choir &amp; The Christmas Choir for a sublime concert, including some fabulous Christmas Favourites perfect for the Perth winter season in their fan-favourite Christmas in July! ...",
+      "venue": "The Church of the Resurrection, Swanbourne, Western Australia",
+      "address": "",
+      "category": "Pop",
+      "datetime_start": "2026-07-26 16:00:00",
+      "datetime_end": "2026-07-26 18:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/christmas-in-july-concert/perth",
       "status": "active"
     }
   ],
