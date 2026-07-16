@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-16T01:23:02+00:00",
+  "fetched_at": "2026-07-16T13:14:39+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,6 +16,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 402085,
+      "name": "Wreckage Charity Screening and QandA with Phoenix Support and Advocacy",
+      "description": "WRECKAGE | A Charity Screening and Q&amp;A \nHosted by Phoenix Support and Advocacy Service\r\nFollowing its sold-out screening at the WA Made Film Festival, Phoenix Support and Advocacy Service is proud to host a special ...",
+      "venue": "Windsor Cinema, Luna Palace Cinemas, Nedlands, Western Australia",
+      "address": "",
+      "category": "Film",
+      "datetime_start": "2026-07-30 18:00:00",
+      "datetime_end": "2026-07-30 20:45:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/wreckage-charity-screening-and-qanda-with-phoenix-support-and-advocacy/perth",
       "status": "active"
     },
     {
