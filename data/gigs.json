@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-21T13:11:25+00:00",
+  "fetched_at": "2026-07-22T01:22:41+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -61,6 +61,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/christmas-in-july-concert/perth",
+      "status": "active"
+    },
+    {
+      "id": 395999,
+      "name": "Nicolas Altstaedt & Thomas Dunford",
+      "description": "In the intricate weave of sounds that make up a baroque ensemble, the lute is central. It's fitting, then, that French-American lutenist Thomas Dunford is at the centre of some of the most exciting early music-making of ...",
+      "venue": "Winthrop Hall - University of WA, Crawley, Western Australia",
+      "address": "",
+      "category": "Chamber Music",
+      "datetime_start": "2026-08-05 19:30:00",
+      "datetime_end": "2026-08-05 21:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/nicolas-altstaedt-thomas-dunford/perth/crawley",
       "status": "active"
     }
   ],
