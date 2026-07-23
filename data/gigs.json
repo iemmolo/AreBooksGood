@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-22T13:17:12+00:00",
+  "fetched_at": "2026-07-23T01:42:07+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,6 +76,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/nicolas-altstaedt-thomas-dunford/perth/crawley",
+      "status": "active"
+    },
+    {
+      "id": 400397,
+      "name": "RunNation Film Tour 2026",
+      "description": "Real stories. Running connections. A film night to inspire. \n \nAustralia and New Zealand, 2026 \n \nRunNation Film Festival Presented by Yeah Buddy, returns for its 12th year in 2026, touring more than 30 locations across ...",
+      "venue": "Luna on SX, Fremantle, Western Australia",
+      "address": "",
+      "category": "Film",
+      "datetime_start": "2026-08-06 18:30:00",
+      "datetime_end": "2026-08-06 21:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/runnation-film-tour-2026-fremantle/perth/fremantle",
       "status": "active"
     }
   ],
