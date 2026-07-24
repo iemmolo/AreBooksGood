@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-23T13:20:04+00:00",
+  "fetched_at": "2026-07-24T01:26:30+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,6 +31,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/wreckage-charity-screening-and-qanda-with-phoenix-support-and-advocacy/perth",
+      "status": "active"
+    },
+    {
+      "id": 401689,
+      "name": "Mould X Pinot Palooza",
+      "description": "MOULD x PINOT PALOOZA returns in 2026 for the biggest, cheesiest pinot-perfect party Australia's ever seen! \n \nVino-lovers and curd-nerds, rejoice! Australia's biggest cheese and wine party is coming to a city near you ...",
+      "venue": "Claremont Showground, Claremont, Western Australia",
+      "address": "",
+      "category": "Food, Gourmet, Wine",
+      "datetime_start": "2026-08-07 17:00:00",
+      "datetime_end": "2026-08-09 15:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/mould-pinot-palooza/perth/claremont",
       "status": "active"
     },
     {
