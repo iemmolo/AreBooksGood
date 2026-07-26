@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-25T12:56:13+00:00",
+  "fetched_at": "2026-07-26T01:29:41+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/mould-pinot-palooza/perth/claremont",
+      "status": "active"
+    },
+    {
+      "id": 402040,
+      "name": "Minang Moon Lullaby Music Video Launch Party",
+      "description": "Come and help us celebrate this West Australian piece of music and its music video!\n \nWe invite you to the launch of Robert Zielinski's new music video at Kidogo Arthouse. There will be a public screening of the video at ...",
+      "venue": "Kidogo Art House, Fremantle, Western Australia",
+      "address": "",
+      "category": "Acoustic, Instrumental",
+      "datetime_start": "2026-08-09 16:00:00",
+      "datetime_end": "2026-08-09 19:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/minang-moon-lullaby-music-video-launch-party/perth/fremantle",
       "status": "active"
     },
     {
