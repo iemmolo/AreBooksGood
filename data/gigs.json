@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-07-29T13:41:03+00:00",
+  "fetched_at": "2026-07-30T01:16:22+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,6 +16,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 402358,
+      "name": "Vistas",
+      "description": "Vistas is a seasonal survey exhibition showcasing artists represented in the Japingka Gallery collection. Featuring works by major artists including Dorothy Napangardi, George Hairbrush Tjungurrayi, Yukultji Napangati, ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Fine Art",
+      "datetime_start": "2026-08-07 10:00:00",
+      "datetime_end": "2026-09-06 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/vistas/perth/fremantle",
       "status": "active"
     },
     {
