@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-08T12:21:48+00:00",
+  "fetched_at": "2026-08-09T00:46:57+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,21 +76,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/save-the-children-uwa-annual-book-sale-2026/perth/crawley",
-      "status": "active"
-    },
-    {
-      "id": 401810,
-      "name": "Sun Fest: a Celebration of Grooves From Around the World",
-      "description": "Put your dancing shoes on and step into the vibrant sounds of Sun Fest&mdash;a feel-good celebration of global rhythms and original music made in WA. This colourful live show brings together rich musical traditions from ...",
-      "venue": "Mojo's, North Fremantle, Western Australia",
-      "address": "",
-      "category": "World",
-      "datetime_start": "2026-08-08 20:00:00",
-      "datetime_end": "2026-08-08 23:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/sun-fest-celebration-of-grooves-from-around-the-world/perth/north-fremantle",
       "status": "active"
     },
     {
