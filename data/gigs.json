@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-18T00:32:47+00:00",
+  "fetched_at": "2026-08-18T12:20:24+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,6 +31,21 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/vistas/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 402889,
+      "name": "CircusWA: The RAFT",
+      "description": "When a luxury cruise goes spectacularly wrong, a group of unlikely survivors must learn to navigate life together on a single raft. \n \nCreated and performed by CircusWA&rsquo;s Youth Academy, The RAFT is a thrilling ...",
+      "venue": "Victoria Hall Fremantle, Fremantle, Western Australia",
+      "address": "",
+      "category": "Circus",
+      "datetime_start": "2026-08-29 19:00:00",
+      "datetime_end": "2026-08-30 19:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/circuswa-the-raft/perth",
       "status": "active"
     },
     {
