@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-26T12:24:50+00:00",
+  "fetched_at": "2026-08-27T05:29:20+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/circuswa-the-raft/perth",
+      "status": "active"
+    },
+    {
+      "id": 402042,
+      "name": "Blues Legends, Presented by Kerry B Ryan",
+      "description": "Duke of George presents \nBlues Legends presented by Kerry B Ryan Blues Experience\n \nRenowned guitarist and vocalist Kerry B Ryan returns with his acclaimed Blues Legends show, joined by his powerhouse band The Blues ...",
+      "venue": "Duke Of George Jazz Club, Fremantle, Western Australia",
+      "address": "",
+      "category": "Blues",
+      "datetime_start": "2026-09-10 19:00:00",
+      "datetime_end": "2026-09-10 21:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/blues-legends-presented-by-kerry-ryan2/perth",
       "status": "active"
     }
   ],
