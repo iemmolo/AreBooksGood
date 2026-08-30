@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-29T15:52:03+00:00",
+  "fetched_at": "2026-08-30T02:06:51+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -46,6 +46,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/circuswa-the-raft/perth",
+      "status": "active"
+    },
+    {
+      "id": 402438,
+      "name": "Classic Cars and Coffee",
+      "description": "Classic Cars &amp; Coffee Perth is a free monthly gathering of classic, exotic and collectible cars held at the University of Western Australia in Crawley, on the first Sunday of every month. Spectators can wander the ...",
+      "venue": "University of Western Australia, Crawley, Western Australia",
+      "address": "",
+      "category": "Lifestyle Shows, Expos",
+      "datetime_start": "2026-09-13 08:30:00",
+      "datetime_end": "2026-11-01 10:30:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/classic-cars-and-coffee/perth/crawley",
       "status": "active"
     },
     {
