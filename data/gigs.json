@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-08-30T15:37:40+00:00",
+  "fetched_at": "2026-08-31T02:02:27+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -34,21 +34,6 @@
       "status": "active"
     },
     {
-      "id": 402889,
-      "name": "CircusWA: The RAFT",
-      "description": "When a luxury cruise goes spectacularly wrong, a group of unlikely survivors must learn to navigate life together on a single raft. \n \nCreated and performed by CircusWA&rsquo;s Youth Academy, The RAFT is a thrilling ...",
-      "venue": "Victoria Hall Fremantle, Fremantle, Western Australia",
-      "address": "",
-      "category": "Circus",
-      "datetime_start": "2026-08-29 19:00:00",
-      "datetime_end": "2026-08-30 19:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/circuswa-the-raft/perth",
-      "status": "active"
-    },
-    {
       "id": 402438,
       "name": "Classic Cars and Coffee",
       "description": "Classic Cars &amp; Coffee Perth is a free monthly gathering of classic, exotic and collectible cars held at the University of Western Australia in Crawley, on the first Sunday of every month. Spectators can wander the ...",
@@ -76,6 +61,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/blues-legends-presented-by-kerry-ryan2/perth",
+      "status": "active"
+    },
+    {
+      "id": 399825,
+      "name": "The Big Bike Film Night 2026",
+      "description": "Let the good times roll! The Big Bike Film Night is riding into town, on its mission to bring the best cycling short films from around the world together for you. \n \nCycle through 2.5 hours of thrilling and moving ...",
+      "venue": "Luna on SX, Fremantle, Western Australia",
+      "address": "",
+      "category": "Cycling",
+      "datetime_start": "2026-09-14 18:30:00",
+      "datetime_end": "2026-09-14 21:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/the-big-bike-film-night-2026/perth/fremantle",
       "status": "active"
     }
   ],
