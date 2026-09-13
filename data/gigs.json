@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-12T14:32:29+00:00",
+  "fetched_at": "2026-09-13T01:47:44+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -106,6 +106,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/the-big-bike-film-night-2026/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 400170,
+      "name": "FREOPALOOZA - The Ultimate 90s Tribute Festival",
+      "description": "Freo's favourite 90s shindig FREOPALOOZA returns this spring for THE ULTIMATE 90S TRIBUTE FESTIVAL, an era when bands ruled the festival stage, and south of the river was home to legendary events such as The Big Day Out, ...",
+      "venue": "Port Beach Garden Bar, Fremantle, Western Australia",
+      "address": "",
+      "category": "Covers, Tribute Bands",
+      "datetime_start": "2026-09-27 14:00:00",
+      "datetime_end": "2026-09-27 23:45:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/freopalooza-the-ultimate-90s-tribute-festival/perth/fremantle",
       "status": "active"
     }
   ],
