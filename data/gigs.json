@@ -1,23 +1,8 @@
 {
-  "fetched_at": "2026-09-14T17:09:45+00:00",
+  "fetched_at": "2026-09-15T02:12:48+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
-    {
-      "id": 399825,
-      "name": "The Big Bike Film Night 2026",
-      "description": "Let the good times roll! The Big Bike Film Night is riding into town, on its mission to bring the best cycling short films from around the world together for you. \n \nCycle through 2.5 hours of thrilling and moving ...",
-      "venue": "Luna on SX, Fremantle, Western Australia",
-      "address": "",
-      "category": "Cycling",
-      "datetime_start": "2026-09-14 18:30:00",
-      "datetime_end": "2026-09-14 21:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/the-big-bike-film-night-2026/perth/fremantle",
-      "status": "active"
-    },
     {
       "id": 403377,
       "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Gui",
