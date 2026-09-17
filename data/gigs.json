@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-09-16T15:41:18+00:00",
+  "fetched_at": "2026-09-17T02:08:50+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
     {
       "id": 403377,
-      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Guinea",
+      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Gui",
       "description": "Step into the extraordinary world of \u00d6mie barkcloth art from the remote rainforests of Papua New Guinea.\n \nMade from natural bark and decorated with intricate patterns, colours and designs drawn from the rainforest ...",
       "venue": "Japingka Gallery, Fremantle, Western Australia",
       "address": "",
@@ -76,6 +76,21 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/freopalooza-the-ultimate-90s-tribute-festival/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 402029,
+      "name": "Tell Mama! Janis Joplin by Karise Eden",
+      "description": "Since helping redefine rock more than half a century ago, Janis Joplin has never stopped finding new audiences. In Tell Mama!, ARIA Award winner Karise Eden revives the spirit and extraordinary legacy of one of rock's ...",
+      "venue": "Freo.Social, Fremantle, Western Australia",
+      "address": "",
+      "category": "Rock & Pop",
+      "datetime_start": "2026-10-01 18:30:00",
+      "datetime_end": "2026-10-01 21:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/tell-mama-janis-joplin-by-karise-eden/perth",
       "status": "active"
     },
     {
