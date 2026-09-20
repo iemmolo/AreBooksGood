@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-09-19T14:57:42+00:00",
+  "fetched_at": "2026-09-20T02:04:48+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
     {
       "id": 403377,
-      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Guinea",
+      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Gui",
       "description": "Step into the extraordinary world of \u00d6mie barkcloth art from the remote rainforests of Papua New Guinea.\n \nMade from natural bark and decorated with intricate patterns, colours and designs drawn from the rainforest ...",
       "venue": "Japingka Gallery, Fremantle, Western Australia",
       "address": "",
@@ -94,6 +94,21 @@
       "status": "active"
     },
     {
+      "id": 402438,
+      "name": "Classic Cars and Coffee",
+      "description": "Classic Cars &amp; Coffee Perth is a free monthly gathering of classic, exotic and collectible cars held at the University of Western Australia in Crawley, on the first Sunday of every month. Spectators can wander the ...",
+      "venue": "University of Western Australia, Crawley, Western Australia",
+      "address": "",
+      "category": "Lifestyle Shows, Expos",
+      "datetime_start": "2026-09-13 08:30:00",
+      "datetime_end": "2026-11-01 10:30:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/classic-cars-and-coffee/perth/crawley",
+      "status": "active"
+    },
+    {
       "id": 402741,
       "name": "ChorusOz",
       "description": "Sydney Philharmonia Choirs is thrilled to bring its &lsquo;big sing&rsquo; ChorusOz back to Perth in 2026, uniting hundreds of voices for two days of community music-making. This year, participants will take on Carl ...",
@@ -106,6 +121,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/chorusoz-perth/perth/crawley",
+      "status": "active"
+    },
+    {
+      "id": 396006,
+      "name": "Paul Lewis: Mozart+",
+      "description": "Acclaimed British concert pianist Paul Lewis is celebrated for his interpretations of the great piano works of Beethoven and Schubert. He now turns his laser-like focus and insightful musicianship to Mozart.\u202fWhen Paul ...",
+      "venue": "Winthrop Hall - University of WA, Crawley, Western Australia",
+      "address": "",
+      "category": "Chamber Music",
+      "datetime_start": "2026-10-04 18:30:00",
+      "datetime_end": "2026-10-04 20:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/paul-lewis-mozart/perth/crawley",
       "status": "active"
     }
   ],
