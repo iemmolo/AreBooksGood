@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-24T16:02:38+00:00",
+  "fetched_at": "2026-09-25T02:14:26+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,21 +31,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/kungka-tjuta-many-sisters/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 402147,
-      "name": "Women's Adventure Film Tour 2026 - 10 Year Anniversary",
-      "description": "REAL STORIES. BOLD SPIRITS. ADVENTURE, REDEFINED. \n \nPresented by Mountain Designs - The Women&rsquo;s Adventure Film Tour returns for its 10th year, and we&rsquo;re proud to once again share a collection of short films ...",
-      "venue": "Luna on SX, Fremantle, Western Australia",
-      "address": "",
-      "category": "Film",
-      "datetime_start": "2026-09-24 18:30:00",
-      "datetime_end": "2026-09-24 23:59:59",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/womens-adventure-film-tour-2026-10-year-anniversary/perth/fremantle",
       "status": "active"
     },
     {
