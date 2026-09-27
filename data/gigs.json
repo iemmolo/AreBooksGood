@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-09-26T15:16:12+00:00",
+  "fetched_at": "2026-09-27T02:15:23+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
     {
       "id": 403377,
-      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Guinea",
+      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Gui",
       "description": "Step into the extraordinary world of \u00d6mie barkcloth art from the remote rainforests of Papua New Guinea.\n \nMade from natural bark and decorated with intricate patterns, colours and designs drawn from the rainforest ...",
       "venue": "Japingka Gallery, Fremantle, Western Australia",
       "address": "",
@@ -46,21 +46,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
-      "status": "active"
-    },
-    {
-      "id": 402741,
-      "name": "ChorusOz",
-      "description": "Sydney Philharmonia Choirs is thrilled to bring its &lsquo;big sing&rsquo; ChorusOz back to Perth in 2026, uniting hundreds of voices for two days of community music-making. This year, participants will take on Carl ...",
-      "venue": "Winthrop Hall - University of WA, Crawley, Western Australia",
-      "address": "",
-      "category": "Choir, Vocal Music",
-      "datetime_start": "2026-09-26 17:00:00",
-      "datetime_end": "2026-09-26 18:15:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/chorusoz-perth/perth/crawley",
       "status": "active"
     },
     {
@@ -125,7 +110,7 @@
     },
     {
       "id": 403811,
-      "name": "Kaya Koorda Kaartdijin Boodja (Welcome friends, learning on Country)",
+      "name": "Kaya Koorda Kaartdijin Boodja (Welcome friends, learning on ",
       "description": "Facilitated by Milliyaan Aboriginal Services, Kaya Koorda Kaartdijin Boodja (Welcome friends, learning on Country), is a three-hour, drop-in cultural engagement session designed to encourage connection, pride and ...",
       "venue": "River Journeys: John Tonkin Reserve, East Fremantle, Western Australia",
       "address": "",
