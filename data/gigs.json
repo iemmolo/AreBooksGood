@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-27T15:55:18+00:00",
+  "fetched_at": "2026-09-28T02:19:28+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -49,21 +49,6 @@
       "status": "active"
     },
     {
-      "id": 400170,
-      "name": "FREOPALOOZA - The Ultimate 90s Tribute Festival",
-      "description": "Freo's favourite 90s shindig FREOPALOOZA returns this spring for THE ULTIMATE 90S TRIBUTE FESTIVAL, an era when bands ruled the festival stage, and south of the river was home to legendary events such as The Big Day Out, ...",
-      "venue": "Port Beach Garden Bar, Fremantle, Western Australia",
-      "address": "",
-      "category": "Covers, Tribute Bands",
-      "datetime_start": "2026-09-27 14:00:00",
-      "datetime_end": "2026-09-27 23:45:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/freopalooza-the-ultimate-90s-tribute-festival/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 402029,
       "name": "Tell Mama! Janis Joplin by Karise Eden",
       "description": "Since helping redefine rock more than half a century ago, Janis Joplin has never stopped finding new audiences. In Tell Mama!, ARIA Award winner Karise Eden revives the spirit and extraordinary legacy of one of rock's ...",
@@ -106,6 +91,21 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/classic-cars-and-coffee/perth/crawley",
+      "status": "active"
+    },
+    {
+      "id": 403897,
+      "name": "Blackadder ",
+      "description": "Harbour Theatre brings the second series of the classic British comedy Blackadder to life at Camelot in Mosman Park this October.\r\n\r\nJoin Edmund Blackadder, Queenie, Baldrick and Sir Percy in two favourite episodes set ...",
+      "venue": "Harbour Theatre, Peppermint Grove, Western Australia",
+      "address": "",
+      "category": "Theatre",
+      "datetime_start": "2026-10-09 19:30:00",
+      "datetime_end": "2026-10-18 16:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/blackadder-live-on-stage/perth/peppermint-grove",
       "status": "active"
     },
     {
