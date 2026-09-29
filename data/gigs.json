@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-09-28T18:52:09+00:00",
+  "fetched_at": "2026-09-29T03:03:58+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
     {
       "id": 403377,
-      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Gui",
+      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Guinea",
       "description": "Step into the extraordinary world of \u00d6mie barkcloth art from the remote rainforests of Papua New Guinea.\n \nMade from natural bark and decorated with intricate patterns, colours and designs drawn from the rainforest ...",
       "venue": "Japingka Gallery, Fremantle, Western Australia",
       "address": "",
@@ -110,7 +110,7 @@
     },
     {
       "id": 403811,
-      "name": "Kaya Koorda Kaartdijin Boodja (Welcome friends, learning on ",
+      "name": "Kaya Koorda Kaartdijin Boodja (Welcome friends, learning on Country)",
       "description": "Facilitated by Milliyaan Aboriginal Services, Kaya Koorda Kaartdijin Boodja (Welcome friends, learning on Country), is a three-hour, drop-in cultural engagement session designed to encourage connection, pride and ...",
       "venue": "River Journeys: John Tonkin Reserve, East Fremantle, Western Australia",
       "address": "",
@@ -121,6 +121,21 @@
       "price": "Free",
       "age_restriction": "12+",
       "url": "https://www.eventfinda.com.au/2026/kaya-koorda-kaartdijin-boodja-welcome-friends-learning-on-country/perth",
+      "status": "active"
+    },
+    {
+      "id": 403756,
+      "name": "Dual Nature: Australian Landscape Exhibition",
+      "description": "Discover two distinctive perspectives on the Australian landscape at Dual Nature, a free exhibition by Western Australian artists Tammi de Rooy and Sarah Eve at Palette Fremantle, just metres from Leighton ...",
+      "venue": "Palette Fremantle, Fremantle, Western Australia",
+      "address": "",
+      "category": "Fine Art",
+      "datetime_start": "2026-10-13 06:00:00",
+      "datetime_end": "2026-11-08 15:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/dual-nature-australian-landscape-exhibition/perth",
       "status": "active"
     }
   ],
