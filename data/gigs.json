@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-10T16:30:03+00:00",
+  "fetched_at": "2026-10-11T02:37:25+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -91,6 +91,21 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/katchafire-mike-love-fremantle/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 403564,
+      "name": "Blank Instrument - Jumping At Ghosts - Album Launch",
+      "description": "Join indie folk singer-songwriter Kim Franklin aka Blank Instrument and friends (7 piece band!) for a special evening celebrating the launch of her debut album Jumping at Ghosts. \nAfter releasing her first two EPs, So ...",
+      "venue": "Clancy's Fish Pub Fremantle, Fremantle, Western Australia",
+      "address": "",
+      "category": "Folk",
+      "datetime_start": "2026-10-25 19:00:00",
+      "datetime_end": "2026-10-25 22:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/blank-instrument-jumping-at-ghosts-album-launch/perth/fremantle",
       "status": "active"
     }
   ],
