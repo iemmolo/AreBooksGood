@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-10-13T18:36:14+00:00",
+  "fetched_at": "2026-10-14T02:28:13+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
     {
       "id": 403377,
-      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Guinea",
+      "name": "Cloud Forest, Unfolding: \u00d6mie Barkcloth Art of Papua New Gui",
       "description": "Step into the extraordinary world of \u00d6mie barkcloth art from the remote rainforests of Papua New Guinea.\n \nMade from natural bark and decorated with intricate patterns, colours and designs drawn from the rainforest ...",
       "venue": "Japingka Gallery, Fremantle, Western Australia",
       "address": "",
@@ -106,6 +106,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/blank-instrument-jumping-at-ghosts-album-launch/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 403605,
+      "name": "Performance of Gender",
+      "description": "Performance of Gender \n \nSolo exhibition by Sarah McBride \n \nPerformance of Gender explores gender as something performed rather than fixed, using the experiences and representation of cross-dressers as its central ...",
+      "venue": "Old Customs House, Fremantle, Western Australia",
+      "address": "",
+      "category": "Contemporary",
+      "datetime_start": "2026-10-28 10:30:00",
+      "datetime_end": "2026-11-11 15:30:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/performance-of-gender/perth/fremantle",
       "status": "active"
     }
   ],
