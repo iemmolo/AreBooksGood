@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-16T15:41:16+00:00",
+  "fetched_at": "2026-10-17T01:54:34+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,21 +76,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/dual-nature-australian-landscape-exhibition/perth",
-      "status": "active"
-    },
-    {
-      "id": 402578,
-      "name": "Katchafire + Mike Love ",
-      "description": "Fremantle Show - Early Bird $65 | Online $70+bf | General Admission $80 \n \nNew Zealand&rsquo;s Katchafire are teaming up with Hawaii&rsquo;s Mike Love for their 2026 Australian Tour dates, along with a collaboration on ...",
-      "venue": "Port Beach Garden Bar, Fremantle, Western Australia",
-      "address": "",
-      "category": "Reggae",
-      "datetime_start": "2026-10-16 19:30:00",
-      "datetime_end": "2026-10-16 23:59:59",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/katchafire-mike-love-fremantle/perth/fremantle",
       "status": "active"
     },
     {
