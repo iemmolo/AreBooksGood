@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-18T15:00:17+00:00",
+  "fetched_at": "2026-10-19T02:09:57+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -61,21 +61,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/classic-cars-and-coffee/perth/crawley",
-      "status": "active"
-    },
-    {
-      "id": 403897,
-      "name": "Blackadder ",
-      "description": "Harbour Theatre brings the second series of the classic British comedy Blackadder to life at Camelot in Mosman Park this October.\r\n\r\nJoin Edmund Blackadder, Queenie, Baldrick and Sir Percy in two favourite episodes set ...",
-      "venue": "Harbour Theatre, Peppermint Grove, Western Australia",
-      "address": "",
-      "category": "Theatre",
-      "datetime_start": "2026-10-09 19:30:00",
-      "datetime_end": "2026-10-18 16:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/blackadder-live-on-stage/perth/peppermint-grove",
       "status": "active"
     },
     {
