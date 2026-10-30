@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-29T17:42:44+00:00",
+  "fetched_at": "2026-10-30T03:17:16+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -91,6 +91,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/latvian-radio-choir-genevieve-lacey/perth/crawley",
+      "status": "active"
+    },
+    {
+      "id": 401324,
+      "name": "Dan Rath: Help Me Please",
+      "description": "A-List Entertainment presents \n \nYou probably already know me from reading the news. In 2018, I dressed up as a sewing needle and hid inside a strawberry. \n \nThere should be a French word for the moment you realize a ...",
+      "venue": "Fremantle Comedy Factory, Fremantle, Western Australia",
+      "address": "",
+      "category": "Comedy",
+      "datetime_start": "2026-11-13 19:00:00",
+      "datetime_end": "2026-11-13 20:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "MA15+",
+      "url": "https://www.eventfinda.com.au/2026/dan-rath-help-me-please/perth/fremantle",
       "status": "active"
     }
   ],
