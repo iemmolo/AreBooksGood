@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-31T16:26:44+00:00",
+  "fetched_at": "2026-11-01T02:56:26+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -106,6 +106,36 @@
       "price": "",
       "age_restriction": "MA15+",
       "url": "https://www.eventfinda.com.au/2026/dan-rath-help-me-please/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 399930,
+      "name": "Mischa Maisky in Recital",
+      "description": "Internationally renowned cellist Mischa Maisky returns to Perth for a highly anticipated recital at Winthrop Hall, joined by his daughter, distinguished pianist Lily Maisky. Celebrated for his rich, resonant tone and ...",
+      "venue": "Winthrop Hall - University of WA, Crawley, Western Australia",
+      "address": "",
+      "category": "Acoustic, Instrumental",
+      "datetime_start": "2026-11-15 17:00:00",
+      "datetime_end": "2026-11-15 19:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/mischa-maisky-in-recital/perth/crawley",
+      "status": "active"
+    },
+    {
+      "id": 403469,
+      "name": "Sassafras",
+      "description": "Formed in 2015, Sassafras combines toe-tapping swing, breakneck gypsy classics, wistful french ballads and re-worked jazz standards in a vibrant and engaging mix of acoustic music, all performed with the dazzling ...",
+      "venue": "Duke Of George Jazz Club, Fremantle, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-11-15 18:30:00",
+      "datetime_end": "2026-11-15 21:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/sassafras/perth/fremantle",
       "status": "active"
     }
   ],
