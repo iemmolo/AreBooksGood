@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-06T18:37:32+00:00",
+  "fetched_at": "2026-11-07T03:32:35+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -20,7 +20,7 @@
     },
     {
       "id": 404887,
-      "name": "The Fiddler and the Bard - Cottesloe Concert Series at Curtin Heritage",
+      "name": "The Fiddler and the Bard - Cottesloe Concert Series at Curti",
       "description": "Irish airs meet Italian sonatas: an hour of music and storytelling with Irish guest cellist Carina Drury, by the sea in Cottesloe.\r\n\r\nJoin us at The Heritage Collective in Cottesloe for an hour of music and storytelling ...",
       "venue": "The Club Lounge - The Heritage Collective at , Cottesloe, Western Australia",
       "address": "",
@@ -76,6 +76,21 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/performance-of-gender/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 404130,
+      "name": "Made on the Left 2026 Christmas Market",
+      "description": "Taking over Fremantle's Esplanade Park on Saturday 21 and Sunday 22 November 2026, the much-loved Made on the Left Christmas Markets will bring together more than 100 of the State's most talented artists, designers and ...",
+      "venue": "Esplanade Park, Fremantle, Western Australia",
+      "address": "",
+      "category": "Markets and Fairs",
+      "datetime_start": "2026-11-21 10:00:00",
+      "datetime_end": "2026-11-22 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/made-on-the-left-2026-christmas-market/perth/fremantle",
       "status": "active"
     },
     {
