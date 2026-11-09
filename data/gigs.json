@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-08T17:19:15+00:00",
+  "fetched_at": "2026-11-09T03:24:50+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,21 +31,6 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/the-fiddler-and-the-bard-cottesloe-concert-series-at-curtin-heritage/perth",
-      "status": "active"
-    },
-    {
-      "id": 403756,
-      "name": "Dual Nature: Australian Landscape Exhibition",
-      "description": "Discover two distinctive perspectives on the Australian landscape at Dual Nature, a free exhibition by Western Australian artists Tammi de Rooy and Sarah Eve at Palette Fremantle, just metres from Leighton ...",
-      "venue": "Palette Fremantle, Fremantle, Western Australia",
-      "address": "",
-      "category": "Fine Art",
-      "datetime_start": "2026-10-13 06:00:00",
-      "datetime_end": "2026-11-08 15:00:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/dual-nature-australian-landscape-exhibition/perth",
       "status": "active"
     },
     {
