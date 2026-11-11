@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-11T03:32:01+00:00",
+  "fetched_at": "2026-11-11T18:57:05+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -16,6 +16,21 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 405156,
+      "name": "Spinifex Artists",
+      "description": "Stories of Country, Carried Forward\r\n\r\nAcross the vast desert homelands of Tjuntjuntjara, stories of Country continue to inspire and shape contemporary painting.\r\n\r\nSpinifex Artists \u2013 New Works celebrates Japingka ...",
+      "venue": "Japingka Gallery, Fremantle, Western Australia",
+      "address": "",
+      "category": "Fine Art",
+      "datetime_start": "2026-11-20 10:00:00",
+      "datetime_end": "2026-12-24 17:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/spinifex-artists/perth/fremantle",
       "status": "active"
     },
     {
