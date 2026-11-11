@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-10T18:59:00+00:00",
+  "fetched_at": "2026-11-11T03:32:01+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,21 +76,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/made-on-the-left-2026-christmas-market/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 396015,
-      "name": "Latvian Radio Choir & Genevieve Lacey",
-      "description": "The Latvian Radio Choir spread their wings and fly with Australia&rsquo;s own recorder queen, Genevieve Lacey. Join them as they look to the skies for dancing planets and soaring birds in the music of Peteris Vasks. Get ...",
-      "venue": "Winthrop Hall - University of WA, Crawley, Western Australia",
-      "address": "",
-      "category": "Chamber Music",
-      "datetime_start": "2026-11-10 19:30:00",
-      "datetime_end": "2026-11-10 21:30:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/latvian-radio-choir-genevieve-lacey/perth/crawley",
       "status": "active"
     },
     {
