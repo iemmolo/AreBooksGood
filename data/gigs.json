@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-11T18:57:05+00:00",
+  "fetched_at": "2026-11-12T04:41:34+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -64,21 +64,6 @@
       "status": "active"
     },
     {
-      "id": 403605,
-      "name": "Performance of Gender",
-      "description": "Performance of Gender \n \nSolo exhibition by Sarah McBride \n \nPerformance of Gender explores gender as something performed rather than fixed, using the experiences and representation of cross-dressers as its central ...",
-      "venue": "Old Customs House, Fremantle, Western Australia",
-      "address": "",
-      "category": "Contemporary",
-      "datetime_start": "2026-10-28 10:30:00",
-      "datetime_end": "2026-11-11 15:30:00",
-      "is_free": true,
-      "price": "Free",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/performance-of-gender/perth/fremantle",
-      "status": "active"
-    },
-    {
       "id": 404130,
       "name": "Made on the Left 2026 Christmas Market",
       "description": "Taking over Fremantle's Esplanade Park on Saturday 21 and Sunday 22 November 2026, the much-loved Made on the Left Christmas Markets will bring together more than 100 of the State's most talented artists, designers and ...",
@@ -136,6 +121,21 @@
       "price": "",
       "age_restriction": "18+",
       "url": "https://www.eventfinda.com.au/2026/sassafras/perth/fremantle",
+      "status": "active"
+    },
+    {
+      "id": 398068,
+      "name": "Fischer-Z",
+      "description": "Fischer-Z will embark on their first-ever Australian tour in November&ndash;December 2026, as part of the band&rsquo;s worldwide 50th anniversary celebrations. \n \nAlthough they have never toured Australia, Fischer-Z have ...",
+      "venue": "Freo.Social, Fremantle, Western Australia",
+      "address": "",
+      "category": "Rock & Pop",
+      "datetime_start": "2026-11-26 19:30:00",
+      "datetime_end": "2026-11-26 22:00:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/fischer-z-penrith/perth/fremantle",
       "status": "active"
     }
   ],
