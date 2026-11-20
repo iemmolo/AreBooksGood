@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-19T19:41:40+00:00",
+  "fetched_at": "2026-11-20T04:41:03+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -76,21 +76,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/made-on-the-left-2026-christmas-market/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 398068,
-      "name": "Fischer-Z",
-      "description": "Fischer-Z will embark on their first-ever Australian tour in November&ndash;December 2026, as part of the band&rsquo;s worldwide 50th anniversary celebrations. \n \nAlthough they have never toured Australia, Fischer-Z have ...",
-      "venue": "Freo.Social, Fremantle, Western Australia",
-      "address": "",
-      "category": "Rock & Pop",
-      "datetime_start": "2026-11-26 19:30:00",
-      "datetime_end": "2026-11-26 22:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "18+",
-      "url": "https://www.eventfinda.com.au/2026/fischer-z-penrith/perth/fremantle",
       "status": "active"
     }
   ],
