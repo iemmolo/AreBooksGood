@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-20T19:20:27+00:00",
+  "fetched_at": "2026-11-21T04:36:00+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,21 +31,6 @@
       "price": "Free",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/spinifex-artists/perth/fremantle",
-      "status": "active"
-    },
-    {
-      "id": 404887,
-      "name": "The Fiddler and the Bard - Cottesloe Concert Series at Curtin Heritage",
-      "description": "Irish airs meet Italian sonatas: an hour of music and storytelling with Irish guest cellist Carina Drury, by the sea in Cottesloe.\r\n\r\nJoin us at The Heritage Collective in Cottesloe for an hour of music and storytelling ...",
-      "venue": "The Club Lounge - The Heritage Collective at , Cottesloe, Western Australia",
-      "address": "",
-      "category": "Chamber Music",
-      "datetime_start": "2026-11-20 18:00:00",
-      "datetime_end": "2026-11-20 19:00:00",
-      "is_free": false,
-      "price": "",
-      "age_restriction": "All Ages",
-      "url": "https://www.eventfinda.com.au/2026/the-fiddler-and-the-bard-cottesloe-concert-series-at-curtin-heritage/perth",
       "status": "active"
     },
     {
