@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-26T20:39:11+00:00",
+  "fetched_at": "2026-11-27T05:40:43+00:00",
   "location": "Fremantle, WA",
   "radius_km": 10,
   "events": [
@@ -31,6 +31,36 @@
       "price": "",
       "age_restriction": "All Ages",
       "url": "https://www.eventfinda.com.au/2026/melville-ability-dance-class/perth",
+      "status": "active"
+    },
+    {
+      "id": 405899,
+      "name": "Steve Sedergreen & Friends",
+      "description": "Steve Sedergreen & Friends with Special Guest Vocalists Bridget Allen, Jacki Gaudion & Mark Zanotti.\r\n\r\nDo not miss this great jazz outfit featuring some of Melbourne's best jazz musicians; this lineup is built on ...",
+      "venue": "Duke Of George Jazz Club, Fremantle, Western Australia",
+      "address": "",
+      "category": "Jazz",
+      "datetime_start": "2026-12-11 19:30:00",
+      "datetime_end": "2026-12-11 22:30:00",
+      "is_free": false,
+      "price": "",
+      "age_restriction": "18+",
+      "url": "https://www.eventfinda.com.au/2026/steve-sedergreen-friends/perth",
+      "status": "active"
+    },
+    {
+      "id": 405478,
+      "name": "RPYC Crawley Christmas Markets",
+      "description": "**RPYC CHRISTMAS TWILIGHT MARKETS 2026** \r\n**Free Public Event**\r\n\r\nGet ready to soak up the festive spirit at our Christmas Twilight Markets! Join us on Friday, 11th December at the Catalina Bar Alfresco Area for a ...",
+      "venue": "Royal Perth Yacht Club, Crawley, Western Australia",
+      "address": "",
+      "category": "Markets and Fairs",
+      "datetime_start": "2026-12-11 16:00:00",
+      "datetime_end": "2026-12-11 21:00:00",
+      "is_free": true,
+      "price": "Free",
+      "age_restriction": "All Ages",
+      "url": "https://www.eventfinda.com.au/2026/rpyc-crawley-christmas-markets/perth",
       "status": "active"
     },
     {
